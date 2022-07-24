@@ -1,0 +1,75 @@
+
+.dashboard-wrapper {
+	padding-top: 75px; 
+	padding-bottom: 75px; 
+	@include respond("lg") {
+		padding-top: 25px; 
+		padding-bottom: 25px; 
+		.col-lg-3 {width:100%; margin-bottom: 15px;  }	
+		.col-lg-9 {width: 100%; float: right;}	
+	}
+
+	.dashboard-tab {
+		padding: 18px; 
+		@include respond("lg") {
+			padding: 15px 15px 15px 15px !important; 
+			// padding-left: 0 !important;
+			box-shadow: none !important;
+			height: 100% !important;
+		}
+	}
+	
+	.dashboard-nav {
+		padding: 15px;
+		@include respond("lg") {
+			padding: 10px;
+			li a {padding: 9px 13px;}
+			//li a span {display: none; }
+			ul {display: none; padding-top: 10px; } 
+		}
+		.dash-menu {
+			background-color: #e8f0fb;
+			display: block;
+			color:var(--theme-color);
+			font-size: 14px;
+			padding: 12px 15px;
+			font-weight: 700;
+			border-radius: 8px;
+			font-family: 'Open Sans', sans-serif;
+			i {
+				 top: 4px;
+				 display: inline-block;
+				 position: relative;
+				 margin-right: 10px; 
+			}
+		
+		}
+		li {
+			width: 100%;
+			display: block;
+			margin-bottom: 5px; 
+			&.active {
+				a {
+					background-color: #e8f0fb;
+					color:var(--theme-color);
+					display: block;
+				}
+			}
+			a {
+				display: block;
+				font-weight: 700;
+				color: #888;
+				font-size: 14px;
+				padding: 12px 15px;
+				border-radius: 8px;
+				font-family: 'Open Sans', sans-serif;
+				i {
+					 top: 4px;
+					 display: inline-block;
+					 position: relative;
+					 margin-right: 10px; 
+				}
+			}
+		}
+	}
+}

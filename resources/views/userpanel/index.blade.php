@@ -2,18 +2,29 @@
 @section('title')
     Gift & Giggles
 @endsection
-@section('css')
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.min.css" />
-@endsection
 @section('content')
 
-        <!-- banner wrapper -->
-        <div class="banner-wrapper style1 bg-image-contain" style="background-image: url(https://via.placeholder.com/1900x500.png);">
-             
+    <!-- banner wrapper -->
+        <div class="banner-wrapper style1 bg-image-contain" >
+            <!-- Slider 1 -->
+                <div class="slider" id="slider1">
+                    <!-- Slides -->
+                    <div style="background-image:url(https://img.freepik.com/premium-vector/characters-having-financial-problems-debts-loans-scenes_1325-3083.jpg?w=2000)"></div>
+                    <div style="background-image:url(https://img.freepik.com/free-photo/ggift-beautiful-box-with-red-bow-grey-blanket_169016-5349.jpg?w=1480&t=st=1659363644~exp=1659364244~hmac=163fcaf4c4a624f0ce891ad80d60b8d7006e9aa6680ece2758a1fd28e332cfc3)"></div>
+                    <div style="background-image:url(https://www.axisbank.com/images/default-source/revamp_new/cards/blogs/pre-paid-cards-blog.jpg?sfvrsn=e5048a55_4)"></div>
+                    
+                        <!-- The Arrows -->
+                    <i class="left" class="arrows" style="z-index:2; position:absolute;"><svg viewBox="0 0 100 100">
+                        <path d="M 10,50 L 60,100 L 70,90 L 30,50  L 70,10 L 60,0 Z"></path>
+                        </svg></i>
+                    <i class="right" class="arrows" style="z-index:2; position:absolute;"><svg viewBox="0 0 100 100">
+                        <path d="M 10,50 L 60,100 L 70,90 L 30,50  L 70,10 L 60,0 Z" transform="translate(100, 100) rotate(180) "></path>
+                        </svg></i>
+                </div>
         </div>
-        <!-- banner wrapper --> 
-
-        <div class="offer-wrapper pb-4 bg-lightblue">
+    <!-- banner wrapper --> 
+        <!-- <div class="offer-wrapper pb-4 bg-lightblue"> -->
+        <div class="offer-wrapper pb-4">
 
 
             <div class="tab-wrapper">
@@ -23,11 +34,15 @@
                             <nav class="d-lg-block d-none">
                                 <div class="nav nav-tabs border-0 nav-fill" id="nav-tab" role="tablist">
                                     <a class="nav-item nav-link rounded-lg border-0 p-4 mr-2 active bg-current" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true"><i class="font-xxl ti-mobile text-current d-block mt-2"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">Mobile Recharge</h4></a>
+                                    
                                     <a class="nav-item nav-link rounded-lg border-0 p-4 mr-2" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false"><i class="font-xxl ti-shine text-current d-block mt-2"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">Electicity</h4></a>
-                                    <a class="nav-item nav-link rounded-lg border-0 p-4 mr-2" id="nav-contact-tab" data-toggle="tab" href="#nav-contact" role="tab" aria-controls="nav-contact" aria-selected="false"><i class="font-xxl ti-stats-up text-current d-block mt-2"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">DTH</h4></a>
-                                    <a class="nav-item nav-link rounded-lg border-0 p-4 mr-2" id="nav-about-tab" data-toggle="tab" href="#nav-about" role="tab" aria-controls="nav-about" aria-selected="false"><i class="font-xxl ti-car text-current d-block mt-2"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">GAS</h4></a>
-                                    <a class="nav-item nav-link rounded-lg border-0 p-4 mr-2" id="nav-shoping-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false"><i class="font-xxl ti-package text-current d-block mt-2"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">Money Transfer</h4></a>
-                                    <a href="#" class="nav-item nav-link rounded-lg border-0 p-4 mr-0" data-toggle="modal" data-target="#Modalmore"><i class="font-xxl ti-announcement text-current d-block mt-2"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">More</h4></a>
+                                    <a class="nav-item nav-link rounded-lg border-0 p-4 mr-2" id="nav-contact-tab" data-toggle="tab" href="#nav-contact" role="tab" aria-controls="nav-contact" aria-selected="false"><i class="font-xxl  fa-solid fa-satellite-dish d-block mt-2"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">DTH</h4></a>
+
+                                    <a class="nav-item nav-link rounded-lg border-0 p-4 mr-2" id="nav-gas-tab" data-toggle="tab" href="#nav-gas" role="tab" aria-controls="nav-gas" aria-selected="false"><i class="font-xxl fa-solid fa-fire-flame-simple"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">GAS</h4></a>
+
+                                    <a class="nav-item nav-link rounded-lg border-0 p-4 mr-2" id="nav-money-tab" data-toggle="tab" href="#nav-money" role="tab" aria-controls="nav-money" aria-selected="false"><i class="font-xxl fa-solid fa-money-bill-transfer"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">Money Transfer</h4></a>
+
+                                    <a href="#" class="nav-item nav-link rounded-lg border-0 p-4 mr-0" data-toggle="modal" data-target="#Modalmore"><i class="font-xxl fa-solid fa-ellipsis-vertical"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">More</h4></a>
                                     <!-- <a class="nav-item nav-link rounded-lg border-0 p-4 mr-0" id="nav-tab-tab" data-toggle="modal" href="#nav-contact" role="tab" data-target="#ModalregisterD" aria-controls="nav-contact" aria-selected="false"><i class="font-xxl ti-announcement text-current d-block mt-2"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">More</h4></a> -->
                                 </div>
                             </nav>
@@ -61,23 +76,32 @@
                                                     <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss" for="customRadio">Postpaid</label>
                                                 </div>
                                             </div>
-                                            <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="Enter Mobile Number"></div>
-                                            <div class="col-sm-2">
-                                                <select class="selectpicker" data-live-search="true">
-                                                    <option data-tokens="ketchup mustard">Airtel</option>
-                                                    <option data-tokens="mustard">Jio</option>
-                                                    <option data-tokens="frosting">VI</option>
-                                                </select>
+                                            <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="Enter Mobile Number" required></div>
+                                            <div class="col-sm-3">
+                                                <select class="operator">
+                                                    <option></option>
+                                                    <option value="airtel">Airtel</option>
+                                                    <option value="jio">JIO</option>
+                                                    <option value="vi">VI</option>
+                                                </select>   
                                             </div>
-                                            <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="Select Location"></div>
-                                            <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="Amount">
+                                            <div class="col-sm-3">
+                                                <select class="select-state">
+                                                    <option></option>
+                                                    <option value="maharashtra">Maharashtra</option>
+                                                    <option value="Gujurat">Gujurat</option>
+                                                    <option value="goa">Goa</option>
+                                                </select>   
+                                            </div>
+                                            <!-- <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="Select Location"></div> -->
+                                            <div class="col-sm-2"><input type="text" class="form-control mb-2 prepared-amount" placeholder="Amount">
                                             <span id="view-plan" >view plan</span></div>
                                             <div class="col-sm-1"><button class="bg-current border-0 w-100 form-bttn fw-500 rounded-lg text-white"><i class="ti-arrow-right"></i></button></div>
                                         </div>
                                     </form>
                                     <br/>
-                                    <table hidden class="table table-condensed table-striped plan-details">
-                                    <!-- <table hidden class="table table-responsive-sm table-hover plan-details"> -->
+                                    <!-- <table hidden class="table table-condensed table-striped plan-details"> -->
+                                    <table hidden class="table table-responsive-sm table-hover plan-details">
                                         <thead>
                                             <tr>
                                             <th scope="col">Circle</th>
@@ -93,21 +117,21 @@
                                             <td>Recharge</td>
                                             <td>28 Days</td>
                                             <td>Enjoy talktime of Rs 99 valid for 28 days at 1p/sec local & STD calls with 200 MB data.</td>
-                                            <td><button class="bg-current border-0 w-100 form-bttn fw-500 rounded-lg text-white">RS. 99</Button></td>
+                                            <td><button class="bg-current border-0 w-100 form-bttn fw-500 rounded-lg text-white amount" value="99">RS. 99</Button></td>
                                             </tr>
                                             <tr>
                                             <td scope="row">Maharashtra</td>
                                             <td>Recharge</td>
                                             <td>28 Days</td>
                                             <td>Enjoy talktime of Rs 99 valid for 28 days at 1p/sec local & STD calls with 200 MB data.</td>
-                                            <td><button class="bg-current border-0 w-100 form-bttn fw-500 rounded-lg text-white">RS. 99</Button></td>
+                                            <td><button class="bg-current border-0 w-100 form-bttn fw-500 rounded-lg text-white amount" value="199">RS. 199</Button></td>
                                             </tr>
                                             <tr>
                                             <td scope="row">Maharashtra</td>
                                             <td>Recharge</td>
                                             <td>28 Days</td>
                                             <td>Enjoy talktime of Rs 99 valid for 28 days at 1p/sec local & STD calls with 200 MB data.</td>
-                                            <td><button class="bg-current border-0 w-100 form-bttn fw-500 rounded-lg text-white">RS. 99</Button></td>
+                                            <td><button class="bg-current border-0 w-100 form-bttn fw-500 rounded-lg text-white amount" value="299">RS. 299</Button></td>
                                             </tr>
                                             
                                         </tbody>
@@ -127,14 +151,79 @@
                                                     <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss" for="customRadio4">Apartments</label>
                                                 </div>
                                             </div>
-                                            <div class="col-sm-4"><input type="text" class="form-control mb-2" placeholder="Select Location"></div>
-                                            <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="Electricity Board"></div>
-                                            <div class="col-sm-4"><input type="text" class="form-control mb-2" placeholder="Consumer Number"></div>
+                                            <div class="col-sm-3">
+                                                <select class="select-state">
+                                                    <option></option>
+                                                    <option value="maharashtra">Maharashtra</option>
+                                                    <option value="Gujurat">Gujurat</option>
+                                                    <option value="goa">Goa</option>
+                                                </select>   
+                                            </div>
+                                            <div class="col-sm-3">
+                                                <select class="select-electric-board">
+                                                    <option></option>
+                                                    <option value="adani">Adani</option>
+                                                    <option value="tata_power">Tata Power</option>
+                                                    <option value="best">Best</option>
+                                                </select>   
+                                            </div>
+                                            <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="Consumer Number"></div>
+                                            <div class="col-sm-2"><input type="text" class="form-control mb-3" placeholder="Amount"></div>
                                             <div class="col-sm-1"><button class="bg-current border-0 w-100 form-bttn fw-500 rounded-lg text-white"><i class="ti-arrow-right"></i></button></div>
                                         </div>
                                     </form>
                                 </div>
-                                 
+                                <div class="tab-pane p-4 fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">
+                                    <form action="#">
+                                        <div class="row">
+                                            <div class="col-sm-12 mb-2"><h4 class="fw-700 font-xl">Recharge DTH or TV</h4></div>
+                                            <div class="col-sm-3">
+                                                <select class="dth-operator">
+                                                    <option></option>
+                                                    <option value="dth_tv">DTH TV</option>
+                                                    <option value="airtel_digital_tv">Airtel Digital TV</option>
+                                                    <option value="d2h">d2h</option>
+                                                </select>   
+                                            </div>
+                                            <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="Consumer ID"></div>
+                                            <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="Amount"></div>
+                                            <div class="col-sm-3"><button class="bg-current border-0 w-100 form-bttn fw-500 rounded-lg text-white"><i class="ti-arrow-right"></i></button></div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="tab-pane p-4 fade" id="nav-gas" role="tabpanel" aria-labelledby="nav-gas-tab">
+                                    <form action="#">
+                                        <div class="row">
+                                            <div class="col-sm-12 mb-2"><h4 class="fw-700 font-xl">Pay Gas Bill</h4></div>
+                                            <div class="col-sm-3">
+                                                <select class="gas-bill">
+                                                    <option></option>
+                                                    <option value="hp_gas">HP Gas</option>
+                                                    <option value="bharat_gas">Bharat Gas</option>
+                                                </select>   
+                                            </div>
+                                            <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="LPG ID/Consumer ID"></div>
+                                            <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="Gas Agency"></div>
+                                            <div class="col-sm-3"><button class="bg-current border-0 w-100 form-bttn fw-500 rounded-lg text-white"><i class="ti-arrow-right"></i></button></div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="tab-pane p-4 fade" id="nav-money" role="tabpanel" aria-labelledby="nav-money-tab">
+                                    <form action="#">
+                                        <div class="row">
+                                            <div class="col-sm-12 mb-2"><h4 class="fw-700 font-xl">Money Transfer</h4></div>
+                                            <div class="col-sm-3"><input type="password" class="form-control mb-2" placeholder="Account Number"></div>
+                                            <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="ReEnter Account Number"></div>
+                                            <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="IFSC Code"></div>
+                                            <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="Amount"></div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4"><input type="password" class="form-control mb-2" placeholder="Beneficiary Name"></div>
+                                            <div class="col-sm-4"><input type="text" class="form-control mb-2" placeholder="Beneficiary Nick Name"></div>
+                                            <div class="col-sm-4"><button class="bg-current border-0 w-100 form-bttn fw-500 rounded-lg text-white"><i class="ti-arrow-right"></i></button></div>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                             
                         </div>
@@ -157,72 +246,7 @@
             </div> -->
         </div>
 
-        <div class="popular-wrapper pt-lg--7 pb-lg--7 pb-5 pt-5 bg-lightblue">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-4 text-left mb-5 pb-0">
-                        <h2 class="text-grey-900 fw-400 display1-size lh-2">Explore <br> by category</h2>
-                    </div>
-                
-                    <div class="col-lg-12">
-                        <div class="categorie-slider owl-carousel owl-theme overflow-visible dot-none right-nav pb-4">
-                            <div class="owl-items text-center">
-                                <div class="card w-100 p-4 text-left border-0 shadow-md rounded-lg">
-                                    <i class="ti-world mt-4 font-xl text-current"></i>
-                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Vouchers</h4>
-                                    <h6 class="fw-500 font-xssss text-grey-500">Total active Member</h6>
-                                </div>
-                            </div>
-                            <div class="owl-items text-center">
-                                <div class="card w-100 p-4 text-left border-0 shadow-md rounded-lg">
-                                    <i class="ti-briefcase mt-4 font-xl text-current"></i>
-                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Finance</h4>
-                                    <h6 class="fw-500 font-xssss text-grey-500">Total active Member</h6>
-                                </div>
-                            </div>
-                            <div class="owl-items text-center">
-                                <div class="card w-100 p-4 text-left border-0 shadow-md rounded-lg">
-                                    <i class="ti-location-pin mt-4 font-xl text-current"></i>
-                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Flights</h4>
-                                    <h6 class="fw-500 font-xssss text-grey-500">Total active Member</h6>
-                                </div>
-                            </div>
-                            <div class="owl-items text-center">
-                                <div class="card w-100 p-4 text-left border-0 shadow-md rounded-lg">
-                                    <i class="ti-video-clapper mt-4 font-xl text-current"></i>
-                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Movies</h4>
-                                    <h6 class="fw-500 font-xssss text-grey-500">Total active Member</h6>
-                                </div>
-                            </div>
-                            <div class="owl-items text-center">
-                                <div class="card w-100 p-4 text-left border-0 shadow-md rounded-lg">
-                                    <i class="ti-credit-card mt-4 font-xl text-current"></i>
-                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Coupon</h4>
-                                    <h6 class="fw-500 font-xssss text-grey-500">Total active Member</h6>
-                                </div>
-                            </div>
-                            <div class="owl-items text-center">
-                                <div class="card w-100 p-4 text-left border-0 shadow-md rounded-lg">
-                                    <i class="ti-wallet mt-4 font-xl text-current"></i>
-                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Shopping</h4>
-                                    <h6 class="fw-500 font-xssss text-grey-500">Total active Member</h6>
-                                </div>
-                            </div>
-
-                            <div class="owl-items text-center">
-                                <div class="card w-100 p-4 text-left border-0 shadow-md rounded-lg">
-                                    <i class="ti-stats-up mt-4 font-xl text-current"></i>
-                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Share</h4>
-                                    <h6 class="fw-500 font-xssss text-grey-500">Total active Member</h6>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="how-to-work pt-lg--7 pb-lg--7 pb-5 pt-5 bg-greylight">
+        <div class="how-to-work pt-lg--7 pb-lg--7 pb-5 pt-5">
             <div class="container">
                 <div class="row">
                     <div class="col-lg-12 text-center mb-lg-5 mb-4 pb-3">
@@ -231,16 +255,16 @@
                     <div class="col-lg-4 mb-3">
                         <div class="card shadow-lg rounded-0 p-5 bg-white text-center border-0">
                             <i class="ti-home ml-auto mr-auto round-lg-btn text-white bg-current font-xxl text-center"></i>
-                            <h2 class="fw-700 font-sm mt-4">Choose what to do</h2>
-                            <p class="font-xsss fw-500 text-grey-500 lh-26 mt-2">We are digital agency, a small design agency based in paris as i was groping to remove through language.</p>
+                            <h2 class="fw-700 font-sm mt-4">What we do</h2>
+                            <p class="font-xsss fw-500 text-grey-500 lh-26 mt-2"> We focused on connecting retailers to customers, businesses and their employees through various products and services in the prepaid market</p>
                         </div>
                     </div>
 
                     <div class="col-lg-4 mb-3">
                         <div class="card shadow-lg rounded-0 p-5 bg-white text-center border-0">
                             <i class="ti-harddrives ml-auto mr-auto round-lg-btn text-white bg-current font-xxl text-center"></i>
-                            <h2 class="fw-700 font-sm mt-4">Find what you want</h2>
-                            <p class="font-xsss fw-500 text-grey-500 lh-26 mt-2">We are digital agency, a small design agency based in paris as i was groping to remove through language.</p>
+                            <h2 class="fw-700 font-sm mt-4">How we do</h2>
+                            <p class="font-xsss fw-500 text-grey-500 lh-26 mt-2">Our Network is bringing prepaid and digital commerce together for retailers, brands, consumers and corporate incentives.</p>
                         </div>
                     </div>
 
@@ -336,7 +360,7 @@
                         </div>   
                     </div>              
                 </div>
-                <div class="row mt-5 pt-5">
+                <!-- <div class="row mt-5 pt-5">
                     <div class="col-lg-6"><img src="https://via.placeholder.com/570x600.png" alt="app-image" class="img-fluid"></div>
                     <div class="col-lg-4 offset-lg-1 pt-5 mt-5">
                         <h4 class="text-uppercase text-current font-xsss fw-600 mb-3 mt-5">Download & Enjoy</h4>
@@ -345,115 +369,46 @@
                         <a href="#"><img src="https://via.placeholder.com/210x60.png" alt="icon" class="w175 mb-xs-2"></a>
                         <a href="#"><img src="https://via.placeholder.com/210x60.png" class="w175 p-md--2"></a>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
 
         <div class="faq-wrapper pt-4 pb-0">
             <div class="container">
                 <div class="row">
-                    <div class="col-lg-12 text-center mb-lg-5 mb-4 pb-3">
-                        <h2 class="text-grey-900 fw-400 display1-size">Frequently Asked Question</h2>
-                    </div>
-                </div>
-                <div class="row justify-content-center">
-                    <div class="col-xl-8">
-                        <div id="accordion" class="accordion">
-                          <div class="card border-0 mb-4">
-                            <div class="card-header" id="headingOne">
-                              <h5 class="mb-0">
-                                <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                  I have read and agree to the Privacy Policy and Terms &amp; Conditions*
-                                </button>
-                              </h5>
-                            </div>
-
-                            <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
-                              <div class="card-body">
-                                <p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.</p>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="card border-0 mb-4">
-                            <div class="card-header" id="headingTwo">
-                              <h5 class="mb-0">
-                                <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                                  You can easily build a page without any design or custom coding.
-                                </button>
-                              </h5>
-                            </div>
-                            <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
-                              <div class="card-body">
-                                <p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.</p>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="card border-0 mb-4">
-                            <div class="card-header" id="headingFour">
-                              <h5 class="mb-0">
-                                <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                                  I have read and agree to the Privacy Policy and Terms &amp; Conditions*
-                                </button>
-                              </h5>
-                            </div>
-
-                            <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordion">
-                              <div class="card-body">
-                                <p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.</p>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="card border-0 mb-4">
-                            <div class="card-header" id="headingFive">
-                              <h5 class="mb-0">
-                                <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                                  I have read and agree to the Privacy Policy and Terms &amp; Conditions*
-                                </button>
-                              </h5>
-                            </div>
-
-                            <div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#accordion">
-                              <div class="card-body">
-                                <p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.</p>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="card border-0 mb-4">
-                            <div class="card-header" id="headingSix">
-                              <h5 class="mb-0">
-                                <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
-                                  I have read and agree to the Privacy Policy and Terms &amp; Conditions*
-                                </button>
-                              </h5>
-                            </div>
-
-                            <div id="collapseSix" class="collapse" aria-labelledby="headingSix" data-parent="#accordion">
-                              <div class="card-body">
-                                <p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.</p>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="card border-0 mb-4">
-                            <div class="card-header" id="headingThree">
-                              <h5 class="mb-0">
-                                <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                                  Stream that converts more visitors than any website.
-                                </button>
-                              </h5>
-                            </div>
-                            <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
-                              <div class="card-body">
-                                <p>Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.</p>
-                              </div>
-                            </div>
-                          </div>
+                    <div class="col-md-12">
+                        <div class="filters">
+                            <ul>
+                            <li class="is-checked" data-filter="*">All</li>          
+                            <li data-filter=".bank_cards">Bank Cards</li>
+                            <li data-filter=".gift_cards">Gift Cards</li>
+                            </ul>
                         </div>
                     </div>
-                </div>
+                    <div class="col-md-12">
+                        <div class="rows grid data-isotope='{ "itemSelector": ".grid-item", "masonry": { "columnWidth": 200 } }'">
+                            <div class="col-md-4 grid-item gift_cards" data-category="gift_cards">
+                                <img src="{{URL::asset('/images/bigbasket_card.png')}}" alt="gift card" height="300" width="300">
+                            </div>
+                            <div class="col-md-4 grid-item bank_cards" data-category="bank_cards">
+                                <img src="{{URL::asset('/images/ajio_card.png')}}" alt="gift card" height="300" width="300">
+                            </div>
+                            <div class="col-md-4 grid-item bank_cards" data-category="bank_cards">
+                                <img src="{{URL::asset('/images/flipkart_card.png')}}" alt="gift card" height="300" width="300">
+                            </div>
+                            <div class="col-md-4 grid-item gift_cards" data-category="gift_cards">
+                                <img src="{{URL::asset('/images/amazon_card.png')}}" alt="gift card" height="300" width="300">
+                            </div>      
+                        </div>
+                    </div>
+                    <div class="col-md-12 text-center">
+                        <button type="button" class="btn btn-link">Show More</button>
+                    </div>
+                </div>   
             </div>
         </div>
-
-        <div class="count-wrapper pt-lg--7 pb-lg--7 pb-5 pt-5">
+        <br>
+        <!-- <div class="count-wrapper pt-lg--7 pb-lg--7 pb-5 pt-5">
             <div class="container">
                 <div class="row">
                     <div class="col-lg-4 text-center">
@@ -470,39 +425,305 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div class="brand-wrapper pt-2 pb-7">
             <div class="container">
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="brand-slider owl-carousel owl-theme overflow-visible dot-none">
-                            <div class="owl-items text-center"><img src="https://via.placeholder.com/100x50.png" alt="icon" class="w100 ml-auto mr-auto"></div>
-                            <div class="owl-items text-center"><img src="https://via.placeholder.com/100x50.png" alt="icon" class="w100 ml-auto mr-auto"></div>
-                            <div class="owl-items text-center"><img src="https://via.placeholder.com/100x50.png" alt="icon" class="w100 ml-auto mr-auto"></div>
-                            <div class="owl-items text-center"><img src="https://via.placeholder.com/100x50.png" alt="icon" class="w100 ml-auto mr-auto"></div>
-                            <div class="owl-items text-center"><img src="https://via.placeholder.com/100x50.png" alt="icon" class="w100 ml-auto mr-auto"></div>
-                            <div class="owl-items text-center"><img src="https://via.placeholder.com/100x50.png" alt="icon" class="w100 ml-auto mr-auto"></div>
+                            <div class="owl-items text-center"><img src="{{URL::asset('/images/britannia-logo.png')}}" alt="icon" class="w100 ml-auto mr-auto"></div>
+                            <div class="owl-items text-center"><img src="{{URL::asset('/images/GIFTS_GIGGLES.png')}}" alt="icon" class="w100 ml-auto mr-auto"></div>
+                            <div class="owl-items text-center"><img src="{{URL::asset('/images/tomtom.png')}}" alt="icon" class="w100 ml-auto mr-auto"></div>
+                            <div class="owl-items text-center"><img src="{{URL::asset('/images/cashfin.png')}}" alt="icon" class="w100 ml-auto mr-auto"></div>
+                            <div class="owl-items text-center"><img src="{{URL::asset('/images/onstage.png')}}" alt="icon" class="w100 ml-auto mr-auto"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        
-
+       
 @endsection
 
 @push('scripts')
    
         <script>
                 $(document).ready(function(){
-                    $('.selectpicker').selectpicker();
+                    $('.operator').select2({
+                        placeholder: "Select Operator"
+                    });
+
+                    // for states
+                    $('.select-state').select2({
+                        placeholder: "Select State"
+                    }); 
+
+                    // for electric board
+                    $('.select-electric-board').select2({
+                        placeholder: "Select Electric Board"
+                    });
+                    
+                    // for dth operator
+                    $('.dth-operator').select2({
+                        placeholder: "Select Operator"
+                    });
+
+                    // for gas bill
+                    $('.gas-bill').select2({
+                        placeholder: "Gas Provider"
+                    });
+
                     $('#view-plan').on('click',function() {
                         var bool=$(".plan-details").is(":hidden")
                         $(".plan-details").toggleClass('hidden')
                         $(".plan-details").attr('hidden',!bool)
                     });
                 });
-        </script> 
+    //----------------------------------- for isotope filter for cards-----------------------------
+                var $grid = $('.grid').isotope({
+                // options
+                itemSelector: '.grid-item',
+                layoutMode: 'fitRows',
+                });
+
+                // change is-checked class on buttons
+                var $buttonGroup = $('.filters');
+                $buttonGroup.on( 'click', 'li', function( event ) {
+                $buttonGroup.find('.is-checked').removeClass('is-checked');
+                var $button = $( event.currentTarget );
+                $button.addClass('is-checked');
+                var filterValue = $button.attr('data-filter');
+                $grid.isotope({ filter: filterValue });
+                });
+    //-------------------------------------- end isotope filter for cards----------------------------
+
+    //------------------------------ for slider --------------------------------------------
+    (function ($) {
+        "use strict";
+        $.fn.sliderResponsive = function (settings) {
+            var set = $.extend(
+            {
+                slidePause: 5000,
+                fadeSpeed: 800,
+                autoPlay: "on",
+                showArrows: "off",
+                hideDots: "off",
+                hoverZoom: "on",
+                titleBarTop: "off"
+            },
+            settings
+            );
+
+            var $slider = $(this);
+            var size = $slider.find("> div").length; //number of slides
+            var position = 0; // current position of carousal
+            var sliderIntervalID; // used to clear autoplay
+
+            // Add a Dot for each slide
+            $slider.append("<ul></ul>");
+            $slider.find("> div").each(function () {
+            $slider.find("> ul").append("<li></li>");
+            });
+
+            // Put .show on the first Slide
+            $slider.find("div:first-of-type").addClass("show");
+
+            // Put .showLi on the first dot
+            $slider.find("li:first-of-type").addClass("showli");
+
+            //fadeout all items except .show
+            $slider.find("> div").not(".show").fadeOut();
+
+            // If Autoplay is set to 'on' than start it
+            if (set.autoPlay === "on") {
+            startSlider();
+            }
+
+            // If showarrows is set to 'on' then don't hide them
+            if (set.showArrows === "on") {
+            $slider.addClass("showArrows");
+            }
+
+            // If hideDots is set to 'on' then hide them
+            if (set.hideDots === "on") {
+            $slider.addClass("hideDots");
+            }
+
+            // If hoverZoom is set to 'off' then stop it
+            if (set.hoverZoom === "off") {
+            $slider.addClass("hoverZoomOff");
+            }
+
+            // If titleBarTop is set to 'on' then move it up
+            if (set.titleBarTop === "on") {
+            $slider.addClass("titleBarTop");
+            }
+
+            // function to start auto play
+            function startSlider() {
+            sliderIntervalID = setInterval(function () {
+                nextSlide();
+            }, set.slidePause);
+            }
+
+            // on mouseover stop the autoplay
+            $slider.mouseover(function () {
+            if (set.autoPlay === "on") {
+                clearInterval(sliderIntervalID);
+            }
+            });
+
+            // on mouseout starts the autoplay
+            $slider.mouseout(function () {
+            if (set.autoPlay === "on") {
+                startSlider();
+            }
+            });
+
+            //on right arrow click
+            $slider.find("> .right").click(nextSlide);
+
+            //on left arrow click
+            $slider.find("> .left").click(prevSlide);
+
+            // Go to next slide
+            function nextSlide() {
+            position = $slider.find(".show").index() + 1;
+            if (position > size - 1) position = 0;
+            changeCarousel(position);
+            }
+
+            // Go to previous slide
+            function prevSlide() {
+            position = $slider.find(".show").index() - 1;
+            if (position < 0) position = size - 1;
+            changeCarousel(position);
+            }
+
+            //when user clicks slider button
+            $slider.find(" > ul > li").click(function () {
+            position = $(this).index();
+            changeCarousel($(this).index());
+            });
+
+            //this changes the image and button selection
+            function changeCarousel() {
+            $slider.find(".show").removeClass("show").fadeOut();
+            $slider.find("> div").eq(position).fadeIn(set.fadeSpeed).addClass("show");
+            // The Dots
+            $slider.find("> ul").find(".showli").removeClass("showli");
+            $slider.find("> ul > li").eq(position).addClass("showli");
+            }
+
+            return $slider;
+        };
+    })(jQuery);
+    $("#slider1").sliderResponsive({
+        // Using default everything
+        // slidePause: 5000,
+        // fadeSpeed: 800,
+        // autoPlay: "on",
+        // showArrows: "off",
+        // hideDots: "off",
+        // hoverZoom: "on",
+        // titleBarTop: "off"
+    });
+    // ------------------------------------ end Slider ------------------------------
+
+    // ------------------------------------ for amount display ----------------------
+    $('.amount').click(function(){
+        $(".prepared-amount").val($(this).val());
+    })
+
+    </script> 
+
+    <!-- Other transaction Modal -->
+    <div class="modal bottom fade" id="Modalmore" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content border-0">
+                    <div class="row">
+                        <div class="col-md-4 more-card">
+                            <div class="owl-items text-center">
+                                <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
+                                    <i class="fa-solid fa-gift mt-4 font-xl"></i>
+                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Gift Cards</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 more-card">
+                            <div class="owl-items text-center">
+                                <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
+                                    <i class="fa-solid fa-money-bill-trend-up mt-4 font-xl"></i>
+                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Bank Cards</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 more-card">
+                            <div class="owl-items text-center">
+                                <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
+                                    <i class="fa-solid fa-money-check mt-4 font-xl"></i>
+                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Mutual Funds</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 more-card">
+                            <div class="owl-items text-center">
+                                <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
+                                <i class="fa-solid fa-water mt-4 font-xl"></i>
+                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Water</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 more-card">
+                            <div class="owl-items text-center">
+                                <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
+                                    <i class="fa-solid fa-scroll mt-4 font-xl"></i>
+                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Insurance</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 more-card">
+                            <div class="owl-items text-center">
+                                <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
+                                    <i class="fa-solid fa-landmark mt-4 font-xl"></i>
+                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Loan Payment</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 more-card">
+                            <div class="owl-items text-center">
+                                <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
+                                    <i class="fa-solid fa-car mt-4 font-xl"></i>
+                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">FASTag</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 more-card">
+                            <div class="owl-items text-center">
+                                <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
+                                    <i class="fa-solid fa-tv mt-4 font-xl"></i>
+                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Cable TV</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 more-card">
+                            <div class="owl-items text-center">
+                                <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
+                                    <a href="{{ url('all_transaction') }}" class="all-category">
+                                    <i class="fa-solid fa-table-cells-large mt-4 font-xl"></i>
+                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">All</h4></a>
+                                    <!-- <i class="fa-regular fa-credit-card mt-4 font-xl text-current"></i>
+                                    <h4 class="font-xsss fw-700 mt-3 text-grey-900">Credit Card</h4> -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 @endpush

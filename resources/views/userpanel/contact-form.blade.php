@@ -81,33 +81,25 @@
                             </form>
                         </div>
                     </div>
-                    <div class="col-lg-10 offset-lg-1 col-xl-8 offset-xl-2">
+                    <div class="col-lg-12 offset-lg-1 col-xl-12 offset-xl-1">
                         <div class="row">
                             <div class="col-lg-4 col-md-4 md-mb25">
-                                <h4 class="text-grey-900 fw-600 font-xl ls-2">London</h4>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">41 madison ave, floor 24 <br> New Work,</h5>
-                                <div class="w30 border-bottom mt-4 mb-4"></div>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4 mb-0">+4232 4234 3232</h5>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-0">support@mail.com</h5>
                                 
+                                <!-- <i class="fa-solid fa-map-location-dot font-md float-left mr-3 contact-us"></i> -->
+                                <h4 class="text-grey-900 fw-600 font-xl ls-2">Address</h4>
+                                <h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">Second floor Satwant villa 2 Aarey Road, <br/>next to Goregaon, railway subway, Goregaon West, <br/>Mumbai, Maharashtra 400063</h4>
                             </div>
 
                             <div class="col-lg-4 col-md-4 md-mb25">
-                                <h4 class="text-grey-900 fw-600 font-xl ls-2">Paris</h4>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">41 madison ave, floor 24 <br> New Work,</h5>
-                                <div class="w30 border-bottom mt-4 mb-4"></div>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4 mb-0">+4232 4234 3232</h5>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-0">support@mail.com</h5>
-                                
+                                <!-- <i class="fa-solid fa-map-location-dot font-md float-left mr-3 contact-us"></i> -->
+                                <h4 class="text-grey-900 fw-600 font-xl ls-2">Email Us</h4>
+                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4 mb-0">amazeindia31@gmail.com</h5>
                             </div>
 
                             <div class="col-lg-4 col-md-4 md-mb25">
-                                <h4 class="text-grey-900 fw-600 font-xl ls-2">Beijing</h4>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">41 madison ave, floor 24 <br> New Work,</h5>
-                                <div class="w30 border-bottom mt-4 mb-4"></div>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4 mb-0">+4232 4234 3232</h5>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-0">support@mail.com</h5>
-                                
+                                <!-- <i class="fa-solid fa-map-location-dot font-md float-left mr-3 contact-us"></i> -->
+                                <h4 class="text-grey-900 fw-600 font-xl ls-2">Conatct Us</h4>
+                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-0">+91-98211 99497</h5>
                             </div>
                         </div>
                     </div>

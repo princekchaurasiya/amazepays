@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
+Route::group(['prefix' => 'admin'], function () {
+    Voyager::routes();
+});
 Route::get('/', function () {
     return view('userpanel/index');
 });
@@ -21,4 +23,16 @@ Route::get('/about', function () {
 });
 Route::get('/contact_us', function () {
     return view('userpanel/contact-form');
+});
+Route::get('/f&q', function () {
+    return view('userpanel/f&q');
+});
+Route::get('/terms_of_use', function () {
+    return view('userpanel/terms_of_use');
+});
+Route::get('/private_policy', function () {
+    return view('userpanel/private_policy');
+});
+Route::get('/all_transaction', function () {
+    return view('userpanel/all_transaction');
 });

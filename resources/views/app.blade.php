@@ -13,13 +13,13 @@
     <link rel="stylesheet" href="css/style.css">
 
 
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" />
 
     <!-- Bootstrap Stylesheet -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.0/css/bootstrap-grid.min.css" />
 
 <!-- Bootstrap Select Stylesheet -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/css/bootstrap-select.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
 
 
@@ -50,14 +50,15 @@
                     </div>
                     <div class="col-12 d-none d-lg-block">
                         <ul class="list-inline list-item-style mt-0 float-left pl-1">
-                            <li class="list-inline-item pl-0"><a href="#">BECOME AN AGENT</a></li>
-                            <li class="list-inline-item"><a href="#">PRIVACY</a></li>
-                            <li class="list-inline-item"><a href="#">CUSTOMER SERVICE </a></li>                            
+                            <!-- <li class="list-inline-item pl-0"><a href="#">BECOME AN AGENT</a></li> -->
+                            <li class="list-inline-item pl-0"><a href="#">(+1)866-540-3229</a></li>                         
                         </ul>
 
                         <ul class="list-inline list-item-style mt-0 float-right">
-                            <li class="list-inline-item"><a href="#"><i class="ti-location-pin mr-2"></i>Store Locator</a></li>
-                            <li class="list-inline-item"><a href="#"><i class="ti-user mr-2"></i> My Account</a></li>
+                            <li class="list-inline-item"><a href="#">PRIVACY</a></li>
+                            <li class="list-inline-item"><a href="#">CUSTOMER SERVICE </a></li>  
+                            <!-- <li class="list-inline-item"><a href="#"><i class="ti-location-pin mr-2"></i>Store Locator</a></li> -->
+                            <!-- <li class="list-inline-item"><a href="#"><i class="ti-user mr-2"></i> My Account</a></li> -->
                         </ul>
                     </div>
                 </div>
@@ -67,7 +68,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-lg-8 navbar">
-                         <a href="index.html" class="logo"><h1 class="fredoka-font ls-3 fw-700 text-current display1-size">Gift&Giggles</h1></a>
+                         <a href="/" class="logo"><h1 class="fredoka-font ls-3 fw-700 text-current display1-size">Amazepays</h1></a>
                         <button class="navbar-toggler" type="button" data-toggle="collapse"
                             data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
                             aria-expanded="false" aria-label="Toggle navigation">
@@ -78,19 +79,20 @@
                             <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
                                 <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Services <i class="ti-angle-down"></i></a>
                                     <div class="dropdown-menu">
-                                        <a class="dropdown-item" href="#">Service 1</a>
-                                        <a class="dropdown-item" href="#">Service 2</a>
+                                        <a class="dropdown-item" href="#">Money Transfer</a>
+                                        <a class="dropdown-item" href="#">Bill payment</a>
                                         
                                     </div>
                                 </li>
                                 <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Products <i class="ti-angle-down"></i></a>
                                     <div class="dropdown-menu">
-                                        <a class="dropdown-item" href="#">Product 1</a>
-                                        <a class="dropdown-item" href="#">Product 2</a>
+                                        <a class="dropdown-item" href="#">Gift Cards</a>
+                                        <a class="dropdown-item" href="#">Bank Gift Cards</a>
                                     </div>
                                 </li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url('about') }}">About</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url('contact_us') }}">Contact</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ url('f&q') }}">F&Q</a></li>
                             </ul>
                         </div>
                     </div>
@@ -112,49 +114,39 @@
                     <div class="col-sm-12">
                         <div class="row">
                             <div class="col-md-12 col-lg-4 col-sm-9 col-xs-12 md-mb25">
-                                <a href="index.html" class="logo"><img src="images/logo.png" alt="logo"></a>
-                                <p class="w-100 mt-lg-5 mt-4">41 madison ave, floor 24 new work, <br>NY 10010 1-877-932-7111 <br> support@mail.com</p>
-                                <ul class="list-inline">
-                                <li class="list-inline-item mr-3"><a href="#"><i class="ti-facebook"></i></a></li>
-                                <li class="list-inline-item mr-3"><a href="#"><i class="ti-twitter-alt"></i></a></li>
-                                <li class="list-inline-item mr-3"><a href="#"><i class="ti-linkedin"></i></a></li>
-                                <li class="list-inline-item"><a href="#"><i class="ti-instagram"></i></a></li>
-                            </ul>
+                                <!-- <a href="index.html" class="logo"><img src="images/logo.png" alt="logo"></a> -->
+                                <a href="/" class="logo"><h1 class="fredoka-font ls-3 fw-700 text-current display1-size">Amazepays</h1></a>
+                                <p class="w-100 mt-lg-5 mt-4">293/2330,Ashirwad CHS Ltd.<br/> Motilal Nagar, M.G.Road, Opp. Ganesh Maidan, Goregoan (West) <br/> Mumbai – 400104</p>                               
                             </div>
-                            <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6 md-mb25">
-                                <h5>Language</h5>
-                                <ul>
-                                    <li><a href="#">English</a></li>
-                                    <li><a href="#">Spanish</a></li>
-                                    <li><a href="#">Arab</a></li>
-                                    <li><a href="#">Urdu</a></li>
-                                    <li><a href="#">Brazil</a></li>
-                                </ul>
-                            </div>
+                            
                             <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
                                 <h5>Channel</h5>
                                 <ul>
-                                    <li><a href="#">Makeup</a></li>
-                                    <li><a href="#">Dresses</a></li>
-                                    <li><a href="#">Girls</a></li>
-                                    <li><a href="#">Sandals</a></li>
-                                    <li><a href="#">Headphones</a></li>
+                                    <li><a href="#">Gift Cards</a></li>
+                                    <li><a href="#">bank Cards</a></li>
+                                    <li><a href="#">Vouchers</a></li>
                                 </ul>
                             </div>
                             <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
                                 <h5>About</h5>
                                 <ul>
                                     <li><a href="#">FAQ</a></li>
-                                    <li><a href="#">Term of use</a></li>
-                                    <li><a href="#">Privacy Policy</a></li>
-                                    <li><a href="#">Feedback</a></li>
-                                    <li><a href="#">Careers</a></li>
+                                    <li><a href="{{ url('terms_of_use') }}">Term of use</a></li>
+                                    <li><a href="{{ url('private_policy') }}">Privacy Policy</a></li>
                                 </ul>
                             </div>
                             <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
                                 <h5 class="mb-3">Office</h5>
-                                <p style="width: 100%;">41 madison ave, floor 24 new work, NY 10010 <br>1-877-932-7111</p>
-                                <p style="width: 100%;">41 madison ave, floor 24 new work, NY 10010 <br>1-877-932-7111</p>
+                                <p style="width: 100%;">293/2330,Ashirwad CHS Ltd., Motilal Nagar, M.G.Road, Opp. Ganesh Maidan, Goregoan (West), Mumbai – 400104</p>
+                            </div>
+                            <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6 md-mb25">
+                                <h5 class="mb-3">Follow us on</h5>
+                                <ul class="list-inline">
+                                    <li class="list-inline-item mr-3"><a href="#"><i class="ti-facebook"></i></a></li>
+                                    <li class="list-inline-item mr-3"><a href="#"><i class="ti-twitter-alt"></i></a></li>
+                                    <li class="list-inline-item mr-3"><a href="#"><i class="ti-linkedin"></i></a></li>
+                                    <li class="list-inline-item"><a href="#"><i class="ti-instagram"></i></a></li>
+                                </ul>
                             </div>
                         </div>
                         <div class="middle-footer mt-5 pt-4"></div>
@@ -164,7 +156,7 @@
                         <p class="copyright-text">© 2021 copyright. All rights reserved.</p>
                     </div>
                     <div class="col-sm-6 col-xs-12 text-right">
-                        <p class="copyright-text float-right">Design by <a href="#" class="">uitheme</a></p>
+                        <p class="copyright-text float-right">Design & Develop by <a href="#" class="">Toutle</a></p>
                     </div>
                 </div>
             </div>
@@ -252,91 +244,7 @@
         </div>
     </div>
 
-    <!-- Other transaction Modal -->
-    <div class="modal bottom fade" id="Modalmore" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content border-0">
-                <div class="row">
-                    <div class="col-md-4 more-card">
-                        <div class="owl-items text-center">
-                            <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
-                                <i class="ti-world mt-4 font-xl text-current"></i>
-                                <h4 class="font-xsss fw-700 mt-3 text-grey-900">Service 1</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 more-card">
-                        <div class="owl-items text-center">
-                            <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
-                                <i class="ti-world mt-4 font-xl text-current"></i>
-                                <h4 class="font-xsss fw-700 mt-3 text-grey-900">Service 2</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 more-card">
-                        <div class="owl-items text-center">
-                            <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
-                                <i class="ti-world mt-4 font-xl text-current"></i>
-                                <h4 class="font-xsss fw-700 mt-3 text-grey-900">Service 3</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4 more-card">
-                        <div class="owl-items text-center">
-                            <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
-                                <i class="ti-world mt-4 font-xl text-current"></i>
-                                <h4 class="font-xsss fw-700 mt-3 text-grey-900">Service 1</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 more-card">
-                        <div class="owl-items text-center">
-                            <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
-                                <i class="ti-world mt-4 font-xl text-current"></i>
-                                <h4 class="font-xsss fw-700 mt-3 text-grey-900">Service 2</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 more-card">
-                        <div class="owl-items text-center">
-                            <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
-                                <i class="ti-world mt-4 font-xl text-current"></i>
-                                <h4 class="font-xsss fw-700 mt-3 text-grey-900">Service 3</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4 more-card">
-                        <div class="owl-items text-center">
-                            <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
-                                <i class="ti-world mt-4 font-xl text-current"></i>
-                                <h4 class="font-xsss fw-700 mt-3 text-grey-900">Service 1</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 more-card">
-                        <div class="owl-items text-center">
-                            <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
-                                <i class="ti-world mt-4 font-xl text-current"></i>
-                                <h4 class="font-xsss fw-700 mt-3 text-grey-900">Service 2</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 more-card">
-                        <div class="owl-items text-center">
-                            <div class="card w-100 p-4 border-0 shadow-md rounded-lg">
-                                <i class="ti-world mt-4 font-xl text-current"></i>
-                                <h4 class="font-xsss fw-700 mt-3 text-grey-900">Service 3</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+   
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <!-- Bootstrap JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.0/js/bootstrap.min.js"></script>
@@ -344,15 +252,18 @@
     <!-- Bootstrap Select Main JavaScript -->
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
-
+    
     <script src="js/plugin.js"></script>
     <script src="js/scripts.js"></script>
+    
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta3/js/bootstrap-select.min.js"></script> -->
     <!-- for filter select -->
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js"></script>
     @stack('scripts')
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/js/bootstrap-select.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
 </body>
 
 </html>

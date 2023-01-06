@@ -18,6 +18,14 @@ Route::group(['prefix' => 'admin'], function () {
 Route::get('/', function () {
     return view('userpanel/index');
 });
+Route::get('/gift_card_detail_page/{id}', function () {
+    return view('userpanel/gift_card_detail_page');
+})->name('gift_card_detail_page');
+
+Route::get('/checkout', function () {
+    return view('userpanel/checkout');
+})->name('checkout');
+
 Route::get('/about', function () {
     return view('userpanel/about');
 });

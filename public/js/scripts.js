@@ -226,10 +226,10 @@ $(document).ready(function() {
                 items:3,
             },
             1000:{
-                items:4,
+                items:3,
             },
             1200:{
-                items:5,
+                items:4,
             }
             
         }
@@ -298,6 +298,27 @@ $(document).ready(function() {
             },
             1200:{
                 items:6,
+            }
+            
+        }
+    })
+    $('.theme-slider').owlCarousel({
+        loop:true,
+        margin:15,
+        nav:true,
+        autoplay:false,  
+        dots:false,
+        items:5,
+        navText:['<i class="ti-angle-left"></i>','<i class="ti-angle-right"></i>'],
+        responsive:{
+            0:{
+                items:2,
+            },
+            600:{
+                items:3,
+            },
+            1200:{
+                items:4,
             }
             
         }

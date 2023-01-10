@@ -303,7 +303,7 @@ $(document).ready(function() {
         }
     })
     $('.theme-slider').owlCarousel({
-        loop:true,
+        loop:false,
         margin:15,
         nav:true,
         autoplay:false,  

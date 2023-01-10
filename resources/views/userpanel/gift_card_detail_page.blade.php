@@ -102,7 +102,7 @@
                     <span class="font-xsssss fw-400">Preview</span>
                     <div class="col-lg-6 preview">
                         
-                        <img class="mt-2" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
+                        <img class="mt-2" src="" alt="Avatar" style="width:100%;">
                         <div class="">
                             <div class="container"> 
                                 <h5 class="text-uppercase font-xssss fw-500 mb-4 my-4">Hi Receiver,</h5>
@@ -134,27 +134,27 @@
                         
                             <div class="col-lg-12">
                                 <div class="theme-slider owl-carousel owl-theme dot-none right-nav pb-4">
-                                    <div class="owl-items text-center">
+                                    <div class="owl-items text-center active" onclick="showChild('playstore')">
                                         <div class="card w-100 text-left border-0 shadow-md rounded-lg">
                                            <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
                                         </div>
                                     </div>
-                                    <div class="owl-items text-center">
+                                    <div class="owl-items text-center active" onclick="showChild('gpay')">
                                         <div class="card w-100 text-left border-0 shadow-md rounded-lg">
                                             <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
                                         </div>
                                     </div>
-                                    <div class="owl-items text-center">
+                                    <div class="owl-items text-center active">
                                         <div class="card w-100 text-left border-0 shadow-md rounded-lg">
                                             <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
                                         </div>
                                     </div>
-                                    <div class="owl-items text-center">
+                                    <div class="owl-items text-center active">
                                         <div class="card w-100 text-left border-0 shadow-md rounded-lg">
                                             <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
                                         </div>
                                     </div>
-                                    <div class="owl-items text-center">
+                                    <div class="owl-items text-center active">
                                         <div class="card w-100 text-left border-0 shadow-md rounded-lg">
                                             <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
                                         </div>
@@ -164,30 +164,39 @@
                         </div>
                         <div class="row">
                             <div class="col-lg-12">
-                                <div class="theme-slider owl-carousel owl-theme dot-none right-nav mt-5">
-                                    <div class="owl-items text-center">
+                                <div class="theme-slider owl-carousel owl-theme dot-none right-nav mt-5 child child_playstore" style="display:none;">
+                                    <div class="owl-items text-center child-active">
+                                        <div class="card w-100 text-left border-0 shadow-md rounded-lg thumbnail">
+                                           <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
+                                        </div>
+                                    </div>
+                                    <div class="owl-items text-center child-active">
+                                        <div class="card w-100 text-left border-0 shadow-md rounded-lg thumbnail">
+                                           <img class="" src="{{URL::asset('/images/phone_pay.png')}}" alt="Avatar" style="width:100%;"> 
+                                        </div>
+                                    </div>
+                                   
+                                    <div class="owl-items text-center child-active">
                                         <div class="card w-100 text-left border-0 shadow-md rounded-lg">
                                            <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
                                         </div>
                                     </div>
-                                    <div class="owl-items text-center">
+                                    <div class="owl-items text-center child-active">
                                         <div class="card w-100 text-left border-0 shadow-md rounded-lg">
-                                            <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
+                                           <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
                                         </div>
                                     </div>
-                                    <div class="owl-items text-center">
+                                    <div class="owl-items text-center child-active">
                                         <div class="card w-100 text-left border-0 shadow-md rounded-lg">
-                                            <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
+                                           <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
                                         </div>
                                     </div>
-                                    <div class="owl-items text-center">
+                                    
+                                </div>
+                                <div class="theme-slider owl-carousel owl-theme dot-none right-nav mt-5 child child_gpay" style="display:none;">
+                                    <div class="owl-items text-center child-active">
                                         <div class="card w-100 text-left border-0 shadow-md rounded-lg">
                                             <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
-                                        </div>
-                                    </div>
-                                    <div class="owl-items text-center">
-                                        <div class="card w-100 text-left border-0 shadow-md rounded-lg">
-                                            <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
                                         </div>
                                     </div>
                                 </div>
@@ -266,33 +275,68 @@
     </div>
     @push('scripts')
         <script>
-        // Gift Send Option
-            $('#customRadio').click(function(){
-                $('.gifting-details').removeClass('d-none');
-                $('.add-gift-cards').addClass('d-none');
-            });
-            $('#customRadio1').click(function(){
-                $('.add-gift-cards').removeClass('d-none');
-                $('.gifting-details').addClass('d-none');
-            });
+            // Preview Image on page load
+                $(document).ready(function(){
+                    $('div>.owl-items:first').addClass('border-black');
+                    $('.child:first').css("display","block");
+                    $('.child-active:first').addClass('border-black');
+                    $('.preview > img').attr("src",$('.child-active:first').find('img').attr('src'));           
+                });  
+            // end Preview Image on page load
 
-        // Delivery Mode
-            $("input[name='delivery_mode']").change(function(){
-                var delivery_mode = $(this).val();
-                switch (delivery_mode) { 
-                    case 'email': 
-                        $('.receiver-email').removeClass('d-none');
-                        $('.receiver-mobile').addClass('d-none');
-                        break;
-                    case 'mobile': 
-                        $('.receiver-email').addClass('d-none');
-                        $('.receiver-mobile').removeClass('d-none');
-                        break;
-                    default:
-                        $('.receiver-email').removeClass('d-none');
-                        $('.receiver-mobile').removeClass('d-none');
+            // Gift Send Option
+                $('#customRadio').click(function(){
+                    $('.gifting-details').removeClass('d-none');
+                    $('.add-gift-cards').addClass('d-none');
+                });
+                $('#customRadio1').click(function(){
+                    $('.add-gift-cards').removeClass('d-none');
+                    $('.gifting-details').addClass('d-none');
+                });
+
+            // Delivery Mode
+                $("input[name='delivery_mode']").change(function(){
+                    var delivery_mode = $(this).val();
+                    switch (delivery_mode) { 
+                        case 'email': 
+                            $('.receiver-email').removeClass('d-none');
+                            $('.receiver-mobile').addClass('d-none');
+                            break;
+                        case 'mobile': 
+                            $('.receiver-email').addClass('d-none');
+                            $('.receiver-mobile').removeClass('d-none');
+                            break;
+                        default:
+                            $('.receiver-email').removeClass('d-none');
+                            $('.receiver-mobile').removeClass('d-none');
+                    }
+                });
+
+            // Preview Image   
+                $('.active').on('click',function(){
+                    $('.active').removeClass('border-black');
+                    $(this).addClass('border-black');
+                });
+                
+                function showChild(className) {
+                    $('.child').css("display","none");
+                    $('.child_' + className).css("display","block");
+                    $('.child-active').removeClass('border-black');
+                    $('.child').find('.child-active:first').addClass('border-black');
+                    $('.preview > img').attr("src",$('.child').find('.child-active:first').find('img').attr('src'));                
                 }
-            });
+
+                // $('.thumbnail').click(function() {
+                //     var $thumb = $(this);
+                //     $('.preview > img').attr("src",$thumb.find('img').attr('src'));
+                // });             
+                $('.child-active').click(function(){
+                    $('.child-active').removeClass('border-black');
+                    $(this).addClass('border-black');
+                    //var $thumb = $(this);
+                    $('.preview > img').attr("src",$(this).find('img').attr('src'));
+                });
+            // end Preview Image 
         </script>
     @endpush
 @endsection

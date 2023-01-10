@@ -89,7 +89,7 @@
                                                 </div>
                                                 <div class="row coupan-code">
                                                     <div class="col-md-12 col-sm-4 col-xs-12">
-                                                        <form class="coupan-code-form"><input type="text" class="coupan-code-input" placeholder="Enter Coupan Code"><a href="#" class="bg-current border-0 text-white apply-coupan-button">Button</a></form>
+                                                        <form class="coupan-code-form"><input type="text" class="coupan-code-input" placeholder="Enter Coupan Code" id="coupan-code"><a href="#" id="apply-coupan"class="bg-current border-0 text-white apply-coupan-button">Button</a></form>
                                                     </div>
                                                 </div>
                                                 <hr>
@@ -111,6 +111,41 @@
         </div>
  
     @push('scripts')
-    
+        <script type="text/javascript">
+            $('#apply-coupan').click( function(e) {
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                    // headers: {
+                    //     'X-CSRF-TOKEN': jQuery('meta[name="csrf-token"]').attr('content')
+                    // }
+                });
+                e.preventDefault();
+                var formData = new FormData();
+                formData.append( 'coupan',$('#coupan-code').val());
+                 
+                
+                var type = "POST";
+                var ajaxurl = "{{url('/check-data')}}";
+                $.ajax({
+                    type: type,
+                    url: ajaxurl,
+                    contentType: 'application/json',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    success: function (data) {
+                        debugger;
+                        console.log(data);
+                    },
+                    error: function (data) {
+                        console.log(data);
+                    }
+                });
+                return false;
+            });
+        </script>
     @endpush
 @endsection

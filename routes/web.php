@@ -26,6 +26,21 @@ Route::get('/checkout', function () {
     return view('userpanel/checkout');
 })->name('checkout');
 
+
+Route::post('/check-data', [App\Http\Controllers\CommonController::class, 'checkData'])->name('check-data');
+
+Route::get('/profile', function () {
+    return view('userpanel/profile');
+})->name('profile');
+
+Route::get('/my-order', function () {
+    return view('userpanel/my-order');
+})->name('my-order');
+
+Route::get('/change-password', function () {
+    return view('userpanel/change-password');
+})->name('change-password');
+
 Route::get('/about', function () {
     return view('userpanel/about');
 });

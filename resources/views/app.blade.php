@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title> @yield('title')</title>
 
     <link rel="stylesheet" href="{{URL::asset('css/themify-icons.css')}}">
@@ -20,10 +21,8 @@
 
 <!-- Bootstrap Select Stylesheet -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
-
-
-
+<link href="https://cdn.jsdelivr.net/jquery.slick/1.6.0/slick.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/jquery.slick/1.6.0/slick-theme.css" rel="stylesheet"/>
     
     @yield('css')
     
@@ -176,7 +175,7 @@
                             <h2 class="fw-600 display2-size mb-4">Create <br>your account</h2>
                             <form>
                                 <div class="form-group mb-3">
-                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" value="Name">                        
+                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Name">                        
                                 </div>
                                 <div class="form-group mb-3">
                                     <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" value="Email">                        
@@ -193,11 +192,14 @@
                              
                             <div class="col-sm-12 p-0 text-center">
                                 <a href="#" class="form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0">Create an account</a>
-                                <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-4 lh-32">Are you already member? <a href="#" class="fw-700 ml-1">Login</a></h6>
+                                <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-4 lh-32">Are you already member? <a href="#" class="fw-700 ml-1 text-current" data-toggle="modal" data-target="#Modallogin" data-dismiss="modal">Login</a></h6>
                                 <div class="row">
                                     <div class="col-6 pr-1"><a href="#" class="form-control h60 p-0 pl-5 bg-lightblue text-grey-700 border-2 border-0 font-xssss fw-600  position-relative">Login with OTP</a></div>
                                     <div class="col-6 pl-1"><a href="#" class="form-control h60 p-0 pl-5 bg-lightblue text-grey-700 border-2 border-0 font-xssss fw-600  position-relative">Forgot Password?</a></div>
                                 </div>
+                                <p class="fw-900 font-xssss text-grey-600 mt-2 pt-3 d-inline-block">
+                                    By continuing, you agree to Amazepay's <a href="blog-single.html" class="text-current">Term ans Condition</a> and <a href="blog-single.html" class="text-current">Privacy Policy </a>.
+                                </p>
                             </div>
                             
                         </div>
@@ -207,7 +209,7 @@
         </div>
     </div>
 
-    <!-- Modal Register -->
+    <!-- Modal Login -->
     <div class="modal bottom fade" id="Modallogin" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
          <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content border-0">
@@ -228,15 +230,20 @@
                                 <div class="form-check text-left mb-3">
                                     <input type="checkbox" class="form-check-input mt-2" id="exampleCheck1">
                                     <label class="form-check-label font-xsss text-grey-500" for="exampleCheck1">Remember me</label>
-                                    <a href="#" class="fw-600 font-xsss text-grey-700 mt-1 float-right">Forgot your Password?</a>
+                                    <a href="#" class="fw-600 font-xsss text-grey-700 mt-1 float-right" data-toggle="modal" data-target="#Modalforgotpassword"  data-dismiss="modal">Forgot your Password?</a>
                                 </div>
                             </form>
                              
                             <div class="col-sm-12 p-0 text-center">
                                 <a href="#" class="form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0">Login</a>
-                                <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Dont have account <a href="#" class="fw-700 ml-1">Register</a></h6>
+                                <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Dont have account <a href="#" class="fw-700 ml-1 text-current" data-toggle="modal" data-target="#ModalregisterD" data-dismiss="modal">Register</a></h6>
                             </div>
-                            
+
+                            <div class="col-sm-12 p-0 text-center">
+                                <p class="fw-900 font-xssss text-grey-600 mt-2 pt-3 d-inline-block text-center">
+                                    By continuing, you agree to Amazepay's <a href="blog-single.html" class="text-current">Term ans Condition</a> and <a href="blog-single.html" class="text-current">Privacy Policy </a>.
+                                </p>
+                            </div>
                         </div>
                     </div>                    
                 </div>
@@ -244,6 +251,39 @@
         </div>
     </div>
 
+    <!-- Forgot Password Modal -->
+    <div class="modal bottom fade" id="Modalforgotpassword" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+         <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="ti-close text-grey-500"></i></button>
+                <div class="modal-body p-3 d-flex align-items-center bg-none">
+                    <div class="card shadow-none rounded-0 w-100 p-2 pt-3 border-0">
+                        <div class="card-body rounded-0 text-left pt-0 pb-2">
+                            <h2 class="fw-600 display1-size mb-4">Forgot Password</h2>
+                            <form>
+                                
+                                <div class="form-group mb-3">
+                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Email">                        
+                                </div>
+                               
+                            </form>
+                             
+                            <div class="col-sm-12 p-0 text-center">
+                                <a href="#" class="form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0">Submit</a>
+                                <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Dont have account <a href="#" class="fw-700 ml-1 text-current" data-toggle="modal" data-target="#Modallogin" data-dismiss="modal">Login</a></h6>
+                            </div>
+
+                            <div class="col-sm-12 p-0 text-center">
+                                <p class="fw-900 font-xssss text-grey-600 mt-2 pt-3 d-inline-block text-center">
+                                    By continuing, you agree to Amazepay's <a href="blog-single.html" class="text-current">Term ans Condition</a> and <a href="blog-single.html" class="text-current">Privacy Policy </a>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>                    
+                </div>
+            </div>
+        </div>
+    </div>
    
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <!-- Bootstrap JavaScript -->
@@ -260,9 +300,11 @@
     <!-- for filter select -->
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.slick/1.6.0/slick.min.js"></script>
     @stack('scripts')
     
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+   
     
     
 </body>

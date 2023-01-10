@@ -23,8 +23,700 @@
                 </div>
         </div>
     <!-- banner wrapper --> 
+
+        <div class="product-wrapper pt-5 pb-7">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-6 col-xs-6">
+                        <h2 class="text-grey-900 fw-700 font-xxl pb-0 mb-1 d-block text-left">Best Product</h2>
+                    </div>
+                    <div class="col-lg-6 col-xs-6">
+                        <a href="#" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
+                    </div>
+                </div>
+                <div class="row">                    
+                    <div class="col-lg-12">
+                        <div class="cycle-slider-5 owl-carousel owl-theme dot-none owl-nav-link style2">
+                            <div class="owl-items">
+                                <div class="col-lg-12 p-3 border rounded-0">
+                                    <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                   
+                                    <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                    <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                        <div class="container" style="background-color:white">
+                                            <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                            <span class="font-xsss fw-600 text-black">Flat 3% off. Applicable on payment via UPI.</span>
+                                        </div>
+                                        <div class="container">
+                                            
+                                            <span class="font-xssss mb-3 fw-600">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                            <p class="font-xssss mt-2 fw-600 text-red">Expires: Jan 03, 2021</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="owl-items">
+                                <div class="col-lg-12 p-3 border rounded-0">
+                                    <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                   
+                                    <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                    <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                        <div class="container" style="background-color:white">
+                                            <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                            <span class="font-xsss fw-600 text-black">Flat 3% off. Applicable on payment via UPI.</span>
+                                        </div>
+                                        <div class="container">
+                                            
+                                            <span class="font-xssss mb-3 fw-600 text-current">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                            <p class="font-xssss mt-2 fw-600 text-red">Expires: Jan 03, 2021</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="owl-items">
+                                <div class="col-lg-12 p-3 border rounded-0">
+                                    <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                   
+                                    <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                    <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                        <div class="container" style="background-color:white">
+                                            <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                            <span class="font-xsss fw-600 text-black">Flat 3% off. Applicable on payment via UPI.</span>
+                                        </div>
+                                        <div class="container">
+                                            
+                                            <span class="font-xssss mb-3 fw-600 text-current">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                            <p class="font-xssss mt-2 fw-600 text-red">Expires: Jan 03, 2021</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="owl-items">
+                                <div class="col-lg-12 p-3 border rounded-0">
+                                    <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                   
+                                    <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                    <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                        <div class="container" style="background-color:white">
+                                            <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                            <span class="font-xsss fw-600 text-black">Flat 3% off. Applicable on payment via UPI.</span>
+                                        </div>
+                                        <div class="container">
+                                            
+                                            <span class="font-xssss mb-3 fw-600 text-current">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                            <p class="font-xssss mt-2 fw-600 text-red">Expires: Jan 03, 2021</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="owl-items">
+                                <div class="col-lg-12 p-3 border rounded-0">
+                                    <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                   
+                                    <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                    <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                        <div class="container" style="background-color:white">
+                                            <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                            <span class="font-xsss fw-600 text-black">Flat 3% off. Applicable on payment via UPI.</span>
+                                        </div>
+                                        <div class="container">
+                                            
+                                            <span class="font-xssss mb-3 fw-600 text-current">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                            <p class="font-xssss mt-2 fw-600 text-red">Expires: Jan 03, 2021</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="owl-items">
+                                <div class="col-lg-12 p-3 border rounded-0">
+                                    <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                   
+                                    <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                    <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                        <div class="container" style="background-color:white">
+                                            <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                            <span class="font-xsss fw-600 text-black">Flat 3% off. Applicable on payment via UPI.</span>
+                                        </div>
+                                        <div class="container">
+                                            
+                                            <span class="font-xssss mb-3 fw-600 text-current">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                            <p class="font-xssss mt-2 fw-600 text-red">Expires: Jan 03, 2021</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="product-wrapper pt-lg--7 pt-5 pb-lg--7 pb-5">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-6 col-xs-6">
+                        <h2 class="text-grey-900 fw-700 font-xxl pb-0 mb-1 d-block text-left">All</h2>
+                    </div>
+                    <div class="col-lg-6 col-xs-6">
+                        <a href="#" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
+                    </div>
+                </div>
+                <div class="row">                
+                    <div class="col-lg-12">
+                        <div class="row">
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="product-wrapper pt-lg--7 pt-5 pb-lg--7 pb-5">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-6 col-xs-6">
+                        <h2 class="text-grey-900 fw-700 font-xxl pb-0 mb-1 d-block text-left">Trending</h2>
+                    </div>
+                    <div class="col-lg-6 col-xs-6">
+                        <a href="#" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
+                    </div>
+                </div>
+                <div class="row">                
+                    <div class="col-lg-12">
+                        <div class="row">
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="product-wrapper pt-lg--7 pt-5 pb-lg--7 pb-5">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-6 col-xs-6">
+                        <h2 class="text-grey-900 fw-700 font-xxl pb-0 mb-1 d-block text-left">Hot</h2>
+                    </div>
+                    <div class="col-lg-6 col-xs-6">
+                        <a href="#" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
+                    </div>
+                </div>
+                <div class="row">                
+                    <div class="col-lg-12">
+                        <div class="row">
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-lg-3 bg-white p-3 border">
+                                
+                                <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                    <div class="container" style="background-color:white">
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                    </div>
+                                    <div class="container">
+                                        <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                        <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+       
+
+    
+        <!-- <div class="how-to-work pt-lg--7 pb-lg--7 pb-5 pt-5">
+            <div class="container">
+                <div class="row mb-4">
+                    <div class="col-lg-12 mb-lg-3">
+                        <h2 class="text-grey-900 fw-400 display1-size">All</h2>
+                        <hr>
+                    </div>
+                  
+                    <div class="col-lg-4 mb-4">
+                        <img class="coupan-img" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
+                        <div class="coupon">
+                            <div class="container" style="background-color:white">
+                                <span class="coupan-title"><b>20% OFF YOUR PURCHASE</b></span> 
+                                <span class="expire">Expires: Jan 03, 2021</span>
+                            </div>
+                            <div class="container">
+                                <span class="coupan-detail">Lorem ipsum dolor sit amet.</span>
+                                <span class="code-name" >Use Promo Code: <span class="promo">BOH232</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                        <img class="coupan-img" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
+                        <div class="coupon">
+                            <div class="container" style="background-color:white">
+                                <span class="coupan-title"><b>20% OFF YOUR PURCHASE</b></span> 
+                                <span class="expire">Expires: Jan 03, 2021</span>
+                            </div>
+                            <div class="container">
+                                <span class="coupan-detail">Lorem ipsum dolor sit amet.</span>
+                                <span class="code-name" >Use Promo Code: <span class="promo">BOH232</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                        <img class="coupan-img" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
+                        <div class="coupon">
+                            <div class="container" style="background-color:white">
+                                <span class="coupan-title"><b>20% OFF YOUR PURCHASE</b></span> 
+                                <span class="expire">Expires: Jan 03, 2021</span>
+                            </div>
+                            <div class="container">
+                                <span class="coupan-detail">Lorem ipsum dolor sit amet.</span>
+                                <span class="code-name" >Use Promo Code: <span class="promo">BOH232</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                        <img class="coupan-img" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
+                        <div class="coupon">
+                            <div class="container" style="background-color:white">
+                                <span class="coupan-title"><b>20% OFF YOUR PURCHASE</b></span> 
+                                <span class="expire">Expires: Jan 03, 2021</span>
+                            </div>
+                            <div class="container">
+                                <span class="coupan-detail">Lorem ipsum dolor sit amet.</span>
+                                <span class="code-name" >Use Promo Code: <span class="promo">BOH232</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                        <img class="coupan-img" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
+                        <div class="coupon">
+                            <div class="container" style="background-color:white">
+                                <span class="coupan-title"><b>20% OFF YOUR PURCHASE</b></span> 
+                                <span class="expire">Expires: Jan 03, 2021</span>
+                            </div>
+                            <div class="container">
+                                <span class="coupan-detail">Lorem ipsum dolor sit amet.</span>
+                                <span class="code-name" >Use Promo Code: <span class="promo">BOH232</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-4">
+                        <img class="coupan-img" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
+                        <div class="coupon">
+                            <div class="container" style="background-color:white">
+                                <span class="coupan-title"><b>20% OFF YOUR PURCHASE</b></span> 
+                                <span class="expire">Expires: Jan 03, 2021</span>
+                            </div>
+                            <div class="container">
+                                <span class="coupan-detail">Lorem ipsum dolor sit amet.</span>
+                                <span class="code-name" >Use Promo Code: <span class="promo">BOH232</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+               
+                <div class="row">
+                    <div class="col-lg-12 mb-lg-5 mb-4 pb-3">
+                        <h2 class="text-grey-900 fw-400 display1-size">Hot Deals</h2>
+                        <hr>
+                    </div>
+                  
+                    <div class="col-lg-4 mb-3">
+                        <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                            <img class="coupan-img" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
+                            <div class="coupon">
+                                <div class="container" style="background-color:white">
+                                    <span class="coupan-title"><b>20% OFF YOUR PURCHASE</b></span> 
+                                    <span class="expire">Expires: Jan 03, 2021</span>
+                                </div>
+                                <div class="container">
+                                    <span class="coupan-detail">Lorem ipsum dolor sit amet.</span>
+                                    <span class="code-name" >Use Promo Code: <span class="promo">BOH232</span></span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-4 mb-3">
+                        <img class="coupan-img" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
+                        <div class="coupon">
+                            <div class="container" style="background-color:white">
+                                <span class="coupan-title"><b>20% OFF YOUR PURCHASE</b></span> 
+                                <span class="expire">Expires: Jan 03, 2021</span>
+                            </div>
+                            <div class="container">
+                                <span class="coupan-detail">Lorem ipsum dolor sit amet.</span>
+                                <span class="code-name" >Use Promo Code: <span class="promo">BOH232</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 mb-3">
+                        <img class="coupan-img" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
+                        <div class="coupon">
+                            <div class="container" style="background-color:white">
+                                <span class="coupan-title"><b>20% OFF YOUR PURCHASE</b></span> 
+                                <span class="expire">Expires: Jan 03, 2021</span>
+                            </div>
+                            <div class="container">
+                                <span class="coupan-detail">Lorem ipsum dolor sit amet.</span>
+                                <span class="code-name" >Use Promo Code: <span class="promo">BOH232</span></span>
+                            </div>
+                        </div>
+                    </div>
+                   
+                </div>
+            </div>
+        </div> -->
+       
+
         <!-- <div class="offer-wrapper pb-4 bg-lightblue"> -->
-        <div class="offer-wrapper pb-4">
+        <!-- <div class="offer-wrapper pb-4">
 
 
             <div class="tab-wrapper">
@@ -43,7 +735,7 @@
                                     <a class="nav-item nav-link rounded-lg border-0 p-4 mr-2" id="nav-money-tab" data-toggle="tab" href="#nav-money" role="tab" aria-controls="nav-money" aria-selected="false"><i class="font-xxl fa-solid fa-money-bill-transfer"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">Money Transfer</h4></a>
 
                                     <a href="#" class="nav-item nav-link rounded-lg border-0 p-4 mr-0" data-toggle="modal" data-target="#Modalmore"><i class="font-xxl fa-solid fa-ellipsis-vertical"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">More</h4></a>
-                                    <!-- <a class="nav-item nav-link rounded-lg border-0 p-4 mr-0" id="nav-tab-tab" data-toggle="modal" href="#nav-contact" role="tab" data-target="#ModalregisterD" aria-controls="nav-contact" aria-selected="false"><i class="font-xxl ti-announcement text-current d-block mt-2"></i><h4 class="font-xssss fw-600 text-grey-900 mt-3">More</h4></a> -->
+                                  
                                 </div>
                             </nav>
                             <div class="tab-content rounded-lg  bg-blur p-3 mt-2" id="nav-tabContent">
@@ -93,14 +785,14 @@
                                                     <option value="goa">Goa</option>
                                                 </select>   
                                             </div>
-                                            <!-- <div class="col-sm-3"><input type="text" class="form-control mb-2" placeholder="Select Location"></div> -->
+                                           
                                             <div class="col-sm-2"><input type="text" class="form-control mb-2 prepared-amount" placeholder="Amount">
                                             <span id="view-plan" >view plan</span></div>
                                             <div class="col-sm-1"><button class="bg-current border-0 w-100 form-bttn fw-500 rounded-lg text-white"><i class="ti-arrow-right"></i></button></div>
                                         </div>
                                     </form>
                                     <br/>
-                                    <!-- <table hidden class="table table-condensed table-striped plan-details"> -->
+                                   
                                     <table hidden class="table table-responsive-sm table-hover plan-details">
                                         <thead>
                                             <tr>
@@ -230,23 +922,9 @@
                     </div>
                 </div>
             </div>  
+        </div> -->
 
-             
-            <!-- <div class="container">
-                <div class="row">
-                    <div class="brand-slider owl-carousel owl-theme overflow-visible dot-none pt-3">
-                        <div class="owl-items text-center"><img src="https://via.placeholder.com/100x50.png" alt="icon" class="w100 ml-auto mr-auto"></div>
-                        <div class="owl-items text-center"><img src="https://via.placeholder.com/100x50.png" alt="icon" class="w100 ml-auto mr-auto"></div>
-                        <div class="owl-items text-center"><img src="https://via.placeholder.com/100x50.png" alt="icon" class="w100 ml-auto mr-auto"></div>
-                        <div class="owl-items text-center"><img src="https://via.placeholder.com/100x50.png" alt="icon" class="w100 ml-auto mr-auto"></div>
-                        <div class="owl-items text-center"><img src="https://via.placeholder.com/100x50.png" alt="icon" class="w100 ml-auto mr-auto"></div>
-                        <div class="owl-items text-center"><img src="https://via.placeholder.com/100x50.png" alt="icon" class="w100 ml-auto mr-auto"></div>
-                    </div>
-                </div>
-            </div> -->
-        </div>
-
-        <div class="how-to-work pt-lg--7 pb-lg--7 pb-5 pt-5">
+        <!-- <div class="how-to-work pt-lg--7 pb-lg--7 pb-5 pt-5">
             <div class="container">
                 <div class="row">
                     <div class="col-lg-12 text-center mb-lg-5 mb-4 pb-3">
@@ -277,9 +955,9 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
-        <div class="feedback-wrapper pt-lg--7 pb-lg--7 pb-5 pt-5">
+        <!-- <div class="feedback-wrapper pt-lg--7 pb-lg--7 pb-5 pt-5">
             <div class="container">
                 <div class="row">
                     <div class="col-lg-12 text-center mb-lg-5 mb-4 pb-3">
@@ -360,20 +1038,11 @@
                         </div>   
                     </div>              
                 </div>
-                <!-- <div class="row mt-5 pt-5">
-                    <div class="col-lg-6"><img src="https://via.placeholder.com/570x600.png" alt="app-image" class="img-fluid"></div>
-                    <div class="col-lg-4 offset-lg-1 pt-5 mt-5">
-                        <h4 class="text-uppercase text-current font-xsss fw-600 mb-3 mt-5">Download & Enjoy</h4>
-                        <h2 class="text-grey-900 fw-700 display1-size lh-3">Get the zpito app <br> for payment</h2>
-                        <p class="w-75 font-xsss fw-500 text-grey-500 lh-26 mt-2">We are digital agency, a small design agency based in paris as i was groping to remove through language.</p>
-                        <a href="#"><img src="https://via.placeholder.com/210x60.png" alt="icon" class="w175 mb-xs-2"></a>
-                        <a href="#"><img src="https://via.placeholder.com/210x60.png" class="w175 p-md--2"></a>
-                    </div>
-                </div> -->
+                
             </div>
-        </div>
+        </div> -->
 
-        <div class="faq-wrapper pt-4 pb-0">
+        <!-- <div class="faq-wrapper pt-4 pb-0">
             <div class="container">
                 <div class="row">
                     <div class="col-md-12">
@@ -406,8 +1075,8 @@
                     </div>
                 </div>   
             </div>
-        </div>
-        <br>
+        </div> -->
+       
         <!-- <div class="count-wrapper pt-lg--7 pb-lg--7 pb-5 pt-5">
             <div class="container">
                 <div class="row">

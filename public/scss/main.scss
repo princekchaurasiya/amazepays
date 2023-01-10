@@ -1,0 +1,131 @@
+/*-----------------------------------------------------------
+    Theme Name: Zpito
+    Theme URI: http://html.aonecolor.com/Zpito/
+    Description: Online Recharge and shopping HTML Template
+    Version: 1.0.0
+-------------------------------------------------------------*/
+
+/*-----------------------------------------------------------
+    Table of Content: 
+
+    
+    2. Bootstrap CSS
+    1. Abstract
+    3. Base
+    4. Component
+    5. Pages
+    7. Header
+    8. Footer
+    
+    
+    
+*/
+@import "./abstract/abstract";
+@import "./../vendor/bootstrap/scss/bootstrap.scss";
+@import "./../vendor/owl-carousel/css/owl.carousel.min.css";
+@import "./../vendor/owl-carousel/css/owl.theme.default.css";
+
+@import "./base/base";
+@import "./components/components";
+
+
+body {font-family: 'Roboto', sans-serif;}
+.center-div {
+    max-width: 1500px; 
+    margin: 0 auto;
+}
+ 
+
+
+@media (min-width: 992px) {
+    .navbar-collapse {
+        display: flex !important;
+        flex-basis: auto;
+    }
+    .mt-xl-4 {margin-top: 20px; }
+    .pt-xl--10 {padding-top: 125px;}
+}
+@media (min-width: 768px) {
+    .pr-md--2 {padding-right: 0.5rem !important;}
+    .pl-md--2 {padding-left: 0.5rem !important;}
+    .pr-md--5 {padding-right: 3rem !important;}
+    .pl-md--5 {padding-left: 3rem !important;}
+    .mr-md--5 {padding-right: 3rem !important;}
+    .ml-md--5 {padding-left: 3rem !important;}
+    .p-md--2 {padding: 0.5rem !important;}
+    .p-md-0 {padding: 0;}
+
+    .pt-lg--7 {padding-top: 75px !important; } 
+    .pb-lg--7 {padding-bottom: 75px !important; }
+    .pt-lg--10 {padding-top: 125px !important; } 
+
+}
+@media (min-width: 1600px) {
+    .mw-75 {max-width: 1600px; }
+    .bg-image-md-contain {background-size: contain !important;}
+}
+@media (max-width: 991px) {
+    .md-mb25 {
+        margin-bottom: 25px; 
+    }
+    .footer-wrapper p {
+        width: 100%;
+    }
+     
+    .d-block-md {display: block !important; }
+    .d-none-md {display: none !important; }
+
+    .tab-ul {display: none; }
+
+
+}
+
+
+@media (max-width: 768px) {
+    .col-xs-6 { flex: 0 0 50%; max-width: 50%; }
+    .col-xs-12 { flex: 0 0 100%; max-width: 100%; }
+    
+    .col-xs-6 {flex: 0 0 50%;max-width: 50%; }
+    .col-xs-3 {flex: 0 0 25%;max-width: 25%; }
+    .col-xs-9 {flex: 0 0 75%;max-width: 75%; }
+    
+    .ptb-sm-3 {padding-top: 10px; padding-bottom: 10px; }
+    .post-content.pt-7.pb-7 {padding-bottom: 50px; padding-top: 50px; }
+    .mt-md--3 {margin-top: 10px;}
+    .d-none-md {display: none !important; }
+    .d-block-md {display: block !important; }
+    .owl-theme.right-nav .owl-nav button {width: 40px; height: 40px; margin-top: 0; }
+    .owl-theme.right-nav .owl-nav button i {line-height: 38px; font-size: 16px; }
+    .w-md--75 {width: 75% !important;}
+    .w-md--100 {width: 100% !important;}
+    .font-sm-size {font-size: 17px !important; }
+    .display5-md-size {font-size: 40px !important; }
+    .display2-md-size {font-size: 32px !important; }
+
+    .pt-lg-10 {padding-top: 125px; }
+
+    .vertical-slide.nav-img .owl-nav {
+        right: 50%;
+        margin-right: -50px;
+    }
+}
+@media (max-width: 576px) {
+    .comments-list .mb-5.ml-5.pl-5 {padding-left: 0 !important; margin-left: 0 !important;}
+    .d-none-sm {display: none !important; }
+
+    .w-xs-100 {width: 100% !important;}
+    .w-sm--90 {width: 90% !important;}
+    .w-xs-90 {width: 90% !important; }
+
+    .mb-xs-2 {margin-bottom: 5px;}
+    .d-block-xs {display: block !important;}
+    .left-xs-0 {left: 0 !important; right:auto !important; }
+    .border-right-xs {border-right:1px solid #E1E1F0 !important;}
+    .display2-size-sm {font-size: 34px !important; }
+    .display5-size-sm {font-size: 45px !important; }
+    .mt-sm--3 {margin-top: 10px;}
+
+    .pl-xs-0 {padding-left: 0;}
+    .product-slider-7 .owl-thumbs {top:100px;}
+
+}

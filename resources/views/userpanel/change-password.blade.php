@@ -3,7 +3,7 @@
     Gift & Giggles
 @endsection
 @section('content')
-<div class="dashboard-wrapper bg-greylight">
+    <div class="dashboard-wrapper bg-greylight">
             <div class="container">
                 <div class="row">
                     <div class="col-lg-3">
@@ -71,7 +71,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+    </div>
 @push('scripts')
     <script>
         

@@ -41,6 +41,10 @@ Route::get('/change-password', function () {
     return view('userpanel/change-password');
 })->name('change-password');
 
+Route::get('/view-all-product/{slug}', function () {
+    return view('userpanel/view_all_product');
+})->name('view-all-product');
+
 Route::get('/about', function () {
     return view('userpanel/about');
 });

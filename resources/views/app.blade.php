@@ -9,7 +9,7 @@
 
     <link rel="stylesheet" href="{{URL::asset('css/themify-icons.css')}}">
     <!-- Favicon icon -->
-    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{url('images/favicon.png')}}">
     <!-- Custom Stylesheet -->
     <link rel="stylesheet" href="{{URL::asset('css/style.css')}}">
 

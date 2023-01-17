@@ -1112,6 +1112,17 @@
             </div>
         </div>
 
+        <form method="POST" action=" {{route('generate-authcode')}}">
+                {!! csrf_field() !!}
+                <button class="bg-current w-25 form-bttn fw-500 rounded-lg text-white">Click<i class="ti-arrow-right"></i></button>
+        </form>
+
+
+
+        
+        <!-- <a href="{{route('generate-authcode')}}"><button class="bg-current w-25 form-bttn fw-500 rounded-lg text-white">Click<i class="ti-arrow-right"></i></button></a> -->
+
+        <a href="{{route('get-category')}}"><button class="bg-current w-25 form-bttn fw-500 rounded-lg text-white">Category<i class="ti-arrow-right"></i></button></a>
        
 @endsection
 

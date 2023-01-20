@@ -31,7 +31,7 @@
                         <h2 class="text-grey-900 fw-700 font-xxl pb-0 mb-1 d-block text-left">Best Product</h2>
                     </div>
                     <div class="col-lg-6 col-xs-6">
-                        <a href="#" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
+                        <a href="{{route('view-all-product' , ['slug' => '1'])}}" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
                     </div>
                 </div>
                 <div class="row">                    
@@ -160,7 +160,7 @@
                         <h2 class="text-grey-900 fw-700 font-xxl pb-0 mb-1 d-block text-left">All</h2>
                     </div>
                     <div class="col-lg-6 col-xs-6">
-                        <a href="#" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
+                        <a href="{{route('view-all-product' , ['slug' => '1'])}}" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
                     </div>
                 </div>
                 <div class="row">                
@@ -299,7 +299,7 @@
                         <h2 class="text-grey-900 fw-700 font-xxl pb-0 mb-1 d-block text-left">Trending</h2>
                     </div>
                     <div class="col-lg-6 col-xs-6">
-                        <a href="#" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
+                        <a href="{{route('view-all-product' , ['slug' => '1'])}}" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
                     </div>
                 </div>
                 <div class="row">                
@@ -438,7 +438,7 @@
                         <h2 class="text-grey-900 fw-700 font-xxl pb-0 mb-1 d-block text-left">Hot</h2>
                     </div>
                     <div class="col-lg-6 col-xs-6">
-                        <a href="#" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
+                        <a href="{{route('view-all-product' , ['slug' => '1'])}}" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
                     </div>
                 </div>
                 <div class="row">                
@@ -1112,6 +1112,17 @@
             </div>
         </div>
 
+        <form method="POST" action=" {{route('generate-authcode')}}">
+                {!! csrf_field() !!}
+                <button class="bg-current w-25 form-bttn fw-500 rounded-lg text-white">Click<i class="ti-arrow-right"></i></button>
+        </form>
+
+
+
+        
+        <!-- <a href="{{route('generate-authcode')}}"><button class="bg-current w-25 form-bttn fw-500 rounded-lg text-white">Click<i class="ti-arrow-right"></i></button></a> -->
+
+        <a href="{{route('get-category')}}"><button class="bg-current w-25 form-bttn fw-500 rounded-lg text-white">Category<i class="ti-arrow-right"></i></button></a>
        
 @endsection
 

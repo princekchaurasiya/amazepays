@@ -7,6 +7,7 @@
     <div class="gift-card-detail-page pt-lg--7 pb-lg--7 pb-5 pt-5">
         <div class="container">
             <div class="row">
+           
                 <div class="col-lg-12 mb-lg-4 mb-4 pb-3">
                     <h6 class="text-grey-900 fw-400 font-xl">E-Gift Card</h6>
                     <hr>
@@ -14,7 +15,7 @@
                 <div class="row">
                     <div class="col-lg-6">
                         <div class="card-container">
-                            <img class="coupan-img" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">     
+                            <img src="{{$prdtDetails['images']['small'] == null ? URL::asset('/images/hamburger.jpg'): $prdtDetails['images']['small']}}" alt="product-detail-image">
                         </div>
                         <div class="container">
                             <h6 class="text-grey-900 fw-400 font-xs mt-2">Offers</h6>
@@ -27,9 +28,27 @@
                     <div class="col-lg-6">
                         <div class="container">
                             <div class="row">
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <h6 class="mb-3 fw-600 font-xs mt-2">{{$prdtDetails['name']}}</h6>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <span class="mb-3 font-xssss fw-600 mt-2">Validity : {{$prdtDetails['expiry']}}</span>
+                                    </div>
+                                </div>
                                 <div class="row copuan-quantity">
                                     <div class="col-sm-6">
-                                        <input type="text" class="form-control mb-3" placeholder="Enter Denomination">
+                                        @if($prdtDetails['price']['type'] == "RANGE")
+                                            <div class="radio-btn-row">
+                                                @foreach($prdtDetails['price']['denominations'] as $denomination)
+                                                    <div class="radio-btn-wrapper">
+                                                        <button id="bt1" class="radio-btn" type="button">{{$denomination}}</button>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <input type="text" class="form-control mb-3" placeholder="Select Denomination">
+                                        @endif  
                                     </div>
                                     <div class="col-sm-6">
                                         <input type="text" class="form-control mb-3" placeholder="Quantity">
@@ -49,16 +68,19 @@
                                 <div class="row card-form gifting-details">
                                 <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
                                 <div class="col-sm-6 receiver-name">
-                                    <input type="text" class="form-control mb-3" placeholder="Receiver Name">
+                                    <input type="text" class="form-control mb-3" placeholder="Receiver Name" id="receiver-name">
+                                    <span class="font-xssss fw-400 error-rec-name"></span>
                                 </div>
                                 <div class="col-sm-6 receiver-email">
-                                    <input type="text" class="form-control mb-3" placeholder="Receiver Email">
+                                    <input type="text" class="form-control mb-3" placeholder="Receiver Email" id="receiver-email">
+                                    <span class="font-xssss fw-400 error-rec-email"></span>
                                 </div>
                                 <div class="col-sm-6 receiver-mobile d-none">
-                                    <input type="text" class="form-control mb-3" placeholder="Receiver Mobile Number">
+                                    <input type="text" class="form-control mb-3" placeholder="Receiver Mobile Number" id="receiver-mobile">
+                                    <span class="font-xssss fw-400 error-rec-mobile"></span>
                                 </div>
                                 <div class="col-sm-6 receiver-message">
-                                    <input type="text" class="form-control mb-3" placeholder="Message for Receiver">
+                                    <input type="text" class="form-control mb-3" placeholder="Message for Receiver" id="receiver-msg">
                                 </div>
                                 <div class="col-sm-12 mb-4">
                                         <h6 class="mb-3 fw-600 font-xss mt-2">Delivery Mode</h6>
@@ -112,7 +134,7 @@
                             <div class="container">
                                 <div class="row cart-item-record">
                                     <div class="col-md-6 col-sm-4 col-xs-12">
-                                        <img class="my-4" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
+                                        <img class="my-4" src="{{$prdtDetails['images']['base'] == null ? URL::asset('/images/hamburger.jpg'): $prdtDetails['images']['base']}}" alt="Avatar" style="width:100%;">
                                         <span class="font-xssss fw-400">* Validity: xx xx xxxx</span>
                                     </div>
                                         <div class="col-md-6 col-sm-4 col-xs-9"><p class="font-xl fw-800">₹50.00</p>
@@ -134,35 +156,17 @@
                         
                             <div class="col-lg-12">
                                 <div class="theme-slider owl-carousel owl-theme dot-none right-nav pb-4">
-                                    <div class="owl-items text-center active" onclick="showChild('playstore')">
-                                        <div class="card w-100 text-left border-0 shadow-md rounded-lg">
-                                           <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
+                                    @foreach($prdtDetails['themes'] as $theme)
+                                        <div class="owl-items text-center active" onclick="showChild('{{$theme['sku']}}')">
+                                            <div class="card w-100 text-left border-0 shadow-md rounded-lg">
+                                                <img class="" src="{{$theme['image']}}" alt="Avatar" style="width:100%;"> 
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="owl-items text-center active" onclick="showChild('gpay')">
-                                        <div class="card w-100 text-left border-0 shadow-md rounded-lg">
-                                            <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
-                                        </div>
-                                    </div>
-                                    <div class="owl-items text-center active">
-                                        <div class="card w-100 text-left border-0 shadow-md rounded-lg">
-                                            <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
-                                        </div>
-                                    </div>
-                                    <div class="owl-items text-center active">
-                                        <div class="card w-100 text-left border-0 shadow-md rounded-lg">
-                                            <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;"> 
-                                        </div>
-                                    </div>
-                                    <div class="owl-items text-center active">
-                                        <div class="card w-100 text-left border-0 shadow-md rounded-lg">
-                                            <img class="" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
-                                        </div>
-                                    </div> 
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
+                        <!-- <div class="row">
                             <div class="col-lg-12">
                                 <div class="theme-slider owl-carousel owl-theme dot-none right-nav mt-5 child child_playstore" style="display:none;">
                                     <div class="owl-items text-center child-active">
@@ -201,8 +205,15 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <a href="{{ route('checkout') }}" class="form-control rounded-lg h60 float-right bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 mt-4 w100">Pay Now</a>
+                        </div> -->
+                        @if(\Auth::user())
+                            <form action="{{route('checkout')}}" method="POST">
+                                {{csrf_field()}}
+                                <input type="submit" class="form-control rounded-lg h60 float-right bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 mt-4 w100" value="Pay Now">Pay Now
+                            </form>
+                        @else
+                            <a href="#" class="form-control rounded-lg h60 float-right bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 mt-4 w100" data-toggle="modal" data-target="#Modallogin">Pay Now</a>
+                        @endif
                     </div>
                 </div> 
             </div>
@@ -224,18 +235,16 @@
                     <label for="tabtwo">Description</label>
                     <div class="tab">
                         <ul class="square-type-unordered">
-                            <li>Flipkart Gift Cards ("GCs" or "Gift Cards") are issued by Pine Labs Pvt. Ltd ("Pine Labs") which is a private limited company incorporated under the laws of India, and is authorized by the Reserve Bank of India ("RBI") to issue such Gift Cards.</li>
-                            <li>The Gift Cards can be redeemed online against Sellers listed on www.flipkart.com or Flipkart Mobile App or Flipkart m-site ("Platform") only.</li>
-                            <li>Gift Cards can be purchased on www.flipkart.com or Flipkart Mobile App using the following payment modes only - Credit Card, Debit Card and Net Banking.</li>
-                            <li>Gift Cards can be redeemed by selecting the payment mode as Gift Card. The Gift Card payment option is available for single orders with multiple sellers.</li>
-                            <li>Gift Cards cannot be used to purchase other Flipkart Gift Cards or Flipkart First subscriptions.</li>
+                            <li>{{$prdtDetails['description']}}</li>
                         </ul>
                     </div>
                 
                     <input type="radio" name="tabs" id="tabthree">
                     <label for="tabthree">Terms & Condition</label>
-                    <div class="tab">
-                        <ul class="square-type-unordered">
+                    <div class="tab term-condition">
+                        {!! $prdtDetails['tnc']['content'] !!}
+                        
+                        <!-- <ul class="square-type-unordered">
                             <li>Flipkart Gift Cards ("GCs" or "Gift Cards") are issued by Pine Labs Pvt. Ltd ("Pine Labs") which is a private limited company incorporated under the laws of India, and is authorized by the Reserve Bank of India ("RBI") to issue such Gift Cards.</li>
                             <li>The Gift Cards can be redeemed online against Sellers listed on www.flipkart.com or Flipkart Mobile App or Flipkart m-site ("Platform") only.</li>
                             <li>Gift Cards can be purchased on www.flipkart.com or Flipkart Mobile App using the following payment modes only - Credit Card, Debit Card and Net Banking.</li>
@@ -256,7 +265,7 @@
                             <li>Gift Cards can be purchased on www.flipkart.com or Flipkart Mobile App using the following payment modes only - Credit Card, Debit Card and Net Banking.</li>
                             <li>Gift Cards can be redeemed by selecting the payment mode as Gift Card. The Gift Card payment option is available for single orders with multiple sellers.</li>
                             <li>Gift Cards cannot be used to purchase other Flipkart Gift Cards or Flipkart First subscriptions.</li>
-                        </ul>
+                        </ul> -->
                     </div>
                     <input type="radio" name="tabs" id="tabfour">
                     <label for="tabfour">How to Redeem</label>
@@ -280,7 +289,7 @@
                     $('div>.owl-items:first').addClass('border-black');
                     $('.child:first').css("display","block");
                     $('.child-active:first').addClass('border-black');
-                    $('.preview > img').attr("src",$('.child-active:first').find('img').attr('src'));           
+                    $('.preview > img').attr("src",$('.active:first').find('img').attr('src'));           
                 });  
             // end Preview Image on page load
 
@@ -316,27 +325,189 @@
                 $('.active').on('click',function(){
                     $('.active').removeClass('border-black');
                     $(this).addClass('border-black');
+                    // console.log($(this).find('img').attr('src'));
+                    $('.preview > img').attr("src",$(this).find('img').attr('src'));
+                    
                 });
                 
-                function showChild(className) {
-                    $('.child').css("display","none");
-                    $('.child_' + className).css("display","block");
-                    $('.child-active').removeClass('border-black');
-                    $('.child').find('.child-active:first').addClass('border-black');
-                    $('.preview > img').attr("src",$('.child').find('.child-active:first').find('img').attr('src'));                
-                }
+                // function showChild(className) {
+                //     // var $thumb = $(this);
+                //     // console.log($('div > img').attr('src'));
+                //     // $('.preview > img').attr("src",$('.active').find('img').attr('src'));
+                //     // $('.child').css("display","none");
+                //     // $('.child_' + className).css("display","block");
+                //     // $('.child-active').removeClass('border-black');
+                //     // $('.child').find('.child-active:first').addClass('border-black');
+                //     //$('.preview > img').attr("src",$(this).find('img').attr('src'));                
+                // }
 
                 // $('.thumbnail').click(function() {
                 //     var $thumb = $(this);
                 //     $('.preview > img').attr("src",$thumb.find('img').attr('src'));
                 // });             
-                $('.child-active').click(function(){
-                    $('.child-active').removeClass('border-black');
-                    $(this).addClass('border-black');
-                    //var $thumb = $(this);
-                    $('.preview > img').attr("src",$(this).find('img').attr('src'));
-                });
+                // $('.child-active').click(function(){
+                //     $('.child-active').removeClass('border-black');
+                //     $(this).addClass('border-black');
+                //     //var $thumb = $(this);
+                //     $('.preview > img').attr("src",$(this).find('img').attr('src'));
+                // });
             // end Preview Image 
+
+            $('#pay-now').click(function(e){
+                var delivery_mode = $("input[name='delivery_mode']:checked").val();
+                e.preventDefault();
+                switch (delivery_mode) { 
+                    case 'email': 
+                        email();
+                        break;
+                    case 'mobile': 
+                        mobile();
+                        break;
+                    default:
+                        both();
+                }
+            });
+
+            function email(){
+                // var recName    = $('#receiver-name').val();
+                // var recEmail   = $('#receiver-email').val();
+                // var recMobile  = $('#receiver-mobile').val();
+                // var recMsg     = $('#receiver-msg').val();
+                var status     = true;
+                // if (recName.length == "") {
+                //     $(".error-rec-name").text('Name Required');
+                //     status     = false;
+                // } else {
+                //     $(".error-rec-name").empty();
+                //     status = true;
+                // }
+                // if (recEmail.length == "") {
+                //     $(".error-rec-email").text('Email Required');
+                //     status     = false;
+                // } else {
+                //     $(".error-rec-email").empty();
+                //     status = true;
+                // }
+                if(status == true){
+                   payNow();
+                } else {
+                    alert('400');
+                }
+            }
+
+            function mobile(){
+                debugger;
+                var recName    = $('#receiver-name').val();
+                var recMobile  = $('#receiver-mobile').val();
+                var recMsg     = $('#receiver-msg').val();
+                var status     = false;
+                if (recName.length == "") {
+                    $(".error-rec-name").text('Name Required');
+                    status     = false;
+                } else {
+                    $(".error-rec-name").empty();
+                    status = true;
+                }
+                if (recMobile.length == "") {
+                    $(".error-rec-mobile").text('Mobile Required');
+                    status     = false;
+                } else {
+                    $(".error-rec-mobile").empty();
+                    status = true;
+                }
+                if(status == true){
+                    alert('200');
+                } else {
+                    alert('400');
+                }
+                
+            }
+
+            function both(){
+                debugger;
+                var recName    = $('#receiver-name').val();
+                var recEmail   = $('#receiver-email').val();
+                var recMobile  = $('#receiver-mobile').val();
+                var recMsg     = $('#receiver-msg').val();
+                var status     = false;
+                if (recName.length == "") {
+                    $(".error-rec-name").text('Name Required');
+                    status = false;
+                } else {
+                    $(".error-rec-name").empty();
+                    status = true;
+                }
+                if (recEmail.length == "") {
+                    $(".error-rec-email").text('Email Required');
+                    status = false;
+                } else {
+                    $(".error-rec-email").empty();
+                    status = true;
+                }
+                if (recMobile.length == "") {
+                    $(".error-rec-mobile").text('Mobile Required');
+                    status = false;
+                } else {
+                    $(".error-rec-mobile").empty();
+                    status = true;
+                }
+                if(status == true){
+                    alert('200');
+                } else {
+                    alert('400');
+                }
+            }
+
+
+            $.each($('.radio-btn'), function(key, value) {
+                $(this).click(function(e) {
+                    $('.radio-btn-selected')
+                    .removeClass('radio-btn-selected')
+                    .addClass('radio-btn');
+
+                    $(this)
+                    .removeClass('radio-btn')
+                    .addClass('radio-btn-selected');
+
+                    //do whatever you want on click
+                });
+            });
+
+            $('#tabthree').click(function(){
+                $('.term-condition').find("ol, ul").addClass('square-type-unordered');
+            });
+        // pay now
+            function payNow(){
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                // var formData = new FormData();
+                // formData.append( 'coupan',$('#coupan-code').val());
+                 
+                
+                var type = "POST";
+                var ajaxurl = "{{url('/check-user-validation')}}";
+                $.ajax({
+                    type: type,
+                    url: ajaxurl,
+                    contentType: 'application/json',
+                    // data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    success: function (data) {
+                        debugger;
+                        console.log(data);
+                        $("#Modallogin").modal('show');
+                    },
+                    error: function (data) {
+                        console.log(data);
+                    }
+                });
+                return false;
+            }
         </script>
     @endpush
 @endsection

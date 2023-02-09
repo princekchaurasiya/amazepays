@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Carbon;
+use DB;
+use App\QsCategory;
+use View;
 
 class CommonController extends Controller
 {
@@ -14,34 +17,36 @@ class CommonController extends Controller
     }
 
     public function generateAuthcode(Request $request){
-        // dd(13132);
         $authorizationCode_resp = Http::post('https://sandbox.woohoo.in/oauth2/verify', [
-            "clientId"=>"546300637c4f1caf36daeeb4a10443f6",  //coming from database
-            "username"=>"freneticapisandbox@woohoo.in",    //coming from database
-            "password"=>"freneticapisandbox@1234"        //coming from database
+            "clientId"=>setting('api.clientId'),  //coming from database
+            "username"=>setting('api.qs_username'),    //coming from database
+            "password"=>setting('api.qs_password')        //coming from database
         ]);
         if($authorizationCode_resp->status() == 200) {
             // save authocode into database
-            $this->generateToken($authorizationCode_resp->json());
+            $response = $this->generateToken($authorizationCode_resp->json());
+            return json_decode($response);
         } else {
-            return json_response(["status"=>$authorizationCode_resp->status(), "msg"=>$authorizationCode_resp->failed()]);
+            return json_decode(json_encode(["status"=>$authorizationCode_resp->status(), "msg"=>$authorizationCode_resp->failed()]));
         }
         
     }
 
-    private function generateToken($authorizationCode){
+    public function generateToken($authorizationCode){
         $token_resp = Http::post('https://sandbox.woohoo.in/oauth2/token', [
-            "clientId"=>"546300637c4f1caf36daeeb4a10443f6",                  //coming from database
-            "clientSecret"=>"fb3e12b2e1f526b68ff41b79152be092",             //coming from database
+            "clientId"=>setting('api.clientId'),                  //coming from database
+            "clientSecret"=>setting('api.qs_clientSecret'),             //coming from database
             "authorizationCode"=>  $authorizationCode['authorizationCode'] //from signatureGenerate function
         ]);
-        //dd($token_resp->json());
-        // if($token_resp->status() == 200){
-        //     // save token  into database
-        //     //$this->generateToken($token_resp->json());
-        // } else {
-        //     return json_response(["status"=>$token_resp->status(), "msg"=>$token_resp->failed()]);
-        // }
+        //dd($token_resp->json()['token']);
+        if($token_resp->status() == 200){
+            // save token  into database
+            DB::table('settings')->updateOrInsert(['display_name' => 'Bearer Token'],['value' => $token_resp->json()['token']]);
+            return json_encode(["status"=>$token_resp->status(), "data"=>$token_resp->json()['token']]);
+        } else {
+            
+            return json_encode(["status"=>$token_resp->status(), "data"=>$token_resp->failed()]);
+        }
         
     }
 
@@ -105,7 +110,7 @@ class CommonController extends Controller
             return implode('&', $baseStrings);
         }
 
-        echo hash_hmac('sha512', getConcatenateBaseString($absApiUrl, $requestHttpMethod, $requestBody), $clientSecret);
+        //echo hash_hmac('sha512', getConcatenateBaseString($absApiUrl, $requestHttpMethod, $requestBody), $clientSecret);
         return hash_hmac('sha512', getConcatenateBaseString($absApiUrl, $requestHttpMethod, $requestBody), $clientSecret);
 
     }
@@ -114,9 +119,9 @@ class CommonController extends Controller
     public function getCategory(){
         $requestBody = '';
         $requestHttpMethod = 'get';
-        $absApiUrl = 'https://sandbox.woohoo.in/rest/v3/catalog/categories';
-        $clientSecret = 'fb3e12b2e1f526b68ff41b79152be092';
-        $bearerToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjb25zdW1lcklkIjoiNDI5IiwiZXhwIjoxNjc0MzgyMzU2LCJ0b2tlbiI6ImQ5ZThmMzVkMTFlM2YxNDAzNjgyZGEzMjljZGMzODI2In0.BSvQT-nNow2eJxeSo3br0UGgq0UvP1TEhjXcRjc6z3Q';
+        $absApiUrl = "https://".setting('api.woohoo_url')."/rest/v3/catalog/categories";
+        $clientSecret = setting('api.qs_clientSecret');
+        $bearerToken = setting('api.bearer_token');
         $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         //dd($signature);
         
@@ -127,40 +132,79 @@ class CommonController extends Controller
             'signature' => $signature,
         ])->get('https://sandbox.woohoo.in/rest/v3/catalog/categories');
 
-        // save category into database
-        dd($category_resp->json());
-
+        if($category_resp->status == 200){
+            
+            //save category into database
+            $category_resp = $category_resp->json($key = null);
+            $data = [
+                'id'=>$category_resp['id'],
+                'name'=>$category_resp['name'],
+                'url'=>$category_resp['url'],
+                'description'=>$category_resp['description'],
+                'images' => json_encode($category_resp['images']),
+                'subcategoriesCount'=>$category_resp['subcategoriesCount'],
+                'subcategories'=>json_encode($category_resp['subcategories'])
+            ];
+            DB::table('qs_categories')->updateOrInsert(['id' => $category_resp['id']],$data);
+            return json_encode(["status"=>$token_resp->status(), "data"=>'Stored Successfully']);
+        } else {
+            return json_encode(["status"=>$token_resp->status(), "data"=>'Something went wrong']);
+        }
+        
     }
 
     public function getProducts(){
+        $qsCat = QsCategory::pluck('id')->first();
         $requestBody = '';
         $requestHttpMethod = 'get';
-        $absApiUrl = 'https://sandbox.woohoo.in/rest/v3/catalog/categories/121/products';
-        $clientSecret = 'fb3e12b2e1f526b68ff41b79152be092';
-        $bearerToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjb25zdW1lcklkIjoiNDI5IiwiZXhwIjoxNjc0MzgyMzU2LCJ0b2tlbiI6ImQ5ZThmMzVkMTFlM2YxNDAzNjgyZGEzMjljZGMzODI2In0.BSvQT-nNow2eJxeSo3br0UGgq0UvP1TEhjXcRjc6z3Q';
+        $absApiUrl = "https://".setting('api.woohoo_url')."/rest/v3/catalog/categories/".$qsCat."/products";
+        $clientSecret = setting('api.qs_clientSecret');
+        $bearerToken = setting('api.bearer_token');
         $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
-        //dd($signature);
         
         $dateAtClient = Carbon\Carbon::now()->toIso8601String();
        
         $products_resp = Http::acceptJson()->withToken($bearerToken)->withHeaders([
             'dateAtClient' => $dateAtClient,
             'signature' => $signature,
-        ])->get('https://sandbox.woohoo.in/rest/v3/catalog/categories/121/products');
+        ])->get("https://".setting('api.woohoo_url')."/rest/v3/catalog/categories/".$qsCat."/products");
 
         // save Products into database
-        dd($products_resp->json());
-
+       
+        if($products_resp->status() == 200){
+            $collection = collect($products_resp->json($key = null)['products']);
+            $collection->map(function ($item, $key) use ($qsCat) {
+                // $createdAt = Carbon\Carbon::parse($item['createdAt'])->format('Y-m-d H:m:s');
+                // $updatedAt = Carbon\Carbon::parse($item['updatedAt'])->format('Y-m-d H:m:s');
+                $data = [
+                    'sku'=>$item['sku'],
+                    'name'=>$item['name'],
+                    'currency'=>json_encode($item['currency']),
+                    'url'=>$item['url'],
+                    'minPrice'=>$item['minPrice'],
+                    'maxPrice'=>$item['maxPrice'],
+                    'price'=>json_encode($item['price']),
+                    'images' => json_encode($item['images']),
+                    'created_at'=>$item['createdAt'],
+                    'updated_at'=>$item['updatedAt'],
+                    'qs_category_id'=>$qsCat
+                ];
+                DB::table('qs_products')->updateOrInsert(['sku' => $item['sku']],$data);
+            });
+            return json_encode(["status"=>$products_resp->status(), "data"=>'Stored Successfully']);
+        } else {
+            return json_encode(["status"=>$products_resp->status(), "data"=>'Something went wrong']);
+        }
     }
 
     public function getProductbySKU(Request $request){
         $requestBody = '';
         $requestHttpMethod = 'get';
-        $absApiUrl = 'https://sandbox.woohoo.in/rest/v3/catalog/products/CNPIN';
-        $clientSecret = 'fb3e12b2e1f526b68ff41b79152be092';
-        $bearerToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjb25zdW1lcklkIjoiNDI5IiwiZXhwIjoxNjc0MzgyMzU2LCJ0b2tlbiI6ImQ5ZThmMzVkMTFlM2YxNDAzNjgyZGEzMjljZGMzODI2In0.BSvQT-nNow2eJxeSo3br0UGgq0UvP1TEhjXcRjc6z3Q';
+        $absApiUrl = "https://".setting('api.woohoo_url')."/rest/v3/catalog/products/".$request->slug;
+        $clientSecret = setting('api.qs_clientSecret');
+        $bearerToken = setting('api.bearer_token');
         $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
-        //dd($signature);
+        // dd($signature);
         
         $dateAtClient = Carbon\Carbon::now()->toIso8601String();
        
@@ -170,7 +214,79 @@ class CommonController extends Controller
         ])->get('https://sandbox.woohoo.in/rest/v3/catalog/products/CNPIN');
 
         // fetch Products with sku
-        dd($products_resp->json());
+        $prdtDetails = $products_resp->json();
+        return view("userpanel/gift_card_detail_page",compact('prdtDetails'));
+        //dd($products_resp->json());
 
     }
+
+    public function orderCard(){
+        dd(123123);
+        $body='{
+            "address":
+            {
+                "firstname":"kevin","lastname":"","email":"kevin.toutle@gmail.com","telephone":"+918652868765","line1":"86/80","line2":"goregaon","city":"mumbai","region":"maharashtra","country":"IN","postcode":"400104","languages":"Hind","billToThis":true
+            },
+            "payments":
+            [
+                {
+                    "code":"svc",
+                    "amount":1000 //take from selected front end
+                }
+            ],
+            "refno":"CLA3747408489",
+            "products":
+            [
+                {"sku":"CNPIN","price":1000,"qty":1,"currency":356}
+            ],
+            "syncOnly":true,
+            "delivery_mode":"API"
+        }';
+
+        $requestBody = $body;
+        $requestHttpMethod = 'post';
+        $absApiUrl = "https://".setting('api.woohoo_url')."/rest/v3/orders";
+        $clientSecret = setting('api.qs_clientSecret');
+        $bearerToken = setting('api.bearer_token');
+        $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+
+        $response = Http::acceptJson()->withToken($bearerToken)->withHeaders([
+            'dateAtClient' => $dateAtClient,
+            'signature' => $signature,
+            ])->send('POST', 'https://sandbox.woohoo.in/rest/v3/orders', [
+            'body' => $body
+        ])->get();
+
+        dd($response);
+        // if($token_resp->status() == 200){
+        //     // save token  into database
+        //     DB::table('settings')->updateOrInsert(['display_name' => 'Bearer Token'],['value' => $token_resp->json()['token']]);
+        //     return json_encode(["status"=>$token_resp->status(), "data"=>$token_resp->json()['token']]);
+        // } else {
+            
+        //     return json_encode(["status"=>$token_resp->status(), "data"=>$token_resp->failed()]);
+        // }
+        
+    }
+
+    // {
+    //     "address":
+    //     {
+    //         "firstname":"kevin","lastname":"","email":"kevin.toutle@gmail.com","telephone":"+918652868765","line1":"86/80","line2":"goregaon","city":"mumbai","region":"maharashtra","country":"IN","postcode":"400104","languages":"Hind","billToThis":true
+    //     },
+    //     "payments":
+    //     [
+    //         {
+    //             "code":"svc",
+    //             "amount":1000 //take from selected front end
+    //         }
+    //     ],
+    //     "refno":"CLA3747408489",
+    //     "products":
+    //     [
+    //         {"sku":"CNPIN","price":1000,"qty":1,"currency":356}
+    //     ],
+    //     "syncOnly":true,
+    //     "delivery_mode":"API"
+    // }
 }

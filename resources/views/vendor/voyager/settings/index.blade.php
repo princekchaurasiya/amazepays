@@ -205,6 +205,9 @@
         .voyager .settings .nav-tabs > li > a:hover{
             background-color:#fff !important;
         }
+        .generate-token{
+            margin-bottom:2% !important;
+        }
     </style>
 @stop
 
@@ -249,10 +252,10 @@
                         
                         <div id="{{ \Illuminate\Support\Str::slug($group) }}" class="tab-pane fade in @if($group == $active) active @endif">
                             @if ($group=="API")
-                            <div class="panel-heading">
-                                <button type="button" class="btn btn-danger pull-right delete-confirm">Generate Token</button>
+                            <div class="generate-token">
+                                <button type="button" class="btn btn-danger pull-right " id="generate-token">Generate Token</button>
                             </div>
-                        @endif
+                            @endif
                             @foreach($group_settings as $setting)
                             <div class="panel-heading">
                                 <h3 class="panel-title">
@@ -526,5 +529,28 @@
             console.log(options_editor.getValue());
             options_textarea.value = options_editor.getValue();
         });
+    </script>
+    <script>
+        $('input[name="api.bearer_token"]').prop('readonly', true);
+        $('#generate-token').click(function(e){
+            e.preventDefault();
+            var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
+            $.ajax({
+                type:'POST',
+                url:"{{ route('generate-authcode') }}",
+                data:{_token:CSRF_TOKEN},
+                //dataType: 'json',
+                //contentType: "application/json",
+                success:function(data){
+                    $('input[name="api.bearer_token"]').val(data.data);
+                    $('input[name="api.bearer_token"]').prop('readonly', true);
+                },
+                error:function (jqXHR, textStatus, errorThrown) {
+                    console.log(textStatus);
+                }
+            });
+        });
+
+        
     </script>
 @stop

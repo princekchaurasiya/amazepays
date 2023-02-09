@@ -15,23 +15,31 @@ use Illuminate\Support\Facades\Route;
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
 });
-Route::get('/', function () {
-    return view('userpanel/index');
-});
+Route::get('/', [App\Http\Controllers\UserPanelController::class, 'homePage'])->name('home');
 Route::get('/gift_card_detail_page/{id}', function () {
-    return view('userpanel/gift_card_detail_page');
+    return view('userpanel/gift_card_detail_page_old');
 })->name('gift_card_detail_page');                                                                                          
 
-Route::post('/generate-authcode', [App\Http\Controllers\CommonController::class, 'generateAuthcode'])->name('generate-authcode');
+Route::post('/generate-authcode', [App\Http\Controllers\CommonController::class, 'generateAuthcode'])->name('generate-authcode'); //admin
 
 
 Route::get('/get-category',  [App\Http\Controllers\CommonController::class, 'getCategory'])->name('get-category');
 Route::get('/get-product',  [App\Http\Controllers\CommonController::class, 'getProducts'])->name('get-product');
-Route::get('/get-product-sku',  [App\Http\Controllers\CommonController::class, 'getProductbySKU'])->name('get-product-sku');
+Route::get('/get-product-sku/{slug}',  [App\Http\Controllers\CommonController::class, 'getProductbySKU'])->name('get-product-sku');
 
-Route::get('/checkout', function () {
-    return view('userpanel/checkout');
-})->name('checkout');
+Route::group(['middleware'=>'guest'],function(){
+    Route::post('/user-registration',[App\Http\Controllers\UserPanelController::class, 'userRegistration'])->name('user-registration');
+    Route::post('/user-login',[App\Http\Controllers\UserPanelController::class, 'userLogin'])->name('user-login');
+});
+Route::group(['middleware'=>'auth'],function(){
+    Route::post('/order-card',  [App\Http\Controllers\CommonController::class, 'orderCard'])->name('order-card'); // auth user only
+    Route::post('/checkout',[App\Http\Controllers\UserPanelController::class, 'checkOut'])->name('checkout');
+    Route::get('/user-logout',[App\Http\Controllers\UserPanelController::class, 'userLogOut'])->name('user-logout');
+});
+
+
+
+//Route::post('/check-user-validation', [App\Http\Controllers\UserPanelController::class, 'checkUserValidation'])->name('check-user-validation'); //auth user only
 
 
 Route::post('/check-data', [App\Http\Controllers\CommonController::class, 'checkData'])->name('check-data');

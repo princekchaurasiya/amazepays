@@ -96,8 +96,13 @@
                         </div>
                     </div>
                     <div class="col-lg-4 text-right">
-                        <a href="#" class="header-btn bg-dark fw-500 text-white font-xssss" data-toggle="modal" data-target="#Modallogin">Login</a>
-                        <a href="#" class="header-btn bg-current fw-500 text-white font-xssss" data-toggle="modal" data-target="#ModalregisterD">Register</a>
+                        @if(\Auth::check())
+                            <a href="{{route('user-logout')}}" class="header-btn bg-dark fw-500 text-white font-xssss">Logout</a>
+                        @else
+                            <a href="#" class="header-btn bg-dark fw-500 text-white font-xssss" data-toggle="modal" data-target="#Modallogin">Login</a>
+                            <a href="#" class="header-btn bg-current fw-500 text-white font-xssss register-form" data-toggle="modal" data-target="#ModalregisterD">Register</a>
+                        @endif
+                        
                     </div>
                 </div>
             </div>
@@ -165,7 +170,7 @@
     </div> 
 
     <!-- Modal Register -->
-    <div class="modal bottom fade" id="ModalregisterD" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal fade" id="ModalregisterD" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static" data-keyboard="false" aria-hidden="true">
          <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content border-0">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="ti-close text-grey-500"></i></button>
@@ -173,25 +178,38 @@
                     <div class="card shadow-none rounded-0 w-100 p-2 pt-3 border-0">
                         <div class="card-body rounded-0 text-left pt-0">
                             <h2 class="fw-600 display2-size mb-4">Create <br>your account</h2>
-                            <form>
+                            <form id="registration-form">
+                            <span class="font-xssss fw-400 main-register-error text-center"></span> 
                                 <div class="form-group mb-3">
-                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Name">                        
+                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Name" id="name"> 
+                                    <span class="font-xssss fw-400 error-name"></span>                       
                                 </div>
                                 <div class="form-group mb-3">
-                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" value="Email">                        
+                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Mobile Number" id="mobile"> 
+                                    <span class="font-xssss fw-400 error-mobile"></span>                       
+                                </div>
+                                <div class="form-group mb-3">
+                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Email" id="email">    
+                                    <span class="font-xssss fw-400 error-email"></span>                    
                                 </div>
                                 <div class="form-group icon-tab mb-3">
-                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" value="Password">
+                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Password" id="password">
                                     <i class="ti-lock text-grey-700 pr-0"></i>
+                                    <span class="font-xssss fw-400 error-password"></span>
                                 </div>
                                 <div class="form-group icon-tab mb-3">
-                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" value="Confirm Password">
+                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Confirm Password" id="confmPassword">
                                     <i class="ti-lock text-grey-700 pr-0"></i>
+                                    <span class="font-xssss fw-400 error-confmPass"></span>
                                 </div>
+                                <div class="form-group icon-tab mb-3">
+                                    <a href="#" class="text-center form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0" id="createUser">Create an account</a>
+                                </div>
+                                
                             </form>
                              
                             <div class="col-sm-12 p-0 text-center">
-                                <a href="#" class="form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0">Create an account</a>
+                                <!-- <a href="#" class="form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0">Create an account</a> -->
                                 <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-4 lh-32">Are you already member? <a href="#" class="fw-700 ml-1 text-current" data-toggle="modal" data-target="#Modallogin" data-dismiss="modal">Login</a></h6>
                                 <div class="row">
                                     <div class="col-6 pr-1"><a href="#" class="form-control h60 p-0 pl-5 bg-lightblue text-grey-700 border-2 border-0 font-xssss fw-600  position-relative">Login with OTP</a></div>
@@ -210,7 +228,7 @@
     </div>
 
     <!-- Modal Login -->
-    <div class="modal bottom fade" id="Modallogin" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal bottom fade" id="Modallogin" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static" data-keyboard="false" aria-hidden="true">
          <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content border-0">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="ti-close text-grey-500"></i></button>
@@ -218,25 +236,30 @@
                     <div class="card shadow-none rounded-0 w-100 p-2 pt-3 border-0">
                         <div class="card-body rounded-0 text-left pt-0 pb-2">
                             <h2 class="fw-600 display2-size mb-4">Login into <br>your account</h2>
-                            <form>
+                                    <span class="font-xssss fw-400 main-error text-center"></span> 
+                            <form id="login-form">
                                 
                                 <div class="form-group mb-3">
-                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" value="Email">                        
+                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Mobile Number" id="loginMobNumb"> 
+                                    <span class="font-xssss fw-400 error-loginMobNumb"></span>                       
                                 </div>
-                                <div class="form-group icon-tab mb-1">
-                                    <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" value="Password">
-                                    <i class="ti-lock text-grey-700 pr-0"></i>
+                                <div class="form-group mb-3">
+                                    <input type="password" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Password" id="loginPass"> 
+                                    <span class="font-xssss fw-400 error-loginPass"></span>                       
                                 </div>
                                 <div class="form-check text-left mb-3">
                                     <input type="checkbox" class="form-check-input mt-2" id="exampleCheck1">
                                     <label class="form-check-label font-xsss text-grey-500" for="exampleCheck1">Remember me</label>
                                     <a href="#" class="fw-600 font-xsss text-grey-700 mt-1 float-right" data-toggle="modal" data-target="#Modalforgotpassword"  data-dismiss="modal">Forgot your Password?</a>
                                 </div>
+
+                                <div class="form-group icon-tab mb-3">
+                                    <a href="#" class="text-center form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0" id="loginUser">Login</a>
+                                </div>
                             </form>
                              
                             <div class="col-sm-12 p-0 text-center">
-                                <a href="#" class="form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0">Login</a>
-                                <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Dont have account <a href="#" class="fw-700 ml-1 text-current" data-toggle="modal" data-target="#ModalregisterD" data-dismiss="modal">Register</a></h6>
+                                <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Dont have account <a href="#" class="fw-700 ml-1 text-current register-form" data-toggle="modal" data-target="#ModalregisterD" data-dismiss="modal">Register</a></h6>
                             </div>
 
                             <div class="col-sm-12 p-0 text-center">
@@ -302,11 +325,174 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/jquery.slick/1.6.0/slick.min.js"></script>
-    @stack('scripts')
-    
-   
-    
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.min.js"></script>
+    <script>
+
+        // close button
+        $('.close').click(function(){
+                $(".error-name").text('');
+                $(".error-mobile").text('');
+                $(".error-email").text('');
+                $(".error-password").text('');
+
+                $(".error-loginMobNumb").text('');
+                $(".error-loginPass").text('');
+
+                $(".main-error").text('');
+        });
+        // for registration
+            // $('.register-form').click(function(){
+            //     $(".error-name").text('');
+            //     $(".error-mobile").text('');
+            //     $(".error-email").text('');
+            //     $(".error-password").text('');
+            // });
+            
+            $('#createUser').click(function(e){
+                e.preventDefault();
+                // $(this).find('form')[0].reset();
+                var name = $('#name').val();
+                var mobile = $('#mobile').val();
+                var email = $('#email').val();
+                var password = $('#password').val();
+                var confmPassword = $('#confmPassword').val();
+                var regxMobile = /^(?:(?:\+|0{0,2})91(\s*[\-]\s*)?|[0]?)?[789]\d{9}$/;
+                var regxEmail = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+                var status = false;
+                if(name.length != ''){
+                    status = true;
+                }else {
+                    status = false;
+                    $(".error-name").text('Name required');
+                }
+                if(regxMobile.test(mobile) && mobile.length ==10 && mobile.length!= ''){
+                    status = true;
+                } else {
+                    status = false;
+                    $(".error-mobile").text('Mobile required');
+                }
+                if(regxEmail.test(email) && email.length!= ''){
+                    status = true;
+                } else {
+                    $(".error-email").text('Email required');
+                    status = false;
+                }
+                if(confmPassword == password && password.length!= ''){
+                    status = true;
+                } else {
+                    $(".error-password").text('Password required/ Password does not match');
+                    status = false;
+                }
+                if(status == true){
+                    userRegister(name,mobile,email,password);
+                } else {
+                    return status;
+                }
+            });
+
+            function userRegister(name,mobile,email,password){
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                var formData = new FormData();
+                formData.append('name',name);
+                formData.append('mobile',mobile);
+                formData.append('email',email);
+                formData.append('password',password);
+                var type = "POST";
+                var ajaxurl = "{{url('/user-registration')}}";
+                $.ajax({
+                    type: type,
+                    url: ajaxurl,
+                    contentType: 'application/json',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    success: function (data) {
+                        if(data.status == 200){
+                            location.reload(true);
+                        } else {
+                            $(".main-register-error").text(data.msg);
+                        }
+                    },
+                    error: function (data) {
+                        console.log(data);
+                    }
+                });
+                return false;
+            }
+        //  end registration
+        
+        // for login
+        // $('.login-form').click(function(){
+        //         $(".error-loginMobNumb").text('');
+        //         $(".error-loginPass").text('');
+        //     });
+            
+            $('#loginUser').click(function(e){
+                e.preventDefault();
+                // $(this).find('form')[0].reset();
+                var mobile = $('#loginMobNumb').val();
+                var password = $('#loginPass').val();
+                var regxMobile = /^(?:(?:\+|0{0,2})91(\s*[\-]\s*)?|[0]?)?[789]\d{9}$/;
+                var status = true;
+                // if(regxMobile.test(mobile) && mobile.length ==10 && mobile.length!= ''){
+                //     status = true;
+                // } else {
+                //     status = false;
+                //     $(".error-loginMobNumb").text('Mobile required');
+                // }
+                // if(password.length != ''){
+                //     status = true;
+                // } else {
+                //     $(".error-loginPass").text('Password required');
+                //     status = false;
+                // }
+                if(status == true){
+                    userLogin(mobile,password);
+                } else {
+                    return status;
+                }
+            });
+
+            function userLogin(mobile,password){
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                var formData = new FormData();
+                formData.append('email',mobile);
+                formData.append('password',password);
+                var type = "POST";
+                var ajaxurl = "{{url('/user-login')}}";
+                $.ajax({
+                    type: type,
+                    url: ajaxurl,
+                    contentType: 'application/json',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    // dataType: 'json',
+                    success: function (data) {
+                        if(data.status == 200){
+                            location.reload(true);
+                        } else {
+                            $(".main-error").text('Something went wrong');
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log(jqXHR);
+                    }
+                });
+                return false;
+            }
+        // end login
+    </script>
+    @stack('scripts')   
 </body>
 
 </html>

@@ -5808,7 +5808,7 @@
                 "laravel",
                 "panel"
             ],
-<<<<<<< HEAD
+
             "support": {
                 "issues": "https://github.com/the-control-group/voyager/issues",
                 "source": "https://github.com/the-control-group/voyager"
@@ -5836,9 +5836,9 @@
                 }
             ],
             "time": "2021-11-09T08:33:29+00:00"
-=======
-            "time": "2022-10-20T09:12:29+00:00"
->>>>>>> 95140d0e73b8536193fefff092278616aa1d5bad
+
+
+
         },
         {
             "name": "tijsverkoyen/css-to-inline-styles",

@@ -33,16 +33,14 @@ Route::group(['middleware'=>'guest'],function(){
 });
 Route::group(['middleware'=>'auth'],function(){
     Route::post('/order-card',  [App\Http\Controllers\CommonController::class, 'orderCard'])->name('order-card'); // auth user only
-    Route::post('/checkout',[App\Http\Controllers\UserPanelController::class, 'checkOut'])->name('checkout');
+    Route::post('/checkout/{sku}',[App\Http\Controllers\UserPanelController::class, 'checkOut'])->name('checkout');
     Route::get('/user-logout',[App\Http\Controllers\UserPanelController::class, 'userLogOut'])->name('user-logout');
+    Route::post('/apply-coupan', [App\Http\Controllers\UserPanelController::class, 'applyCoupan'])->name('apply-coupan'); //auth user only
+    Route::post('/remove-apply-coupan', [App\Http\Controllers\UserPanelController::class, 'removeApplyCoupan'])->name('remove-apply-coupan'); //auth user only
 });
 
-
-
-//Route::post('/check-user-validation', [App\Http\Controllers\UserPanelController::class, 'checkUserValidation'])->name('check-user-validation'); //auth user only
-
-
 Route::post('/check-data', [App\Http\Controllers\CommonController::class, 'checkData'])->name('check-data');
+Route::get('/view-all-product', [App\Http\Controllers\UserPanelController::class, 'viewAllProduct'])->name('view-all-product');
 
 Route::get('/profile', function () {
     return view('userpanel/profile');
@@ -55,10 +53,6 @@ Route::get('/my-order', function () {
 Route::get('/change-password', function () {
     return view('userpanel/change-password');
 })->name('change-password');
-
-Route::get('/view-all-product/{slug}', function () {
-    return view('userpanel/view_all_product');
-})->name('view-all-product');
 
 Route::get('/about', function () {
     return view('userpanel/about');

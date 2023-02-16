@@ -184,30 +184,35 @@
                                             <div class="col-lg-12 col-sm-12">
                                                 <div class="row order-data">
                                                     <div class="mont-font col-md-6 col-sm-4 col-xs-6 order-summary"><span>Order Summary</span></div>
-                                                    <div class="col-md-6 col-sm-4 col-xs-6"><a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="float-right mont-font">Edit</a></div>
+                                                    <div class="col-md-6 col-sm-4 col-xs-6"><a href="{{ route('get-product-sku', ['slug' => $qsProd->sku]) }}" class="float-right mont-font">Edit</a></div>
                                                 </div>
                                                 <div class="row cart-item-record">
                                                     <div class="col-md-6 col-sm-4 col-xs-12">
-                                                        <img class="cart-coupan-img" src="{{URL::asset('/images/hamburger.jpg')}}" alt="Avatar" style="width:100%;">
+                                                        <img class="cart-coupan-img" src="{{json_decode($qsProd['images'])->small == null ? URL::asset('/images/hamburger.jpg'): json_decode($qsProd['images'])->small}}" alt="Avatar" style="width:100%;">
                                                     </div>
-                                                    <div class="col-md-6 col-sm-4 col-xs-9"><span class="product-name mont-font">Amazon Pay E-Gift Card  </span>
+                                                    <div class="col-md-6 col-sm-4 col-xs-9"><span class="product-name mont-font">{{$qsProd->name}}</span>
                                                         <div class="row item-qty-subtotal">
-                                                            <div class="col-md-6 col-sm-4 col-xs-6"><span>Qty : 1</span></div>
-                                                            <div class="col-md-6 col-sm-4 col-xs-6"><span>Subtotal : ₹100</span></div>
+                                                            <div class="col-md-6 col-sm-4 col-xs-6"><span>Qtn : {{$qsProd->prodData['quantity']}}</span></div>
+                                                            <div class="col-md-6 col-sm-4 col-xs-6"><span>Subtotal :₹{{$qsProd->prodData['denomination']}}</span></div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="row coupan-code">
                                                     <div class="col-md-12 col-sm-4 col-xs-12">
                                                         <form class="coupan-code-form"><input type="text" class="coupan-code-input mont-font" placeholder="Enter Coupan Code" id="coupan-code"><a href="#" id="apply-coupan"class="bg-current border-0 text-white apply-coupan-button mont-font">Button</a></form>
+                                                        <div class="col-md-6 col-sm-4 col-xs-6"><a href="#" class="float-right mont-font" id="remove-coupan-code">Remove</a></div>
                                                     </div>
                                                 </div>
                                                 <hr>
                                                 <div class="row total-amount">
                                                     <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font"><span>Grand Total : </span></div>
-                                                    <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font"><span>₹100</span></div>
+                                                    <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font"><input type="hidden" value="{{$qsProd->prodData['denomination'] * $qsProd->prodData['quantity']}}" id="grand-amount"><span>₹{{$qsProd->prodData['denomination'] * $qsProd->prodData['quantity']}}</span></div>
+                                                    <div class="coupan-code-amount">
+                                                        <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font apply-coupan"><span>Apply Coupan : </span></div>
+                                                        <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font apply-coupan-amount"><span>₹</span></div>
+                                                    </div>
                                                     <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font"><span>Payable Amount : </span></div>
-                                                    <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font"><span>₹1000</span></div>
+                                                    <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font total-payable-amount"><span>₹{{$qsProd->prodData['denomination'] * $qsProd->prodData['quantity']}}</span></div>
                                                 </div>
                                             </div>   
                                         </div>
@@ -226,7 +231,15 @@
  
     @push('scripts')
         <script type="text/javascript">
-            $('#apply-coupan').click( function(e) {
+            $(document).ready(function(){
+                var storageData = JSON.parse(window.localStorage.getItem('data'));
+                console.log(storageData);
+            });
+            $('.coupan-code-amount').css('display','none');
+            $('#remove-coupan-code').css('display','none');
+        
+            // final step of order place api
+            $('#place-order').click( function(e) {
                 $.ajaxSetup({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -238,7 +251,7 @@
                  
                 
                 var type = "POST";
-                var ajaxurl = "{{url('/check-data')}}";
+                var ajaxurl = "{{url('/')}}";
                 $.ajax({
                     type: type,
                     url: ajaxurl,
@@ -257,8 +270,9 @@
                 });
                 return false;
             });
-            // place order
-            $('#place-order').click( function(e) {
+            
+            // Apply Coupan
+            $('#apply-coupan').click( function(e) {
                 $.ajaxSetup({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -267,10 +281,10 @@
                 e.preventDefault();
                 var formData = new FormData();
                 formData.append( 'coupan',$('#coupan-code').val());
-                 
+                formData.append( 'grand_total',$('#grand-amount').val());
                 
                 var type = "POST";
-                var ajaxurl = "{{url('/order-card')}}";
+                var ajaxurl = "{{url('/apply-coupan')}}";
                 $.ajax({
                     type: type,
                     url: ajaxurl,
@@ -280,8 +294,46 @@
                     contentType: false,
                     dataType: 'json',
                     success: function (data) {
-                        debugger;
+                        $('.apply-coupan-amount').text(data.coupan+'%');
+                        $('.coupan-code-amount').css('display','contents');
+                        $('#remove-coupan-code').css('display','contents');
+                        $('.total-payable-amount').text('₹'+data.aftApplyCoupan);
+                    },
+                    error: function (data) {
                         console.log(data);
+                    }
+                });
+                return false;
+            });
+
+            // remove copuan code
+            $('#remove-coupan-code').click( function(e) {
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                e.preventDefault();
+                 var formData = new FormData();
+                 formData.append( 'grand_total',$('#grand-amount').val());
+                 
+                
+                var type = "POST";
+                var ajaxurl = "{{url('/remove-apply-coupan')}}";
+                $.ajax({
+                    type: type,
+                    url: ajaxurl,
+                    contentType: 'application/json',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    success: function (data) {
+                        $('.apply-coupan-amount').text(data.coupan);
+                        $('.coupan-code-amount').css('display','none');
+                        $('#remove-coupan-code').css('display','none');
+                        $('#coupan-code').val('');
+                        $('.total-payable-amount').text('₹'+data.grandTotal);
                     },
                     error: function (data) {
                         console.log(data);

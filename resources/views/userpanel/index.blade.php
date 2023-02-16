@@ -32,7 +32,7 @@
                         <h2 class="text-grey-900 fw-700 font-xxl pb-0 mb-4 d-block text-left">{{$getCategory->name}}</h2>
                     </div>
                     <div class="col-lg-6 col-xs-6">
-                        <a href="{{route('view-all-product' , ['slug' => '1'])}}" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
+                        <a href="{{route('view-all-product')}}" class="fw-600 font-xsss text-current d-block text-right">View More <i class="ti-angle-right font-xssss"></i></a>
                     </div>
                 </div>
                 <div class="row">                

@@ -1,6 +1,6 @@
 @extends('app')
 @section('title')
-    Gift & Giggles
+    Amazepay | About
 @endsection
 @section('content')
 

@@ -1,6 +1,6 @@
 @extends('app')
 @section('title')
-    Gift & Giggles
+Amazepay | Transaction
 @endsection
 @section('content')
         <div class="online bg-lightgrey-after pb-7 pt-3 position-relative">

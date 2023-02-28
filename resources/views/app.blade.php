@@ -76,19 +76,19 @@
                         <div class="collapse navbar-collapse" id="navbarNavDropdown">
                             <ul class="navbar-nav nav-menu float-none text-center">
                             <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                                <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Services <i class="ti-angle-down"></i></a>
+                                {{-- <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Services <i class="ti-angle-down"></i></a>
                                     <div class="dropdown-menu">
                                         <a class="dropdown-item" href="#">Money Transfer</a>
                                         <a class="dropdown-item" href="#">Bill payment</a>
                                         
                                     </div>
-                                </li>
-                                <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Products <i class="ti-angle-down"></i></a>
+                                </li> --}}
+                                {{-- <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Products <i class="ti-angle-down"></i></a>
                                     <div class="dropdown-menu">
                                         <a class="dropdown-item" href="#">Gift Cards</a>
                                         <a class="dropdown-item" href="#">Bank Gift Cards</a>
                                     </div>
-                                </li>
+                                </li> --}}
                                 <li class="nav-item"><a class="nav-link" href="{{ url('about') }}">About</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url('contact_us') }}">Contact</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url('f&q') }}">F&Q</a></li>

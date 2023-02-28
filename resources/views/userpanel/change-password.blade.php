@@ -1,6 +1,6 @@
 @extends('app')
 @section('title')
-    Gift & Giggles
+Amazepay | Change Password
 @endsection
 @section('content')
     <div class="dashboard-wrapper bg-greylight">

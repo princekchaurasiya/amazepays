@@ -1,6 +1,6 @@
 @extends('app')
 @section('title')
-    Gift & Giggles
+Amazepay | Products
 @endsection
 @section('content')
         <div class="product-wrapper pt-lg--7 pt-5 pb-lg--7 pb-5">

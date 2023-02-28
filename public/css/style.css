@@ -45,6 +45,10 @@
 
 /* for recharge plan */
 
+body{
+  /* font-family: "Montserrat", sans-serif !important; */
+}
+
 #view-plan {
   font-size: 10px;
   position: absolute;
@@ -12497,7 +12501,7 @@ strong,
 .header-wrapper {
   padding: 20px 0;
   background-color: transparent;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 1px 1px 1px 1px rgb(237 237 237) !important;
 }
 .header-wrapper.b-bottom {
   border-bottom: 3px solid var(--theme-color);
@@ -12622,7 +12626,7 @@ strong,
   color: #000 !important;
 }
 .header-wrapper .nav-menu li {
-  padding: 0 15px;
+  padding: 0 10px;
   display: inline-block;
   float: left;
 }
@@ -15597,7 +15601,7 @@ body {
 }
 .coupan-code-input{
     display: inline-block;
-    width: 70%;
+    width: 65%;
     height: 40px;
     margin-bottom: 0px;
     padding: 9px 12px;
@@ -15706,3 +15710,43 @@ body {
 }
 
 /*# sourceMappingURL=style.css.map */
+
+/* custloader code starts here */
+
+.custLoaderDiv{
+  position: absolute;
+}
+.custLoaderImage{
+  width: 3rem;
+  padding: 0.4rem;
+}
+
+.hideLoader{
+  display: none;
+}
+
+ /* custLoader code ends here */
+
+ /* apply button code starts here */
+
+.red{
+  background-color: #b20202 !important;
+}
+
+
+ /* apply buuton code ends here */
+
+ /* input  field disabled code starts here */
+
+ .custDisabled 
+    {
+        cursor: not-allowed;
+        background-color: rgb(229, 229, 229) !important;
+        pointer-events:none;
+    }
+
+ /* input  field disabled code ends here */
+
+ .custDisplayNone{
+  display: none !important;
+ }

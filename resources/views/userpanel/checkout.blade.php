@@ -1,6 +1,6 @@
 @extends('app')
 @section('title')
-    Gift & Giggles
+Amazepay | Checkout
 @endsection
 @section('content')
         <div class="faq-wrapper pt-4 pb-0">
@@ -192,23 +192,27 @@
                                                     </div>
                                                     <div class="col-md-6 col-sm-4 col-xs-9"><span class="product-name mont-font">{{$qsProd->name}}</span>
                                                         <div class="row item-qty-subtotal">
-                                                            <div class="col-md-6 col-sm-4 col-xs-6"><span>Qtn : {{$qsProd->prodData['quantity']}}</span></div>
-                                                            <div class="col-md-6 col-sm-4 col-xs-6"><span>Subtotal :₹{{$qsProd->prodData['denomination']}}</span></div>
+                                                            <div class="col-md-4 col-sm-4 col-xs-6"><span>Qtn : {{$qsProd->prodData['quantity']}}</span></div>
+                                                            <div class="col-md-8 col-sm-4 col-xs-6"><span>Subtotal :₹{{$qsProd->prodData['denomination']}}</span></div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="row coupan-code">
                                                     <div class="col-md-12 col-sm-4 col-xs-12">
-                                                        <form class="coupan-code-form"><input type="text" class="coupan-code-input mont-font" placeholder="Enter Coupan Code" id="coupan-code"><a href="#" id="apply-coupan"class="bg-current border-0 text-white apply-coupan-button mont-font">Button</a></form>
-                                                        <div class="col-md-6 col-sm-4 col-xs-6"><a href="#" class="float-right mont-font" id="remove-coupan-code">Remove</a></div>
+                                                        <form class="coupan-code-form"><input type="text" class="coupan-code-input mont-font" placeholder="Enter Coupan Code" id="coupan-code"><a href="#" id="apply-coupan"class="bg-current border-0 text-white apply-coupan-button mont-font ">Apply</a>
+                                                        <span class="custLoaderDiv">
+                                                            <img src="{{URL::asset('images/preloader.svg')}}" alt="" id = "custLoaderImage" class="custLoaderImage img-responsive hideLoader">
+                                                        </span>
+                                                        </form>
+                                                        {{-- <div class="col-md-6 col-sm-4 col-xs-6"><a href="#" class="float-right mont-font" id="">Remove</a></div> --}}
                                                     </div>
                                                 </div>
                                                 <hr>
                                                 <div class="row total-amount">
                                                     <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font"><span>Grand Total : </span></div>
                                                     <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font"><input type="hidden" value="{{$qsProd->prodData['denomination'] * $qsProd->prodData['quantity']}}" id="grand-amount"><span>₹{{$qsProd->prodData['denomination'] * $qsProd->prodData['quantity']}}</span></div>
-                                                    <div class="coupan-code-amount">
-                                                        <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font apply-coupan"><span>Apply Coupan : </span></div>
+                                                    <div class="coupan-code-amount" id="discountDiv">
+                                                        <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font apply-coupan"><span>Discount : </span></div>
                                                         <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font apply-coupan-amount"><span>₹</span></div>
                                                     </div>
                                                     <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font"><span>Payable Amount : </span></div>
@@ -341,6 +345,38 @@
                 });
                 return false;
             });
+
+            // on click apply coupon code starts here
+
+            const applyButton = $('#apply-coupan');
+            const loaderImage  = $('#custLoaderImage');
+            isHideLoaderPresent = loaderImage.hasClass('hideLoader');
+            const inputFeild = $('#coupan-code');
+            const discoutDiv = $('#discoutDiv');
+
+            applyButton.click(function(){
+                if(isHideLoaderPresent){
+                loaderImage.removeClass("hideLoader");
+                setTimeout(function() {loaderImage.addClass('hideLoader');}, 1000);
+                };
+                if(applyButton.html() === "Apply"){
+                    applyButton.html("Remove");
+                    applyButton.addClass("red");
+                    inputFeild.addClass("custDisabled");
+                }
+                else{
+                    applyButton.html("Apply");
+                    applyButton.removeClass("red");
+                    inputFeild.removeClass("custDisabled");
+                    discoutDiv.css("display", "none");
+                };
+            });
+
+            // on click apply button code ends here
+                        
         </script>
     @endpush
 @endsection
+
+{{-- loader on click code starts here --}}
+

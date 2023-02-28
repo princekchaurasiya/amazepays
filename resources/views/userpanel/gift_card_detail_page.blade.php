@@ -1,6 +1,6 @@
 @extends('app')
 @section('title')
-    Gift & Giggles
+Amazepay | Gift Card
 @endsection
 @section('content')
 
@@ -125,9 +125,9 @@
                     $('.preview > img').attr("src",$('.active:first').find('img').attr('src')); 
 
                     var storageData = JSON.parse(window.localStorage.getItem('data'));     
-                    $('#receiver-name').val(storageData.recName);
-                    $('#receiver-email').val(storageData.recEmail);
-                    $('#receiver-msg').val(storageData.recMsg); 
+                    // $('#receiver-name').val(storageData.recName);
+                    // $('#receiver-email').val(storageData.recEmail);
+                    // $('#receiver-msg').val(storageData.recMsg); 
                     // alert($('.copuan-quantity').find('.range').attr('type').length);
                     if($('.copuan-quantity').find('.range').attr('type') == 'radio'){
 
@@ -238,7 +238,9 @@
                 }
 
                 if (quantity.length == "") {
-                    $(".error-rec-qnty").text('Enter Quantity');
+                    $(".error-rec-qnty").text('Enter Quantity' );
+                    $(".error-rec-qnty").css('color', 'red');
+                    // $(this).css('color', 'red');
                     status     = false;
                 } else {
                     $(".error-rec-qnty").empty();

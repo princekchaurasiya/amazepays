@@ -1,6 +1,6 @@
 @extends('app')
 @section('title')
-    Gift & Giggles
+Amazepay | Terms of Services
 @endsection
 @section('content')
         <div class="faq-wrapper pt-4 pb-0">

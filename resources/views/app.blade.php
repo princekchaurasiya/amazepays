@@ -63,11 +63,11 @@
                 </div>
             </div>
         </div>
-        <div class="header-wrapper">
+        <div class="header-wrapper ">
             <div class="container">
-                <div class="row">
-                    <div class="col-lg-8 navbar">
-                         <a href="/" class="logo"><h1 class="fredoka-font ls-3 fw-700 text-current display1-size">Amazepays</h1></a>
+                <div class="row sticky-top">
+                    <div class="col-lg-7 navbar">
+                         <a href="/" class="logo"><img src="{{asset('images/logo.png')}}" alt="logo" class="custLogo"></a>
                         <button class="navbar-toggler" type="button" data-toggle="collapse"
                             data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
                             aria-expanded="false" aria-label="Toggle navigation">
@@ -95,7 +95,7 @@
                             </ul>
                         </div>
                     </div>
-                    <div class="col-lg-4 text-right">
+                    <div class="col-lg-5 text-right align-self-center">
                         @if(\Auth::check())
                             <a href="{{route('user-logout')}}" class="header-btn bg-dark fw-500 text-white font-xssss">Logout</a>
                         @else
@@ -119,7 +119,7 @@
                         <div class="row">
                             <div class="col-md-12 col-lg-4 col-sm-9 col-xs-12 md-mb25">
                                 <!-- <a href="index.html" class="logo"><img src="images/logo.png" alt="logo"></a> -->
-                                <a href="/" class="logo"><h1 class="fredoka-font ls-3 fw-700 text-current display1-size">Amazepays</h1></a>
+                                <a href="/" class="logo"><img src="{{asset('images/logo.png')}}" alt="logo" class="custLogo"></a>
                                 <p class="w-100 mt-lg-5 mt-4">293/2330,Ashirwad CHS Ltd.<br/> Motilal Nagar, M.G.Road, Opp. Ganesh Maidan, Goregoan (West) <br/> Mumbai – 400104</p>                               
                             </div>
                             

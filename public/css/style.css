@@ -15750,3 +15750,12 @@ body {
  .custDisplayNone{
   display: none !important;
  }
+
+ .custLogo{
+  max-height: 80px !important;
+ }
+
+ 
+.header-wrapper{
+  padding: 10px;
+}

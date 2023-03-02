@@ -15,21 +15,20 @@ Amazepay | Checkout
                     <div class="table-content table-responsive mb-5 card border-0 bg-greyblue p-5">
                             <div class="page-title">
                                 <div class="row">
-                                <div class="col-md-6 col-sm-4 col-xs-6"><h4 class="mont-font fw-500 font-xxl mb-5">Sender Details</h4></div>
-                                <div class="col-md-6 col-sm-4 col-xs-6"><a href="#" class="float-right">Edit</a></div>
+                                <div class="col-12"><h4 class="mont-font fw-500 font-xxl mb-5">Sender Details</h4></div>
                                 </div>
                                 <form action="#">
                                     <div class="row">
                                         <div class="col-lg-6 mb-3">
                                             <div class="form-gorup">
                                                 <label class="mont-font fw-500 font-xsss" for="comment-name">First Name</label>
-                                                <input type="text" name="comment-name" class="form-control" value="{{\Auth::user()->name }}" readonly>  
+                                                <input type="text" name="comment-name" class="form-control" value="{{\Auth::user()->name }}" >  
                                             </div>        
                                         </div>
                                         <div class="col-lg-6 mb-3">
                                             <div class="form-gorup">
                                                 <label class="mont-font fw-500 font-xsss" for="comment-name">Email</label>
-                                                <input type="text" name="comment-name" class="form-control" value="{{\Auth::user()->email }}" readonly>
+                                                <input type="text" name="comment-name" class="form-control" value="{{\Auth::user()->email }}">
                                             </div>        
                                         </div>
                                         
@@ -40,7 +39,7 @@ Amazepay | Checkout
                                         <div class="col-lg-6 mb-3">
                                             <div class="form-gorup">
                                                 <label class="mont-font fw-500 font-xsss" for="comment-name">Phone</label>
-                                                <input type="text" name="comment-name" class="form-control" readonly>
+                                                <input type="text" name="comment-name" class="form-control">
                                             </div>        
                                         </div>
 
@@ -75,21 +74,21 @@ Amazepay | Checkout
                                         <div class="col-lg-6 mb-3">
                                             <div class="form-gorup">
                                                 <label class="mont-font fw-500 font-xsss" for="comment-name">Twon / City</label>
-                                                <input type="text" name="comment-name" class="form-control" readonly>
+                                                <input type="text" name="comment-name" class="form-control">
                                             </div>        
                                         </div>
 
                                         <div class="col-lg-6 mb-3">
                                             <div class="form-gorup">
                                                 <label class="mont-font fw-500 font-xsss" for="comment-name">State</label>
-                                                <input type="text" name="comment-name" class="form-control" readonly>
+                                                <input type="text" name="comment-name" class="form-control">
                                             </div>        
                                         </div>
                                     </div>
                                 </form>
                             </div>
                         </div>
-                        <div class="table-content table-responsive mb-5 card border-0 bg-greyblue p-5">
+                        {{-- <div class="table-content table-responsive mb-5 card border-0 bg-greyblue p-5">
                             <h4 class="mont-font fw-500 font-xxl mb-5">Choose Payment Option</h4>
                             <div class="cc-selector-2 col-lg-12 col-sm-12">
                                 <div class="row">
@@ -119,7 +118,7 @@ Amazepay | Checkout
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                         <!-- <div class="row justify-content-center">
                             <div class="col-xl-12">
                                 <div id="accordion" class="accordion">

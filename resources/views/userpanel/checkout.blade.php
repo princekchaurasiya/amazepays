@@ -198,10 +198,11 @@ Amazepay | Checkout
                                                 </div>
                                                 <div class="row coupan-code">
                                                     <div class="col-md-12 col-sm-4 col-xs-12">
-                                                        <form class="coupan-code-form"><input type="text" class="coupan-code-input mont-font" placeholder="Enter Coupan Code" id="coupan-code"><a href="#" id="apply-coupan"class="bg-current border-0 text-white apply-coupan-button mont-font ">Apply</a>
+                                                        <form class="coupan-code-form"><input type="text" class="coupan-code-input mont-font" placeholder="Enter Coupan Code" id="coupan-code" required><a href="#" id="apply-coupan"class="bg-current border-0 text-white apply-coupan-button mont-font ">Apply</a>
                                                         <span class="custLoaderDiv">
                                                             <img src="{{URL::asset('images/preloader.svg')}}" alt="" id = "custLoaderImage" class="custLoaderImage img-responsive hideLoader">
                                                         </span>
+                                                        <div class="coupon-code-error-div"><span class="error-coupon-code"></span></div>
                                                         </form>
                                                         {{-- <div class="col-md-6 col-sm-4 col-xs-6"><a href="#" class="float-right mont-font" id="">Remove</a></div> --}}
                                                     </div>
@@ -212,10 +213,10 @@ Amazepay | Checkout
                                                     <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font"><input type="hidden" value="{{$qsProd->prodData['denomination'] * $qsProd->prodData['quantity']}}" id="grand-amount"><span>₹{{$qsProd->prodData['denomination'] * $qsProd->prodData['quantity']}}</span></div>
                                                     <div class="coupan-code-amount" id="discountDiv">
                                                         <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font apply-coupan"><span>Discount : </span></div>
-                                                        <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font apply-coupan-amount"><span>₹</span></div>
+                                                        <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font apply-coupan-amount"></div>
                                                     </div>
                                                     <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font"><span>Payable Amount : </span></div>
-                                                    <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font total-payable-amount"><span>₹{{$qsProd->prodData['denomination'] * $qsProd->prodData['quantity']}}</span></div>
+                                                    <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font total-payable-amount">₹{{$qsProd->prodData['denomination'] * $qsProd->prodData['quantity']}}</span></div>
                                                 </div>
                                             </div>   
                                         </div>
@@ -275,13 +276,13 @@ Amazepay | Checkout
             });
             
             // Apply Coupan
-            $('#apply-coupan').click( function(e) {
+            function couponCodeasd(){
                 $.ajaxSetup({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     }
                 });
-                e.preventDefault();
+                 
                 var formData = new FormData();
                 formData.append( 'coupan',$('#coupan-code').val());
                 formData.append( 'grand_total',$('#grand-amount').val());
@@ -306,17 +307,82 @@ Amazepay | Checkout
                         console.log(data);
                     }
                 });
-                return false;
+            }
+            // $('#apply-coupan').click( function(e) {
+               
+            //     return false;
+            // });
+
+ // on click apply coupon code starts here
+
+ const applyButton = $('#apply-coupan');
+            const loaderImage  = $('#custLoaderImage');
+            isHideLoaderPresent = loaderImage.hasClass('hideLoader');
+            const inputFeild = $('#coupan-code');
+            const discoutDiv = $('#discoutDiv');
+            const coupanCodeInput = $('#coupan-code').val();
+            couponCode = true;
+            // couponCode = false;
+
+            applyButton.click(function(e){
+                e.preventDefault();
+                if (!($("#coupan-code").val() == "")) {      // value not empty
+                    if (couponCode){
+                        if(isHideLoaderPresent){
+                        loaderImage.removeClass("hideLoader");
+                        setTimeout(function() {loaderImage.addClass('hideLoader');}, 1000);
+                        
+                            if(applyButton.html() === "Apply"){
+                                couponCodeasd();
+                                applyButton.html("Remove");
+                                applyButton.addClass("red");
+                                inputFeild.addClass("custDisabled");
+                                $(".error-coupon-code").text('Coupon apllied successfully');
+                                $(".error-coupon-code").addClass('greenColor');
+                            }
+                            else{
+                                removeDiscount();
+                                applyButton.html("Apply");
+                                applyButton.removeClass("red");
+                                inputFeild.removeClass("custDisabled");
+                                discoutDiv.css("display", "none");
+                                $(".error-coupon-code").css('display', 'none');
+
+                            };
+                        }
+                    }
+                    else{
+                        $(".error-coupon-code").text('This is not a valid code' );
+                        $(".error-coupon-code").addClass('redColor');
+                    }
+                }
+                else{
+                    
+
+                    $(".error-coupon-code").text('Coupon code can not be BLANK' );
+                    $(".error-coupon-code").addClass('redColor');
+                
+                };
             });
 
+            // on click apply button code ends here
+
+            //  coupon code blank validation code starts here 
+
+
+
+
+
+//  coupon code blank validation code ends here
             // remove copuan code
-            $('#remove-coupan-code').click( function(e) {
+
+            function removeDiscount(){
                 $.ajaxSetup({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     }
                 });
-                e.preventDefault();
+
                  var formData = new FormData();
                  formData.append( 'grand_total',$('#grand-amount').val());
                  
@@ -341,41 +407,17 @@ Amazepay | Checkout
                     error: function (data) {
                         console.log(data);
                     }
-                });
-                return false;
             });
+            };
 
-            // on click apply coupon code starts here
+            
 
-            const applyButton = $('#apply-coupan');
-            const loaderImage  = $('#custLoaderImage');
-            isHideLoaderPresent = loaderImage.hasClass('hideLoader');
-            const inputFeild = $('#coupan-code');
-            const discoutDiv = $('#discoutDiv');
-
-            applyButton.click(function(){
-                if(isHideLoaderPresent){
-                loaderImage.removeClass("hideLoader");
-                setTimeout(function() {loaderImage.addClass('hideLoader');}, 1000);
-                };
-                if(applyButton.html() === "Apply"){
-                    applyButton.html("Remove");
-                    applyButton.addClass("red");
-                    inputFeild.addClass("custDisabled");
-                }
-                else{
-                    applyButton.html("Apply");
-                    applyButton.removeClass("red");
-                    inputFeild.removeClass("custDisabled");
-                    discoutDiv.css("display", "none");
-                };
-            });
-
-            // on click apply button code ends here
+           
                         
         </script>
     @endpush
 @endsection
 
-{{-- loader on click code starts here --}}
+
+
 

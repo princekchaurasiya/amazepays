@@ -219,7 +219,7 @@ Amazepay | Gift Card
                 } else {
                     denomination = $('#denomination').val();
                 }
-                var quantity        = $('#quantity').val(); 
+                var quantity = $('#quantity').val(); 
 
                 const data = {
                     denomination: denomination,

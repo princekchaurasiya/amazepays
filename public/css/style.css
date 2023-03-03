@@ -15733,6 +15733,13 @@ body {
   background-color: #b20202 !important;
 }
 
+.redColor{
+  color: red;
+}
+.greenColor{
+  color: green;
+}
+
 
  /* apply buuton code ends here */
 
@@ -15758,4 +15765,13 @@ body {
  
 .header-wrapper{
   padding: 10px;
+}
+
+.coupon-code-error-div{
+  margin: 1rem 0;
+}
+
+.error-coupon-code{
+  font-weight: 700;
+  font-size: 1rem;
 }

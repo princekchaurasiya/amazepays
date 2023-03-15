@@ -8,7 +8,7 @@ Amazepay | Privacy Policy
             <h1 class="display-3">PRIVACY POLICY</h1> 
             <p class="lead">
                 We are pleased that you are visiting our website. The protection and security of your personal information when using our website is very important to us. We would therefore like to inform you at this point which of your personal data we collect when you visit our website and for what purposes it is used 
-                This data protection declaration applies to the website of the Gifts and Giggles , which can be reached under the domain _______.de as well as the various subdomains ("our website")
+                This data protection declaration applies to the website of the Amazepay , which can be reached under the domain _______.de as well as the various subdomains ("our website")
             </p>
             <br> 
             <h1 class="display-4">WHAT IS THIS ABOUT? </h1>

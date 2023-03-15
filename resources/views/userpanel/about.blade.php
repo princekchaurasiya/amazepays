@@ -9,24 +9,24 @@
         	<div class="container">
         		<div class="row">
         			<div class="col-lg-6">
-        				<h2 class="display3-size fw-300 open-font lh-2 mt-0">The leading prepaid card distributors in india with technology at the core of its solution</h2>
+        				<h2 class="display3-size fw-300 open-font lh-2 mt-0">Welcome to Amazepays, your one-stop destination for gift vouchers and digital gift cards!</h2>
         			</div>
         			<div class="col-lg-4 offset-lg-1">
 						<h4 class="text-grey-900 fw-600 font-xl ls-2">WHAT WE DO</h4>
-						<h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4"> Network is bringing prepaid and digital commerce together for retailers, brands, consumers and corporate incentives. GCI is focused on connecting retailers to customers, businesses and their employees through various products and services in the prepaid market. 
+						<h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4"> At Amazepays, we believe in making gifting a hassle-free and delightful experience. We are a leading gift voucher provider, offering a wide range of gift vouchers and digital gift cards from various popular brands across the globe. Our mission is to help you find the perfect gift for your loved ones, no matter what the occasion. 
 						</h4>
 					</div>
         			<div class="col-lg-12 mt-5"><img src="{{URL::asset('/images/about.png')}}" alt="about" class="img-fluid"></div>
         			<div class="col-lg-12 mt-5 text-center pt-4">
-        				<a href="#" class="ml-1 mr-1 rounded-lg text-primary font-xss border-size-md border-primary fw-600 open-font p-3 w200 btn mb-3 mt-3">Learn More</a>
-        				<h3 class="font-xss fw-600 text-grey-500 p-3 d-inline-block d-none-sm">or</h3>
+        				{{-- <a href="#" class="ml-1 mr-1 rounded-lg text-primary font-xss border-size-md border-primary fw-600 open-font p-3 w200 btn mb-3 mt-3">Learn More</a> --}}
+        				{{-- <h3 class="font-xss fw-600 text-grey-500 p-3 d-inline-block d-none-sm">or</h3> --}}
         				<a href="{{ url('contact_us') }}" class="ml-1 mr-1 rounded-lg alert-primary text-primary font-xss border-size-md border-0 fw-600 open-font p-3 w200 btn">Contact Us</a>
         			</div>
         		</div>
         	</div>
         </div>
 
-        <div class="service-wrapper bg-greyblue pb-0 pt-7">
+        {{-- <div class="service-wrapper bg-greyblue pb-0 pt-7">
         	<div class="container">
         		<div class="row">
         			<div class="col-lg-6 text-center mb-5">
@@ -54,7 +54,7 @@
         			</div>
         		</div>
         	</div>
-        </div>
+        </div> --}}
 
         <div class="team-wrapper bg-greyblue pb-7 pt-7">
         	<div class="container">

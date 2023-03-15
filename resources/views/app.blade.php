@@ -91,7 +91,7 @@
                                 </li> --}}
                                 <li class="nav-item"><a class="nav-link" href="{{ url('about') }}">About</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url('contact_us') }}">Contact</a></li>
-                                <li class="nav-item"><a class="nav-link" href="{{ url('f&q') }}">F&Q</a></li>
+                                {{-- <li class="nav-item"><a class="nav-link" href="{{ url('f&q') }}">F&Q</a></li> --}}
                             </ul>
                         </div>
                     </div>

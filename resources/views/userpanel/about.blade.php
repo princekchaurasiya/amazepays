@@ -8,15 +8,21 @@
 <div class="about-wrapper pb-7 pt-7">
         	<div class="container">
         		<div class="row">
-        			<div class="col-lg-6">
+        			<div class="col-lg-12">
         				<h2 class="display3-size fw-300 open-font lh-2 mt-0">Welcome to Amazepays, your one-stop destination for gift vouchers and digital gift cards!</h2>
         			</div>
-        			<div class="col-lg-4 offset-lg-1">
+        			<div class="col-lg-12 mt-5">
 						<h4 class="text-grey-900 fw-600 font-xl ls-2">WHAT WE DO</h4>
 						<h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4"> At Amazepays, we believe in making gifting a hassle-free and delightful experience. We are a leading gift voucher provider, offering a wide range of gift vouchers and digital gift cards from various popular brands across the globe. Our mission is to help you find the perfect gift for your loved ones, no matter what the occasion. 
+						</h4><h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">
+						We understand the importance of making a good impression with a gift, and that's why we strive to provide a seamless and user-friendly platform for our customers to choose and purchase gift vouchers. Our team of experts is dedicated to curating the best gift options for you, so you can find the perfect gift for any occasion, be it a birthday, anniversary, wedding, or corporate gifting.
+						</h4><h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">
+						At Amazepays, we value customer satisfaction above all else, and we go above and beyond to ensure that our customers have an enjoyable and memorable gifting experience. Our user-friendly website, secure payment gateways, and prompt delivery services make gifting with us a breeze.
+						</h4><h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">
+						So, whether you're looking for a gift for a special someone, or a corporate gift for your valued clients or employees, we've got you covered. Browse through our extensive range of gift vouchers and digital gift cards today, and give the gift of choice with Amazepays!
 						</h4>
 					</div>
-        			<div class="col-lg-12 mt-5"><img src="{{URL::asset('/images/about.png')}}" alt="about" class="img-fluid"></div>
+        			{{-- <div class="col-lg-12 mt-5"><img src="{{URL::asset('/images/about.png')}}" alt="about" class="img-fluid"></div> --}}
         			<div class="col-lg-12 mt-5 text-center pt-4">
         				{{-- <a href="#" class="ml-1 mr-1 rounded-lg text-primary font-xss border-size-md border-primary fw-600 open-font p-3 w200 btn mb-3 mt-3">Learn More</a> --}}
         				{{-- <h3 class="font-xss fw-600 text-grey-500 p-3 d-inline-block d-none-sm">or</h3> --}}

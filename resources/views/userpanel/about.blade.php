@@ -62,7 +62,7 @@
         	</div>
         </div> --}}
 
-        <div class="team-wrapper bg-greyblue pb-7 pt-7">
+        {{-- <div class="team-wrapper bg-greyblue pb-7 pt-7">
         	<div class="container">
         		<div class="row">
         			<!-- <div class="col-lg-12 text-center mb-2 pb-3">
@@ -126,7 +126,7 @@
 
         		</div>
         	</div>
-        </div>
+        </div> --}}
 
 @endsection
 

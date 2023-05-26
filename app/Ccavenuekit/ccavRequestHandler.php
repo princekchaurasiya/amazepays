@@ -29,8 +29,7 @@
         echo "<input type=hidden name=access_code value=$access_code>";
         ?>
     </form>
-    <?php echo 'asdasdsad';
-    exit(); ?>
+    
     </center>
     <script language='javascript'>
         document.redirect.submit();

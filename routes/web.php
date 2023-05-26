@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -72,3 +73,21 @@ Route::get('/private_policy', function () {
 Route::get('/all_transaction', function () {
     return view('userpanel/all_transaction');
 });
+
+
+
+// Routes for payment
+
+Route::get('/payment', function () {
+    return view('paymentFolder.payment-index');
+})->name('payment');
+
+Route::post('/process-payment', 'App\Http\Controllers\PaymentController@processPayment')->name('process-payment');
+
+
+
+// Routes for payment success and failure actions
+
+Route::get('/payment/success', 'App\Http\Controllers\PaymentController@paymentSuccess')->name('payment-success');
+
+Route::get('/payment/failed', 'App\Http\Controllers\PaymentController@paymentFailed')->name('payment-failed');

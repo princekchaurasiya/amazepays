@@ -5,9 +5,9 @@
 @section('content')
     <h1>CCAvenue Payment Gateway Integration</h1>
     <div id="ccav-payment-form">
-        <form name="frmPayment" action="{{ route('process-payment') }}" method="POST">
+        <form name="frmPayment" action="{{url('payment-process')}}" method="POST">
             @csrf
-            <input type="hidden" name="merchant_id" value="{{ config('paymentconfig.merchant_id') }}">
+            <input type="hidden" name="merchant_id" value="{{ config('auth.merchant_id') }}">
             <input type="hidden" name="_token" value="{{ csrf_token() }}">
             <input type="hidden" name="language" value="EN">
             <input type="hidden" name="amount" value="1">

@@ -91,7 +91,7 @@
                                 </li> --}}
                                 <li class="nav-item"><a class="nav-link" href="{{ url('about') }}">About</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url('contact_us') }}">Contact</a></li>
-                                <li class="nav-item"><a class="nav-link" href="{{ url('f&q') }}">F&Q</a></li>
+                                {{-- <li class="nav-item"><a class="nav-link" href="{{ url('f&q') }}">F&Q</a></li> --}}
                             </ul>
                         </div>
                     </div>
@@ -134,7 +134,7 @@
                             <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
                                 <h5>About</h5>
                                 <ul>
-                                    <li><a href="#">FAQ</a></li>
+                                    {{-- <li><a href="#">FAQ</a></li> --}}
                                     <li><a href="{{ url('terms_of_use') }}">Term of use</a></li>
                                     <li><a href="{{ url('private_policy') }}">Privacy Policy</a></li>
                                 </ul>

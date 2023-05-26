@@ -61,9 +61,9 @@ Route::get('/about', function () {
 Route::get('/contact_us', function () {
     return view('userpanel/contact-form');
 });
-Route::get('/f&q', function () {
-    return view('userpanel/f&q');
-});
+// Route::get('/f&q', function () {
+//     return view('userpanel/f&q');
+// });
 Route::get('/terms_of_use', function () {
     return view('userpanel/terms_of_use');
 });

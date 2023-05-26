@@ -5,7 +5,7 @@
 </head>
 
 <body>
-    <?php include 'Crypto.php'; ?>
+    <?php include 'crypto.php'; ?>
     <?php require_once 'config.php'; ?>
     <?php
     error_reporting(0);

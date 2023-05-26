@@ -11,7 +11,7 @@
     <?php
     error_reporting(0);
     
-    $merchant_data = config('auth.merchant_id');
+    $merchant_data ='';
     $working_key = config('auth.working_key');
     $access_code = config('auth.access_code');
     

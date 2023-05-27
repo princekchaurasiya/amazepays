@@ -58,7 +58,14 @@ class PaymentController extends Controller
 
     public function paymentSuccess()
     {
-        return view('paymentFolder.payment-success');
+        $workingKey=config('auth.working_key');		//Working Key should be provided here.
+        $encResponse=$_POST["encResp"];			//This is the response sent by the CCAvenue Server
+        dd($encResponse);
+        $rcvdString=decryptCCAvenue($encResponse,$workingKey);		//Crypto Decryption used as per the specified working key.
+        $order_status="";
+        $decryptValues=explode('&', $rcvdString);
+        $dataSize=sizeof($decryptValues);
+        
     }
 
     public function paymentFailed()

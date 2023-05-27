@@ -83,6 +83,7 @@ Route::get('/payment', function () {
 })->name('payment');
 
 Route::post('/payment-process', function () {
+    dd(123);
     return view('paymentFolder.ccavRequestHandler');
 });
 

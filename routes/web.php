@@ -86,7 +86,7 @@ Route::post('/payment-process', function () {
     return view('paymentFolder.ccavRequestHandler');
 });
 
-// Route::post('/process-payment', 'App\Http\Controllers\PaymentController@processPayment')->name('process-payment');
+// Route::post('/payment-process', 'App\Http\Controllers\PaymentController@processPayment')->name('payment-process');
 
 
 

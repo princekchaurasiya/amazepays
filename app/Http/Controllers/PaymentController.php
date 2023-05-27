@@ -40,19 +40,20 @@ class PaymentController extends Controller
             'billing_tel' => $billingTelephone,
             'billing_email' => $billingEmail,
         ];
+       
+        // // Create an instance of ccavRequestHandler
+        // $requestHandler = new ccavRequestHandler();
 
-        // Create an instance of ccavRequestHandler
-        $requestHandler = new ccavRequestHandler();
+        // // Generate the encrypted data
 
-        // Generate the encrypted data
+        // $encryptedData = $requestHandler->encrypt($data, config('auth.working_key'));
 
-        $encryptedData = $requestHandler->encrypt($data, config('paymentconfig.working_key'));
-
-        // Add the encrypted data to the request form
-        $request->merge(['encRequest' => $encryptedData]);
+        // // Add the encrypted data to the request form
+        // $request->merge(['encRequest' => $encryptedData]);
 
         // Redirect to the CCAvenue gateway
-        return view('payment.redirect')->with(['data' => $request->all()]);
+        // return view('paymentFolder.ccavRequestHandler');
+        return view('paymentFolder.ccavRequestHandler',compact('data'));
     }
 
     public function paymentSuccess()

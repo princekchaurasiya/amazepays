@@ -37,7 +37,7 @@
 					<td>Currency	:</td><td><input type="text" name="currency" value="INR"/></td>
 				</tr>
 				<tr>
-					<td>Redirect URL	:</td><td><input type="text" name="redirect_url" value="{{url('payment-complete')}}"/></td>
+					<td>Redirect URL	:</td><td><input type="text" name="redirect_url" value="http://localhost/ccavResponseHandler.php"/></td>
 				</tr>
 			 	<tr>
 			 		<td>Cancel URL	:</td><td><input type="text" name="cancel_url" value="{{url('payment-complete')}}"/></td>

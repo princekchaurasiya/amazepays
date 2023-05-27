@@ -39,6 +39,9 @@
 
 	echo "<br><br>";
 
+	 //print_r($dataSize);
+
+
 	echo "<table cellspacing=4 cellpadding=4>";
 	for($i = 0; $i < $dataSize; $i++) 
 	{

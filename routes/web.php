@@ -102,3 +102,11 @@ Route::post('/payment-process', function () {
 Route::get('/payment-complete', 'App\Http\Controllers\PaymentController@paymentSuccess');
 
 // Route::get('/payment/failed', 'App\Http\Controllers\PaymentController@paymentFailed')->name('payment-failed');
+
+Route::get('payment-success', function(){
+    dd('success')->name('success');
+});
+
+Route::get('payment-cancel', function(){
+    dd('cancel')->name('cancel');
+});

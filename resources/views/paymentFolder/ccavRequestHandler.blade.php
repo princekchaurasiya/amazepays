@@ -5,10 +5,11 @@
 </head>
 
 <body>
-    {{-- <?php include 'crypto.php'; ?> --}}
+    
     @include('paymentFolder.crypto');
-    {{-- <?php require_once 'config.php'; ?> --}}
+    
     <?php
+   
     error_reporting(0);
     
     $merchant_data ='';
@@ -18,8 +19,9 @@
     foreach ($_POST as $key => $value) {
         $merchant_data .= $key . '=' . $value . '&';
     }
-    $merchant_data .= 'order_id=' . $orderId;
-    
+    // $merchant_data .= 'order_id=' . $data['order_id'];
+    // print_r($_POST);
+    // exit;
     $encrypted_data = encrypt($merchant_data, $working_key);
     
     ?>

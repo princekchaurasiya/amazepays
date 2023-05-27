@@ -87,10 +87,12 @@ Route::post('/payment-process', function () {
 });
 
 
-Route::get('/payment-complete', function () {
+// Route::get('/payment-complete', function () {
+//     return view('paymentFolder.ccavResponseHandler');
+// })->name('payment-complete');
+Route::match(['get', 'post'], '/payment-complete', function () {
     return view('paymentFolder.ccavResponseHandler');
 })->name('payment-complete');
-
 // Route::post('/payment-process', 'App\Http\Controllers\PaymentController@processPayment')->name('payment-process');
 
 

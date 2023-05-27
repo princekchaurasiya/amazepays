@@ -86,12 +86,17 @@ Route::post('/payment-process', function () {
     return view('paymentFolder.ccavRequestHandler');
 });
 
+
+Route::get('/payment-complete', function () {
+    return view('paymentFolder.ccavResponseHandler');
+})->name('payment-complete');
+
 // Route::post('/payment-process', 'App\Http\Controllers\PaymentController@processPayment')->name('payment-process');
 
 
 
 // Routes for payment success and failure actions
 
-Route::get('/payment/success', 'App\Http\Controllers\PaymentController@paymentSuccess')->name('payment-success');
+// Route::get('/payment/success', 'App\Http\Controllers\PaymentController@paymentSuccess')->name('payment-success');
 
-Route::get('/payment/failed', 'App\Http\Controllers\PaymentController@paymentFailed')->name('payment-failed');
+// Route::get('/payment/failed', 'App\Http\Controllers\PaymentController@paymentFailed')->name('payment-failed');

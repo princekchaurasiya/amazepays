@@ -37,9 +37,7 @@
 					<td>Currency	:</td><td><input type="text" name="currency" value="INR"/></td>
 				</tr>
 				<tr>
-					<form method="GET" name="redirect_url" action="{{route('success')}}">
-						<td>Redirect URL :</td><td><input type="text" name="redirect_url" value="{{route('success')}}"/></td>
-					</form>
+					<td>Redirect URL :</td><td><input type="text" name="redirect_url" value="https://amazepay.toutle.in/payment-complete"/></td>
 				</tr>
 			 	<tr>
 			 		<td>Cancel URL	:</td><td><input type="text" name="cancel_url" value="{{route('cancel')}}"/></td>

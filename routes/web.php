@@ -82,7 +82,7 @@ Route::get('/payment', function () {
     return view('paymentFolder.payment-index');
 })->name('payment');
 
-Route::post('/payment-process', function () {
+Route::get('/payment-process', function () {
     return view('paymentFolder.ccavRequestHandler');
 });
 

@@ -229,7 +229,7 @@ class CommonController extends Controller
             return $e->getMessage();
         }
 
-        dd($products_resp->json());
+        // dd($products_resp->json());
     }
 // wohoo ordercard api call integration
     public function orderCard()
@@ -298,7 +298,7 @@ class CommonController extends Controller
             ])
             ->get();
 
-        dd($response);
+        // dd($response);
         // if($token_resp->status() == 200){
         //     // save token  into database
         //     DB::table('settings')->updateOrInsert(['display_name' => 'Bearer Token'],['value' => $token_resp->json()['token']]);

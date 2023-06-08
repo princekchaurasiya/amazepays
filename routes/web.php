@@ -117,5 +117,5 @@ Route::post('payment-success', 'PaymentController@processData')->name('success')
 
 
 Route::get('payment-cancel', function(){
-    dd('cancel');
+    // dd('cancel');
 })->name('cancel');

@@ -30,8 +30,8 @@
 </head>
 
 <body class="color-theme-blue open-font">
-
-<div class="preloader"></div>
+    <div class="cotainer">
+        <div class="preloader"></div>
 <div class="main-wrapper">
         <!-- header wrapper -->
         <div class="upper-header bg-greylight">
@@ -357,7 +357,7 @@
                 var password = $('#password').val();
                 var confmPassword = $('#confmPassword').val();
                 var regxMobile = /^(?:(?:\+|0{0,2})91(\s*[\-]\s*)?|[0]?)?[789]\d{9}$/;
-                var regxEmail = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+                var regxMobile = /^(?:(?:\+|0{0,2})91)?[789]\d{9}$/;
                 var status = false;
                 if(name.length != ''){
                     status = true;
@@ -493,6 +493,9 @@
         // end login
     </script>
     @stack('scripts')   
+
+    </div>
+
 </body>
 
 </html>

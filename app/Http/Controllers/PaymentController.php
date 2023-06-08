@@ -9,8 +9,62 @@ use App\Ccavenuekit\crypto;
 
 class PaymentController extends Controller
 {
+
+ /* This is crypto.php code provided by cc   
+/*
+* @param1 : Plain String
+* @param2 : Working key provided by CCAvenue
+* @return : Decrypted String
+*/
+    function encrypt($plainText,$key)
+    {
+        $key = $this->hextobin(md5($key));
+        $initVector = pack("C*", 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f);
+        $openMode = openssl_encrypt($plainText, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $initVector);
+        $encryptedText = bin2hex($openMode);
+        return $encryptedText;
+    }
+
+/*
+* @param1 : Encrypted String
+* @param2 : Working key provided by CCAvenue
+* @return : Plain String
+*/
+function decrypt($encryptedText,$key)
+{
+	$key = $this->hextobin(md5($key));
+	$initVector = pack("C*", 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f);
+	$encryptedText = $this->hextobin($encryptedText);
+	$decryptedText = openssl_decrypt($encryptedText, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $initVector);
+	return $decryptedText;
+}
+
+function hextobin($hexString) 
+ { 
+	$length = strlen($hexString); 
+	$binString="";   
+	$count=0; 
+	while($count<$length) 
+	{       
+	    $subString =substr($hexString,$count,2);           
+	    $packedString = pack("H*",$subString); 
+	    if ($count==0)
+	    {
+			$binString=$packedString;
+	    } 
+	    
+	    else 
+	    {
+			$binString.=$packedString;
+	    } 
+	    
+	    $count+=2; 
+	} 
+        return $binString; 
+  } 
     public function processPayment(Request $request)
     {
+        // dd($request)
         // Generate a unique order ID or transaction ID
         $orderId = uniqid();
 
@@ -40,36 +94,65 @@ class PaymentController extends Controller
             'billing_tel' => $billingTelephone,
             'billing_email' => $billingEmail,
         ];
-       
-        // // Create an instance of ccavRequestHandler
-        // $requestHandler = new ccavRequestHandler();
-
-        // // Generate the encrypted data
-
-        // $encryptedData = $requestHandler->encrypt($data, config('auth.working_key'));
-
-        // // Add the encrypted data to the request form
-        // $request->merge(['encRequest' => $encryptedData]);
-
-        // Redirect to the CCAvenue gateway
-        // return view('paymentFolder.ccavRequestHandler');
+    
         return view('paymentFolder.ccavRequestHandler',compact('data'));
     }
 
     public function paymentSuccess()
     {
-        $workingKey=config('auth.working_key');		//Working Key should be provided here.
-        $encResponse=$_POST["encResp"];			//This is the response sent by the CCAvenue Server
-        dd($encResponse);
-        $rcvdString=decryptCCAvenue($encResponse,$workingKey);		//Crypto Decryption used as per the specified working key.
-        $order_status="";
-        $decryptValues=explode('&', $rcvdString);
-        $dataSize=sizeof($decryptValues);
-        
+        return view('paymentFolder.payment-success');
     }
 
     public function paymentFailed()
     {
         return view('paymentFolder.payment-failed');
     }
+
+
+    public function responseCcavenue(Request $request)
+    {
+
+        $workingKey=config('auth.working_key');	
+        
+        $encResponse=$request->encResp;	//This is the response sent by the CCAvenue Server
+        $rcvdString=$this->decrypt($encResponse,$workingKey);	//Crypto Decryption used as per the specified working key.
+        $order_status="";
+        $decryptValues=explode('&', $rcvdString);
+        $dataSize=sizeof($decryptValues);
+        // dd($decryptValues);
+
+	for($i = 0; $i < $dataSize; $i++) 
+	{
+		$information=explode('=',$decryptValues[$i]);
+		if($i==3)	$order_status=$information[1];
+	}
+
+	if($order_status==="Success")
+	{
+        return view('paymentFolder.payment-success');		
+	}
+	else if($order_status==="Aborted")
+	{
+		echo "<br>Thank you for shopping with us.We will keep you posted regarding the status of your order through e-mail";
+	
+	}
+	else if($order_status==="Failure")
+	{
+		return view('paymentFolder.payment-failed');
+	}
+	else
+	{
+		echo "<br>Security Error. Illegal access detected";
+	
+	}
+    for($i = 0; $i < $dataSize; $i++) 
+	{
+		$information=explode('=',$decryptValues[$i]);
+	    	echo '<tr><td>'.$information[0].'</td><td>'.$information[1].'</td></tr>';
+	}
+
+    }
+  
 }
+
+

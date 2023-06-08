@@ -11,58 +11,55 @@ use View;
 
 class CommonController extends Controller
 {
-    public function checkData(Request $request){
-        $data=['status'=>true,'msg'=>$request->all()];
+    public function checkData(Request $request)
+    {
+        $data = ['status' => true, 'msg' => $request->all()];
         return response()->json($data);
     }
 
-    public function generateAuthcode(Request $request){
+    public function generateAuthcode(Request $request)
+    {
         $authorizationCode_resp = Http::post('https://sandbox.woohoo.in/oauth2/verify', [
-            "clientId"=>setting('api.clientId'),  //coming from database
-            "username"=>setting('api.qs_username'),    //coming from database
-            "password"=>setting('api.qs_password')        //coming from database
+            'clientId' => setting('api.clientId'), //coming from database
+            'username' => setting('api.qs_username'), //coming from database
+            'password' => setting('api.qs_password'), //coming from database
         ]);
-        if($authorizationCode_resp->status() == 200) {
+        if ($authorizationCode_resp->status() == 200) {
             // save authocode into database
             $response = $this->generateToken($authorizationCode_resp->json());
             return json_decode($response);
         } else {
-            return json_decode(json_encode(["status"=>$authorizationCode_resp->status(), "msg"=>$authorizationCode_resp->failed()]));
+            return json_decode(json_encode(['status' => $authorizationCode_resp->status(), 'msg' => $authorizationCode_resp->failed()]));
         }
-        
     }
 
-    public function generateToken($authorizationCode){
+    public function generateToken($authorizationCode)
+    {
         $token_resp = Http::post('https://sandbox.woohoo.in/oauth2/token', [
-            "clientId"=>setting('api.clientId'),                  //coming from database
-            "clientSecret"=>setting('api.qs_clientSecret'),             //coming from database
-            "authorizationCode"=>  $authorizationCode['authorizationCode'] //from signatureGenerate function
+            'clientId' => setting('api.clientId'), //coming from database
+            'clientSecret' => setting('api.qs_clientSecret'), //coming from database
+            'authorizationCode' => $authorizationCode['authorizationCode'], //from signatureGenerate function
         ]);
         //dd($token_resp->json()['token']);
-        if($token_resp->status() == 200){
+        if ($token_resp->status() == 200) {
             // save token  into database
-            DB::table('settings')->updateOrInsert(['display_name' => 'Bearer Token'],['value' => $token_resp->json()['token']]);
-            return json_encode(["status"=>$token_resp->status(), "data"=>$token_resp->json()['token']]);
+            DB::table('settings')->updateOrInsert(['display_name' => 'Bearer Token'], ['value' => $token_resp->json()['token']]);
+            return json_encode(['status' => $token_resp->status(), 'data' => $token_resp->json()['token']]);
         } else {
-            
-            return json_encode(["status"=>$token_resp->status(), "data"=>$token_resp->failed()]);
+            return json_encode(['status' => $token_resp->status(), 'data' => $token_resp->failed()]);
         }
-        
     }
 
-    // keep this function in helper call 
-    function generateSignature($requestBody=null, $requestHttpMethod, $absApiUrl, $clientSecret){
+    // keep this function in helper call
+    function generateSignature($requestBody = null, $requestHttpMethod, $absApiUrl, $clientSecret)
+    {
         $requestBody = $requestBody;
-
 
         $requestHttpMethod = $requestHttpMethod;
 
-
-        $absApiUrl = $absApiUrl; 
-
+        $absApiUrl = $absApiUrl;
 
         $clientSecret = $clientSecret;
-
 
         function sortParams(array &$params)
         {
@@ -75,7 +72,6 @@ class CommonController extends Controller
             }
         }
 
-
         function sortQueryParams($queryParam)
         {
             $query = explode('&', $queryParam);
@@ -83,7 +79,6 @@ class CommonController extends Controller
 
             return implode('&', $query);
         }
-
 
         function getConcatenateBaseString($absApiUrl, $requestHttpMethod, $requestBody)
         {
@@ -94,17 +89,14 @@ class CommonController extends Controller
             $apiUrl = $url[0];
             if (isset($url[1])) {
                 $baseStrings[] = rawurlencode($apiUrl . '?' . sortQueryParams($url[1]));
-            }
-            else {
+            } else {
                 $baseStrings[] = rawurlencode($apiUrl);
             }
 
             if ($requestBody) {
-                $jsonDecodedRequestBody = json_decode($requestBody, TRUE);
+                $jsonDecodedRequestBody = json_decode($requestBody, true);
                 sortParams($jsonDecodedRequestBody);
-                $baseStrings[] = rawurlencode(
-                    json_encode($jsonDecodedRequestBody, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-                );
+                $baseStrings[] = rawurlencode(json_encode($jsonDecodedRequestBody, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
             }
 
             return implode('&', $baseStrings);
@@ -112,134 +104,165 @@ class CommonController extends Controller
 
         //echo hash_hmac('sha512', getConcatenateBaseString($absApiUrl, $requestHttpMethod, $requestBody), $clientSecret);
         return hash_hmac('sha512', getConcatenateBaseString($absApiUrl, $requestHttpMethod, $requestBody), $clientSecret);
-
     }
 
-
-    public function getCategory(){
+    public function getCategory()
+    {
         try {
             $requestBody = '';
             $requestHttpMethod = 'get';
-            $absApiUrl = "https://".setting('api.woohoo_url')."/rest/v3/catalog/categories";
+            $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/catalog/categories';
             $clientSecret = setting('api.qs_clientSecret');
             $bearerToken = setting('api.bearer_token');
             $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
             //dd($signature);
-            
+
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
-           
-            $category_resp = Http::acceptJson()->withToken($bearerToken)->withHeaders([
-                'dateAtClient' => $dateAtClient,
-                'signature' => $signature,
-            ])->get('https://sandbox.woohoo.in/rest/v3/catalog/categories');
-    
-            if($category_resp->status == 200){
-                
+
+            $category_resp = Http::acceptJson()
+                ->withToken($bearerToken)
+                ->withHeaders([
+                    'dateAtClient' => $dateAtClient,
+                    'signature' => $signature,
+                ])
+                ->get('https://sandbox.woohoo.in/rest/v3/catalog/categories');
+
+            if ($category_resp->status == 200) {
                 //save category into database
                 $category_resp = $category_resp->json($key = null);
                 $data = [
-                    'id'=>$category_resp['id'],
-                    'name'=>$category_resp['name'],
-                    'url'=>$category_resp['url'],
-                    'description'=>$category_resp['description'],
+                    'id' => $category_resp['id'],
+                    'name' => $category_resp['name'],
+                    'url' => $category_resp['url'],
+                    'description' => $category_resp['description'],
                     'images' => json_encode($category_resp['images']),
-                    'subcategoriesCount'=>$category_resp['subcategoriesCount'],
-                    'subcategories'=>json_encode($category_resp['subcategories'])
+                    'subcategoriesCount' => $category_resp['subcategoriesCount'],
+                    'subcategories' => json_encode($category_resp['subcategories']),
                 ];
-                DB::table('qs_categories')->updateOrInsert(['id' => $category_resp['id']],$data);
-                return json_encode(["status"=>$token_resp->status(), "data"=>'Stored Successfully']);
+                DB::table('qs_categories')->updateOrInsert(['id' => $category_resp['id']], $data);
+                return json_encode(['status' => $token_resp->status(), 'data' => 'Stored Successfully']);
             } else {
-                return json_encode(["status"=>$token_resp->status(), "data"=>'Something went wrong']);
+                return json_encode(['status' => $token_resp->status(), 'data' => 'Something went wrong']);
             }
         } catch (\Exception $e) {
             return $e->getMessage();
         }
-        
-        
     }
 
-    public function getProducts(){
+    public function getProducts()
+    {
         try {
             $qsCat = QsCategory::pluck('id')->first();
             $requestBody = '';
             $requestHttpMethod = 'get';
-            $absApiUrl = "https://".setting('api.woohoo_url')."/rest/v3/catalog/categories/".$qsCat."/products";
+            $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/catalog/categories/' . $qsCat . '/products';
             $clientSecret = setting('api.qs_clientSecret');
             $bearerToken = setting('api.bearer_token');
             $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
-            
+
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
-        
-            $products_resp = Http::acceptJson()->withToken($bearerToken)->withHeaders([
-                'dateAtClient' => $dateAtClient,
-                'signature' => $signature,
-            ])->get("https://".setting('api.woohoo_url')."/rest/v3/catalog/categories/".$qsCat."/products");
+
+            $products_resp = Http::acceptJson()
+                ->withToken($bearerToken)
+                ->withHeaders([
+                    'dateAtClient' => $dateAtClient,
+                    'signature' => $signature,
+                ])
+                ->get('https://' . setting('api.woohoo_url') . '/rest/v3/catalog/categories/' . $qsCat . '/products');
 
             // save Products into database
-        
-            if($products_resp->status() == 200){
+
+            if ($products_resp->status() == 200) {
                 $collection = collect($products_resp->json($key = null)['products']);
                 $collection->map(function ($item, $key) use ($qsCat) {
                     // $createdAt = Carbon\Carbon::parse($item['createdAt'])->format('Y-m-d H:m:s');
                     // $updatedAt = Carbon\Carbon::parse($item['updatedAt'])->format('Y-m-d H:m:s');
                     $data = [
-                        'sku'=>$item['sku'],
-                        'name'=>$item['name'],
-                        'currency'=>json_encode($item['currency']),
-                        'url'=>$item['url'],
-                        'minPrice'=>$item['minPrice'],
-                        'maxPrice'=>$item['maxPrice'],
-                        'price'=>json_encode($item['price']),
+                        'sku' => $item['sku'],
+                        'name' => $item['name'],
+                        'currency' => json_encode($item['currency']),
+                        'url' => $item['url'],
+                        'minPrice' => $item['minPrice'],
+                        'maxPrice' => $item['maxPrice'],
+                        'price' => json_encode($item['price']),
                         'images' => json_encode($item['images']),
-                        'created_at'=>$item['createdAt'],
-                        'updated_at'=>$item['updatedAt'],
-                        'qs_category_id'=>$qsCat
+                        'created_at' => $item['createdAt'],
+                        'updated_at' => $item['updatedAt'],
+                        'qs_category_id' => $qsCat,
                     ];
-                    DB::table('qs_products')->updateOrInsert(['sku' => $item['sku']],$data);
+                    DB::table('qs_products')->updateOrInsert(['sku' => $item['sku']], $data);
                 });
-                return json_encode(["status"=>$products_resp->status(), "data"=>'Stored Successfully']);
+                return json_encode(['status' => $products_resp->status(), 'data' => 'Stored Successfully']);
             } else {
-                return json_encode(["status"=>$products_resp->status(), "data"=>'Something went wrong']);
+                return json_encode(['status' => $products_resp->status(), 'data' => 'Something went wrong']);
             }
         } catch (Exception $e) {
             return $e->getMessage();
         }
-        
     }
 
-    public function getProductbySKU(Request $request){
+    public function getProductbySKU(Request $request)
+    {
         try {
             $requestBody = '';
             $requestHttpMethod = 'get';
-            $absApiUrl = "https://".setting('api.woohoo_url')."/rest/v3/catalog/products/".$request->slug;
+            $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/catalog/products/' . $request->slug;
             $clientSecret = setting('api.qs_clientSecret');
             $bearerToken = setting('api.bearer_token');
             $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
-            // dd($signature);
-            
+
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
-        
-            $products_resp = Http::acceptJson()->withToken($bearerToken)->withHeaders([
-                'dateAtClient' => $dateAtClient,
-                'signature' => $signature,
-            ])->get('https://sandbox.woohoo.in/rest/v3/catalog/products/CNPIN');
+
+            $products_resp = Http::acceptJson()
+                ->withToken($bearerToken)
+                ->withHeaders([
+                    'dateAtClient' => $dateAtClient,
+                    'signature' => $signature,
+                ])
+                ->get('https://sandbox.woohoo.in/rest/v3/catalog/products/CNPIN');
 
             // fetch Products with sku
+
             $prdtDetails = $products_resp->json();
-            return view("userpanel/gift_card_detail_page",compact('prdtDetails'));
+            return view('userpanel/gift_card_detail_page', compact('prdtDetails'));
         } catch (Exception $e) {
             return $e->getMessage();
         }
-        
-        //dd($products_resp->json());
 
+        dd($products_resp->json());
     }
-
-    public function orderCard(){
-        $body='{
+// wohoo ordercard api call integration
+    public function orderCard()
+    {
+        $body = '{
             "address":
             {
-                "firstname":"kevin","lastname":"","email":"kevin.toutle@gmail.com","telephone":"+918652868765","line1":"86/80","line2":"goregaon","city":"mumbai","region":"maharashtra","country":"IN","postcode":"400104","languages":"Hind","billToThis":true
+                "firstname":"kevin",
+                "lastname":"",
+                "email":"kevin.toutle@gmail.com",
+                "telephone":"+918652868765",
+                "line1":"86/80",
+                "line2":"goregaon",
+                "city":"mumbai",
+                "region":"maharashtra",
+                "country":"IN",
+                "postcode":"400104",
+                "languages":"Hind",
+                "billToThis":true
+            },
+            "billing": {
+                "firstname":"kevin",
+                "lastname":"",
+                "email":"kevin.toutle@gmail.com",
+                "telephone":"+918652868765",
+                "line1":"86/80",
+                "line2":"goregaon",
+                "city":"mumbai",
+                "region":"maharashtra",
+                "country":"IN",
+                "postcode":"400104",
+                "languages":"Hind",
+                "billToThis":true
             },
             "payments":
             [
@@ -259,17 +282,21 @@ class CommonController extends Controller
 
         $requestBody = $body;
         $requestHttpMethod = 'post';
-        $absApiUrl = "https://".setting('api.woohoo_url')."/rest/v3/orders";
+        $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/orders';
         $clientSecret = setting('api.qs_clientSecret');
         $bearerToken = setting('api.bearer_token');
         $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
 
-        $response = Http::acceptJson()->withToken($bearerToken)->withHeaders([
-            'dateAtClient' => $dateAtClient,
-            'signature' => $signature,
-            ])->send('POST', 'https://sandbox.woohoo.in/rest/v3/orders', [
-            'body' => $body
-        ])->get();
+        $response = Http::acceptJson()
+            ->withToken($bearerToken)
+            ->withHeaders([
+                'dateAtClient' => $dateAtClient,
+                'signature' => $signature,
+            ])
+            ->send('POST', 'https://sandbox.woohoo.in/rest/v3/orders', [
+                'body' => $body,
+            ])
+            ->get();
 
         dd($response);
         // if($token_resp->status() == 200){
@@ -277,10 +304,9 @@ class CommonController extends Controller
         //     DB::table('settings')->updateOrInsert(['display_name' => 'Bearer Token'],['value' => $token_resp->json()['token']]);
         //     return json_encode(["status"=>$token_resp->status(), "data"=>$token_resp->json()['token']]);
         // } else {
-            
+
         //     return json_encode(["status"=>$token_resp->status(), "data"=>$token_resp->failed()]);
         // }
-        
     }
 
     // {

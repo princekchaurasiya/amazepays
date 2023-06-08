@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserPanelController;
+use App\Http\Controllers\CommonController;
+use App\Http\Controllers\PaymentController;
 
 
 /*
@@ -16,32 +19,33 @@ use Illuminate\Support\Facades\Route;
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
 });
-Route::get('/', [App\Http\Controllers\UserPanelController::class, 'homePage'])->name('home');
+Route::get('/', [UserPanelController::class, 'homePage'])->name('home');
 Route::get('/gift_card_detail_page/{id}', function () {
     return view('userpanel/gift_card_detail_page_old');
 })->name('gift_card_detail_page');                                                                                          
 
-Route::post('/generate-authcode', [App\Http\Controllers\CommonController::class, 'generateAuthcode'])->name('generate-authcode'); //admin
+Route::post('/generate-authcode', [CommonController::class, 'generateAuthcode'])->name('generate-authcode'); //admin
 
 
-Route::get('/get-category',  [App\Http\Controllers\CommonController::class, 'getCategory'])->name('get-category');
-Route::get('/get-product',  [App\Http\Controllers\CommonController::class, 'getProducts'])->name('get-product');
-Route::get('/get-product-sku/{slug}',  [App\Http\Controllers\CommonController::class, 'getProductbySKU'])->name('get-product-sku');
+Route::get('/get-category',  [CommonController::class, 'getCategory'])->name('get-category');
+Route::get('/get-product',  [CommonController::class, 'getProducts'])->name('get-product');
+Route::get('/get-product-sku/{slug}',  [CommonController::class, 'getProductbySKU'])->name('get-product-sku');
 
 Route::group(['middleware'=>'guest'],function(){
-    Route::post('/user-registration',[App\Http\Controllers\UserPanelController::class, 'userRegistration'])->name('user-registration');
-    Route::post('/user-login',[App\Http\Controllers\UserPanelController::class, 'userLogin'])->name('user-login');
+    Route::post('/user-registration',[UserPanelController::class, 'userRegistration'])->name('user-registration');
+    Route::post('/user-login',[UserPanelController::class, 'userLogin'])->name('user-login');
 });
 Route::group(['middleware'=>'auth'],function(){
-    Route::post('/order-card',  [App\Http\Controllers\CommonController::class, 'orderCard'])->name('order-card'); // auth user only
-    Route::post('/checkout/{sku}',[App\Http\Controllers\UserPanelController::class, 'checkOut'])->name('checkout');
-    Route::get('/user-logout',[App\Http\Controllers\UserPanelController::class, 'userLogOut'])->name('user-logout');
-    Route::post('/apply-coupan', [App\Http\Controllers\UserPanelController::class, 'applyCoupan'])->name('apply-coupan'); //auth user only
-    Route::post('/remove-apply-coupan', [App\Http\Controllers\UserPanelController::class, 'removeApplyCoupan'])->name('remove-apply-coupan'); //auth user only
+    Route::post('/order-card',  [CommonController::class, 'orderCard'])->name('order-card'); // auth user only
+    
+    Route::post('/checkout/{sku}',[UserPanelController::class, 'checkOut'])->name('checkout');
+    Route::get('/user-logout',[UserPanelController::class, 'userLogOut'])->name('user-logout');
+    Route::post('/apply-coupan', [UserPanelController::class, 'applyCoupan'])->name('apply-coupan'); //auth user only
+    Route::post('/remove-apply-coupan', [UserPanelController::class, 'removeApplyCoupan'])->name('remove-apply-coupan'); //auth user only
 });
 
-Route::post('/check-data', [App\Http\Controllers\CommonController::class, 'checkData'])->name('check-data');
-Route::get('/view-all-product', [App\Http\Controllers\UserPanelController::class, 'viewAllProduct'])->name('view-all-product');
+Route::post('/check-data', [CommonController::class, 'checkData'])->name('check-data');
+Route::get('/view-all-product', [UserPanelController::class, 'viewAllProduct'])->name('view-all-product');
 
 Route::get('/profile', function () {
     return view('userpanel/profile');
@@ -83,9 +87,11 @@ Route::get('/payment', function () {
 })->name('payment');
 
 Route::post('/payment-process', function () {
+    // dd(12345);
     return view('paymentFolder.ccavRequestHandler');
 });
 
+Route::post('/response_ccavenue', 'PaymentController@responseCcavenue')->name('response_ccavenue');
 
 Route::get('/payment-complete', function () {
     return view('paymentFolder.ccavResponseHandler');
@@ -93,20 +99,23 @@ Route::get('/payment-complete', function () {
 // Route::match(['get', 'post'], '/payment-complete', function () {
 //     return view('paymentFolder.ccavResponseHandler');
 // })->name('payment-complete');
-// Route::post('/payment-process', 'App\Http\Controllers\PaymentController@processPayment')->name('payment-process');
+// Route::post('/payment-process', 'PaymentController@processPayment')->name('payment-process');
 
 
 
 // Routes for payment success and failure actions
 
-//Route::get('/payment-complete', 'App\Http\Controllers\PaymentController@paymentSuccess');
+//Route::get('/payment-complete', 'PaymentController@paymentSuccess');
 
-// Route::get('/payment/failed', 'App\Http\Controllers\PaymentController@paymentFailed')->name('payment-failed');
+// Route::get('/payment/failed', 'PaymentController@paymentFailed')->name('payment-failed');
 
-Route::get('payment-success', function(){
-    dd('success');
-})->name('success');
+// Route::get('payment-success', function(){
+//     dd('success');
+// })->name('success');
+
+Route::post('payment-success', 'PaymentController@processData')->name('success');
+
 
 Route::get('payment-cancel', function(){
-    dd('cancel');
+    // dd('cancel');
 })->name('cancel');

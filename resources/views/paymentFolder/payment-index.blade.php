@@ -31,16 +31,16 @@
 					<td>Order Id	:</td><td><input type="text" name="order_id" value="123654789"/></td>
 				</tr>
 				<tr>
-					<td>Amount	:</td><td><input type="text" name="amount" value="10.00"/></td>
+					<td>Amount	:</td><td><input type="text" name="amount" value="1.00"/></td>
 				</tr>
 				<tr>
 					<td>Currency	:</td><td><input type="text" name="currency" value="INR"/></td>
 				</tr>
 				<tr>
-					<td>Redirect URL :</td><td><input type="text" name="redirect_url" value="https://amazepay.toutle.in/payment-complete"/></td>
+					<td>Redirect URL :</td><td><input type="text" name="redirect_url" value="{{ route('response_ccavenue') }}"/></td>
 				</tr>
 			 	<tr>
-			 		<td>Cancel URL	:</td><td><input type="text" name="cancel_url" value="{{route('cancel')}}"/></td>
+			 		<td>Cancel URL	:</td><td><input type="text" name="cancel_url" value=""/></td>
 			 	</tr>
 			 	<tr>
 					<td>Language	:</td><td><input type="text" name="language" value="EN"/></td>
@@ -239,6 +239,7 @@
 	  var amount="6000.00";
   	  var currency="INR";
   	  
+		
       $.ajax({
            url:'https://test.ccavenue.com/transaction/transaction.do?command=getJsonData&access_code='+access_code+'&currency='+currency+'&amount='+amount,
            dataType: 'jsonp',

@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserPanelController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\PaymentController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\CcAvenuePayment;
 
 
 /*
@@ -16,6 +19,7 @@ use App\Http\Controllers\PaymentController;
 | contains the "web" middleware group. Now create something great!
 |
 */
+// Route::logout();
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
 });
@@ -86,36 +90,29 @@ Route::get('/payment', function () {
     return view('paymentFolder.payment-index');
 })->name('payment');
 
-Route::post('/payment-process', function () {
-    // dd(12345);
-    return view('paymentFolder.ccavRequestHandler');
+Route::post('/payment-process', function (Request $request) {
+    $cc_avenue_payment = new CcAvenuePayment();
+    $cc_avenue_payment->user_id = Auth::user()->id;
+    $cc_avenue_payment->order_id = $request->order_id;
+    $cc_avenue_payment->price = $request->denomination;
+    $cc_avenue_payment->qty = $request->quantity;
+    $cc_avenue_payment->currency_code = $request->numericCode;
+    if($cc_avenue_payment->save()){
+        return view('paymentFolder.ccavRequestHandler');
+    } else {
+        return redirect()->route('payment-process');
+    }
 });
 
-Route::post('/response_ccavenue', 'PaymentController@responseCcavenue')->name('response_ccavenue');
+Route::post('/response_ccavenue', [PaymentController::class, 'responseCcavenue'])->name('response_ccavenue');
 
 Route::get('/payment-complete', function () {
     return view('paymentFolder.ccavResponseHandler');
 })->name('payment-complete');
-// Route::match(['get', 'post'], '/payment-complete', function () {
-//     return view('paymentFolder.ccavResponseHandler');
-// })->name('payment-complete');
-// Route::post('/payment-process', 'PaymentController@processPayment')->name('payment-process');
-
-
-
-// Routes for payment success and failure actions
-
-//Route::get('/payment-complete', 'PaymentController@paymentSuccess');
-
-// Route::get('/payment/failed', 'PaymentController@paymentFailed')->name('payment-failed');
-
-// Route::get('payment-success', function(){
-//     dd('success');
-// })->name('success');
 
 Route::post('payment-success', 'PaymentController@processData')->name('success');
 
 
 Route::get('payment-cancel', function(){
-    // dd('cancel');
+    return view('userpanel.order_details');
 })->name('cancel');

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use DB;
 use App\Models\User;
 use App\QsProduct;
+use Session;
 
 class UserPanelController extends Controller
 {
@@ -101,7 +102,10 @@ class UserPanelController extends Controller
         try {
             $qsProd = QsProduct::where('sku',$sku)->first();
             $qsProd['prodData'] = $request->all();
-            //dd($qsProd);
+            $currency = json_decode($qsProd['currency']);
+            $qsProd['currency'] = $currency;
+            $qsProd['images'] = json_decode($qsProd->images);
+            // dd(json_decode($qsProd->images));
             if(\Auth::user()){
                 return view("userpanel/checkout",compact('qsProd'));
             } else {

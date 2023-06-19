@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Carbon;
 use DB;
 use App\QsCategory;
+use App\QsProduct;
 use View;
 
 class CommonController extends Controller
@@ -177,6 +178,7 @@ class CommonController extends Controller
                 $collection->map(function ($item, $key) use ($qsCat) {
                     // $createdAt = Carbon\Carbon::parse($item['createdAt'])->format('Y-m-d H:m:s');
                     // $updatedAt = Carbon\Carbon::parse($item['updatedAt'])->format('Y-m-d H:m:s');
+                    // dd($createdAt);
                     $data = [
                         'sku' => $item['sku'],
                         'name' => $item['name'],
@@ -186,10 +188,11 @@ class CommonController extends Controller
                         'maxPrice' => $item['maxPrice'],
                         'price' => json_encode($item['price']),
                         'images' => json_encode($item['images']),
-                        'created_at' => $item['createdAt'],
-                        'updated_at' => $item['updatedAt'],
+                        'prdt_created_at' => $item['createdAt'],
+                        'prdt_updated_at' => $item['updatedAt'],
                         'qs_category_id' => $qsCat,
                     ];
+                    // dd($data);
                     DB::table('qs_products')->updateOrInsert(['sku' => $item['sku']], $data);
                 });
                 return json_encode(['status' => $products_resp->status(), 'data' => 'Stored Successfully']);
@@ -203,6 +206,12 @@ class CommonController extends Controller
 
     public function getProductbySKU(Request $request)
     {
+        // $checkSKU = QsProduct::where("sku", "=",  $prdtDetails['sku'])->first();
+        // if(!empty($checkSKU)){
+
+        // } else {
+
+        // }
         try {
             $requestBody = '';
             $requestHttpMethod = 'get';
@@ -219,12 +228,53 @@ class CommonController extends Controller
                     'dateAtClient' => $dateAtClient,
                     'signature' => $signature,
                 ])
-                ->get('https://sandbox.woohoo.in/rest/v3/catalog/products/CNPIN');
+                ->get('https://' . setting('api.woohoo_url') . '/rest/v3/catalog/products/' . $request->slug);
 
             // fetch Products with sku
 
             $prdtDetails = $products_resp->json();
-            return view('userpanel/gift_card_detail_page', compact('prdtDetails'));
+            // dd($prdtDetails);
+            $data = [
+                    'product_id' => $prdtDetails['id'],
+                    'description' => $prdtDetails['description'],
+                    'price' => json_encode($prdtDetails['price']),
+                    'kycEnabled' => $prdtDetails['kycEnabled'],
+                    'additionalForm' => $prdtDetails['additionalForm'],
+                    'metaInformation' => json_encode($prdtDetails['price']),
+                    'type' => $prdtDetails['type'],
+                    'schedulingEnabled' => $prdtDetails['schedulingEnabled'],
+                    'product_currency_code' => $prdtDetails['currency'],
+                    'images' => json_encode($prdtDetails['images']),
+                    'tnc' => json_encode($prdtDetails['tnc']),
+                    'categories' => json_encode($prdtDetails['categories']),
+                    'customThemesAvailable' => json_encode($prdtDetails['customThemesAvailable']),
+                    'handlingCharges' => json_encode($prdtDetails['handlingCharges']),
+                    'reloadCardNumber' => json_encode($prdtDetails['reloadCardNumber']),
+                    'expiry' => $prdtDetails['expiry'],
+                    'formatExpiry' => $prdtDetails['formatExpiry'],
+                    'discounts' => json_encode($prdtDetails['discounts']),
+                    'relatedProducts' => json_encode($prdtDetails['relatedProducts']),
+                    'storeLocatorUrl' => $prdtDetails['storeLocatorUrl'],
+                    'brandName' => $prdtDetails['brandName'],
+                    'etaMessage' => $prdtDetails['etaMessage'],
+                    // 'created_at' => $item['createdAt'],
+                    // 'updated_at' => $item['updatedAt'],
+                    'cpg' => serialize($prdtDetails['cpg']),
+                    'payout' => serialize($prdtDetails['payout']),
+                    'allowedfulfillments' => json_encode($prdtDetails['allowedfulfillments']),
+                ];
+                    // dd($data);
+                    // $x = DB::table('qs_products')->update(['sku' => $prdtDetails['sku']], $data);
+                    $updatedprdtDetails = QsProduct::where("sku", "=",  $prdtDetails['sku'])->update($data);
+                    if(!empty($updatedprdtDetails)){
+                        $getprdtDetails = QsProduct::where("sku", "=",  $prdtDetails['sku'])->first()->toArray();
+                        $getprdtDetails['price'] = json_decode($getprdtDetails['price']);
+                        $getprdtDetails['images'] = json_decode($getprdtDetails['images']);
+                        $getprdtDetails['tnc'] = json_decode($getprdtDetails['tnc']);
+
+                    }
+                    // dd($getprdtDetails['images']->small);
+            return view('userpanel/gift_card_detail_page', compact('getprdtDetails'));
         } catch (Exception $e) {
             return $e->getMessage();
         }

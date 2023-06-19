@@ -7,7 +7,7 @@ Amazepay | Gift Card
     <div class="gift-card-detail-page pt-lg--7 pb-lg--7 pb-5 pt-5">
         <div class="container">
             <div class="row">
-                <form action="{{route('checkout', ['sku' => $prdtDetails['sku']])}}" method="POST" id="form_id">
+                <form action="{{route('checkout', ['sku' => $getprdtDetails['sku']])}}" method="POST" id="form_id">
                     {{csrf_field()}}
                     <div class="col-lg-12 mb-lg-4 mb-4 pb-3">
                         <h6 class="text-grey-900 fw-400 font-xl">E-Gift Card</h6>
@@ -16,7 +16,7 @@ Amazepay | Gift Card
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="card-container">
-                                <img src="{{$prdtDetails['images']['small'] == null ? URL::asset('/images/hamburger.jpg'): $prdtDetails['images']['small']}}" alt="product-detail-image">
+                                <img src="{{$getprdtDetails['images']->small == null ? URL::asset('/images/hamburger.jpg'): $getprdtDetails['images']->small}}" alt="product-detail-image">
                             </div>
                             <div class="container">
                                 <!-- <h6 class="text-grey-900 fw-400 font-xs mt-2">Offers</h6>
@@ -33,17 +33,17 @@ Amazepay | Gift Card
                                 <div class="row">
                                     <div class="row">
                                         <div class="col-sm-6">
-                                            <h6 class="mb-3 fw-600 font-xs mt-2" name="product_name" value="{{$prdtDetails['name']}}">{{$prdtDetails['name']}}</h6>
+                                            <h6 class="mb-3 fw-600 font-xs mt-2" name="product_name" value="{{$getprdtDetails['name']}}">{{$getprdtDetails['name']}}</h6>
                                         </div>
                                         <div class="col-sm-6">
-                                            <span class="mb-3 font-xssss fw-600 mt-2">Validity : {{$prdtDetails['expiry']}}</span>
+                                            <span class="mb-3 font-xssss fw-600 mt-2">Validity : {{$getprdtDetails['expiry']}}</span>
                                         </div>
                                     </div>
                                     <div class="row copuan-quantity">
                                         <div class="col-sm-6">
-                                            @if($prdtDetails['price']['type'] == "RANGE")
+                                            @if($getprdtDetails['price']->type == "RANGE")
                                                 <div class="radio-btn-row">
-                                                    @foreach($prdtDetails['price']['denominations'] as $denomination)
+                                                    @foreach($getprdtDetails['price']->denominations as $denomination)
                                                         <div class="custom-control mr-4 custom-radio custom-control-inline">
                                                             <input type="radio" class="custom-control-input range" id="customRadio-{{$denomination}}" name="denomination" value="{{$denomination}}">
                                                             <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss" for="customRadio-{{$denomination}}">{{$denomination}}</label>
@@ -83,14 +83,14 @@ Amazepay | Gift Card
                             <label for="tabtwo">Description</label>
                             <div class="tab">
                                 <ul class="square-type-unordered">
-                                    <li>{{$prdtDetails['description']}}</li>
+                                    <li>{{$getprdtDetails['description']}}</li>
                                 </ul>
                             </div>
                         
                             <input type="radio" name="tabs" id="tabthree">
                             <label for="tabthree">Terms & Condition</label>
                             <div class="tab term-condition">
-                                {!! $prdtDetails['tnc']['content'] !!}
+                                {!! $getprdtDetails['tnc']->content !!}
                             </div>
                             <input type="radio" name="tabs" id="tabfour">
                             <label for="tabfour">How to Redeem</label>

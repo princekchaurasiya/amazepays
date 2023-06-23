@@ -49,15 +49,15 @@
                     </div>
                     <div class="col-12 d-none d-lg-block">
                         <ul class="list-inline list-item-style mt-0 float-left pl-1">
-                            <!-- <li class="list-inline-item pl-0"><a href="#">BECOME AN AGENT</a></li> -->
-                            <li class="list-inline-item pl-0"><a href="#">(+1)866-540-3229</a></li>                         
+                             {{-- <li class="list-inline-item pl-0"><a href="#">BECOME AN AGENT</a></li> --}}
+                            <li class="list-inline-item pl-0"><a href="#">(+1)  866-540-3229</a></li>                         
                         </ul>
 
                         <ul class="list-inline list-item-style mt-0 float-right">
                             <li class="list-inline-item"><a href="#">PRIVACY</a></li>
                             <li class="list-inline-item"><a href="#">CUSTOMER SERVICE </a></li>  
-                            <!-- <li class="list-inline-item"><a href="#"><i class="ti-location-pin mr-2"></i>Store Locator</a></li> -->
-                            <!-- <li class="list-inline-item"><a href="#"><i class="ti-user mr-2"></i> My Account</a></li> -->
+                            {{-- <li class="list-inline-item"><a href="#"><i class="ti-location-pin mr-2"></i>Store Locator</a></li>
+                            <li class="list-inline-item"><a href="#"><i class="ti-user mr-2"></i> My Account</a></li>  --}}
                         </ul>
                     </div>
                 </div>
@@ -82,8 +82,8 @@
                                         <a class="dropdown-item" href="#">Bill payment</a>
                                         
                                     </div>
-                                </li> --}}
-                                {{-- <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Products <i class="ti-angle-down"></i></a>
+                                </li>
+                                <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Products <i class="ti-angle-down"></i></a>
                                     <div class="dropdown-menu">
                                         <a class="dropdown-item" href="#">Gift Cards</a>
                                         <a class="dropdown-item" href="#">Bank Gift Cards</a>
@@ -91,18 +91,31 @@
                                 </li> --}}
                                 <li class="nav-item"><a class="nav-link" href="{{ url('about') }}">About</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url('contact_us') }}">Contact</a></li>
-                                {{-- <li class="nav-item"><a class="nav-link" href="{{ url('f&q') }}">F&Q</a></li> --}}
+                                {{-- <li class="nav-item"><a class="nav-link" href="{{ url('f&q') }}">F&Q</a></li> --}}    
+                                @if(Auth::check())
+                            <li class="dropdown">
+                                <button class="btn dropdown-toggle pr-0 pl-0" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Hello {{ Auth::user()->name }}
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><a class="dropdown-item" href="{{ route('profile') }}"><i class="ti-user font-sm"></i> Profile</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('myOrder') }}"><i class="fa-sharp fa-solid fa-cart-shopping"></i> My Order</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('user-logout') }}"><i class="fa-sharp fa-solid fa-power-off"></i> Logout</a></li>
+                                </ul>
+                            </li>
+                        @endif                           
                             </ul>
                         </div>
                     </div>
                     <div class="col-lg-5 text-right align-self-center">
+                        
+                        
                         @if(\Auth::check())
                             <a href="{{route('user-logout')}}" class="header-btn bg-dark fw-500 text-white font-xssss">Logout</a>
                         @else
                             <a href="#" class="header-btn bg-dark fw-500 text-white font-xssss" data-toggle="modal" data-target="#Modallogin">Login</a>
                             <a href="#" class="header-btn bg-current fw-500 text-white font-xssss register-form" data-toggle="modal" data-target="#ModalregisterD">Register</a>
                         @endif
-                        
                     </div>
                 </div>
             </div>
@@ -310,7 +323,7 @@
    
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <!-- Bootstrap JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.0/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
     <!-- Bootstrap Select Main JavaScript -->
     
@@ -319,9 +332,6 @@
     <script src="{{URL::asset('js/plugin.js')}}"></script>
     <script src="{{URL::asset('js/scripts.js')}}"></script>
     
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta3/js/bootstrap-select.min.js"></script> -->
-    <!-- for filter select -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.10.0/js/bootstrap-select.min.js"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/jquery.slick/1.6.0/slick.min.js"></script>

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserPanelController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\MyOrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CcAvenuePayment;
@@ -55,9 +56,7 @@ Route::get('/profile', function () {
     return view('userpanel/profile');
 })->name('profile');
 
-Route::get('/my-order', function () {
-    return view('userpanel/my-order');
-})->name('my-order');
+
 
 Route::get('/change-password', function () {
     return view('userpanel/change-password');
@@ -90,19 +89,21 @@ Route::get('/payment', function () {
     return view('paymentFolder.payment-index');
 })->name('payment');
 
-Route::post('/payment-process', function (Request $request) {
-    $cc_avenue_payment = new CcAvenuePayment();
-    $cc_avenue_payment->user_id = Auth::user()->id;
-    $cc_avenue_payment->order_id = $request->order_id;
-    $cc_avenue_payment->price = $request->denomination;
-    $cc_avenue_payment->qty = $request->quantity;
-    $cc_avenue_payment->currency_code = $request->numericCode;
-    if($cc_avenue_payment->save()){
-        return view('paymentFolder.ccavRequestHandler');
-    } else {
-        return redirect()->route('payment-process');
-    }
-});
+// Route::post('/payment-process', function (Request $request) {
+//     $cc_avenue_payment = new CcAvenuePayment();
+//     $cc_avenue_payment->user_id = Auth::user()->id;
+//     $cc_avenue_payment->order_id = $request->order_id;
+//     $cc_avenue_payment->price = $request->denomination;
+//     $cc_avenue_payment->qty = $request->quantity;
+//     $cc_avenue_payment->currency_code = $request->numericCode;
+//     if($cc_avenue_payment->save()){
+//         return view('paymentFolder.ccavRequestHandler');
+//     } else {
+//         return redirect()->route('payment-process');
+//     }
+// });
+
+Route::post('/payment-process',[UserPanelController::class, 'orderProceed']);
 
 Route::post('/response_ccavenue', [PaymentController::class, 'responseCcavenue'])->name('response_ccavenue');
 
@@ -116,3 +117,11 @@ Route::post('payment-success', 'PaymentController@processData')->name('success')
 Route::get('payment-cancel', function(){
     return view('userpanel.order_details');
 })->name('cancel');
+
+// Route::get('/my-order', function () {
+//     return view('userpanel/my-order');
+// })->name('my-order');
+
+Route::get('/my-order', [MyOrderController::class, 'displayOrder'])->name('myOrder');
+
+Route::get('/get-category',  [CommonController::class, 'getCategory'])->name('get-category');

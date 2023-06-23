@@ -15775,3 +15775,15 @@ body {
   font-weight: 700;
   font-size: 1rem;
 }
+
+.nav-dropdown-div {
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: #777 !important;
+}
+
+h2{
+  color: red !important;
+}

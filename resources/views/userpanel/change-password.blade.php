@@ -1,4 +1,4 @@
-@extends('app')
+@extends('layouts.app')
 @section('title')
 Amazepay | Change Password
 @endsection
@@ -12,7 +12,7 @@ Amazepay | Change Password
                             <ul class="dash-menu-ul">
                                
                                 <li class="d-block rounded-lg"><a href="{{route('profile')}}"><i class="ti-user font-sm"></i><span> Profile</span></a></li>
-                                <li class="d-block rounded-lg"><a href="{{route('my-order')}}"><i class="ti-package font-sm"></i><span> My Order</span></a></li>
+                                <li class="d-block rounded-lg"><a href="{{route('myOrder')}}"><i class="ti-package font-sm"></i><span> My Order</span></a></li>
                                 <li class="d-block rounded-lg active"><a href="{{route('change-password')}}"><i class="ti-lock font-sm"></i><span> Chnage Password</span></a></li>
                                 <!-- <li class="d-block rounded-lg "><a href="payment.html"><i class="ti-credit-card font-sm"></i><span> Payment</span></a></li> -->
                                 <li class="d-block rounded-lg"><a href="#"><i class="ti-power-off font-sm"></i><span> Logout</span></a></li>

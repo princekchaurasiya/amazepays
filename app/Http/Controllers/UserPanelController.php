@@ -7,6 +7,10 @@ use DB;
 use App\Models\User;
 use App\QsProduct;
 use Session;
+use Carbon;
+use Illuminate\Support\Facades\Http;
+use App\Models\QsOrder;
+use Auth;
 
 class UserPanelController extends Controller
 {
@@ -115,6 +119,104 @@ class UserPanelController extends Controller
             $e->getMessage();
         }
         
+    }
+
+    public function orderProceed(Request $request){
+        // dd($request->all());
+        $modfy_user_data = [
+                'address' => [
+                    "firstname"=>$request->billing_name,
+                    "lastname"=>'test',
+                    "email"=>$request->billing_email,
+                    "telephone"=>"+91".$request->billing_tel,
+                    "line1"=>$request->billing_address,
+                    "line2"=>$request->billing_address_two,
+                    "city"=>$request->billing_city,
+                    "region"=>$request->billing_state,
+                    "country"=>'IN',
+                    "postcode"=>$request->billing_zip,
+                    "languages"=>"Hindi",
+                    "billToThis"=>true
+                ],
+                "billing" =>[
+                    "firstname"=>$request->billing_name,
+                    "lastname"=>'test',
+                    "email"=>$request->billing_email,
+                    "telephone"=>"+91".$request->billing_tel,
+                    "line1"=>$request->billing_address,
+                    "line2"=>$request->billing_address_two,
+                    "city"=>$request->billing_city,
+                    "region"=>$request->billing_state,
+                    "country"=>'IN',
+                    "postcode"=>$request->billing_zip,
+                    "languages"=>"Hindi",
+                    "billToThis"=>true
+                ],
+                "payments"=>[
+                    [
+                        "code"=>"svc",
+                        "amount"=>$request->amount //take from selected front end
+                    ]
+                ],
+                "refno"=>"Amaz".mt_rand(1111,9999),
+                "products" =>[
+                    [
+                        "sku"=>$request->sku,
+                        "price"=>$request['denomination'],
+                        "qty"=>$request['quantity'],
+                        "currency"=>$request['numericCode']
+                    ]
+                ],
+                "syncOnly"=>($request['quantity'] > 10 ? false : true),
+                "delivery_mode"=>"API"
+            ];
+// dd($modfy_user_data);
+            $requestBody = json_encode($modfy_user_data);
+            $requestHttpMethod = 'post';
+            $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/orders';
+            $clientSecret = setting('api.qs_clientSecret');
+            $bearerToken = setting('api.bearer_token');
+            $signature = CommonController::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+            $dateAtClient = Carbon\Carbon::now()->toIso8601String();
+            $response = Http::acceptJson()
+                // ->withToken($bearerToken)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer '.$bearerToken,
+                    'Accept' => '*/*',
+                    'dateAtClient' => $dateAtClient,
+                    'signature' => $signature,
+                ])
+                ->send('POST', 'https://sandbox.woohoo.in/rest/v3/orders', [
+                    'body' => $requestBody,
+            ]);
+            $status = $response->json();
+            // dd($status);
+            if($status['status'] == 'COMPLETE'){
+                $userOrder = new QsOrder();
+                $userOrder->user_id = Auth::user()->id;
+                $userOrder->product = json_encode($response['payments']);
+                $userOrder->reference_id = $response['refno'];
+                $userOrder->order_id = $response['orderId'];
+                $userOrder->order_status = $response['status'];
+                $userOrder->cards = json_encode($response['cards']);
+                $userOrder->order_cancel =json_encode($response['cancel']);
+                $userOrder->order_payment = json_encode($response['payments']);
+                $userOrder->currency = json_encode($response['currency']);
+                $userOrder->additionalTxnFields = json_encode($response['additionalTxnFields']);
+                $userOrder->sku = $request->sku;
+                $userOrder->price = $request['denomination'];
+                $userOrder->qty = $request['quantity'];
+                // dd($userOrder);
+                $userOrder->save();
+                $request['order_id'] = $status['orderId'];
+                $data = $request->all();
+                return view('paymentFolder.ccavRequestHandler',compact('data'));
+            } else {
+                $msg = 'Something went wrong';
+                return redirect('checkout',['sku',$request->sku])->with('msg', $msg);
+            }
+            
     }
 
     public function applyCoupan(Request $request){

@@ -190,9 +190,8 @@ class UserPanelController extends Controller
                 ->send('POST', 'https://sandbox.woohoo.in/rest/v3/orders', [
                     'body' => $requestBody,
             ]);
-
-           
             $status = $response->json();
+            // dd($status);
             if($status['status'] == 'COMPLETE'){
                 $userOrder = new QsOrder();
                 $userOrder->user_id = Auth::user()->id;
@@ -205,13 +204,17 @@ class UserPanelController extends Controller
                 $userOrder->order_payment = json_encode($response['payments']);
                 $userOrder->currency = json_encode($response['currency']);
                 $userOrder->additionalTxnFields = json_encode($response['additionalTxnFields']);
+                $userOrder->sku = $request->sku;
+                $userOrder->price = $request['denomination'];
+                $userOrder->qty = $request['quantity'];
                 // dd($userOrder);
                 $userOrder->save();
                 $request['order_id'] = $status['orderId'];
                 $data = $request->all();
                 return view('paymentFolder.ccavRequestHandler',compact('data'));
             } else {
-                dd('something went wrong');
+                $msg = 'Something went wrong';
+                return redirect('checkout',['sku',$request->sku])->with('msg', $msg);
             }
             
     }

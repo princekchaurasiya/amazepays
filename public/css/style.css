@@ -15784,6 +15784,10 @@ body {
   color: #777 !important;
 }
 
-h2{
-  color: red !important;
+/* my order page code goes here */
+
+.my-order-heading{
+  font-size: 20px !important;
+  font-weight: 800 !important;
 }
+

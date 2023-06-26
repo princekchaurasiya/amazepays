@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CcAvenuePayment;
 
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -27,36 +26,34 @@ Route::group(['prefix' => 'admin'], function () {
 Route::get('/', [UserPanelController::class, 'homePage'])->name('home');
 Route::get('/gift_card_detail_page/{id}', function () {
     return view('userpanel/gift_card_detail_page_old');
-})->name('gift_card_detail_page');                                                                                          
+})->name('gift_card_detail_page');
 
 Route::post('/generate-authcode', [CommonController::class, 'generateAuthcode'])->name('generate-authcode'); //admin
 
+Route::get('/get-category', [CommonController::class, 'getCategory'])->name('get-category');
+Route::get('/get-product', [CommonController::class, 'getProducts'])->name('get-product');
+Route::get('/get-product-sku/{slug}', [CommonController::class, 'getProductbySKU'])->name('get-product-sku');
 
-Route::get('/get-category',  [CommonController::class, 'getCategory'])->name('get-category');
-Route::get('/get-product',  [CommonController::class, 'getProducts'])->name('get-product');
-Route::get('/get-product-sku/{slug}',  [CommonController::class, 'getProductbySKU'])->name('get-product-sku');
-
-Route::group(['middleware'=>'guest'],function(){
-    Route::post('/user-registration',[UserPanelController::class, 'userRegistration'])->name('user-registration');
-    Route::post('/user-login',[UserPanelController::class, 'userLogin'])->name('user-login');
+Route::group(['middleware' => 'guest'], function () {
+    Route::post('/user-registration', [UserPanelController::class, 'userRegistration'])->name('user-registration');
+    Route::post('/user-login', [UserPanelController::class, 'userLogin'])->name('user-login');
 });
-Route::group(['middleware'=>'auth'],function(){
-    Route::post('/order-card',  [CommonController::class, 'orderCard'])->name('order-card'); // auth user only
-    
-    Route::post('/checkout/{sku}',[UserPanelController::class, 'checkOut'])->name('checkout');
-    Route::get('/user-logout',[UserPanelController::class, 'userLogOut'])->name('user-logout');
+Route::group(['middleware' => 'auth'], function () {
+    Route::post('/order-card', [CommonController::class, 'orderCard'])->name('order-card'); // auth user only
+
+    Route::post('/checkout/{sku}', [UserPanelController::class, 'checkOut'])->name('checkout');
+    Route::get('/user-logout', [UserPanelController::class, 'userLogOut'])->name('user-logout');
     Route::post('/apply-coupan', [UserPanelController::class, 'applyCoupan'])->name('apply-coupan'); //auth user only
     Route::post('/remove-apply-coupan', [UserPanelController::class, 'removeApplyCoupan'])->name('remove-apply-coupan'); //auth user only
+
+    Route::get('/profile', function () {
+        return view('userpanel/profile');
+    })->name('profile');  //auth user only
+    Route::get('/my-order', [MyOrderController::class, 'displayOrder'])->name('myOrder'); //auth user only
 });
 
 Route::post('/check-data', [CommonController::class, 'checkData'])->name('check-data');
 Route::get('/view-all-product', [UserPanelController::class, 'viewAllProduct'])->name('view-all-product');
-
-Route::get('/profile', function () {
-    return view('userpanel/profile');
-})->name('profile');
-
-
 
 Route::get('/change-password', function () {
     return view('userpanel/change-password');
@@ -81,8 +78,6 @@ Route::get('/all_transaction', function () {
     return view('userpanel/all_transaction');
 });
 
-
-
 // Routes for payment
 
 Route::get('/payment', function () {
@@ -103,7 +98,7 @@ Route::get('/payment', function () {
 //     }
 // });
 
-Route::post('/payment-process',[UserPanelController::class, 'orderProceed']);
+Route::post('/payment-process', [UserPanelController::class, 'orderProceed']);
 
 Route::post('/response_ccavenue', [PaymentController::class, 'responseCcavenue'])->name('response_ccavenue');
 
@@ -111,10 +106,10 @@ Route::get('/payment-complete', function () {
     return view('paymentFolder.ccavResponseHandler');
 })->name('payment-complete');
 
-Route::post('payment-success', 'PaymentController@processData')->name('success');
+Route::post('payment-success', [PaymentController::class, 'processData'])->name('success');
 
 
-Route::get('payment-cancel', function(){
+Route::get('payment-cancel', function () {
     return view('userpanel.order_details');
 })->name('cancel');
 
@@ -122,6 +117,6 @@ Route::get('payment-cancel', function(){
 //     return view('userpanel/my-order');
 // })->name('my-order');
 
-Route::get('/my-order', [MyOrderController::class, 'displayOrder'])->name('myOrder');
 
-Route::get('/get-category',  [CommonController::class, 'getCategory'])->name('get-category');
+
+Route::get('/get-category', [CommonController::class, 'getCategory'])->name('get-category');

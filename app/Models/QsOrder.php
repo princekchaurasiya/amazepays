@@ -10,5 +10,5 @@ class QsOrder extends Model
     use HasFactory;
     
     protected $table = 'qs_ordered';
-    protected $fillable = ['order_id'];
+    // protected $fillable = ['order_id'];
 }

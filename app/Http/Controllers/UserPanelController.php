@@ -104,6 +104,9 @@ class UserPanelController extends Controller
     }
     public function checkOut(Request $request,$sku){
         try {
+            // dd($request->all());
+            // Session::set('receiver_name', $request->receiver_name);
+            session()->put('receiver_name', $request->receiver_name);
             $qsProd = QsProduct::where('sku',$sku)->first();
             $qsProd['prodData'] = $request->all();
             $currency = json_decode($qsProd['currency']);
@@ -122,7 +125,8 @@ class UserPanelController extends Controller
     }
 
     public function orderProceed(Request $request){
-        // dd($request->all());
+       
+        // dd(session::get('receiver_name'), $request->all());
         $modfy_user_data = [
                 'address' => [
                     "firstname"=>$request->billing_name,
@@ -192,13 +196,18 @@ class UserPanelController extends Controller
             ]);
             $status = $response->json();
             // dd($status);
-            if($status['status'] == 'COMPLETE'){
+            if(count($status)>0 && count($status) <=4 ){
+                $msg = $status['message'];
+                // return redirect()->route('checkout',['sku',$request->sku])->with('msg', $msg);
+                // return redirect()->back()->with('msg',$msg);
+            } else {
+                if($status['status'] == 'COMPLETE'){
                 $userOrder = new QsOrder();
                 $userOrder->user_id = Auth::user()->id;
                 $userOrder->product = json_encode($response['payments']);
                 $userOrder->reference_id = $response['refno'];
                 $userOrder->order_id = $response['orderId'];
-                $userOrder->order_status = $response['status'];
+                $userOrder->order_status = 'Pending';
                 $userOrder->cards = json_encode($response['cards']);
                 $userOrder->order_cancel =json_encode($response['cancel']);
                 $userOrder->order_payment = json_encode($response['payments']);
@@ -210,11 +219,14 @@ class UserPanelController extends Controller
                 // dd($userOrder);
                 $userOrder->save();
                 $request['order_id'] = $status['orderId'];
+                $request['merchant_id'] = config('auth.merchant_id');
                 $data = $request->all();
+                // dd($data);
                 return view('paymentFolder.ccavRequestHandler',compact('data'));
             } else {
                 $msg = 'Something went wrong';
                 return redirect('checkout',['sku',$request->sku])->with('msg', $msg);
+            }
             }
             
     }

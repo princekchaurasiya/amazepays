@@ -18,7 +18,53 @@ Amazepay | Gift Card
                             <div class="card-container">
                                 <img src="{{$getprdtDetails['images']->small == null ? URL::asset('/images/hamburger.jpg'): $getprdtDetails['images']->small}}" alt="product-detail-image">
                             </div>
+                            <hr>
                             <div class="container">
+                                <div class="row">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <h6 class="mb-3 fw-600 font-xs mt-2" name="product_name" value="{{$getprdtDetails['name']}}">{{$getprdtDetails['name']}}</h6>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <span class="mb-3 font-xssss fw-600 mt-2">Validity : {{$getprdtDetails['expiry']}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row copuan-quantity">
+                                    <div class="col-sm-6">
+                                        @if($getprdtDetails['price']->type == "RANGE")
+                                            <div class="radio-btn-row">
+                                                @foreach($getprdtDetails['price']->denominations as $denomination)
+                                                    <div class="custom-control mr-4 custom-radio custom-control-inline">
+                                                        <input type="radio" class="custom-control-input range" id="customRadio-{{$denomination}}" name="denomination" value="{{$denomination}}">
+                                                        <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss" for="customRadio-{{$denomination}}">{{$denomination}}</label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <input type="text" class="form-control mb-3" placeholder="Select Denomination" name="denomination" id="denomination" value="">
+                                            <span class="font-xssss fw-400 error-rec-deno"></span>
+                                        @endif  
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <input type="text" class="form-control mb-3" placeholder="Quantity" name="quantity" id="quantity" value="">
+                                        <span class="font-xssss fw-400 error-rec-qnty"></span>
+                                    </div>
+                                </div>
+                                {{-- <div class="col-sm-12 mb-4">
+                                    <h6 class="mb-3 fw-600 font-xs mt-2 pb-3">Gift Send Option</h6>
+                                    <div class="custom-control mr-4 custom-radio custom-control-inline">
+                                        <input type="radio" class="custom-control-input" id="customRadio" name="gift_send_option" value="send_as_gift" checked>
+                                        <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="customRadio">Send as Gift</label>
+                                    </div>
+                                    <div class="custom-control mr-0 custom-radio custom-control-inline">
+                                        <input type="radio" class="custom-control-input" id="customRadio1" name="gift_send_option" value="buy_for_self">
+                                        <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="customRadio1">Buy for Self (This E-gift card will be added to your account)</label>
+                                    </div>
+                                    
+                                </div> --}}
+                                
                                 <!-- <h6 class="text-grey-900 fw-400 font-xs mt-2">Offers</h6>
                                 <ul class="square-type-unordered">
                                     <li>Only UPI payment is accepted for this gift card. --- On Amazon Pay Special E-Gift Card (woohoo.in/amazon-pay-special-e-gift-card) Credit/Debit card and Net Banking options are available.</li>
@@ -30,7 +76,7 @@ Amazepay | Gift Card
                         </div>
                         <div class="col-lg-6">
                             <div class="container">
-                                <div class="row">
+                                {{-- <div class="row">
                                     <div class="row">
                                         <div class="col-sm-6">
                                             <h6 class="mb-3 fw-600 font-xs mt-2" name="product_name" value="{{$getprdtDetails['name']}}">{{$getprdtDetails['name']}}</h6>
@@ -39,32 +85,76 @@ Amazepay | Gift Card
                                             <span class="mb-3 font-xssss fw-600 mt-2">Validity : {{$getprdtDetails['expiry']}}</span>
                                         </div>
                                     </div>
-                                    <div class="row copuan-quantity">
-                                        <div class="col-sm-6">
-                                            @if($getprdtDetails['price']->type == "RANGE")
-                                                <div class="radio-btn-row">
-                                                    @foreach($getprdtDetails['price']->denominations as $denomination)
-                                                        <div class="custom-control mr-4 custom-radio custom-control-inline">
-                                                            <input type="radio" class="custom-control-input range" id="customRadio-{{$denomination}}" name="denomination" value="{{$denomination}}">
-                                                            <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss" for="customRadio-{{$denomination}}">{{$denomination}}</label>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @else
-                                                <input type="text" class="form-control mb-3" placeholder="Select Denomination" name="denomination" id="denomination" value="">
-                                                <span class="font-xssss fw-400 error-rec-deno"></span>
-                                            @endif  
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <input type="text" class="form-control mb-3" placeholder="Quantity" name="quantity" id="quantity" value="">
-                                            <span class="font-xssss fw-400 error-rec-qnty"></span>
+                                </div> --}}
+                                <div class="col-sm-12 mb-4">
+                                    <h6 class="mb-3 fw-600 font-xss mt-2">Gift Send Option</h6>
+                                    <div class="custom-control mr-4 custom-radio custom-control-inline">
+                                        <input type="radio" class="custom-control-input" id="customRadio" name="gift_send_option" value="send_as_gift" checked>
+                                        <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="customRadio">Send as Gift</label>
+                                    </div>
+                                    <div class="custom-control mr-0 custom-radio custom-control-inline">
+                                        <input type="radio" class="custom-control-input" id="customRadio1" name="buy_for_self" value="buy_for_self">
+                                        <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="customRadio1">Buy for Self (This E-gift card will be added to your account)</label>
+                                    </div>
+                                </div>
+                                <div class="row card-form gifting-details">
+                                    <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
+                                    <div class="col-sm-6 receiver-name">
+                                        <input type="text" class="form-control mb-3" placeholder="Receiver Name" name="receiver_name" id="receiver-name">
+                                        <span class="font-xssss fw-400 error-rec-name"></span>
+                                    </div>
+                                    <div class="col-sm-6 receiver-email">
+                                        <input type="text" class="form-control mb-3" placeholder="Receiver Email" id="receiver-email">
+                                        <span class="font-xssss fw-400 error-rec-email"></span>
+                                    </div>
+                                    <div class="col-sm-6 receiver-mobile d-none">
+                                        <input type="text" class="form-control mb-3" placeholder="Receiver Mobile Number" id="receiver-mobile">
+                                        <span class="font-xssss fw-400 error-rec-mobile"></span>
+                                    </div>
+                                    <div class="col-sm-6 receiver-message">
+                                        <input type="text" class="form-control mb-3" placeholder="Message for Receiver" id="receiver-msg">
+                                    </div>
+                                    <div class="col-sm-12 mb-4">
+                                            <h6 class="mb-3 fw-600 font-xss mt-2">Delivery Mode</h6>
+                                            <div class="custom-control mr-4 custom-radio custom-control-inline">
+                                                <input type="radio" class="custom-control-input" id="customRadio3" name="delivery_mode" value="email" checked>
+                                                <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss" for="customRadio3">Email</label>
+                                            </div>
+                                            <div class="custom-control mr-4 custom-radio custom-control-inline">
+                                                <input type="radio" class="custom-control-input" id="customRadio4" name="delivery_mode" value="mobile">
+                                                <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss" for="customRadio4">Mobile</label>
+                                            </div>
+                                            <div class="custom-control mr-4 custom-radio custom-control-inline">
+                                                <input type="radio" class="custom-control-input" id="customRadio5" name="delivery_mode" value="both">
+                                                <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss" for="customRadio5">Both</label>
+                                            </div>
                                         </div>
                                     </div>
-                                    
+                                    <div class="row card-form add-gift-cards d-none">
+                                        <h6 class="mb-3 fw-600 font-xss mt-2">Add Gift Cards to your Account</h6>
+                                        <div class="row">
+                                            <div class="col-lg-4 col-md-4 text-center">
+                                                <h2 class="fw-500 text-grey-900 display2-size">4M</h2>
+                                                <p class="font-xssss fw-500 text-grey-400 lh-26 mt-2">If you want to print or forward this Email gift card with an attractive template, please select the 'Send as a Gift' option.</p>
+                                            </div>
+                                            <div class="col-lg-4 col-md-4 text-center">
+                                                <h2 class="fw-500 text-grey-900 display2-size">12k</h2>
+                                                <p class="font-xssss fw-500 text-grey-400 lh-26 mt-2">The e-gift card that you order from this page, will be added to your Woohoo account automatically.</p>
+                                            </div>
+                                            <div class="col-lg-4 col-md-4 text-center">
+                                                <h2 class="fw-500 text-grey-900 display2-size">20M</h2>
+                                                <p class="font-xssss fw-500 text-grey-400 lh-26 mt-2">For better security of your e-gift card, the details of your gift card will not be sent separately.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                
                                 </div>   
                             </div>
                         </div>
-                    </div>
+                    
+                                    
+               
+    
                     <div class="row personalise-gift-card">
                         <div class="tabs">
                             <input type="radio" name="tabs" id="tabone" checked="checked">
@@ -146,6 +236,7 @@ Amazepay | Gift Card
 
             // Gift Send Option
                 $('#customRadio').click(function(){
+                    debugger;
                     $('.gifting-details').removeClass('d-none');
                     $('.add-gift-cards').addClass('d-none');
                 });
@@ -251,22 +342,22 @@ Amazepay | Gift Card
                 } else {
                      this.submit();
                 }
-                // switch (delivery_mode) { 
-                //     case 'email': 
-                //         status = email(recName,recEmail,recMsg);
-                //         break;
-                //     case 'mobile': 
-                //         status =  mobile(recName,recMobile,recMsg);
-                //         break;
-                //     default:
-                //         status =  both(recName,recEmail,recMobile,recMsg);
-                // }
+                switch (delivery_mode) { 
+                    case 'email': 
+                        status = email(recName,recEmail,recMsg);
+                        break;
+                    case 'mobile': 
+                        status =  mobile(recName,recMobile,recMsg);
+                        break;
+                    default:
+                        status =  both(recName,recEmail,recMobile,recMsg);
+                }
 
-                // if(status != true){
-                //     return false;  
-                // } else {
-                //     this.submit();
-                // } 
+                if(status != true){
+                    return false;  
+                } else {
+                    this.submit();
+                } 
             });
 
             function email(recName,recEmail,recMsg){

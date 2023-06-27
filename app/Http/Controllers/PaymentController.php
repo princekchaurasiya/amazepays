@@ -194,7 +194,6 @@ class PaymentController extends Controller
         if ($order_status === 'Success') {
             $msg = "order created successfully!";
             // return redirect()->route('myOrder',compact('msg')); //redirect to order page
-            QsOrder::where('order_id', $data[0]['order_id'])->update(['order_status'=>'COMPLETE']);
             return redirect('my-order')->with('msg', $msg);
         } elseif ($order_status === 'Aborted') {
             $msg = "order created successfully!";

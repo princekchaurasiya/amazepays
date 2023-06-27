@@ -3652,7 +3652,7 @@ pre code {
   color: #495057;
   background-color: #fff;
   background-clip: padding-box;
-  border: 1px solid #ced4da;
+  border: 2px solid #ced4da;
   border-radius: 0.25rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
@@ -14458,7 +14458,7 @@ strong,
   height: 50px;
   font-size: 14px;
   display: inline-block;
-  border: 2px #eee solid;
+  border: 2px #c4c4c4 solid;
 }
 .form-control:focus {
   border-color: var(--theme-color);
@@ -15791,3 +15791,11 @@ body {
   font-weight: 800 !important;
 }
 
+/* bllingform code starts here */
+
+.error{
+  color: red;
+  font-size: 14px;
+  margin-top: 5px;
+  font-weight: 600;
+}

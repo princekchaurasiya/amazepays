@@ -9,7 +9,6 @@
 
             <form method="POST" name="customerData" action="{{ url('payment-process') }}" id="checkoutForm">
                 @csrf
-                <input type="hidden" name="merchant_id" value="{{ config('auth.merchant_id') }}" />
                 <input type="hidden" name="redirect_url" value="{{ route('response_ccavenue') }}" />
                 <input type="hidden" name="language" value="EN" />
                 <input type="hidden" name="cancel_url" value="{{ url('payment-cancel') }}" />
@@ -100,7 +99,6 @@
                                                         class="float-right mont-font">Edit</a></div>
                                             </div>
                                             <div class="row cart-item-record">
-                                                <input type="hidden" name="order_id" value="{{ $qsProd->id }}" />
                                                 <div class="col-md-6 col-sm-4 col-xs-12">
                                                     <img class="cart-coupan-img"
                                                         src="{{ $qsProd['images']->small == null ? URL::asset('/images/hamburger.jpg') : $qsProd['images']->small }}"

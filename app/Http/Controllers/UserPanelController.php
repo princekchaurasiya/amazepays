@@ -103,7 +103,9 @@ class UserPanelController extends Controller
         return  $viewProds;
     }
     public function checkOut(Request $request,$sku){
+        // dd($request->all());
         try {
+            session()->put('receiver_name', $request->receiver_name);
             $qsProd = QsProduct::where('sku',$sku)->first();
             $qsProd['prodData'] = $request->all();
             $currency = json_decode($qsProd['currency']);
@@ -122,7 +124,7 @@ class UserPanelController extends Controller
     }
 
     public function orderProceed(Request $request){
-        // dd($request->all());
+        // dd(session::get('receiver_name'), $request->all());
         $modfy_user_data = [
                 'address' => [
                     "firstname"=>$request->billing_name,
@@ -210,6 +212,7 @@ class UserPanelController extends Controller
                 // dd($userOrder);
                 $userOrder->save();
                 $request['order_id'] = $status['orderId'];
+                $request['merchant_id'] = $status['merchant_id'];
                 $data = $request->all();
                 return view('paymentFolder.ccavRequestHandler',compact('data'));
             } else {

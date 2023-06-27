@@ -219,7 +219,7 @@
                     contentType: false,
                     dataType: 'json',
                     success: function(data) {
-                        debugger;
+                        // debugger;
                         console.log(data);
                     },
                     error: function(data) {
@@ -358,7 +358,7 @@
                     contentType: false,
                     dataType: 'json',
                     success: function(data) {
-                        debugger;
+                        // debugger;
                         $('.apply-coupan-amount').text(data.coupan);
                         $('.coupan-code-amount').css('display', 'none');
                         $('#remove-coupan-code').css('display', 'none');

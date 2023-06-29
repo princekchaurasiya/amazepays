@@ -10,6 +10,7 @@ use Session;
 use Carbon;
 use Illuminate\Support\Facades\Http;
 use App\Models\QsOrder;
+use App\Models\GiftCard;
 use Auth;
 
 class UserPanelController extends Controller
@@ -103,9 +104,15 @@ class UserPanelController extends Controller
         return  $viewProds;
     }
     public function checkOut(Request $request,$sku){
-        // dd($request->all());
         try {
+            session()->put('denomination', $request->denomination);
+            session()->put('quantity', $request->quantity);
+            session()->put('gift_send_option', $request->gift_send_option);
             session()->put('receiver_name', $request->receiver_name);
+            session()->put('receiver_email', $request->receiver_email);
+            session()->put('receiver_mobile', $request->receiver_mobile);
+            session()->put('receiver_msg', $request->receiver_msg);
+            session()->put('delivery_mode', $request->delivery_mode);
             $qsProd = QsProduct::where('sku',$sku)->first();
             $qsProd['prodData'] = $request->all();
             $currency = json_decode($qsProd['currency']);
@@ -124,7 +131,7 @@ class UserPanelController extends Controller
     }
 
     public function orderProceed(Request $request){
-        // dd(session::get('receiver_name'), $request->all());
+        // dd(session::get('denomination'), $request->all());
         $modfy_user_data = [
                 'address' => [
                     "firstname"=>$request->billing_name,
@@ -164,8 +171,8 @@ class UserPanelController extends Controller
                 "products" =>[
                     [
                         "sku"=>$request->sku,
-                        "price"=>$request['denomination'],
-                        "qty"=>$request['quantity'],
+                        "price"=>session::get('denomination'),
+                        "qty"=>session::get('quantity'),
                         "currency"=>$request['numericCode']
                     ]
                 ],
@@ -200,20 +207,33 @@ class UserPanelController extends Controller
                 $userOrder->product = json_encode($response['payments']);
                 $userOrder->reference_id = $response['refno'];
                 $userOrder->order_id = $response['orderId'];
-                $userOrder->order_status = $response['status'];
+                $userOrder->order_status = 'PENDING';
                 $userOrder->cards = json_encode($response['cards']);
                 $userOrder->order_cancel =json_encode($response['cancel']);
                 $userOrder->order_payment = json_encode($response['payments']);
                 $userOrder->currency = json_encode($response['currency']);
                 $userOrder->additionalTxnFields = json_encode($response['additionalTxnFields']);
                 $userOrder->sku = $request->sku;
-                $userOrder->price = $request['denomination'];
-                $userOrder->qty = $request['quantity'];
+                $userOrder->price = session::get('denomination');
+                $userOrder->qty = session::get('quantity');
+                $userOrder->is_gifted = (session::get('gift_send_option') == 'send_as_gift') ? 1 : 0;
                 // dd($userOrder);
                 $userOrder->save();
                 $request['order_id'] = $status['orderId'];
-                $request['merchant_id'] = $status['merchant_id'];
+                $request['merchant_id'] = config('auth.merchant_id');
                 $data = $request->all();
+                if(session::get('gift_send_option') == 'send_as_gift'){
+                    $gift_card = new GiftCard();
+                    $gift_card->sender_id = Auth::user()->id;
+                    $gift_card->order_id = $status['orderId'];
+                    $gift_card->receiver_name = session::get('receiver_name');
+                    $gift_card->receiver_email = session::get('receiver_email');
+                    $gift_card->receiver_mobile = session::get('receiver_mobile');
+                    $gift_card->receiver_msg = session::get('receiver_msg');
+                    $gift_card->card = json_encode($response['cards']);
+                    $gift_card->amount = session::get('denomination')*session::get('quantity');
+                    $gift_card->save();
+                }
                 return view('paymentFolder.ccavRequestHandler',compact('data'));
             } else {
                 $msg = 'Something went wrong';

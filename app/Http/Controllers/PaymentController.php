@@ -15,6 +15,7 @@ use App\Models\QsOrder;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CcAvenuePayment;
 use DB;
+use Mail;
 
 
 class PaymentController extends Controller
@@ -192,21 +193,27 @@ class PaymentController extends Controller
             // $userOrder->currency_code = 356;
             $userOrder->save();
         if ($order_status === 'Success') {
+            QsOrder::where('order_id', $data[0]['order_id'])->update(['order_status'=>'COMPLETE']);
+            // send mail or sms to buyer
+            $data = array('name'=>"Virat Gandhi");
+            Mail::send('layouts.mail', $data, function($message) {
+                $message->to('shubham.toutle@gmail.com', 'Tutorials Point')->subject
+                    ('Laravel Testing Mail with Attachment');
+            });
             $msg = "order created successfully!";
             // return redirect()->route('myOrder',compact('msg')); //redirect to order page
             return redirect('my-order')->with('msg', $msg);
         } elseif ($order_status === 'Aborted') {
-            $msg = "order created successfully!";
             QsOrder::where('order_id', $data[0]['order_id'])->update(['order_status'=>'CANCELED']);
-            // $userOrder = CcAvenuePayment::findOrFail();
+            $msg = "Something went wrong. Please contact the support team if any money got deducted.";
             return redirect()->route('myOrder',compact('msg')); //redirect to order page
         } elseif ($order_status === 'Failure') {
-            $msg = "order created successfully!";
             QsOrder::where('order_id', $data[0]['order_id'])->update(['order_status'=>'CANCELED']);
+            $msg = "Something went wrong. Please contact the support team if any money got deducted.";
             return redirect()->route('myOrder',compact('msg')); //redirect to order page
         } else {
-            $msg = "order created successfully!";
             QsOrder::where('order_id', $data[0]['order_id'])->update(['order_status'=>'CANCELED']);
+            $msg = "Something went wrong. Please contact the support team if any money got deducted.";
             return redirect()->route('myOrder',compact('msg')); //redirect to order page
         }
         // for($i = 0; $i < $dataSize; $i++)

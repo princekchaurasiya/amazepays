@@ -104,15 +104,15 @@ Amazepay | Gift Card
                                         <span class="font-xssss fw-400 error-rec-name"></span>
                                     </div>
                                     <div class="col-sm-6 receiver-email">
-                                        <input type="text" class="form-control mb-3" placeholder="Receiver Email" id="receiver-email">
+                                        <input type="text" class="form-control mb-3" placeholder="Receiver Email" name="receiver_email" id="receiver-email">
                                         <span class="font-xssss fw-400 error-rec-email"></span>
                                     </div>
                                     <div class="col-sm-6 receiver-mobile d-none">
-                                        <input type="text" class="form-control mb-3" placeholder="Receiver Mobile Number" id="receiver-mobile">
+                                        <input type="text" class="form-control mb-3" placeholder="Receiver Mobile Number" name="receiver_mobile" id="receiver-mobile">
                                         <span class="font-xssss fw-400 error-rec-mobile"></span>
                                     </div>
                                     <div class="col-sm-6 receiver-message">
-                                        <input type="text" class="form-control mb-3" placeholder="Message for Receiver" id="receiver-msg">
+                                        <input type="text" class="form-control mb-3" placeholder="Message for Receiver" name ="receiver_msg" id="receiver-msg">
                                     </div>
                                     <div class="col-sm-12 mb-4">
                                             <h6 class="mb-3 fw-600 font-xss mt-2">Delivery Mode</h6>

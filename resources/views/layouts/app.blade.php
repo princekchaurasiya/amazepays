@@ -216,9 +216,7 @@
                                 <form id="registration-form">
                                     <span class="font-xssss fw-400 main-register-error text-center"></span>
                                     <div class="form-group mb-3">
-                                        <input type="text"
-                                            class="form-control h60 border-2 bg-color-none text-grey-700"
-                                            placeholder="Name" id="name">
+                                            <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Name" id="name" autocomplete="off">
                                         <span class="font-xssss fw-400 error-name"></span>
                                     </div>
                                     <div class="form-group mb-3">
@@ -228,9 +226,7 @@
                                         <span class="font-xssss fw-400 error-mobile"></span>
                                     </div>
                                     <div class="form-group mb-3">
-                                        <input type="text"
-                                            class="form-control h60 border-2 bg-color-none text-grey-700"
-                                            placeholder="Email" id="email">
+                                        <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Email" id="email" autocomplete="off" id="registerEmail" name="registerEmail">
                                         <span class="font-xssss fw-400 error-email"></span>
                                     </div>
                                     <div class="form-group icon-tab mb-3">

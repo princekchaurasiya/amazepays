@@ -370,15 +370,13 @@
                 });
             };
 
- //form validtation starts here
+            //form validtation starts here
 
             $("#checkoutForm").validate({
-
                 rules: {
                     billing_name: {
                         required: true,
                         lattersonly: true
-
                     },
                     billing_email: {
                         required: true,
@@ -387,7 +385,6 @@
                     billing_tel: {
                         required: true,
                         indianNumber: true,
-                        number: true,
                         minlength: 10,
                         maxlength: 10
                     },
@@ -400,14 +397,12 @@
                     billing_address: "required",
                     billing_address_two: "required",
                     billing_city: "required",
-                    billing_state: "required",
-
+                    billing_state: "required"
                 },
-
                 messages: {
                     billing_name: {
                         required: "Please enter a name",
-                        lattersonly: "Please enter a valid name",
+                        lattersonly: "Please enter a valid name"
                     },
                     billing_email: {
                         required: "Please enter an email",
@@ -415,24 +410,21 @@
                     },
                     billing_tel: {
                         required: "Please enter your phone number",
-                        indianNumber: "Please enter valid inidan number",
-
+                        indianNumber: "Please enter a valid Indian number"
                     },
                     billing_zip: {
                         required: "Please enter your zip code"
-                    },
-                },
+                    }
+                }
+            });
 
-            })
             jQuery.validator.addMethod('lattersonly', function(value, element) {
-                    return /^[^-\s][a-zA-Z_\s-]+$/.test(value);
-                });
+                return /^[a-zA-Z\s-]+$/.test(value);
+            }, "Please enter a valid name");
 
-                jQuery.validator.addMethod('indianNumber', function(value, element) {
-                    return /^[6-9]\d{9}$/.test(value);   
-
-                });
-            
+            jQuery.validator.addMethod('indianNumber', function(value, element) {
+                return /^[6-9]\d{9}$/.test(value);
+            }, "Please enter a valid Indian number");
         </script>
     @endpush
 @endsection

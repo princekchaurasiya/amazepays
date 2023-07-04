@@ -33,7 +33,6 @@
                                         </div>
                                     </div>
                                 </div>
-
                                 <div class="row copuan-quantity">
                                     <div class="col-sm-6">
                                         @if ($getprdtDetails['price']->type == 'RANGE')
@@ -53,13 +52,15 @@
                                             <input type="text" class="form-control mb-3"
                                                 placeholder="Select Denomination" name="denomination" id="denomination"
                                                 value="">
-                                            <span class="font-xssss fw-400 error-rec-deno"></span>
                                         @endif
+                                        <div>
+                                            <p class="font-xssss fw-400 error-rec-deno text-danger"></p>
+                                        </div>
                                     </div>
                                     <div class="col-sm-6">
                                         <input type="text" class="form-control mb-3" placeholder="Quantity"
                                             name="quantity" id="quantity" value="">
-                                        <span class="font-xssss fw-400 error-rec-qnty"></span>
+                                        <span class="font-xssss fw-400 error-rec-qnty text-danger"></span>
                                     </div>
                                 </div>
                                 {{-- <div class="col-sm-12 mb-4">
@@ -76,13 +77,11 @@
                                 </div> --}}
 
                                 <!-- <h6 class="text-grey-900 fw-400 font-xs mt-2">Offers</h6>
-                                    <ul class="square-type-unordered">
-                                        <li>Only UPI payment is accepted for this gift card. --- On Amazon Pay Special E-Gift Card (woohoo.in/amazon-pay-special-e-gift-card) Credit/Debit card and Net Banking options are available.</li>
-                                    </ul> -->
-
+                                                                                                                    <ul class="square-type-unordered">
+                                                                                                                        <li>Only UPI payment is accepted for this gift card. --- On Amazon Pay Special E-Gift Card (woohoo.in/amazon-pay-special-e-gift-card) Credit/Debit card and Net Banking options are available.</li>
+                                                                                                                    </ul> -->
 
                             </div>
-
                         </div>
                         <div class="col-lg-6">
                             <div class="container">
@@ -117,18 +116,21 @@
                                     <div class="col-sm-6 receiver-name">
                                         <input type="text" class="form-control mb-3" placeholder="Receiver Name"
                                             name="receiver_name" id="receiver-name">
-                                        <span class="font-xssss fw-400 error-rec-name"></span>
+                                        <span class="font-xssss fw-400 error-rec-name text-danger"></span>
                                     </div>
                                     <div class="col-sm-6 receiver-email">
-                                        <input type="text" class="form-control mb-3" placeholder="Receiver Email" name="receiver_email" id="receiver-email">
-                                        <span class="font-xssss fw-400 error-rec-email"></span>
+                                        <input type="text" class="form-control mb-3" placeholder="Receiver Email"
+                                            name="receiver_email" id="receiver-email">
+                                        <span class="font-xssss fw-400 error-rec-email text-danger"></span>
                                     </div>
                                     <div class="col-sm-6 receiver-mobile d-none">
-                                        <input type="text" class="form-control mb-3" placeholder="Receiver Mobile Number" name="receiver_mobile" id="receiver-mobile">
-                                        <span class="font-xssss fw-400 error-rec-mobile"></span>
+                                        <input type="text" class="form-control mb-3" placeholder="Receiver Mobile Number"
+                                            name="receiver_mobile" id="receiver-mobile">
+                                        <span class="font-xssss fw-400 error-rec-mobile text-danger"></span>
                                     </div>
                                     <div class="col-sm-6 receiver-message">
-                                        <input type="text" class="form-control mb-3" placeholder="Message for Receiver" name ="receiver_msg" id="receiver-msg">
+                                        <input type="text" class="form-control mb-3" placeholder="Message for Receiver"
+                                            name="receiver_msg" id="receiver-msg">
                                     </div>
                                     <div class="col-sm-12 mb-4">
                                         <h6 class="mb-3 fw-600 font-xss mt-2">Delivery Mode</h6>
@@ -179,9 +181,6 @@
                             </div>
                         </div>
                     </div>
-
-
-
 
                     <div class="row personalise-gift-card">
                         <div class="tabs">
@@ -251,34 +250,45 @@
     </div>
     @push('scripts')
         <script>
-            // Preview Image on page load
+            "use strict";
+
             $(document).ready(function() {
                 $('div>.owl-items:first').addClass('border-black');
                 $('.child:first').css("display", "block");
                 $('.child-active:first').addClass('border-black');
                 $('.preview > img').attr("src", $('.active:first').find('img').attr('src'));
 
-                var storageData = JSON.parse(window.localStorage.getItem('data'));
-                // $('#receiver-name').val(storageData.recName);
-                // $('#receiver-email').val(storageData.recEmail);
-                // $('#receiver-msg').val(storageData.recMsg); 
-                // alert($('.copuan-quantity').find('.range').attr('type').length);
-                if ($('.copuan-quantity').find('.range').attr('type') == 'radio') {
 
-                    $($('.copuan-quantity').find('.range')).each(function(index, val) {
-                        if (val['value'] == storageData.denomination) {
-                            $(this).prop('checked', true);
-                        }
-                    });
+                // Preview Image   
+                $('.active').on('click', function() {
+                    $('.active').removeClass('border-black');
+                    $(this).addClass('border-black');
+                    // console.log($(this).find('img').attr('src'));
+                    $('.preview > img').attr("src", $(this).find('img').attr('src'));
+
+                });
+
+                //  on load store value in local storage
+                if (storageData) {
+                    const rangeInputs = $('.copuan-quantity').find('.range');
+                    const denominationValue = storageData.denomination;
+                    const quantityValue = storageData.quantity !== null ? storageData.quantity : '';
+
+                    if (rangeInputs.attr('type') === 'radio') {
+                        rangeInputs.filter((index, element) => element.value === denominationValue)
+                            .prop('checked', true);
+                    } else {
+                        $('#denomination').val(denominationValue);
+                    }
+
+                    $('#quantity').val(quantityValue);
                 } else {
-                    $('#denomination').val(storageData.denomination);
+                    $('#quantity').val('');
                 }
-                // $('#denomination').val(storageData.denomination);
-                $('#quantity').val(storageData.quantity);
-            });
-            // end Preview Image on page load
 
-            // Gift Send Option
+            });
+
+            // Gift Send Option toggle
             $('#customRadio').click(function() {
                 $('.gifting-details').removeClass('d-none');
                 $('.add-gift-cards').addClass('d-none');
@@ -288,7 +298,7 @@
                 $('.gifting-details').addClass('d-none');
             });
 
-            // Delivery Mode
+            // Delivery Mode Selecting Options toggle
             $("input[name='delivery_mode']").change(function() {
                 var delivery_mode = $(this).val();
                 switch (delivery_mode) {
@@ -306,179 +316,92 @@
                 }
             });
 
-            // Preview Image   
-            $('.active').on('click', function() {
-                $('.active').removeClass('border-black');
-                $(this).addClass('border-black');
-                // console.log($(this).find('img').attr('src'));
-                $('.preview > img').attr("src", $(this).find('img').attr('src'));
-
-            });
-
-            // function showChild(className) {
-            //     // var $thumb = $(this);
-            //     // console.log($('div > img').attr('src'));
-            //     // $('.preview > img').attr("src",$('.active').find('img').attr('src'));
-            //     // $('.child').css("display","none");
-            //     // $('.child_' + className).css("display","block");
-            //     // $('.child-active').removeClass('border-black');
-            //     // $('.child').find('.child-active:first').addClass('border-black');
-            //     //$('.preview > img').attr("src",$(this).find('img').attr('src'));                
-            // }
-
-            // $('.thumbnail').click(function() {
-            //     var $thumb = $(this);
-            //     $('.preview > img').attr("src",$thumb.find('img').attr('src'));
-            // });             
-            // $('.child-active').click(function(){
-            //     $('.child-active').removeClass('border-black');
-            //     $(this).addClass('border-black');
-            //     //var $thumb = $(this);
-            //     $('.preview > img').attr("src",$(this).find('img').attr('src'));
-            // });
-            // end Preview Image 
-            // $('#myForm').on('submit', function(e){
-            //     e.preventDefault();
-            //     var len = $('#username').val().length;
-            //     if (len < 6 && len > 1) {
-            //         this.submit();
-            //     }
-            // });
-
             $('form').on('submit', function(e) {
                 e.preventDefault();
+                
+
                 var denomination = '';
+
                 if ($('.copuan-quantity').find('.range').attr('type') == 'radio') {
                     denomination = $("input[name='denomination']:checked").val();
                 } else {
                     denomination = $('#denomination').val();
                 }
+
+                if (!denomination || denomination.length === 0) {
+                    $('.error-rec-deno').text('Please Select Denomination');
+                    // console.log("please select denomination");
+                } else {
+                    $('.error-rec-deno').empty();
+                }
+
                 var quantity = $('#quantity').val();
+                var bool = true;
+                var flag = true;
 
-                const data = {
-                    denomination: denomination,
-                    quantity: quantity,
-                }
-                var localData = window.localStorage.setItem('data', JSON.stringify(data));
-                //this.submit();
+                if (!quantity || quantity.length === 0) {
+                    $('.error-rec-qnty').text('Enter Quantity');
+                    bool = false;
 
-                var status = true;
-                if (denomination.length == "") {
-                    $(".error-rec-deno").text('Please Select Denomination');
-                    status = false;
+                } else if (!/^\d+$/.test(quantity)) {
+                    $('.error-rec-qnty').text(
+                        'spaces and characters not allowed');
+                    bool = false;
+
                 } else {
-                    $(".error-rec-deno").empty();
-
+                    $('.error-rec-qnty').empty();
                 }
 
-                if (quantity.length == "") {
-                    $(".error-rec-qnty").text('Enter Quantity');
-                    $(".error-rec-qnty").css('color', 'red');
-                    // $(this).css('color', 'red');
-                    status = false;
-                } else {
-                    $(".error-rec-qnty").empty();
+                var delivery_mode = $("input[name='delivery_mode']:checked").val();
+                var status = validateRecipient(delivery_mode);
 
+
+                function validateRecipient(mode) {
+                    var recName = $('#receiver-name').val();
+                    var recEmail = $('#receiver-email').val();
+                    var recMobile = $('#receiver-mobile').val();
+                    var recMsg = $('#receiver-msg').val();
+
+                    if (!recName || recName.length === 0) {
+                        $('.error-rec-name').text('Name Required');
+                        flag = false;
+                    } else {
+                        $('.error-rec-name').empty();
+                    }
+
+                    if (mode === 'email' || mode === 'both') {
+                        if (!recEmail || recEmail.length === 0) {
+                            $('.error-rec-email').text('Email Required');
+                            flag = false;
+                        } else {
+                            $('.error-rec-email').empty();
+                        }
+                    }
+
+                    if (mode === 'mobile' || mode === 'both') {
+                        if (!recMobile || recMobile.length === 0) {
+                            $('.error-rec-mobile').text('Mobile Required');
+                            flag = false;
+                        } else {
+                            $('.error-rec-mobile').empty();
+                        }
+                    }
+
+                    return flag;
                 }
-                if (status != true) {
-                    return false;
-                } else {
+
+                if (bool && flag) {
+                    var data = {
+                        denomination: denomination,
+                        quantity: quantity
+                    };
+                    window.localStorage.setItem('data', JSON.stringify(data));
                     this.submit();
-                }
-                switch (delivery_mode) {
-                    case 'email':
-                        status = email(recName, recEmail, recMsg);
-                        break;
-                    case 'mobile':
-                        status = mobile(recName, recMobile, recMsg);
-                        break;
-                    default:
-                        status = both(recName, recEmail, recMobile, recMsg);
+                } else {
+                    return false;
                 }
 
-                if (status != true) {
-                    return false;
-                } else {
-                    this.submit();
-                }
             });
-
-            function email(recName, recEmail, recMsg) {
-                var status = true;
-                if (recName.length == "") {
-                    $(".error-rec-name").text('Name Required');
-                    status = false;
-                } else {
-                    $(".error-rec-name").empty();
-
-                }
-                if (recEmail.length == "") {
-                    $(".error-rec-email").text('Email Required');
-                    status = false;
-                } else {
-                    $(".error-rec-email").empty();
-
-                }
-                if (status == true) {
-                    return status;
-                } else {
-                    return status;
-                }
-            }
-
-            function mobile(recName, recMobile, recMsg) {
-
-                var status = true;
-                if (recName.length == "") {
-                    $(".error-rec-name").text('Name Required');
-                    status = false;
-                } else {
-                    $(".error-rec-name").empty();
-
-                }
-                if (recMobile.length == "") {
-                    $(".error-rec-mobile").text('Mobile Required');
-                    status = false;
-                } else {
-                    $(".error-rec-mobile").empty();
-
-                }
-                if (status == true) {
-                    return status;
-                } else {
-                    return status;
-                }
-
-            }
-
-            function both(recName, recEmail, recMobile, recMsg) {
-
-                var status = true;
-                if (recName.length == "") {
-                    $(".error-rec-name").text('Name Required');
-                    status = false;
-                } else {
-                    $(".error-rec-name").empty();
-                }
-                if (recEmail.length == "") {
-                    $(".error-rec-email").text('Email Required');
-                    status = false;
-                } else {
-                    $(".error-rec-email").empty();
-                }
-                if (recMobile.length == "") {
-                    $(".error-rec-mobile").text('Mobile Required');
-                    status = false;
-                } else {
-                    $(".error-rec-mobile").empty();
-                }
-                if (status == true) {
-                    return status;
-                } else {
-                    return status;
-                }
-            }
-
 
             $.each($('.radio-btn'), function(key, value) {
                 $(this).click(function(e) {
@@ -489,60 +412,12 @@
                     $(this)
                         .removeClass('radio-btn')
                         .addClass('radio-btn-selected');
-
-                    //do whatever you want on click
                 });
             });
 
             $('#tabthree').click(function() {
                 $('.term-condition').find("ol, ul").addClass('square-type-unordered');
             });
-
-
-
-
-
-            $("#giftCardPageForm").validate({
-                rules: {
-                    quantity: {
-                        required: true,
-                        number: true
-                    },
-                },
-                messages: {
-                    quantity: {
-                        required: "Please enter quantity",
-                        number: "Character / White Spaces not Allowed"
-                    }
-                }
-            });
-
-            // jQuery.validator.addMethod('lattersonly', function(value, element) {
-            //     return /^[a-zA-Z\s-]+$/.test(value);
-            // }, "Please enter a valid name");
-
-            // jQuery.validator.addMethod('indianNumber', function(value, element) {
-            //     return /^[6-9]\d{9}$/.test(value);
-            // }, "Please enter a valid Indian number");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
             // pay now

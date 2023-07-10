@@ -8,6 +8,7 @@ use App\Http\Controllers\MyOrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CcAvenuePayment;
+use App\Models\QsOrder;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +24,8 @@ use App\Models\CcAvenuePayment;
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
 });
+
+
 Route::get('/', [UserPanelController::class, 'homePage'])->name('home');
 Route::get('/gift_card_detail_page/{id}', function () {
     return view('userpanel/gift_card_detail_page_old');

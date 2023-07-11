@@ -15798,3 +15798,34 @@ body {
   font-size: 14px;
   margin-top: 5px;
 }
+
+.tyicon {
+  color: green;
+  font-size: 4rem;
+}
+
+
+.cross-icon{
+  color: red;
+  font-size: 4rem;
+}
+.allsection{
+  padding: 2rem 8rem;
+}
+.order-header{
+  color: #000;
+  margin-bottom: 0rem;
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
+    font-weight: bold;
+    font-size: 2rem;
+    letter-spacing: 0.10rem;
+    line-height: 100%;
+}
+.payment-status-link{
+  cursor: pointer;
+}
+.payment-status-link:hover{
+  cursor: pointer;
+  text-decoration: underline !important;
+}

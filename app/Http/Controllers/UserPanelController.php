@@ -40,10 +40,12 @@ class UserPanelController extends Controller
     {
         try {
             User::create([
+                // dd($request),
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => bcrypt($request->password),
                 'role_id' => 2,
+                'mobile' => $request->mobile
             ]);
 
             if (\Auth::attempt($request->only('email', 'password'))) {
@@ -76,7 +78,8 @@ class UserPanelController extends Controller
     {
         
         try {
-            if (\Auth::attempt($request->only('email', 'password'))) {
+           
+            if (\Auth::attempt($request->only('mobile', 'password'))) {
                 $data = [
                     'status' => 200,
                 ];

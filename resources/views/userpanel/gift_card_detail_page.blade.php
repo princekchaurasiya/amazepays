@@ -77,9 +77,9 @@
                                 </div> --}}
 
                                 <!-- <h6 class="text-grey-900 fw-400 font-xs mt-2">Offers</h6>
-                                                                                                                    <ul class="square-type-unordered">
-                                                                                                                        <li>Only UPI payment is accepted for this gift card. --- On Amazon Pay Special E-Gift Card (woohoo.in/amazon-pay-special-e-gift-card) Credit/Debit card and Net Banking options are available.</li>
-                                                                                                                    </ul> -->
+                                                                                                                            <ul class="square-type-unordered">
+                                                                                                                                <li>Only UPI payment is accepted for this gift card. --- On Amazon Pay Special E-Gift Card (woohoo.in/amazon-pay-special-e-gift-card) Credit/Debit card and Net Banking options are available.</li>
+                                                                                                                            </ul> -->
 
                             </div>
                         </div>
@@ -318,7 +318,7 @@
 
             $('form').on('submit', function(e) {
                 e.preventDefault();
-                
+
 
                 var denomination = '';
 
@@ -362,6 +362,7 @@
                     var recMobile = $('#receiver-mobile').val();
                     var recMsg = $('#receiver-msg').val();
 
+
                     if (!recName || recName.length === 0) {
                         $('.error-rec-name').text('Name Required');
                         flag = false;
@@ -370,8 +371,12 @@
                     }
 
                     if (mode === 'email' || mode === 'both') {
+                        var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                         if (!recEmail || recEmail.length === 0) {
                             $('.error-rec-email').text('Email Required');
+                            flag = false;
+                        } else if (!emailRegex.test(recEmail)) {
+                            $('.error-rec-email').text('Invalid Email');
                             flag = false;
                         } else {
                             $('.error-rec-email').empty();
@@ -379,8 +384,12 @@
                     }
 
                     if (mode === 'mobile' || mode === 'both') {
+                        var mobileRegex = /^(?:(?:\+|0{0,2})91(\s*[\-]\s*)?|[0]?)?[789]\d{9}$/;
                         if (!recMobile || recMobile.length === 0) {
-                            $('.error-rec-mobile').text('Mobile Required');
+                            $('.error-rec-mobile').text('Mobile Number Required');
+                            flag = false;
+                        } else if (!mobileRegex.test(recMobile)) {
+                            $('.error-rec-mobile').text('Invalid Mobile Number');
                             flag = false;
                         } else {
                             $('.error-rec-mobile').empty();
@@ -389,6 +398,7 @@
 
                     return flag;
                 }
+
 
                 if (bool && flag) {
                     var data = {

@@ -39,46 +39,50 @@ class UserPanelController extends Controller
     public function userRegistration(Request $request)
     {
         try {
-            User::create([
-                // dd($request),
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => bcrypt($request->password),
-                'role_id' => 2,
-                'mobile' => $request->mobile
-            ]);
+            $mobileExists = User::where('mobile', $request->mobile)->exists();
+            $emailExists = User::where('email', $request->email)->exists();
 
-            if (\Auth::attempt($request->only('email', 'password'))) {
-                $data = [
-                    'status' => 200,
-                    'msg' => 'User Register Successfully',
-                ];
-            } else {
+            if ($mobileExists) {
                 $data = [
                     'status' => 400,
-                    'msg' => 'Something went wrong',
+                    'msg' => 'Mobile number already exists',
                 ];
+            } elseif ($emailExists) {
+                $data = [
+                    'status' => 400,
+                    'msg' => 'Email already exists',
+                ];
+            } else {
+                User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'password' => bcrypt($request->password),
+                    'role_id' => 2,
+                    'mobile' => $request->mobile,
+                ]);
+
+                if (\Auth::attempt($request->only('email', 'password'))) {
+                    $data = [
+                        'status' => 200,
+                        'msg' => 'User registered successfully',
+                    ];
+                } else {
+                    $data = [
+                        'status' => 400,
+                        'msg' => 'Something went wrong',
+                    ];
+                }
             }
 
             return response()->json($data);
         } catch (Exception $e) {
             return $e->getMessage();
         }
-
-        // return redirect()
-        // $userRegister = new User();
-        // $userRegister->name = $request->name;
-        // $userRegister->email = $request->email;
-        // $userRegister->password = bcrypt($request->password);
-        // $userRegister->role_id = 2;
-        // $userRegister->save();
     }
 
     public function userLogin(Request $request)
     {
-        
         try {
-           
             if (\Auth::attempt($request->only('mobile', 'password'))) {
                 $data = [
                     'status' => 200,

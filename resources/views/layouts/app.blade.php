@@ -430,8 +430,7 @@
 
             $('#createUser').click(function(e) {
                 e.preventDefault();
-                // debugger;
-                // $(this).find('form')[0].reset();
+
                 var name = $('#name').val();
                 var mobile = $('#mobile').val();
                 var email = $('#email').val();
@@ -439,41 +438,53 @@
                 var confmPassword = $('#confmPassword').val();
                 var regxMobile = /^(?:(?:\+|0{0,2})91)?[789]\d{9}$/;
                 var regxEmail = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]+$/;
-                var status = false;
+                var status = true;
 
-                if (name.length !== '') {
-                    status = true;
-                } else {
+                if (name.length === 0) {
                     status = false;
-                    $(".error-name").text('Name required');
+                    $(".error-name").text('Name is required').addClass('error-color');
+                } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+                    status = false;
+                    $(".error-name").text('Name should only contain letters and spaces').addClass('error-color');
+                } else {
+                    $(".error-name").empty();
                 }
 
-                if (regxMobile.test(mobile) && mobile.length === 10) {
-                    status = true;
-                } else {
+                if (mobile.length === 0) {
                     status = false;
-                    $(".error-mobile").text('Mobile required');
+                    $(".error-mobile").text('Mobile is required').addClass('error-color');
+                } else if (!regxMobile.test(mobile) || mobile.length !== 10) {
+                    status = false;
+                    $(".error-mobile").text('Invalid mobile number').addClass('error-color');
+                } else {
+                    $(".error-mobile").empty();
                 }
 
-                if (regxEmail.test(email)) {
-                    status = true;
-                } else {
+                if (email.length === 0) {
                     status = false;
-                    $(".error-email").text('Email required');
+                    $(".error-email").text('Email is required').addClass('error-color');
+                } else if (!regxEmail.test(email)) {
+                    status = false;
+                    $(".error-email").text('Invalid email address').addClass('error-color');
+                } else {
+                    $(".error-email").empty();
                 }
 
-                if (confmPassword === password && password.length !== '') {
-                    status = true;
-                } else {
+                if (password.length === 0) {
                     status = false;
-                    $(".error-password").text('Password required/ Password does not match');
+                    $(".error-password").text('Password is required').addClass('error-color');
+                } else if (confmPassword !== password) {
+                    status = false;
+                    $(".error-password").text('Password does not match');
+                } else {
+                    $(".error-password").empty();
                 }
 
-                if (status == true) {
+                if (status) {
                     userRegister(name, mobile, email, password);
-                } else {
-                    return status;
                 }
+
+                return status;
             });
 
             function userRegister(name, mobile, email, password) {
@@ -487,12 +498,11 @@
                 formData.append('mobile', mobile);
                 formData.append('email', email);
                 formData.append('password', password);
-                var type = "POST";
-                var ajaxurl = "{{ url('/user-registration') }}";
+                var type = 'POST';
+                var ajaxurl = '{{ route('user-registration') }}';
                 $.ajax({
                     type: type,
                     url: ajaxurl,
-                    contentType: 'application/json',
                     data: formData,
                     processData: false,
                     contentType: false,
@@ -501,13 +511,17 @@
                         if (data.status == 200) {
                             location.reload(true);
                         } else {
-                            $(".main-register-error").text(data.msg);
+                            $(".main-register-error").text(data.msg).addClass('error-color');
                         }
                     },
-                    error: function(data) {}
+                    error: function(jqXHR) {
+                        $(".main-register-error").text('Something went wrong. Please try again later.');
+                        console.log(jqXHR); // Log the error for debugging purposes
+                    }
                 });
                 return false;
             }
+
             //  end registration
 
             // for login

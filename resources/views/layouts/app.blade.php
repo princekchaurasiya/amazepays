@@ -216,7 +216,9 @@
                                 <form id="registration-form">
                                     <span class="font-xssss fw-400 main-register-error text-center"></span>
                                     <div class="form-group mb-3">
-                                            <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Name" id="name" autocomplete="off">
+                                        <input type="text"
+                                            class="form-control h60 border-2 bg-color-none text-grey-700"
+                                            placeholder="Name" id="name" autocomplete="off">
                                         <span class="font-xssss fw-400 error-name"></span>
                                     </div>
                                     <div class="form-group mb-3">
@@ -226,7 +228,10 @@
                                         <span class="font-xssss fw-400 error-mobile"></span>
                                     </div>
                                     <div class="form-group mb-3">
-                                        <input type="text" class="form-control h60 border-2 bg-color-none text-grey-700" placeholder="Email" id="email" autocomplete="off" id="registerEmail" name="registerEmail">
+                                        <input type="text"
+                                            class="form-control h60 border-2 bg-color-none text-grey-700"
+                                            placeholder="Email" id="email" autocomplete="off" id="registerEmail"
+                                            name="registerEmail">
                                         <span class="font-xssss fw-400 error-email"></span>
                                     </div>
                                     <div class="form-group icon-tab mb-3">
@@ -255,7 +260,8 @@
                                     <!-- <a href="#" class="form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0">Create an account</a> -->
                                     <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-4 lh-32">Are you already member?
                                         <a href="#" class="fw-700 ml-1 text-current" data-toggle="modal"
-                                            data-target="#Modallogin" data-dismiss="modal">Login</a></h6>
+                                            data-target="#Modallogin" data-dismiss="modal">Login</a>
+                                    </h6>
                                     <div class="row">
                                         <div class="col-6 pr-1"><a href="#"
                                                 class="form-control h60 p-0 pl-5 bg-lightblue text-grey-700 border-2 border-0 font-xssss fw-600  position-relative">Login
@@ -296,13 +302,13 @@
                                         <input type="text"
                                             class="form-control h60 border-2 bg-color-none text-grey-700"
                                             placeholder="Mobile Number" id="loginMobNumb">
-                                        <span class="font-xssss fw-400 error-loginMobNumb"></span>
+                                        <span class="font-xssss fw-400 error-loginMobNumb text-danger"></span>
                                     </div>
                                     <div class="form-group mb-3">
                                         <input type="password"
                                             class="form-control h60 border-2 bg-color-none text-grey-700"
                                             placeholder="Password" id="loginPass">
-                                        <span class="font-xssss fw-400 error-loginPass"></span>
+                                        <span class="font-xssss fw-400 error-loginPass text-danger"></span>
                                     </div>
                                     <div class="form-check text-left mb-3">
                                         <input type="checkbox" class="form-check-input mt-2" id="exampleCheck1">
@@ -424,39 +430,45 @@
 
             $('#createUser').click(function(e) {
                 e.preventDefault();
+                // debugger;
                 // $(this).find('form')[0].reset();
                 var name = $('#name').val();
                 var mobile = $('#mobile').val();
                 var email = $('#email').val();
                 var password = $('#password').val();
                 var confmPassword = $('#confmPassword').val();
-                var regxMobile = /^(?:(?:\+|0{0,2})91(\s*[\-]\s*)?|[0]?)?[789]\d{9}$/;
                 var regxMobile = /^(?:(?:\+|0{0,2})91)?[789]\d{9}$/;
+                var regxEmail = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]+$/;
                 var status = false;
-                if (name.length != '') {
+
+                if (name.length !== '') {
                     status = true;
                 } else {
                     status = false;
                     $(".error-name").text('Name required');
                 }
-                if (regxMobile.test(mobile) && mobile.length == 10 && mobile.length != '') {
+
+                if (regxMobile.test(mobile) && mobile.length === 10) {
                     status = true;
                 } else {
                     status = false;
                     $(".error-mobile").text('Mobile required');
                 }
-                if (regxEmail.test(email) && email.length != '') {
+
+                if (regxEmail.test(email)) {
                     status = true;
                 } else {
+                    status = false;
                     $(".error-email").text('Email required');
-                    status = false;
                 }
-                if (confmPassword == password && password.length != '') {
+
+                if (confmPassword === password && password.length !== '') {
                     status = true;
                 } else {
-                    $(".error-password").text('Password required/ Password does not match');
                     status = false;
+                    $(".error-password").text('Password required/ Password does not match');
                 }
+
                 if (status == true) {
                     userRegister(name, mobile, email, password);
                 } else {
@@ -492,9 +504,7 @@
                             $(".main-register-error").text(data.msg);
                         }
                     },
-                    error: function(data) {
-                        console.log(data);
-                    }
+                    error: function(data) {}
                 });
                 return false;
             }
@@ -508,27 +518,25 @@
 
             $('#loginUser').click(function(e) {
                 e.preventDefault();
-                // $(this).find('form')[0].reset();
                 var mobile = $('#loginMobNumb').val();
                 var password = $('#loginPass').val();
                 var regxMobile = /^(?:(?:\+|0{0,2})91(\s*[\-]\s*)?|[0]?)?[789]\d{9}$/;
                 var status = true;
-                // if(regxMobile.test(mobile) && mobile.length ==10 && mobile.length!= ''){
-                //     status = true;
-                // } else {
-                //     status = false;
-                //     $(".error-loginMobNumb").text('Mobile required');
-                // }
-                // if(password.length != ''){
-                //     status = true;
-                // } else {
-                //     $(".error-loginPass").text('Password required');
-                //     status = false;
-                // }
-                if (status == true) {
-                    userLogin(mobile, password);
+
+                if (regxMobile.test(mobile) && mobile.length == 10) {
+                    status = true;
                 } else {
-                    return status;
+                    status = false;
+                    $(".error-loginMobNumb").text('Invalid mobile number');
+                }
+
+                if (password.length == 0) {
+                    $(".error-loginPass").text('Password required');
+                    status = false;
+                }
+
+                if (status) {
+                    userLogin(mobile, password);
                 }
             });
 
@@ -538,32 +546,35 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     }
                 });
+
                 var formData = new FormData();
-                formData.append('email', mobile);
+                formData.append('mobile', mobile);
                 formData.append('password', password);
+
                 var type = "POST";
                 var ajaxurl = "{{ url('/user-login') }}";
+
                 $.ajax({
                     type: type,
                     url: ajaxurl,
-                    contentType: 'application/json',
                     data: formData,
                     processData: false,
                     contentType: false,
-                    // dataType: 'json',
                     success: function(data) {
                         if (data.status == 200) {
                             location.reload(true);
                         } else {
-                            $(".main-error").text('Something went wrong');
+                            $(".main-error").text('Invalid credentials').addClass('error-color');
                         }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
                         console.log(jqXHR);
                     }
                 });
+
                 return false;
             }
+
             // end login
         </script>
         @stack('scripts')

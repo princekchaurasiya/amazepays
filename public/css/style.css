@@ -15829,3 +15829,7 @@ body {
   cursor: pointer;
   text-decoration: underline !important;
 }
+
+.error-color{
+  color: red;
+}

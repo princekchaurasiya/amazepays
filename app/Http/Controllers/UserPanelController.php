@@ -41,16 +41,20 @@ class UserPanelController extends Controller
         try {
             $mobileExists = User::where('mobile', $request->mobile)->exists();
             $emailExists = User::where('email', $request->email)->exists();
+            $errors = [];
 
             if ($mobileExists) {
+                $errors['mobile'] = 'Mobile number already exists';
+            }
+
+            if ($emailExists) {
+                $errors['email'] = 'Email already exists';
+            }
+
+            if (!empty($errors)) {
                 $data = [
                     'status' => 400,
-                    'msg' => 'Mobile number already exists',
-                ];
-            } elseif ($emailExists) {
-                $data = [
-                    'status' => 400,
-                    'msg' => 'Email already exists',
+                    'errors' => $errors,
                 ];
             } else {
                 User::create([
@@ -76,7 +80,11 @@ class UserPanelController extends Controller
 
             return response()->json($data);
         } catch (Exception $e) {
-            return $e->getMessage();
+            $data = [
+                'status' => 500,
+                'msg' => 'Internal Server Error',
+            ];
+            return response()->json($data, 500);
         }
     }
 

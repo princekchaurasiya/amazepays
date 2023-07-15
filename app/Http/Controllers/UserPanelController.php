@@ -216,7 +216,7 @@ class UserPanelController extends Controller
                 'body' => $requestBody,
             ]);
         $status = $response->json();
-        // dd($status);
+        dd($status);
         if ($status['status'] == 'COMPLETE') {
             $userOrder = new QsOrder();
             $userOrder->user_id = Auth::user()->id;

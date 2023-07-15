@@ -102,6 +102,8 @@ class PaymentController extends Controller
         return view('paymentFolder.ccavRequestHandler', compact('data'));
     }
 
+    
+
     public function paymentSuccess()
     {
         return view('paymentFolder.payment-success');
@@ -112,10 +114,12 @@ class PaymentController extends Controller
         return view('paymentFolder.payment-failed');
     }
 
+
+    // cc avenue response handler code
+
     public function responseCcavenue(Request $request)
     {
         $workingKey = config('auth.working_key');
-
         $encResponse = $request->encResp; //This is the response sent by the CCAvenue Server
         $rcvdString = $this->decrypt($encResponse, $workingKey); //Crypto Decryption used as per the specified working key.
         $order_status = '';
@@ -131,9 +135,11 @@ class PaymentController extends Controller
                 $order_status = $information[1];
             }
         }
+        
         $order_details = QsOrder::where('order_id', $data[0]['order_id'])->first();
         Auth::loginUsingId($order_details['user_id']);
         // dd($order_details);
+
         $userOrder = new CcAvenuePayment();
         $userOrder->user_id = $order_details['user_id'];
         $userOrder->order_id = $data[0]['order_id'];
@@ -159,6 +165,7 @@ class PaymentController extends Controller
                 'postcode' => $data[15]['billing_zip'],
             ],
         );
+        // dd($data);
         $userOrder->delivery_details = json_encode(
             $delivery_details = [
                 'firstname' => $data[11]['billing_name'],
@@ -205,8 +212,8 @@ class PaymentController extends Controller
 
             // Send mail or SMS to the buyer
             $data = ['name' => 'Virat Gandhi'];
-            Mail::send('layouts.mail', $data, function ($message) {
-                $message->to('shubham.toutle@gmail.com', 'Tutorials Point')->subject('Laravel Testing Mail with Attachment');
+            Mail::send('layouts.mail', $data, function ($message) use ($email) {
+                $message->to($email, Auth::user()->name.' Tutorials Point')->subject( Auth::user()->name.'Laravel Testing Mail with Atta~chment');
             });
 
             $msg = 'Order created successfully!';

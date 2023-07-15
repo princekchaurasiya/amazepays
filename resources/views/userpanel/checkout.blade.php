@@ -37,8 +37,7 @@
                                     <div class="col-lg-6 mb-3">
                                         <div class="form-gorup">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">Phone</label>
-                                            <input type="text" name="billing_tel"
-                                                class="form-control billingFormInput inputDiv">
+                                            <input type="text" name="billing_tel" class="form-control billingFormInput inputDiv">
                                             {{-- <i class="fa-solid fa-triangle-exclamation inputDivIcon failureIcon"></i>
                                             <i class="fa-sharp fa-solid fa-circle-check inputDivIcon successIcon"></i> --}}
                                         </div>

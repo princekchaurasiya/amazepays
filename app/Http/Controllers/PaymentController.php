@@ -205,7 +205,7 @@ class PaymentController extends Controller
         // $userOrder->currency_code = 356;
         $userOrder->save();
 
-        dd($data);
+        // dd($data);
         $orderData = [
             'order_id' => $data[0]['order_id'],
             'reference_id' => $data[1]['tracking_id'],

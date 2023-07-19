@@ -346,7 +346,7 @@
                     $('.error-rec-qnty').text('Spaces and characters are not allowed');
                     bool = false;
                 } else if (parseInt(quantity) < 1) {
-                    $('.error-rec-qnty').text('Quantity must be greater than or equal to 1');
+                    $('.error-rec-qnty').text('Quantity must be greater than 1');
                     bool = false;
                 } else if (parseInt(quantity) > 10) {
                     $('.error-rec-qnty').text('Maximum quantity allowed is 10');

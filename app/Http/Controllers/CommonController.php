@@ -233,7 +233,7 @@ class CommonController extends Controller
             // fetch Products with sku
 
             $prdtDetails = $products_resp->json();
-            // dd($prdtDetails);
+            dd($prdtDetails);
             $data = [
                     'product_id' => $prdtDetails['id'],
                     'description' => $prdtDetails['description'],

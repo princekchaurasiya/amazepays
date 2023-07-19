@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\CcAvenuePayment;
 use DB;
 use Mail;
+use App\QsProduct;
+
 
 class PaymentController extends Controller
 {
@@ -112,10 +114,11 @@ class PaymentController extends Controller
         return view('paymentFolder.payment-failed');
     }
 
+    // cc avenue response handler code
+
     public function responseCcavenue(Request $request)
     {
         $workingKey = config('auth.working_key');
-
         $encResponse = $request->encResp; //This is the response sent by the CCAvenue Server
         $rcvdString = $this->decrypt($encResponse, $workingKey); //Crypto Decryption used as per the specified working key.
         $order_status = '';
@@ -131,9 +134,11 @@ class PaymentController extends Controller
                 $order_status = $information[1];
             }
         }
+
         $order_details = QsOrder::where('order_id', $data[0]['order_id'])->first();
         Auth::loginUsingId($order_details['user_id']);
         // dd($order_details);
+
         $userOrder = new CcAvenuePayment();
         $userOrder->user_id = $order_details['user_id'];
         $userOrder->order_id = $data[0]['order_id'];
@@ -159,6 +164,7 @@ class PaymentController extends Controller
                 'postcode' => $data[15]['billing_zip'],
             ],
         );
+        // dd($data);
         $userOrder->delivery_details = json_encode(
             $delivery_details = [
                 'firstname' => $data[11]['billing_name'],
@@ -199,14 +205,54 @@ class PaymentController extends Controller
         // $userOrder->currency_code = 356;
         $userOrder->save();
 
-        $order = QsOrder::where('order_id', $data[0]['order_id']);
+        // dd($data);
+        $orderData = [
+            'order_id' => $data[0]['order_id'],
+            'reference_id' => $data[1]['tracking_id'],
+            'order_date' => $data[40]['trans_date'],
+            'billing_name' => $data[11]['billing_name'],
+            'billing_email' => $data[18]['billing_email'],
+            'billing_tel' => $data[17]['billing_tel'],
+            'billing_address' => $data[12]['billing_address'] . ', ' . $data[13]['billing_city'] . ', ' . $data[14]['billing_state'] . ' ' . $data[15]['billing_zip'] . '. ' . $data[16]['billing_country'],
+            'payment_mode' => $data[5]['payment_mode'] . ' - ' . $data[6]['card_name'],
+            'bank_ref_no' => $data[2]['bank_ref_no'],
+            'order_amount' => 'INR ' . $data[10]['amount'],
+            'net_payable' => 'INR ' . $data[10]['amount'],
+            'contact_person' => $data[19]['delivery_name'] . ' | ' . $data[25]['delivery_tel'],
+            'shipping_address' => $data[20]['delivery_address'] . ', ' . $data[21]['delivery_city'] . ', ' . $data[22]['delivery_state'] . ' ' . $data[23]['delivery_zip'] . '. ' . $data[24]['delivery_country'],
+        ];
+       
+        $productData = QsProduct::all();
+
+        
+        $order = QsOrder::where('order_id', $orderData['order_id'])->first();
+        
+
         if ($order_status === 'Success') {
             $order->update(['order_status' => 'COMPLETE']);
+            $email = Auth::user()->email;
+            $name = Auth::user()->name;
 
-            // Send mail or SMS to the buyer
-            $data = ['name' => 'Virat Gandhi'];
-            Mail::send('layouts.mail', $data, function ($message) {
-                $message->to('shubham.toutle@gmail.com', 'Tutorials Point')->subject('Laravel Testing Mail with Attachment');
+            // Send mail to the buyer
+            $data = [
+                'name' => $name,
+                'order_id' => $orderData['order_id'],
+                'reference_id' => $orderData['reference_id'],
+                'order_date' => $orderData['order_date'],
+                'billing_name' => $orderData['billing_name'],
+                'billing_email' => $orderData['billing_email'],
+                'billing_tel' => $orderData['billing_tel'],
+                'billing_address' => $orderData['billing_address'],
+                'payment_mode' => $orderData['payment_mode'],
+                'bank_ref_no' => $orderData['bank_ref_no'],
+                'order_amount' => $orderData['order_amount'],
+                'net_payable' => $orderData['net_payable'],
+                'contact_person' => $orderData['contact_person'],
+                'shipping_address' => $orderData['shipping_address'],
+            ];
+
+            Mail::send('layouts.mail', $data, function ($message) use ($email, $name) {
+                $message->to($email, $name)->subject('Order Confirmation');
             });
 
             $msg = 'Order created successfully!';
@@ -215,6 +261,15 @@ class PaymentController extends Controller
             $order->update(['order_status' => 'CANCELED']);
             $msg = 'Something went wrong. Please contact the support team if any money got deducted.';
             $status = 'failure';
+
+            // Send a message to the buyer for payment failure or abortion
+            $messageData = [
+                'name' => $name,
+                'msg' => $msg,
+            ];
+            Mail::send('layouts.payment_failure', $messageData, function ($message) use ($email, $name) {
+                $message->to($email, $name)->subject('Payment Failure');
+            });
         } else {
             $order->update(['order_status' => 'CANCELED']);
             $msg = 'Something went wrong. Please contact the support team if any money got deducted.';

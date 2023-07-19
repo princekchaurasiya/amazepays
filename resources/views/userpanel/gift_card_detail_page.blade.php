@@ -77,9 +77,9 @@
                                 </div> --}}
 
                                 <!-- <h6 class="text-grey-900 fw-400 font-xs mt-2">Offers</h6>
-                                                                                                                            <ul class="square-type-unordered">
-                                                                                                                                <li>Only UPI payment is accepted for this gift card. --- On Amazon Pay Special E-Gift Card (woohoo.in/amazon-pay-special-e-gift-card) Credit/Debit card and Net Banking options are available.</li>
-                                                                                                                            </ul> -->
+                                                                                                                                    <ul class="square-type-unordered">
+                                                                                                                                        <li>Only UPI payment is accepted for this gift card. --- On Amazon Pay Special E-Gift Card (woohoo.in/amazon-pay-special-e-gift-card) Credit/Debit card and Net Banking options are available.</li>
+                                                                                                                                    </ul> -->
 
                             </div>
                         </div>
@@ -342,12 +342,15 @@
                 if (!quantity || quantity.length === 0) {
                     $('.error-rec-qnty').text('Enter Quantity');
                     bool = false;
-
                 } else if (!/^\d+$/.test(quantity)) {
-                    $('.error-rec-qnty').text(
-                        'spaces and characters not allowed');
+                    $('.error-rec-qnty').text('Spaces and characters are not allowed');
                     bool = false;
-
+                } else if (parseInt(quantity) < 1) {
+                    $('.error-rec-qnty').text('Quantity must be greater than 1');
+                    bool = false;
+                } else if (parseInt(quantity) > 10) {
+                    $('.error-rec-qnty').text('Maximum quantity allowed is 10');
+                    bool = false;
                 } else {
                     $('.error-rec-qnty').empty();
                 }

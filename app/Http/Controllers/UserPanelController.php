@@ -196,12 +196,18 @@ class UserPanelController extends Controller
             'delivery_mode' => 'API',
         ];
         // dd($modfy_user_data);
+        $commonController = new CommonController();
         $requestBody = json_encode($modfy_user_data);
         $requestHttpMethod = 'post';
         $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/orders';
         $clientSecret = setting('api.qs_clientSecret');
         $bearerToken = setting('api.bearer_token');
-        $signature = CommonController::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+        $signature = $commonController->generateSignature(
+            $requestBody,
+            $requestHttpMethod,
+            $absApiUrl,
+            $clientSecret
+        );
         $dateAtClient = Carbon\Carbon::now()->toIso8601String();
         $response = Http::acceptJson()
             // ->withToken($bearerToken)

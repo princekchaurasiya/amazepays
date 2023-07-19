@@ -17,6 +17,7 @@ class MyOrderController extends Controller
         // $orders = CcAvenuePayment::where('user_id', Auth::id())->get();
         // $orderDetails = $orders->toArray();
         // $orderDetails = array_reverse($orderDetails);
+        // dd($orderDetails);
         
         return view('order.myOrder', compact('orderDetails'));
     }

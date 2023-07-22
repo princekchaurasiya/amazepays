@@ -218,7 +218,7 @@
                     <div class="modal-body p-3 d-flex align-items-center bg-none">
                         <div class="card shadow-none rounded-0 w-100 p-2 pt-3 border-0">
                             <div class="card-body rounded-0 text-left pt-0">
-                                <h2 class="fw-600 display2-size mb-4">Create <br>your account</h2>
+                                <h2 class="fw-600 display2-size mb-4">Create your account</h2>
                                 <form id="registration-form">
                                     <span class="font-xssss fw-400 main-register-error text-center"></span>
                                     <div class="form-group mb-3">

@@ -4,6 +4,8 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Console\Commands\GenerateBearerToken;
+
 
 class Kernel extends ConsoleKernel
 {
@@ -15,7 +17,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Add the schedule to run the GenerateBearerToken command every day at 1:00 AM
+        $schedule->command(GenerateBearerToken::class)->weekly()->mondays()->at('12:00');
     }
 
     /**
@@ -23,10 +26,27 @@ class Kernel extends ConsoleKernel
      *
      * @return void
      */
+
+     
     protected function commands()
     {
         $this->load(__DIR__.'/Commands');
+    }
 
-        require base_path('routes/console.php');
+    /**
+     * Get the Artisan commands provided by your application.
+     *
+     * @return array
+     */
+    protected function getCommands()
+    {
+        return array_merge(
+            parent::getCommands(),
+            [
+                // Add the GenerateBearerToken command to the commands array
+                GenerateBearerToken::class,
+            ]
+        );
     }
 }
+

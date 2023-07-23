@@ -18,38 +18,44 @@ class CommonController extends Controller
         return response()->json($data);
     }
 
-    public function generateAuthcode(Request $request)
-    {
-        $authorizationCode_resp = Http::post('https://sandbox.woohoo.in/oauth2/verify', [
-            'clientId' => setting('api.clientId'), //coming from database
-            'username' => setting('api.qs_username'), //coming from database
-            'password' => setting('api.qs_password'), //coming from database
-        ]);
-        if ($authorizationCode_resp->status() == 200) {
-            // save authocode into database
-            $response = $this->generateToken($authorizationCode_resp->json());
-            return json_decode($response);
-        } else {
-            return json_decode(json_encode(['status' => $authorizationCode_resp->status(), 'msg' => $authorizationCode_resp->failed()]));
-        }
-    }
 
-    public function generateToken($authorizationCode)
-    {
-        $token_resp = Http::post('https://sandbox.woohoo.in/oauth2/token', [
-            'clientId' => setting('api.clientId'), //coming from database
-            'clientSecret' => setting('api.qs_clientSecret'), //coming from database
-            'authorizationCode' => $authorizationCode['authorizationCode'], //from signatureGenerate function
-        ]);
-        //dd($token_resp->json()['token']);
-        if ($token_resp->status() == 200) {
-            // save token  into database
-            DB::table('settings')->updateOrInsert(['display_name' => 'Bearer Token'], ['value' => $token_resp->json()['token']]);
-            return json_encode(['status' => $token_resp->status(), 'data' => $token_resp->json()['token']]);
-        } else {
-            return json_encode(['status' => $token_resp->status(), 'data' => $token_resp->failed()]);
-        }
-    }
+    //user verification to generate authorization Code
+    // public function generateAuthcode(Request $request)
+    // {
+    //     $authorizationCode_resp = Http::post('https://sandbox.woohoo.in/oauth2/verify', [
+    //         'clientId' => setting('api.clientId'), //coming from database
+    //         'username' => setting('api.qs_username'), //coming from database
+    //         'password' => setting('api.qs_password'), //coming from database
+    //     ]);
+
+        
+        
+    //     if ($authorizationCode_resp->status() == 200) {
+    //         // save authocode into database
+    //         $response = $this->generateBearerToken($authorizationCode_resp->json());
+    //         return json_decode($response);
+    //     } else {
+    //         return json_decode(json_encode(['status' => $authorizationCode_resp->status(), 'msg' => $authorizationCode_resp->failed()]));
+    //     }
+    // }
+
+    //token (Bearer Token) generation 
+    // public function generateBearerToken($authorizationCode)
+    // {
+    //     $token_resp = Http::post('https://sandbox.woohoo.in/oauth2/token', [
+    //         'clientId' => setting('api.clientId'), //coming from database
+    //         'clientSecret' => setting('api.qs_clientSecret'), //coming from database
+    //         'authorizationCode' => $authorizationCode['authorizationCode'], //from signatureGenerate function
+    //     ]);
+    //     //dd($token_resp->json()['token']);
+    //     if ($token_resp->status() == 200) {
+    //         // save token  into database
+    //         DB::table('settings')->updateOrInsert(['display_name' => 'Bearer Token'], ['value' => $token_resp->json()['token']]);
+    //         return json_encode(['status' => $token_resp->status(), 'data' => $token_resp->json()['token']]);
+    //     } else {
+    //         return json_encode(['status' => $token_resp->status(), 'data' => $token_resp->failed()]);
+    //     }
+    // }
 
     // keep this function in helper call
     function generateSignature($requestBody = null, $requestHttpMethod, $absApiUrl, $clientSecret)

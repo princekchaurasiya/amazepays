@@ -10,6 +10,7 @@
     <table style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif;">
         <tr>
             <td style="text-align: center;">
+                {{-- <img src="http://amazepay.test/images/logo.png" alt="Logo" style="max-width: 200px;" type="image/png"> --}}
                 <h2>Dear {{ $name }},</h2>
                 <p>Thank you for your order from http://amazepay.test</p>
                 <p>For your convenience, we have included a copy of your order below. The charge will appear on your credit card / Account Statement as 'sdf'</p>

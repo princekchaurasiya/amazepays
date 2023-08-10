@@ -17,7 +17,7 @@ use App\Models\CcAvenuePayment;
 use DB;
 use Mail;
 use App\QsProduct;
-
+use PDF;
 
 class PaymentController extends Controller
 {
@@ -221,17 +221,19 @@ class PaymentController extends Controller
             'contact_person' => $data[19]['delivery_name'] . ' | ' . $data[25]['delivery_tel'],
             'shipping_address' => $data[20]['delivery_address'] . ', ' . $data[21]['delivery_city'] . ', ' . $data[22]['delivery_state'] . ' ' . $data[23]['delivery_zip'] . '. ' . $data[24]['delivery_country'],
         ];
-       
+
         $productData = QsProduct::all();
 
-        
         $order = QsOrder::where('order_id', $orderData['order_id'])->first();
-        
 
         if ($order_status === 'Success') {
             $order->update(['order_status' => 'COMPLETE']);
             $email = Auth::user()->email;
             $name = Auth::user()->name;
+
+            // Generate Invoice Number and Invoice Date
+            $invoiceNumber = 'AMZ-' . date('Ymd') . '-' . mt_rand(1000, 9999);
+            $invoiceDate = date('d-m-Y');
 
             // Send mail to the buyer
             $data = [
@@ -249,10 +251,16 @@ class PaymentController extends Controller
                 'net_payable' => $orderData['net_payable'],
                 'contact_person' => $orderData['contact_person'],
                 'shipping_address' => $orderData['shipping_address'],
+                'invoice_number' => $invoiceNumber,
+                'invoice_date' => $invoiceDate,
             ];
 
-            Mail::send('layouts.mail', $data, function ($message) use ($email, $name) {
-                $message->to($email, $name)->subject('Order Confirmation');
+            $pdf = PDF::loadView('layouts.invoice', $data);
+            Mail::send(['html' => 'layouts.mail'], $data, function ($message) use ($email, $name, $pdf) {
+                $message
+                    ->to($email, $name)
+                    ->subject('Order Confirmation with Invoice')
+                    ->attachData($pdf->output(), 'invoice.pdf');
             });
 
             $msg = 'Order created successfully!';

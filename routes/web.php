@@ -9,7 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CcAvenuePayment;
 use App\Models\QsOrder;
-
+use App\Http\Controllers\SmsController;
+use App\Http\Controllers\OtpLoginController;
+use App\Http\Controllers\OtpVerificationController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -123,3 +125,14 @@ Route::get('payment-cancel', function () {
 
 
 Route::get('/get-category', [CommonController::class, 'getCategory'])->name('get-category');
+
+
+Route::post('/send-sms', [SmsController::class, 'sendSms'])->name('send-sms');
+
+Route::post('/verify-otp', [OtpVerificationController::class, 'verifyOtp'])->name('verify-otp');
+
+
+
+Route::get('/invoice', function () {
+    return view('layouts.invoice');
+})->name('invoice');

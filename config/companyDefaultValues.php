@@ -9,6 +9,8 @@ return [
     'company_bank_account_number' => '8747187374',
     'company_bank_ifsc_code' => 'KKBK0001413',
     'company_bank_branch' => 'Goregaon West',
-    'comapny_email' => 'customersupport@amazepays.in',
+    'comapny_bank_name' => 'KOTAK BANK',
+    'comapny_email' => 'shfjehfu',
+    
 ];
 ?>

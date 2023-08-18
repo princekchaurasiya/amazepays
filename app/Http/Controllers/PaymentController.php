@@ -18,6 +18,7 @@ use DB;
 use Mail;
 use App\QsProduct;
 use PDF;
+use App\Models\GiftCard;
 
 class PaymentController extends Controller
 {
@@ -205,7 +206,6 @@ class PaymentController extends Controller
         // $userOrder->currency_code = 356;
         $userOrder->save();
 
-        // dd($data);
         $orderData = [
             'order_id' => $data[0]['order_id'],
             'reference_id' => $data[1]['tracking_id'],
@@ -222,9 +222,45 @@ class PaymentController extends Controller
             'shipping_address' => $data[20]['delivery_address'] . ', ' . $data[21]['delivery_city'] . ', ' . $data[22]['delivery_state'] . ' ' . $data[23]['delivery_zip'] . '. ' . $data[24]['delivery_country'],
         ];
 
-        $productData = QsProduct::all();
+        $productAllData = QsProduct::all();
 
         $order = QsOrder::where('order_id', $orderData['order_id'])->first();
+
+        // Retrieve data from the gift_card table to reciver detail purpose
+        $giftCardData = GiftCard::where('order_id', $orderData['order_id'])->first();
+
+        $shipToName = $giftCardData->receiver_name;
+        $shipToEmail = $giftCardData->receiver_email;
+        $shipToContactNo = $giftCardData->receiver_mobile;
+
+        // Decode the JSON fields
+        $cardsData = json_decode($order->cards);
+
+        $cardSku = $cardsData[0]->sku;
+        $cardProductName = $cardsData[0]->productName;
+
+        // Retrieve the product with the matching sku from the QsProduct table
+        $product = QsProduct::where('sku', $cardSku)->first();
+
+        if ($product) {
+    // The product with the specified sku was found
+    $images = json_decode($product->images, true);
+    
+    
+
+    if ($images && isset($images['small'])) {
+        $smallImageUrl = $images['small'];
+        
+        // Now you can use $thumbnailUrl in your HTML to display the image
+    } else {
+        // Handle the case where the thumbnail URL is missing
+        dd("thumbnail is missing");
+    }
+} else {
+    // No product found with the specified sku
+    // Handle this case according to your requirements
+    dd("no product found");
+}
 
         if ($order_status === 'Success') {
             $order->update(['order_status' => 'COMPLETE']);
@@ -253,7 +289,17 @@ class PaymentController extends Controller
                 'shipping_address' => $orderData['shipping_address'],
                 'invoice_number' => $invoiceNumber,
                 'invoice_date' => $invoiceDate,
+                'cardSku' => $cardSku,
+                'cardProductName' => $cardProductName,
+                'shipToName' => $shipToName,
+                'shipToEmail' => $shipToEmail,
+                'shipToContactNo' => $shipToContactNo,
+                'perOrderPrice' => $order->price,
+                'perOrderQuantity' => $order->qty,
+                'smallImageUrl' => $smallImageUrl,
             ];
+
+            
 
             $pdf = PDF::loadView('layouts.invoice', $data);
             Mail::send(['html' => 'layouts.mail'], $data, function ($message) use ($email, $name, $pdf) {

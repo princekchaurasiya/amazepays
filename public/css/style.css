@@ -15833,3 +15833,43 @@ body {
 .error-color{
   color: red;
 }
+
+.otp-modal-close-style{
+  position: absolute !important;
+  right: 30px !important;
+}
+
+/* Add this CSS to your stylesheet or in a style block in the head section of your HTML */
+.login-otp-link {
+  /* Remove default button styles */
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  text-decoration: underline; /* Add underline */
+  color: #007bff; /* Set link color */
+  transition: color 0.3s; /* Add smooth transition for color change on hover */
+}
+
+.login-otp-link:hover {
+  background: none;
+  color: #000 !important; /* Set a different color on hover */
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.login-otp-link:active {
+  background: none;
+  color: #000 !important; /* Set a different color on hover */
+  cursor: pointer;
+  text-decoration: underline;
+  background-color: transparent !important;
+}
+
+.login-otp-link:focus {
+  background: none;
+  color: #000 !important; /* Set a different color on hover */
+  cursor: pointer;
+  text-decoration: underline;
+  background-color: transparent !important;
+}

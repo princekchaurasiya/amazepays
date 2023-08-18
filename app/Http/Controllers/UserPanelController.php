@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\QsOrder;
 use App\Models\GiftCard;
 use Auth;
-
+use Illuminate\Support\Facades\Redirect;
 class UserPanelController extends Controller
 {
     public function homePage()
@@ -88,6 +88,10 @@ class UserPanelController extends Controller
         }
     }
 
+
+
+    
+
     public function userLogin(Request $request)
     {
         try {
@@ -96,9 +100,8 @@ class UserPanelController extends Controller
                     'status' => 200,
                 ];
             } else {
-                $data = [
-                    'status' => 400,
-                ];
+                // If authentication using password fails, try OTP validation
+                return $this->validateOtp($request);
             }
 
             return response()->json($data);
@@ -106,6 +109,9 @@ class UserPanelController extends Controller
             return $e->getMessage();
         }
     }
+
+
+    
 
     public function userLogOut()
     {
@@ -195,6 +201,8 @@ class UserPanelController extends Controller
             'syncOnly' => $request['quantity'] > 10 ? false : true,
             'delivery_mode' => 'API',
         ];
+       
+        
         // dd($modfy_user_data);
         $commonController = new CommonController();
         $requestBody = json_encode($modfy_user_data);
@@ -202,12 +210,8 @@ class UserPanelController extends Controller
         $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/orders';
         $clientSecret = setting('api.qs_clientSecret');
         $bearerToken = setting('api.bearer_token');
-        $signature = $commonController->generateSignature(
-            $requestBody,
-            $requestHttpMethod,
-            $absApiUrl,
-            $clientSecret
-        );
+        $signature = $commonController->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+
         $dateAtClient = Carbon\Carbon::now()->toIso8601String();
         $response = Http::acceptJson()
             // ->withToken($bearerToken)
@@ -221,8 +225,11 @@ class UserPanelController extends Controller
             ->send('POST', 'https://sandbox.woohoo.in/rest/v3/orders', [
                 'body' => $requestBody,
             ]);
+        // dd($response->json());
         $status = $response->json();
-        // dd($status);
+
+        
+
         if ($status['status'] == 'COMPLETE') {
             $userOrder = new QsOrder();
             $userOrder->user_id = Auth::user()->id;

@@ -9,7 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CcAvenuePayment;
 use App\Models\QsOrder;
-
+use App\Http\Controllers\SmsController;
+use App\Http\Controllers\OtpLoginController;
+use App\Http\Controllers\OtpVerificationController;
+use App\Http\Controllers\PaymentDetailsExportController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -23,7 +26,10 @@ use App\Models\QsOrder;
 // Route::logout();
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
+    Route::resource('cc-avenue', 'VoyagerCcAvenueController');
 });
+
+
 
 
 Route::get('/', [UserPanelController::class, 'homePage'])->name('home');
@@ -123,3 +129,23 @@ Route::get('payment-cancel', function () {
 
 
 Route::get('/get-category', [CommonController::class, 'getCategory'])->name('get-category');
+
+
+Route::post('/send-sms', [SmsController::class, 'sendSms'])->name('send-sms');
+
+Route::post('/verify-otp', [OtpVerificationController::class, 'verifyOtp'])->name('verify-otp');
+
+
+
+Route::get('/invoice', function () {
+    return view('layouts.invoice');
+})->name('invoice');
+
+Route::get('/mail', function () {
+    return view('layouts.mail');
+})->name('mail');
+
+Route::get('/export', [PaymentDetailsExportController::class, 'export']);
+
+
+

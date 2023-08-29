@@ -105,8 +105,8 @@
             </td>
         </tr>
         <tr>
-            <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="3"> Bill to</td>
-            <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="3">Ship to</td>
+            <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="3"> BILL TO</td>
+            <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="3">SHIP TO</td>
         </tr>
         <tr>
             {{-- biil to details --}}

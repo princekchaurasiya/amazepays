@@ -177,6 +177,7 @@ class CommonController extends Controller
                 ])
                 ->get('https://' . setting('api.woohoo_url') . '/rest/v3/catalog/categories/' . $qsCat . '/products');
 
+                
             // save Products into database
 
             if ($products_resp->status() == 200) {

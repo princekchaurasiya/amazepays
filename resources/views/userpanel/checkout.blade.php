@@ -6,7 +6,6 @@
     <div class="container">
         <div class="faq-wrapper pt-4 pb-0">
             <h2 class="text-grey-900 fw-400 display1-size mb-4 pb-3 text-center">Checkout</h2>
-
             <form method="POST" name="customerData" action="{{ url('payment-process') }}" id="checkoutForm">
                 @csrf
                 <input type="hidden" name="redirect_url" value="{{ route('response_ccavenue') }}" />
@@ -108,7 +107,7 @@
                                                     <div class="row item-qty-subtotal">
                                                         <input type="hidden" name="sku"
                                                             value="{{ $qsProd->sku }}" />
-                                                        <div class="col-md-4 col-sm-4 col-xs-6"><span>Qtn :
+                                                        <div class="col-md-4 col-sm-4 col-xs-6"><span>Qty :
                                                                 {{ $qsProd->prodData['quantity'] }}</span>
                                                         </div>
                                                         <input type="hidden" name="quantity"
@@ -123,7 +122,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="row coupan-code">
+                                            {{-- <div class="row coupan-code">
                                                 <div class="col-md-12 col-sm-4 col-xs-12">
                                                     <input type="text" class="coupan-code-input mont-font"
                                                         placeholder="Enter Coupan Code" id="coupan-code"><a
@@ -137,7 +136,7 @@
                                                     <div class="coupon-code-error-div"><span
                                                             class="error-coupon-code"></span></div>
                                                 </div>
-                                            </div>
+                                            </div> --}}
                                             <hr>
                                             <div class="row total-amount">
                                                 <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font">
@@ -188,7 +187,7 @@
         <script type="text/javascript">
             $(document).ready(function() {
                 var storageData = JSON.parse(window.localStorage.getItem('data'));
-                console.log(storageData);
+               
             });
             $('.coupan-code-amount').css('display', 'none');
             $('#remove-coupan-code').css('display', 'none');

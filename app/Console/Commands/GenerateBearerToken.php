@@ -3,10 +3,9 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-
+use Illuminate\Support\Facades\Log;
 
 class GenerateBearerToken extends Command
 {
@@ -15,43 +14,52 @@ class GenerateBearerToken extends Command
 
     public function handle()
     {
-        $authorizationCode_resp = Http::post('https://sandbox.woohoo.in/oauth2/verify', [
-            'clientId' => setting('api.clientId'), //coming from database
-            'username' => setting('api.qs_username'), //coming from database
-            'password' => setting('api.qs_password'), //coming from database
-        ]);
-
-        if ($authorizationCode_resp->status() == 200) {
-            $authorizationCode = $authorizationCode_resp->json();
-
-            $token_resp = Http::post('https://sandbox.woohoo.in/oauth2/token', [
-                'clientId' => setting('api.clientId'), //coming from database
-                'clientSecret' => setting('api.qs_clientSecret'), //coming from database
-                'authorizationCode' => $authorizationCode['authorizationCode'],
+        try {
+           
+            
+            $authorizationCodeResp = Http::post('https://sandbox.woohoo.in/oauth2/verify', [
+                'clientId' => setting('api.clientId'),
+                'username' => setting('api.qs_username'),
+                'password' => setting('api.qs_password'),
             ]);
 
-            if ($token_resp->status() == 200) {
-                $token = $token_resp->json()['token'];
+            if ($authorizationCodeResp->successful()) {
+                $authorizationCode = $authorizationCodeResp->json();
+                $tokenResp = Http::post('https://sandbox.woohoo.in/oauth2/token', [
+                    'clientId' => setting('api.clientId'),
+                    'clientSecret' => setting('api.qs_clientSecret'),
+                    'authorizationCode' => $authorizationCode['authorizationCode'],
+                ]);
 
-                // Save token and update time in the settings table
-                $updateTime = now()->toDateTimeString();
-                DB::table('settings')->updateOrInsert(
-                    ['display_name' => 'Bearer Token'],
-                    [
-                        'value' => $token,
-                        'details' => json_encode(['update_time' => $updateTime]),
-                    ]
-                );
+                if ($tokenResp->successful()) {
+                    $token = $tokenResp->json()['token'];
 
-                // Display success message with token and update time
-                $this->info('Bearer Token generated and stored successfully.');
-                $this->info('Bearer Token: ' . $token);
-                $this->info('Update Time: ' . $updateTime);
+                    DB::transaction(function () use ($token) {
+                        $updateTime = now()->toDateTimeString();
+                        DB::table('settings')->updateOrInsert(
+                            ['display_name' => 'Bearer Token'],
+                            [
+                                'value' => $token,
+                                'details' => json_encode(['update_time' => $updateTime]),
+                            ]
+                        );
+                    });
+
+                    Log::info('GenerateBearerToken command ran successfully.');
+
+                    $this->info('Bearer Token generated and stored successfully.');
+                    $this->info('Bearer Token: ' . $token);
+                } else {
+                    Log::error('Failed to generate Bearer Token.');
+                    $this->error('Failed to generate Bearer Token.');
+                }
             } else {
-                $this->error('Failed to generate Bearer Token.');
+                Log::error('Authorization code verification failed.');
+                $this->error('Authorization code verification failed.');
             }
-        } else {
-            $this->error('Authorization code verification failed.');
+        } catch (\Exception $e) {
+            Log::error('An error occurred: ' . $e->getMessage());
+            $this->error('An error occurred: ' . $e->getMessage());
         }
     }
 }

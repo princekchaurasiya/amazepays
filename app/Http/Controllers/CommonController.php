@@ -1,13 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Carbon;
 use DB;
 use App\QsCategory;
 use App\QsProduct;
+use Illuminate\Support\Facades\Log;
 use View;
 
 class CommonController extends Controller
@@ -18,7 +18,6 @@ class CommonController extends Controller
         return response()->json($data);
     }
 
-
     //user verification to generate authorization Code
     // public function generateAuthcode(Request $request)
     // {
@@ -28,8 +27,6 @@ class CommonController extends Controller
     //         'password' => setting('api.qs_password'), //coming from database
     //     ]);
 
-        
-        
     //     if ($authorizationCode_resp->status() == 200) {
     //         // save authocode into database
     //         $response = $this->generateBearerToken($authorizationCode_resp->json());
@@ -39,7 +36,7 @@ class CommonController extends Controller
     //     }
     // }
 
-    //token (Bearer Token) generation 
+    //token (Bearer Token) generation
     // public function generateBearerToken($authorizationCode)
     // {
     //     $token_resp = Http::post('https://sandbox.woohoo.in/oauth2/token', [
@@ -126,6 +123,7 @@ class CommonController extends Controller
 
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
 
+            // Sending a GET request to retrieve categories from an API
             $category_resp = Http::acceptJson()
                 ->withToken($bearerToken)
                 ->withHeaders([
@@ -134,8 +132,10 @@ class CommonController extends Controller
                 ])
                 ->get('https://sandbox.woohoo.in/rest/v3/catalog/categories');
 
+            // dd($category_resp);
+
             if ($category_resp->status == 200) {
-                //save category into database
+                // If the API response status is 200, save category data into the database
                 $category_resp = $category_resp->json($key = null);
                 $data = [
                     'id' => $category_resp['id'],
@@ -146,6 +146,8 @@ class CommonController extends Controller
                     'subcategoriesCount' => $category_resp['subcategoriesCount'],
                     'subcategories' => json_encode($category_resp['subcategories']),
                 ];
+
+                // Update or insert the category data into the 'qs_categories' table based on the ID
                 DB::table('qs_categories')->updateOrInsert(['id' => $category_resp['id']], $data);
                 return json_encode(['status' => $token_resp->status(), 'data' => 'Stored Successfully']);
             } else {
@@ -159,16 +161,28 @@ class CommonController extends Controller
     public function getProducts()
     {
         try {
+            // Retrieve the ID of the first category from the 'qs_categories' table
             $qsCat = QsCategory::pluck('id')->first();
+            // dd($qsCat);
+
+            // Initialize variables for API request
             $requestBody = '';
             $requestHttpMethod = 'get';
+
+            // Create the API URL to retrieve products of a specific category
             $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/catalog/categories/' . $qsCat . '/products';
+
+            // Get client secret and bearer token from settings
             $clientSecret = setting('api.qs_clientSecret');
             $bearerToken = setting('api.bearer_token');
+
+            // Generate a signature for the API request
             $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
 
+            // Get the current time in ISO8601 format
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
 
+            // Send a GET request to retrieve products from the API
             $products_resp = Http::acceptJson()
                 ->withToken($bearerToken)
                 ->withHeaders([
@@ -176,16 +190,19 @@ class CommonController extends Controller
                     'signature' => $signature,
                 ])
                 ->get('https://' . setting('api.woohoo_url') . '/rest/v3/catalog/categories/' . $qsCat . '/products');
+            $responseBody = $products_resp->body();
+            // dd($responseBody);
 
-                
             // save Products into database
 
+            // Check if the API response status is 200 (success)
             if ($products_resp->status() == 200) {
+                // Extract the list of products from the API response
                 $collection = collect($products_resp->json($key = null)['products']);
+
+                // Process each product item in the collection
                 $collection->map(function ($item, $key) use ($qsCat) {
-                    // $createdAt = Carbon\Carbon::parse($item['createdAt'])->format('Y-m-d H:m:s');
-                    // $updatedAt = Carbon\Carbon::parse($item['updatedAt'])->format('Y-m-d H:m:s');
-                    // dd($createdAt);
+                    // Define the data to be inserted or updated in the 'qs_products' table
                     $data = [
                         'sku' => $item['sku'],
                         'name' => $item['name'],
@@ -199,36 +216,44 @@ class CommonController extends Controller
                         'prdt_updated_at' => $item['updatedAt'],
                         'qs_category_id' => $qsCat,
                     ];
-                    // dd($data);
+
+                    // Update or insert the product data into the 'qs_products' table based on SKU
                     DB::table('qs_products')->updateOrInsert(['sku' => $item['sku']], $data);
                 });
+
+                // Return a success response
                 return json_encode(['status' => $products_resp->status(), 'data' => 'Stored Successfully']);
             } else {
+                // Return an error response if the API request was not successful
                 return json_encode(['status' => $products_resp->status(), 'data' => 'Something went wrong']);
             }
         } catch (Exception $e) {
+            // Return an error message if an exception occurs during the process
             return $e->getMessage();
         }
     }
 
     public function getProductbySKU(Request $request)
     {
-        // $checkSKU = QsProduct::where("sku", "=",  $prdtDetails['sku'])->first();
-        // if(!empty($checkSKU)){
-
-        // } else {
-
-        // }
         try {
+            // Initialize variables for API request
             $requestBody = '';
             $requestHttpMethod = 'get';
+
+            // Create the API URL to retrieve product details by SKU
             $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/catalog/products/' . $request->slug;
+
+            // Get client secret and bearer token from settings
             $clientSecret = setting('api.qs_clientSecret');
             $bearerToken = setting('api.bearer_token');
+
+            // Generate a signature for the API request
             $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
 
+            // Get the current time in ISO8601 format
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
 
+            // Send a GET request to retrieve product details from the API
             $products_resp = Http::acceptJson()
                 ->withToken($bearerToken)
                 ->withHeaders([
@@ -237,60 +262,75 @@ class CommonController extends Controller
                 ])
                 ->get('https://' . setting('api.woohoo_url') . '/rest/v3/catalog/products/' . $request->slug);
 
-            // fetch Products with sku
+            $responseContent = $products_resp->getBody()->getContents();
 
+            // Extract product details from the API response
             $prdtDetails = $products_resp->json();
-            // dd($prdtDetails);
-            $data = [
-                    'product_id' => $prdtDetails['id'],
-                    'description' => $prdtDetails['description'],
-                    'price' => json_encode($prdtDetails['price']),
-                    'kycEnabled' => $prdtDetails['kycEnabled'],
-                    'additionalForm' => $prdtDetails['additionalForm'],
-                    'metaInformation' => json_encode($prdtDetails['price']),
-                    'type' => $prdtDetails['type'],
-                    'schedulingEnabled' => $prdtDetails['schedulingEnabled'],
-                    'product_currency_code' => $prdtDetails['currency'],
-                    'images' => json_encode($prdtDetails['images']),
-                    'tnc' => json_encode($prdtDetails['tnc']),
-                    'categories' => json_encode($prdtDetails['categories']),
-                    'customThemesAvailable' => json_encode($prdtDetails['customThemesAvailable']),
-                    'handlingCharges' => json_encode($prdtDetails['handlingCharges']),
-                    'reloadCardNumber' => json_encode($prdtDetails['reloadCardNumber']),
-                    'expiry' => $prdtDetails['expiry'],
-                    'formatExpiry' => $prdtDetails['formatExpiry'],
-                    'discounts' => json_encode($prdtDetails['discounts']),
-                    'relatedProducts' => json_encode($prdtDetails['relatedProducts']),
-                    'storeLocatorUrl' => $prdtDetails['storeLocatorUrl'],
-                    'brandName' => $prdtDetails['brandName'],
-                    'etaMessage' => $prdtDetails['etaMessage'],
-                    // 'created_at' => $item['createdAt'],
-                    // 'updated_at' => $item['updatedAt'],
-                    'cpg' => serialize($prdtDetails['cpg']),
-                    'payout' => serialize($prdtDetails['payout']),
-                    'allowedfulfillments' => json_encode($prdtDetails['allowedfulfillments']),
-                ];
-                    // dd($data);
-                    // $x = DB::table('qs_products')->update(['sku' => $prdtDetails['sku']], $data);
-                    $updatedprdtDetails = QsProduct::where("sku", "=",  $prdtDetails['sku'])->update($data);
-                    if(!empty($updatedprdtDetails)){
-                        $getprdtDetails = QsProduct::where("sku", "=",  $prdtDetails['sku'])->first()->toArray();
-                        $getprdtDetails['price'] = json_decode($getprdtDetails['price']);
-                        $getprdtDetails['images'] = json_decode($getprdtDetails['images']);
-                        $getprdtDetails['tnc'] = json_decode($getprdtDetails['tnc']);
 
-                    }
-                    // dd($getprdtDetails['images']->small);
-            return view('userpanel/gift_card_detail_page', compact('getprdtDetails'));
+            // dd($prdtDetails);
+
+            // Define data to be inserted or updated in the database
+            $data = [
+                'product_id' => $prdtDetails['id'],
+                'description' => $prdtDetails['description'],
+                'price' => json_encode($prdtDetails['price']),
+                'kycEnabled' => $prdtDetails['kycEnabled'],
+                'additionalForm' => $prdtDetails['additionalForm'],
+                'metaInformation' => json_encode($prdtDetails['price']),
+                'type' => $prdtDetails['type'],
+                'schedulingEnabled' => $prdtDetails['schedulingEnabled'],
+                'product_currency_code' => $prdtDetails['currency'],
+                'images' => json_encode($prdtDetails['images']),
+                'tnc' => json_encode($prdtDetails['tnc']),
+                'categories' => json_encode($prdtDetails['categories']),
+                'customThemesAvailable' => json_encode($prdtDetails['customThemesAvailable']),
+                'handlingCharges' => json_encode($prdtDetails['handlingCharges']),
+                'reloadCardNumber' => json_encode($prdtDetails['reloadCardNumber']),
+                'expiry' => $prdtDetails['expiry'],
+                'formatExpiry' => $prdtDetails['formatExpiry'],
+                'discounts' => json_encode($prdtDetails['discounts']),
+                'relatedProducts' => json_encode($prdtDetails['relatedProducts']),
+                'storeLocatorUrl' => $prdtDetails['storeLocatorUrl'],
+                'brandName' => $prdtDetails['brandName'],
+                'etaMessage' => $prdtDetails['etaMessage'],
+                // 'created_at' => $item['createdAt'],
+                // 'updated_at' => $item['updatedAt'],
+                'cpg' => serialize($prdtDetails['cpg']),
+                'payout' => serialize($prdtDetails['payout']),
+                'allowedfulfillments' => json_encode($prdtDetails['allowedfulfillments']),
+            ];
+
+            // Update product details in the 'qs_products' table based on SKU
+            $updatedprdtDetails = QsProduct::where('sku', '=', $prdtDetails['sku'])->update($data);
+
+            // Check if product details were updated successfully
+            if (!empty($updatedprdtDetails)) {
+                // Retrieve updated product details from the database
+                $getprdtDetails = QsProduct::where('sku', '=', $prdtDetails['sku'])
+                    ->first()
+                    ->toArray();
+
+                // Convert certain JSON fields back to objects
+                $getprdtDetails['price'] = json_decode($getprdtDetails['price']);
+                $getprdtDetails['images'] = json_decode($getprdtDetails['images']);
+                $getprdtDetails['tnc'] = json_decode($getprdtDetails['tnc']);
+
+                // Pass the product details to the view and render it
+                return view('userpanel/gift_card_detail_page', compact('getprdtDetails'));
+            } else {
+                // Return an error response if updating product details failed
+                return json_encode(['status' => 'error', 'message' => 'Failed to update product details']);
+            }
         } catch (Exception $e) {
+            // Return an error message if an exception occurs during the process
             return $e->getMessage();
         }
-
-        // dd($products_resp->json());
     }
-// wohoo ordercard api call integration
+
+    // wohoo ordercard api call integration
     public function orderCard()
     {
+        // Create the request body with required information for placing an order
         $body = '{
             "address":
             {

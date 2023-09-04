@@ -22,6 +22,7 @@ class GenerateBearerToken extends Command
                 'username' => setting('api.qs_username'),
                 'password' => setting('api.qs_password'),
             ]);
+            
 
             if ($authorizationCodeResp->successful()) {
                 $authorizationCode = $authorizationCodeResp->json();
@@ -30,6 +31,7 @@ class GenerateBearerToken extends Command
                     'clientSecret' => setting('api.qs_clientSecret'),
                     'authorizationCode' => $authorizationCode['authorizationCode'],
                 ]);
+                
 
                 if ($tokenResp->successful()) {
                     $token = $tokenResp->json()['token'];

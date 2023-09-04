@@ -33,6 +33,7 @@ Route::group(['prefix' => 'admin'], function () {
 
 
 Route::get('/', [UserPanelController::class, 'homePage'])->name('home');
+
 Route::get('/gift_card_detail_page/{id}', function () {
     return view('userpanel/gift_card_detail_page_old');
 })->name('gift_card_detail_page');

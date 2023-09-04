@@ -13,6 +13,7 @@ use App\Models\QsOrder;
 use App\Models\GiftCard;
 use Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Log;
 class UserPanelController extends Controller
 {
     public function homePage()
@@ -135,7 +136,7 @@ class UserPanelController extends Controller
             $currency = json_decode($qsProd['currency']);
             $qsProd['currency'] = $currency;
             $qsProd['images'] = json_decode($qsProd->images);
-            
+
             // dd(json_decode($qsProd->images));
             if (\Auth::user()) {
                 return view('userpanel/checkout', compact('qsProd'));
@@ -149,7 +150,6 @@ class UserPanelController extends Controller
 
     public function orderProceed(Request $request)
     {
-        // dd(session::get('denomination'), $request->all());
         $modfy_user_data = [
             'address' => [
                 'firstname' => $request->billing_name,
@@ -194,13 +194,16 @@ class UserPanelController extends Controller
                     'currency' => $request['numericCode'],
                 ],
             ],
-            'syncOnly' => $request['quantity'] > 10 ? false : true,
+            'syncOnly' => $request['quantity'] > 5 ? false : true, // If 'quantity' in $request is greater than 10,
+            // then set 'syncOnly' to false, otherwise set it to true.
             'delivery_mode' => 'API',
         ];
 
         // dd($modfy_user_data);
+
         $commonController = new CommonController();
         $requestBody = json_encode($modfy_user_data);
+        // dd($requestBody);
         $requestHttpMethod = 'post';
         $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/orders';
         $clientSecret = setting('api.qs_clientSecret');
@@ -221,8 +224,12 @@ class UserPanelController extends Controller
                 'body' => $requestBody,
             ]);
 
+            
+    
+        // dd($response->json());
         $status = $response->json();
-        
+        // dd($status);
+
         if ($status['status'] == 'COMPLETE') {
             $userOrder = new QsOrder();
             $userOrder->user_id = Auth::user()->id;
@@ -244,7 +251,6 @@ class UserPanelController extends Controller
             $request['merchant_id'] = config('auth.merchant_id');
             $data = $request->all();
             $allSessionData = session()->all();
-           
 
             if (session::get('gift_send_option') == 'send_as_gift') {
                 $gift_card = new GiftCard();
@@ -279,25 +285,25 @@ class UserPanelController extends Controller
         }
     }
 
-    public function applyCoupan(Request $request)
-    {
-        $grandTotal = $request->grand_total;
-        $coupanVal = 10;
-        $aftApplyCoupan = $request->grand_total - $request->grand_total * ($coupanVal / 100);
-        $data = [
-            'coupan' => $coupanVal,
-            'aftApplyCoupan' => $aftApplyCoupan,
-        ];
-        return response()->json($data);
-    }
+    // public function applyCoupan(Request $request)
+    // {
+    //     $grandTotal = $request->grand_total;
+    //     $coupanVal = 10;
+    //     $aftApplyCoupan = $request->grand_total - $request->grand_total * ($coupanVal / 100);
+    //     $data = [
+    //         'coupan' => $coupanVal,
+    //         'aftApplyCoupan' => $aftApplyCoupan,
+    //     ];
+    //     return response()->json($data);
+    // }
 
-    public function removeApplyCoupan(Request $request)
-    {
-        $grandTotal = $request->grand_total;
-        $data = [
-            'coupan' => '',
-            'grandTotal' => $grandTotal,
-        ];
-        return response()->json($data);
-    }
+    // public function removeApplyCoupan(Request $request)
+    // {
+    //     $grandTotal = $request->grand_total;
+    //     $data = [
+    //         'coupan' => '',
+    //         'grandTotal' => $grandTotal,
+    //     ];
+    //     return response()->json($data);
+    // }
 }

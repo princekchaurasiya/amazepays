@@ -125,7 +125,7 @@ class PaymentController extends Controller
         $order_status = '';
         $decryptValues = explode('&', $rcvdString);
         $dataSize = sizeof($decryptValues);
-        // dd($decryptValues);
+
         for ($i = 0; $i < $dataSize; $i++) {
             $information = explode('=', $decryptValues[$i]);
             $data[] = [
@@ -136,9 +136,10 @@ class PaymentController extends Controller
             }
         }
 
+        // cc avenue collected data
+
         $order_details = QsOrder::where('order_id', $data[0]['order_id'])->first();
         Auth::loginUsingId($order_details['user_id']);
-        // dd($order_details);
 
         $userOrder = new CcAvenuePayment();
         $userOrder->user_id = $order_details['user_id'];
@@ -225,6 +226,7 @@ class PaymentController extends Controller
         $productAllData = QsProduct::all();
 
         $order = QsOrder::where('order_id', $orderData['order_id'])->first();
+        $cardsArray = json_decode($order_details['cards'], true);
 
         // Retrieve data from the gift_card table to reciver detail purpose
         $giftCardData = GiftCard::where('order_id', $orderData['order_id'])->first();
@@ -232,6 +234,7 @@ class PaymentController extends Controller
         $shipToName = $giftCardData->receiver_name;
         $shipToEmail = $giftCardData->receiver_email;
         $shipToContactNo = $giftCardData->receiver_mobile;
+        $giftSendOption = $giftCardData->gift_send_option;
 
         // Decode the JSON fields
         $cardsData = json_decode($order->cards);
@@ -243,24 +246,22 @@ class PaymentController extends Controller
         $product = QsProduct::where('sku', $cardSku)->first();
 
         if ($product) {
-    // The product with the specified sku was found
-    $images = json_decode($product->images, true);
-    
-    
+            // The product with the specified sku was found
+            $images = json_decode($product->images, true);
 
-    if ($images && isset($images['small'])) {
-        $smallImageUrl = $images['small'];
-        
-        // Now you can use $thumbnailUrl in your HTML to display the image
-    } else {
-        // Handle the case where the thumbnail URL is missing
-        dd("thumbnail is missing");
-    }
-} else {
-    // No product found with the specified sku
-    // Handle this case according to your requirements
-    dd("no product found");
-}
+            if ($images && isset($images['small'])) {
+                $smallImageUrl = $images['small'];
+
+                // Now you can use $thumbnailUrl in your HTML to display the image
+            } else {
+                // Handle the case where the thumbnail URL is missing
+                dd('thumbnail is missing');
+            }
+        } else {
+            // No product found with the specified sku
+            // Handle this case according to your requirements
+            dd('no product found');
+        }
 
         if ($order_status === 'Success') {
             $order->update(['order_status' => 'COMPLETE']);
@@ -297,17 +298,28 @@ class PaymentController extends Controller
                 'perOrderPrice' => $order->price,
                 'perOrderQuantity' => $order->qty,
                 'smallImageUrl' => $smallImageUrl,
+                'giftSendOption' => $giftSendOption,
             ];
 
             
 
             $pdf = PDF::loadView('layouts.invoice', $data);
+            // here we are directly sending data so we will be able to access directly values by using key in balde file
             Mail::send(['html' => 'layouts.mail'], $data, function ($message) use ($email, $name, $pdf) {
                 $message
                     ->to($email, $name)
-                    ->subject('Order Confirmation with Invoice')
+                    ->subject('Amazepays - Order Confirmation')
                     ->attachData($pdf->output(), 'invoice.pdf');
             });
+            // Check if gift name is present before sending gift mail
+            if (isset($data['giftSendOption']) ) {
+                // Here we are sending data in an array, with only 'giftSendOption'
+                Mail::send(['html' => 'layouts.giftmail'], ['data' => $data, 'cardsArray' => $cardsArray], function ($message) use ($shipToEmail, $shipToName) {
+                    $message->to($shipToEmail, $shipToName)->subject('Amazepays - You Received A Gift Card');
+                });
+            }
+
+            
 
             $msg = 'Order created successfully!';
             $status = 'success';

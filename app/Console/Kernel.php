@@ -15,10 +15,20 @@ class Kernel extends ConsoleKernel
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
+
+     protected $commands = [
+    \App\Console\Commands\GenerateBearerToken::class,
+];
+
     protected function schedule(Schedule $schedule)
     {
         // Add the schedule to run the GenerateBearerToken command every day at 1:00 AM
-        $schedule->command(GenerateBearerToken::class)->weekly()->mondays()->at('12:00');
+        // $schedule->command(GenerateBearerToken::class)->weekly()->mondays()->at('12:00');
+
+
+        // Add the schedule to run the GenerateBearerToken command every minute for testing purpose
+        $schedule->command('generate:bearerToken')->weekly()->mondays()->at('01:00');
+
     }
 
     /**

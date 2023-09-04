@@ -41,20 +41,19 @@
                             <!-- loop product here -->
                             @foreach($allProducts as $product)
 
-                               
                                 <div class="col-lg-3 bg-white p-3 border">
                                     
-                                    <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
+                                    {{-- <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4> --}}
                                     <a href="{{ route('get-product-sku', ['slug' => $product->sku]) }}" class="d-block text-center"><img src="{{$product->images->small == null ? URL::asset('/images/hamburger.jpg'): $product->images->small}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
                                     <a href="{{ route('get-product-sku', ['slug' => $product->sku]) }}">
                                         <div class="container" style="background-color:white">
                                             <p class="text-center font-xsss mt-3 text-current"><b>{{$product->name}}</b></p> 
-                                            <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
+                                            {{-- <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span> --}}
                                         </div>
-                                        <div class="container">
+                                        {{-- <div class="container">
                                             <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
                                             <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
-                                        </div>
+                                        </div> --}}
                                     </a>
                                 </div>
                             @endforeach

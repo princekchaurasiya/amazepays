@@ -4,6 +4,7 @@
 
 @section('page_header')
     <div class="container-fluid">
+
         <h1 class="page-title">
             <i class="{{ $dataType->icon }}"></i> {{ $dataType->getTranslatedAttribute('display_name_plural') }}
         </h1>
@@ -35,7 +36,7 @@
             @endif
         @endforeach
         @include('voyager::multilingual.language-selector')
-        <a href="{{url('/export')}}" class="btn btn-warning btn-add-new">
+        <a href="{{ url('/export') }}" class="btn btn-warning btn-add-new">
             <i class="voyager-download"></i> <span>Export Order Data</span>
         </a>
     </div>
@@ -94,10 +95,9 @@
                                                 <input type="checkbox" class="select_all">
                                             </th>
                                         @endif
-
                                         @foreach ($dataType->browseRows as $row)
+                                       
                                             <th>
-
                                                 @if ($isServerSide && in_array($row->field, $sortableColumns))
                                                     <a href="{{ $row->sortByUrl($orderBy, $sortOrder) }}">
                                                 @endif
@@ -113,15 +113,22 @@
                                                     </a>
                                                 @endif
                                             </th>
-
                                         @endforeach
+                                        <th>Billing Name</th>
+                                        <th>Billing Email</th>
+                                        <th>Billing Contact</th>
+                                        <th>Billing Address</th>
                                         <th class="actions text-right dt-not-orderable">
                                             {{ __('voyager::generic.actions') }}</th>
                                     </tr>
+                                    <tr>
+                                       
+                                        
+                                    </tr>
                                 </thead>
                                 <tbody>
-
                                     @foreach ($dataTypeContent as $data)
+                                    @foreach ($modifiedData as $data2)
                                         <tr>
                                             @if ($showCheckboxColumn)
                                                 <td>
@@ -129,7 +136,6 @@
                                                         id="checkbox_{{ $data->getKey() }}" value="{{ $data->getKey() }}">
                                                 </td>
                                             @endif
-
                                             @foreach ($dataType->browseRows as $row)
                                                 @php
                                                     if ($data->{$row->field . '_browse'}) {
@@ -151,7 +157,7 @@
                                                             'row' => $row,
                                                             'dataType' => $dataType,
                                                             'dataTypeContent' => $dataTypeContent,
-                                                            'content' => $data->{$row->field},
+                                                            
                                                             'action' => 'browse',
                                                             'view' => 'browse',
                                                             'options' => $row->details,
@@ -298,12 +304,10 @@
 
                                                 </td>
                                             @endforeach
-
-                                           
-
-                                           
-                                            
-                                            <!-- End of New Columns -->
+                                            <td>{{ $data2['firstname'] }}</td>
+                                            <td>{{ $data2['email'] }}</td>
+                                            <td>{{ $data2['contact_no'] }}</td>
+                                            <td>{{ $data2['Address'] }}</td>
                                             <td class="no-sort no-click bread-actions">
                                                 @foreach ($actions as $action)
                                                     @if (!method_exists($action, 'massAction'))
@@ -315,12 +319,14 @@
                                             </td>
                                         </tr>
                                     @endforeach
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
                         @if ($isServerSide)
+                        {{-- Showing entries --}}
                             <div class="pull-left">
-                                <div role="status" class="show-res" aria-live="polite">
+                                <div role="status" class="show-res" aria-live="polite" >
                                     {{ trans_choice('voyager::generic.showing_entries', $dataTypeContent->total(), [
                                         'from' => $dataTypeContent->firstItem(),
                                         'to' => $dataTypeContent->lastItem(),
@@ -328,6 +334,7 @@
                                     ]) }}
                                 </div>
                             </div>
+                             {{-- Previous and next  --}}
                             <div class="pull-right">
                                 {{ $dataTypeContent->appends([
                                         's' => $search->value,
@@ -344,7 +351,6 @@
             </div>
         </div>
     </div>
-
     {{-- Single delete modal --}}
     <div class="modal modal-danger fade" tabindex="-1" id="delete_modal" role="dialog">
         <div class="modal-dialog">

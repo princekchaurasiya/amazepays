@@ -13,12 +13,14 @@ use App\Models\QsOrder;
 use App\Models\GiftCard;
 use Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Log;
 class UserPanelController extends Controller
 {
     public function homePage()
     {
         try {
             $getCategory = DB::table('qs_categories')->first();
+
             $allProducts = DB::table('qs_products')
                 ->select('qs_products.*', 'qs_categories.name as category_name')
                 ->leftjoin('qs_categories', 'qs_products.qs_category_id', '=', 'qs_categories.id')
@@ -29,6 +31,7 @@ class UserPanelController extends Controller
                 $item->price = json_decode($item->price);
                 $item->images = json_decode($item->images);
             });
+
             return view('userpanel/index', compact('allProducts', 'getCategory'));
         } catch (Exception $e) {
             return $e->getMessage();
@@ -88,10 +91,6 @@ class UserPanelController extends Controller
         }
     }
 
-
-
-    
-
     public function userLogin(Request $request)
     {
         try {
@@ -109,9 +108,6 @@ class UserPanelController extends Controller
             return $e->getMessage();
         }
     }
-
-
-    
 
     public function userLogOut()
     {
@@ -140,6 +136,7 @@ class UserPanelController extends Controller
             $currency = json_decode($qsProd['currency']);
             $qsProd['currency'] = $currency;
             $qsProd['images'] = json_decode($qsProd->images);
+
             // dd(json_decode($qsProd->images));
             if (\Auth::user()) {
                 return view('userpanel/checkout', compact('qsProd'));
@@ -153,7 +150,6 @@ class UserPanelController extends Controller
 
     public function orderProceed(Request $request)
     {
-        // dd(session::get('denomination'), $request->all());
         $modfy_user_data = [
             'address' => [
                 'firstname' => $request->billing_name,
@@ -198,14 +194,16 @@ class UserPanelController extends Controller
                     'currency' => $request['numericCode'],
                 ],
             ],
-            'syncOnly' => $request['quantity'] > 10 ? false : true,
+            'syncOnly' => $request['quantity'] > 5 ? false : true, // If 'quantity' in $request is greater than 10,
+            // then set 'syncOnly' to false, otherwise set it to true.
             'delivery_mode' => 'API',
         ];
-       
-        
+
         // dd($modfy_user_data);
+
         $commonController = new CommonController();
         $requestBody = json_encode($modfy_user_data);
+        // dd($requestBody);
         $requestHttpMethod = 'post';
         $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/orders';
         $clientSecret = setting('api.qs_clientSecret');
@@ -225,10 +223,12 @@ class UserPanelController extends Controller
             ->send('POST', 'https://sandbox.woohoo.in/rest/v3/orders', [
                 'body' => $requestBody,
             ]);
+
+            
+    
         // dd($response->json());
         $status = $response->json();
-
-        
+        // dd($status);
 
         if ($status['status'] == 'COMPLETE') {
             $userOrder = new QsOrder();
@@ -246,11 +246,12 @@ class UserPanelController extends Controller
             $userOrder->price = session::get('denomination');
             $userOrder->qty = session::get('quantity');
             $userOrder->is_gifted = session::get('gift_send_option') == 'send_as_gift' ? 1 : 0;
-            // dd($userOrder);
             $userOrder->save();
             $request['order_id'] = $status['orderId'];
             $request['merchant_id'] = config('auth.merchant_id');
             $data = $request->all();
+            $allSessionData = session()->all();
+
             if (session::get('gift_send_option') == 'send_as_gift') {
                 $gift_card = new GiftCard();
                 $gift_card->sender_id = Auth::user()->id;
@@ -260,7 +261,21 @@ class UserPanelController extends Controller
                 $gift_card->receiver_mobile = session::get('receiver_mobile');
                 $gift_card->receiver_msg = session::get('receiver_msg');
                 $gift_card->card = json_encode($response['cards']);
+                $gift_card->gift_send_option = session::get('gift_send_option');
                 $gift_card->amount = session::get('denomination') * session::get('quantity');
+                $gift_card->save();
+            }
+            if (session::get('gift_send_option') == 'buy_for_self') {
+                $gift_card = new GiftCard();
+                $gift_card->sender_id = Auth::user()->id;
+                $gift_card->order_id = $status['orderId'];
+                $gift_card->receiver_name = $modfy_user_data['billing']['firstname'];
+                $gift_card->receiver_email = $modfy_user_data['billing']['email'];
+                $gift_card->receiver_mobile = $modfy_user_data['billing']['telephone'];
+                $gift_card->receiver_msg = null;
+                $gift_card->card = json_encode($response['cards']);
+                $gift_card->amount = session::get('denomination') * session::get('quantity');
+                $gift_card->gift_send_option = session::get('gift_send_option');
                 $gift_card->save();
             }
             return view('paymentFolder.ccavRequestHandler', compact('data'));
@@ -270,25 +285,25 @@ class UserPanelController extends Controller
         }
     }
 
-    public function applyCoupan(Request $request)
-    {
-        $grandTotal = $request->grand_total;
-        $coupanVal = 10;
-        $aftApplyCoupan = $request->grand_total - $request->grand_total * ($coupanVal / 100);
-        $data = [
-            'coupan' => $coupanVal,
-            'aftApplyCoupan' => $aftApplyCoupan,
-        ];
-        return response()->json($data);
-    }
+    // public function applyCoupan(Request $request)
+    // {
+    //     $grandTotal = $request->grand_total;
+    //     $coupanVal = 10;
+    //     $aftApplyCoupan = $request->grand_total - $request->grand_total * ($coupanVal / 100);
+    //     $data = [
+    //         'coupan' => $coupanVal,
+    //         'aftApplyCoupan' => $aftApplyCoupan,
+    //     ];
+    //     return response()->json($data);
+    // }
 
-    public function removeApplyCoupan(Request $request)
-    {
-        $grandTotal = $request->grand_total;
-        $data = [
-            'coupan' => '',
-            'grandTotal' => $grandTotal,
-        ];
-        return response()->json($data);
-    }
+    // public function removeApplyCoupan(Request $request)
+    // {
+    //     $grandTotal = $request->grand_total;
+    //     $data = [
+    //         'coupan' => '',
+    //         'grandTotal' => $grandTotal,
+    //     ];
+    //     return response()->json($data);
+    // }
 }

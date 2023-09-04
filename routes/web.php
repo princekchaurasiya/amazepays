@@ -33,6 +33,7 @@ Route::group(['prefix' => 'admin'], function () {
 
 
 Route::get('/', [UserPanelController::class, 'homePage'])->name('home');
+
 Route::get('/gift_card_detail_page/{id}', function () {
     return view('userpanel/gift_card_detail_page_old');
 })->name('gift_card_detail_page');
@@ -144,6 +145,11 @@ Route::get('/invoice', function () {
 Route::get('/mail', function () {
     return view('layouts.mail');
 })->name('mail');
+
+
+Route::get('/mail2', function () {
+    return view('layouts.giftmail');
+})->name('mail2');
 
 Route::get('/export', [PaymentDetailsExportController::class, 'export']);
 

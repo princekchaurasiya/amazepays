@@ -54,6 +54,8 @@ class ApiController extends Controller
                 $baseStrings[] = rawurlencode($apiUrl);
             }
 
+           
+
             if ($responseBody) {
                 $jsonDecodedResponseBody = json_decode($responseBody, TRUE);
                 sortParams($jsonDecodedResponseBody);

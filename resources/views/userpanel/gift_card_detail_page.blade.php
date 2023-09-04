@@ -3,7 +3,6 @@
     Amazepay | Gift Card
 @endsection
 @section('content')
-
     <div class="gift-card-detail-page pt-lg--7 pb-lg--7 pb-5 pt-5">
         <div class="container">
             <div class="row">
@@ -63,38 +62,39 @@
                                         <span class="font-xssss fw-400 error-rec-qnty text-danger"></span>
                                     </div>
                                 </div>
-                                {{-- <div class="col-sm-12 mb-4">
-                                    <h6 class="mb-3 fw-600 font-xs mt-2 pb-3">Gift Send Option</h6>
-                                    <div class="custom-control mr-4 custom-radio custom-control-inline">
-                                        <input type="radio" class="custom-control-input" id="customRadio" name="gift_send_option" value="send_as_gift" checked>
-                                        <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="customRadio">Send as Gift</label>
-                                    </div>
-                                    <div class="custom-control mr-0 custom-radio custom-control-inline">
-                                        <input type="radio" class="custom-control-input" id="customRadio1" name="gift_send_option" value="buy_for_self">
-                                        <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="customRadio1">Buy for Self (This E-gift card will be added to your account)</label>
-                                    </div>
-                                    
-                                </div> --}}
-
+                                {{-- 
+                     <div class="col-sm-12 mb-4">
+                        <h6 class="mb-3 fw-600 font-xs mt-2 pb-3">Gift Send Option</h6>
+                        <div class="custom-control mr-4 custom-radio custom-control-inline">
+                           <input type="radio" class="custom-control-input" id="customRadio" name="gift_send_option" value="send_as_gift" checked>
+                           <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="customRadio">Send as Gift</label>
+                        </div>
+                        <div class="custom-control mr-0 custom-radio custom-control-inline">
+                           <input type="radio" class="custom-control-input" id="customRadio1" name="gift_send_option" value="buy_for_self">
+                           <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="customRadio1">Buy for Self (This E-gift card will be added to your account)</label>
+                        </div>
+                     </div>
+                     --}}
                                 <!-- <h6 class="text-grey-900 fw-400 font-xs mt-2">Offers</h6>
-                                                                                                                                    <ul class="square-type-unordered">
-                                                                                                                                        <li>Only UPI payment is accepted for this gift card. --- On Amazon Pay Special E-Gift Card (woohoo.in/amazon-pay-special-e-gift-card) Credit/Debit card and Net Banking options are available.</li>
-                                                                                                                                    </ul> -->
-
+                                                                <ul class="square-type-unordered">
+                                                                    <li>Only UPI payment is accepted for this gift card. --- On Amazon Pay Special E-Gift Card (woohoo.in/amazon-pay-special-e-gift-card) Credit/Debit card and Net Banking options are available.</li>
+                                                                </ul> -->
                             </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="container">
-                                {{-- <div class="row">
-                                    <div class="row">
-                                        <div class="col-sm-6">
-                                            <h6 class="mb-3 fw-600 font-xs mt-2" name="product_name" value="{{$getprdtDetails['name']}}">{{$getprdtDetails['name']}}</h6>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <span class="mb-3 font-xssss fw-600 mt-2">Validity : {{$getprdtDetails['expiry']}}</span>
-                                        </div>
-                                    </div>
-                                </div> --}}
+                                {{-- 
+                     <div class="row">
+                        <div class="row">
+                           <div class="col-sm-6">
+                              <h6 class="mb-3 fw-600 font-xs mt-2" name="product_name" value="{{$getprdtDetails['name']}}">{{$getprdtDetails['name']}}</h6>
+                           </div>
+                           <div class="col-sm-6">
+                              <span class="mb-3 font-xssss fw-600 mt-2">Validity : {{$getprdtDetails['expiry']}}</span>
+                           </div>
+                        </div>
+                     </div>
+                     --}}
                                 <div class="col-sm-12 mb-4">
                                     <h6 class="mb-3 fw-600 font-xss mt-2">Gift Send Option</h6>
                                     <div class="custom-control mr-4 custom-radio custom-control-inline">
@@ -161,7 +161,8 @@
                                             <h2 class="fw-500 text-grey-900 display2-size">4M</h2>
                                             <p class="font-xssss fw-500 text-grey-400 lh-26 mt-2">If you want to print or
                                                 forward this Email gift card with an attractive template, please select the
-                                                'Send as a Gift' option.</p>
+                                                'Send as a Gift' option.
+                                            </p>
                                         </div>
                                         <div class="col-lg-4 col-md-4 text-center">
                                             <h2 class="fw-500 text-grey-900 display2-size">12k</h2>
@@ -177,11 +178,9 @@
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                     </div>
-
                     <div class="row personalise-gift-card">
                         <div class="tabs">
                             <input type="radio" name="tabs" id="tabone" checked="checked">
@@ -190,18 +189,22 @@
                                 <ul class="square-type-unordered">
                                     <li>Flipkart Gift Cards ("GCs" or "Gift Cards") are issued by Pine Labs Pvt. Ltd ("Pine
                                         Labs") which is a private limited company incorporated under the laws of India, and
-                                        is authorized by the Reserve Bank of India ("RBI") to issue such Gift Cards.</li>
+                                        is authorized by the Reserve Bank of India ("RBI") to issue such Gift Cards.
+                                    </li>
                                     <li>The Gift Cards can be redeemed online against Sellers listed on www.flipkart.com or
-                                        Flipkart Mobile App or Flipkart m-site ("Platform") only.</li>
+                                        Flipkart Mobile App or Flipkart m-site ("Platform") only.
+                                    </li>
                                     <li>Gift Cards can be purchased on www.flipkart.com or Flipkart Mobile App using the
-                                        following payment modes only - Credit Card, Debit Card and Net Banking.</li>
+                                        following payment modes only - Credit Card, Debit Card and Net Banking.
+                                    </li>
                                     <li>Gift Cards can be redeemed by selecting the payment mode as Gift Card. The Gift Card
-                                        payment option is available for single orders with multiple sellers.</li>
+                                        payment option is available for single orders with multiple sellers.
+                                    </li>
                                     <li>Gift Cards cannot be used to purchase other Flipkart Gift Cards or Flipkart First
-                                        subscriptions.</li>
+                                        subscriptions.
+                                    </li>
                                 </ul>
                             </div>
-
                             <input type="radio" name="tabs" id="tabtwo">
                             <label for="tabtwo">Description</label>
                             <div class="tab">
@@ -209,7 +212,6 @@
                                     <li>{{ $getprdtDetails['description'] }}</li>
                                 </ul>
                             </div>
-
                             <input type="radio" name="tabs" id="tabthree">
                             <label for="tabthree">Terms & Condition</label>
                             <div class="tab term-condition">
@@ -221,15 +223,20 @@
                                 <ul class="square-type-unordered">
                                     <li>Flipkart Gift Cards ("GCs" or "Gift Cards") are issued by Pine Labs Pvt. Ltd ("Pine
                                         Labs") which is a private limited company incorporated under the laws of India, and
-                                        is authorized by the Reserve Bank of India ("RBI") to issue such Gift Cards.</li>
+                                        is authorized by the Reserve Bank of India ("RBI") to issue such Gift Cards.
+                                    </li>
                                     <li>The Gift Cards can be redeemed online against Sellers listed on www.flipkart.com or
-                                        Flipkart Mobile App or Flipkart m-site ("Platform") only.</li>
+                                        Flipkart Mobile App or Flipkart m-site ("Platform") only.
+                                    </li>
                                     <li>Gift Cards can be purchased on www.flipkart.com or Flipkart Mobile App using the
-                                        following payment modes only - Credit Card, Debit Card and Net Banking.</li>
+                                        following payment modes only - Credit Card, Debit Card and Net Banking.
+                                    </li>
                                     <li>Gift Cards can be redeemed by selecting the payment mode as Gift Card. The Gift Card
-                                        payment option is available for single orders with multiple sellers.</li>
+                                        payment option is available for single orders with multiple sellers.
+                                    </li>
                                     <li>Gift Cards cannot be used to purchase other Flipkart Gift Cards or Flipkart First
-                                        subscriptions.</li>
+                                        subscriptions.
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -245,7 +252,6 @@
                     @endif
                 </form>
             </div>
-
         </div>
     </div>
     @push('scripts')
@@ -269,6 +275,7 @@
                 });
 
                 //  on load store value in local storage
+                let storageData = {};
                 if (storageData) {
                     const rangeInputs = $('.copuan-quantity').find('.range');
                     const denominationValue = storageData.denomination;
@@ -316,29 +323,57 @@
                 }
             });
 
+
+            // initialzing gift send button
+            var giftSendOption = $("input[name='gift_send_option']:checked").val();
+
+            // Gift Send Option Change Handler
+            $("input[name='gift_send_option']").change(function() {
+                giftSendOption = $(this).val();
+                console.log(giftSendOption);
+            });
+
+
+
+            // pay now button click redirecting to checkout on submit validation on pay now button
+
             $('form').on('submit', function(e) {
+
                 e.preventDefault();
+                
 
 
+                // Denomination validation
+                var denominationBooleanValue = false;
                 var denomination = '';
 
-                if ($('.copuan-quantity').find('.range').attr('type') == 'radio') {
-                    denomination = $("input[name='denomination']:checked").val();
+                if ($('.copuan-quantity').find('.range').attr('type') === 'radio') {
+                    var checkedRadio = $("input[name='denomination']:checked");
+                    if (checkedRadio.length > 0) {
+                        denomination = checkedRadio.val();
+                        denominationBooleanValue = true;
+                    } else {
+                        denomination = 0;
+                        denominationBooleanValue = false;
+                    }
                 } else {
-                    denomination = $('#denomination').val();
+                    denomination = 0;
+                    denominationBooleanValue = false;
                 }
 
-                if (!denomination || denomination.length === 0) {
+                var denominationInvalid = !denomination || denomination === undefined || denomination === null ||
+                    denomination === 0 || !denominationBooleanValue;
+
+                if (denominationInvalid) {
                     $('.error-rec-deno').text('Please Select Denomination');
-                    // console.log("please select denomination");
                 } else {
                     $('.error-rec-deno').empty();
                 }
 
+                // quantity validation
                 var quantity = $('#quantity').val();
                 var bool = true;
                 var flag = true;
-
                 if (!quantity || quantity.length === 0) {
                     $('.error-rec-qnty').text('Enter Quantity');
                     bool = false;
@@ -355,8 +390,12 @@
                     $('.error-rec-qnty').empty();
                 }
 
+                if (giftSendOption === 'send_as_gift') {
+                    status = validateRecipient(delivery_mode);
+                }
+
+
                 var delivery_mode = $("input[name='delivery_mode']:checked").val();
-                var status = validateRecipient(delivery_mode);
 
 
                 function validateRecipient(mode) {
@@ -409,7 +448,10 @@
                         quantity: quantity
                     };
                     window.localStorage.setItem('data', JSON.stringify(data));
-                    this.submit();
+                    if(!denominationInvalid){
+                        this.submit();
+                    }
+                    
                 } else {
                     return false;
                 }

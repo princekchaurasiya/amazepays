@@ -1,19 +1,23 @@
 <?php
-use Illuminate\Support\Str;
+
+use Carbon\Carbon;
 
 // Generate a random OTP (6-digit number)
 $otp = mt_rand(100000, 999999);
+$otpGeneratedTime = Carbon::now('Asia/Kolkata');
+$otpExpiration = $otpGeneratedTime->copy()->addMinutes(5);
+$company_name = 'Frenetic India';
 
-$sms_message  = "Dear User,  Your  one  time  password  ". $otp ."  and  its  valid  for  5  minutes  only.  Do  not  share  to  anyone.  Thanks  -  FRENETIC  INDIA";
+$otp_duration_minutes = $otpExpiration->diffInMinutes($otpGeneratedTime);
+
+$sms_message = 'Dear User,  Your  one  time  password is  ' . $otp . '  and  its  valid  for ' . $otp_duration_minutes . '  minutes  only.  Do  not  share  to  anyone.  Thanks - '  .$company_name;
+
 
 // transaction message setup
 
-
-
-
 return [
     'gst_number' => '27AAFCF2328E1ZX',
-    'company_name' => 'Frenetic India Services Private Limited',
+    'company_name' => $company_name,
     'company_address' => '98-103, 4 Floor, Aditya Industrial Estate Co-op Premises Ltd Mindspace Behind Evershine 
       Mall Off Link Road Malad West Mumbai 400064.',
     'company_cin' => 'U72900MH2022PTC391272',
@@ -33,5 +37,7 @@ return [
     'sms_temp_id' => '1107169019646710710',
     'generated_otp' => $otp,
     'sms_message' => $sms_message,
+    'otpExpiration' => $otpExpiration,
 ];
+
 ?>

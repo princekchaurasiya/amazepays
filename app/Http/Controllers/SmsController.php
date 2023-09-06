@@ -48,13 +48,12 @@ class SmsController extends Controller
         // Build the API URL with the encoded credentials and Template ID
         $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
 
-       
 
         // Store the OTP in the database along with the user ID and expiration time
 
         // OTP valid for 5 minutes
 
-        $otpExpiration = Carbon::now()->addMinutes(5);
+        $otpExpiration = config('companyDefaultValues.otpExpiration');
 
         $otpData = [
             'user_id' => null, // Assuming the user is not logged in, so user_id is null

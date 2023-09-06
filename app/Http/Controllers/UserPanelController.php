@@ -194,7 +194,7 @@ class UserPanelController extends Controller
                     'currency' => $request['numericCode'],
                 ],
             ],
-            'syncOnly' => $request['quantity'] > 5 ? false : true, // If 'quantity' in $request is greater than 10,
+            'syncOnly' => $request['quantity'] > 10 ? false : true, // If 'quantity' in $request is greater than 10,
             // then set 'syncOnly' to false, otherwise set it to true.
             'delivery_mode' => 'API',
         ];

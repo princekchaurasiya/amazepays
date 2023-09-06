@@ -74,6 +74,8 @@ class PaymentController extends Controller
     {
         // Generate a unique order ID or transaction ID
         // dd($request);
+
+        
         $orderId = uniqid();
 
         // Get the form input values

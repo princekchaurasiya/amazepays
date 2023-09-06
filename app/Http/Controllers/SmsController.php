@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use App\Models\Otp;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Response;
+use Config;
 
 class SmsController extends Controller
 {
@@ -32,26 +33,37 @@ class SmsController extends Controller
         $destination = $request->input('destination');
 
         // Generate the OTP (a 6-digit random number)
-        $otp = mt_rand(100000, 999999);
+        $otp = config('companyDefaultValues.generated_otp');
+
+        // get the value from config file
+
+        $sms_api_url = config('companyDefaultValues.sms_api_url');
+        $sms_user_name = config('companyDefaultValues.sms_user_name');
+        $sms_user_password = config('companyDefaultValues.sms_user_password');
+        $sms_source = config('companyDefaultValues.sms_source');
+        $sms_message = config('companyDefaultValues.sms_message');
+        $sms_entity_id = config('companyDefaultValues.sms_entity_id');
+        $sms_temp_id = config('companyDefaultValues.sms_temp_id');
 
         // Build the API URL with the encoded credentials and Template ID
-        $apiUrl = "http://route.digimiles.in/bulksms/bulksms?username=DG35-frenetic&password=digimile&type=0&dlr=1&destination={$destination}&source=FRNTIC&message=Dear%20User,%20Your%20one%20time%20password%20{$otp}%20and%20its%20valid%20for%205%20minutes%20only.%20Do%20not%20share%20to%20anyone.%20Thanks%20-%20FRENETIC%20INDIA&entityid=1101633530000071318&tempid=1107169019646710710";
+        $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
+
 
         // Store the OTP in the database along with the user ID and expiration time
 
         // OTP valid for 5 minutes
-        
-        $otpExpiration = Carbon::now()->addMinutes(5);
-        
+
+        $otpExpiration = config('companyDefaultValues.otpExpiration');
+
         $otpData = [
             'user_id' => null, // Assuming the user is not logged in, so user_id is null
             'mobile_number' => $destination, // Store the mobile number
             'otp' => $otp,
             'expiry_time' => $otpExpiration,
         ];
-        
+
         Otp::create($otpData);
-        // dd($otpExpiration, $otpData); 
+        // dd($otpExpiration, $otpData);
 
         // Send the HTTP GET request to the API
         $response = Http::get($apiUrl);

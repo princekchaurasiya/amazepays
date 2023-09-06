@@ -19,6 +19,7 @@ use Mail;
 use App\QsProduct;
 use PDF;
 use App\Models\GiftCard;
+use Config;
 
 class PaymentController extends Controller
 {
@@ -73,6 +74,8 @@ class PaymentController extends Controller
     {
         // Generate a unique order ID or transaction ID
         // dd($request);
+
+        
         $orderId = uniqid();
 
         // Get the form input values
@@ -304,18 +307,22 @@ class PaymentController extends Controller
             
 
             $pdf = PDF::loadView('layouts.invoice', $data);
+
+           
+            // dd(config('companyDefaultValues.comapny_email'));
             // here we are directly sending data so we will be able to access directly values by using key in balde file
             Mail::send(['html' => 'layouts.mail'], $data, function ($message) use ($email, $name, $pdf) {
                 $message
                     ->to($email, $name)
-                    ->subject('Amazepays - Order Confirmation')
+                    ->subject(config('companyDefaultValues.default_subject'))
                     ->attachData($pdf->output(), 'invoice.pdf');
             });
+           
             // Check if gift name is present before sending gift mail
             if (isset($data['giftSendOption']) ) {
                 // Here we are sending data in an array, with only 'giftSendOption'
                 Mail::send(['html' => 'layouts.giftmail'], ['data' => $data, 'cardsArray' => $cardsArray], function ($message) use ($shipToEmail, $shipToName) {
-                    $message->to($shipToEmail, $shipToName)->subject('Amazepays - You Received A Gift Card');
+                    $message->to($shipToEmail, $shipToName)->subject(config('companyDefaultValues.gift_subject'));
                 });
             }
 

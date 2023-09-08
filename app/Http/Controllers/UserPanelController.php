@@ -100,7 +100,9 @@ class UserPanelController extends Controller
                 ];
             } else {
                 // If authentication using password fails, try OTP validation
-                return $this->validateOtp($request);
+                return $data = [
+                'status' => 401,
+            ];
             }
 
             return response()->json($data);

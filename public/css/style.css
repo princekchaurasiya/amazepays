@@ -12595,11 +12595,7 @@ strong,
   text-align: center;
   letter-spacing: 0.4px;
 }
-@media only screen and (max-width: 992px) {
-  .header-wrapper .header-btn {
-    display: none;
-  }
-}
+
 .header-wrapper .nav-menu {
   display: inline-block;
   float: left;

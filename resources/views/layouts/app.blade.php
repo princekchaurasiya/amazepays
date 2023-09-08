@@ -41,13 +41,14 @@
                                 <li class="list-inline-item pl-0"><a href="#">(+1)866-540-3229</a></li>
                             </ul>
                         </div>
-                        <div class="col-md-6 col-xs-6 d-none d-block-md">
-                            <ul class="list-inline list-item-style mt-0 float-right">
-                                <li class="list-inline-item"><a href="#"><i class="ti-user mr-2"></i> My
-                                        Account</a>
-                                </li>
-                            </ul>
-                        </div>
+                        @if (auth()->check())
+                            <div class="col-md-6 col-xs-6 d-none d-block-md">
+                                <ul class="list-inline list-item-style mt-0 float-right">
+                                    <li class="list-inline-item"><a href="#"><i class="ti-user mr-2"></i> My Account</a></li>
+                                </ul>
+                            </div>
+                        @endif
+
                         <div class="col-12 d-none d-lg-block">
                             <ul class="list-inline list-item-style mt-0 float-left pl-1">
                                 {{--
@@ -773,22 +774,27 @@
                         },
                         dataType: 'json',
                         success: function(response) {
-                    if (response.status === 'success') {
-                        // OTP verification successful, redirect the user or show a success message
-                        window.location.href = '/'; // Redirect to the desired page
-                    } else if (response.status === 'error' && response.message === 'Invalid Mobile Number') {
-                        // Invalid mobile number
-                        $('.error-loginMobNumb').text('Invalid mobile number. Please try again.');
-                    } else if (response.status === 'error' && response.message === 'Invalid OTP.') {
-                        // Invalid OTP
-                        $('.error-otpVerifyInput').text('Invalid OTP. Please try again.');
-                    } else if (response.status === 'error' && response.message === 'OTP has expired.') {
-                        // OTP has expired
-                        $('.error-otpVerifyInput').text('OTP has expired. Please request a new OTP.');
-                        // Show the "Resend OTP" button
-                        $('#resendOtpButton').show();
-                    }
-                },
+                            if (response.status === 'success') {
+                                // OTP verification successful, redirect the user or show a success message
+                                window.location.href = '/'; // Redirect to the desired page
+                            } else if (response.status === 'error' && response.message ===
+                                'Invalid Mobile Number') {
+                                // Invalid mobile number
+                                $('.error-loginMobNumb').text(
+                                    'Invalid mobile number. Please try again.');
+                            } else if (response.status === 'error' && response.message ===
+                                'Invalid OTP.') {
+                                // Invalid OTP
+                                $('.error-otpVerifyInput').text('Invalid OTP. Please try again.');
+                            } else if (response.status === 'error' && response.message ===
+                                'OTP has expired.') {
+                                // OTP has expired
+                                $('.error-otpVerifyInput').text(
+                                    'OTP has expired. Please request a new OTP.');
+                                // Show the "Resend OTP" button
+                                $('#resendOtpButton').show();
+                            }
+                        },
                         error: function() {
                             // AJAX request failed, show the error message
                             $('.error-otpVerifyInput').text(

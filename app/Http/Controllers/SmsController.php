@@ -115,12 +115,12 @@ class SmsController extends Controller
 
                     default:
                         // Handle other cases or unexpected status codes
-                        return response()->json(['status' => 'error', 'error_code' => 'unknown', 'message' => 'Failed to send OTP']);
+                        return response()->json(['status' => 'error', 'error_code' => '500', 'message' => 'Internal Server Error']);
                 }
             } else {
                 // Error occurred while sending OTP
                 \Log::error('API Request Failed:', ['response' => $response->body()]);
-                return response()->json(['status' => 'error', 'error_code' => 'unknown', 'message' => 'Failed to send OTP']);
+                return response()->json(['status' => 'error', 'error_code' => '503', 'message' => 'Service Unavailable']);
             }
         }
     }

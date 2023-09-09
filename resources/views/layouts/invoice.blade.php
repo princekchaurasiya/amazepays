@@ -140,13 +140,13 @@
             <td style="text-align: left; padding-left: 16px;">{{ $cardProductName }}</td>
             <td style="text-align: left; padding-left: 16px;">{{ $perOrderQuantity }}</td>
             <td style="text-align: left; padding-left: 16px;">{{ $perOrderPrice }}</td>
-            <td style="text-align: left; padding-left: 16px;">10%</td>
+            <td style="text-align: left; padding-left: 16px;">-</td>
             <td style="text-align: left; padding-left: 16px;">{{ $order_amount }}</td>
         </tr>
 
         <tr>
             <td colspan="2" style="text-align: left; padding-left: 16px;">Total Amount: {{ $order_amount }}</td>
-            <td colspan="2" style="text-align: left; padding-left: 16px;">Total Discount: 10%</td>
+            <td colspan="2" style="text-align: left; padding-left: 16px;">Total Discount: - </td>
             <td colspan="2" style="font-weight: 600; text-align: left; padding-left: 16px;">Gross Amount after Discount: {{ $order_amount }}</td>
         </tr>
         

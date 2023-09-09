@@ -6,8 +6,8 @@ Amazepay | Contact
 
 
 <div class="section">
-            <div id="map" class="rounded-lg overflow-hidden" style="height: 500px;"></div>
-                <script src="//maps.googleapis.com/maps/api/js?key=AIzaSyCOdKtT5fapH3_OfhV3HFeZjqFs4OfNIew&callback=mapinitialize" type="text/javascript"></script>
+            <div id="map" class="rounded-lg overflow-hidden" style="height: 150px;"></div>
+                {{-- <script src="//maps.googleapis.com/maps/api/js?key=AIzaSyCOdKtT5fapH3_OfhV3HFeZjqFs4OfNIew&callback=mapinitialize" type="text/javascript"></script>
                 <script type="text/javascript">
                     function mapinitialize() {
                         var latlng = new google.maps.LatLng(-33.86938,151.104000);
@@ -43,7 +43,7 @@ Amazepay | Contact
                             
                     }
                     mapinitialize();
-                </script>
+                </script> --}}
             </div>
         </div>
 
@@ -87,13 +87,14 @@ Amazepay | Contact
                                 
                                 <!-- <i class="fa-solid fa-map-location-dot font-md float-left mr-3 contact-us"></i> -->
                                 <h4 class="text-grey-900 fw-600 font-xl ls-2">Address</h4>
-                                <h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">Second floor Satwant villa 2 Aarey Road, <br/>next to Goregaon, railway subway, Goregaon West, <br/>Mumbai, Maharashtra 400063</h4>
+                                <h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">98-103, 4 Floor, Aditya Industrial Estate Co-op Premises Ltd Mindspace Behind Evershine 
+                                    Mall Off Link Road Malad (West)  <br/>Mumbai, Maharashtra 400064</h4>
                             </div>
 
                             <div class="col-lg-4 col-md-4 md-mb25">
                                 <!-- <i class="fa-solid fa-map-location-dot font-md float-left mr-3 contact-us"></i> -->
                                 <h4 class="text-grey-900 fw-600 font-xl ls-2">Email Us</h4>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4 mb-0">amazeindia31@gmail.com</h5>
+                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4 mb-0">support@amazepay.in</h5>
                             </div>
 
                             <div class="col-lg-4 col-md-4 md-mb25">

@@ -157,8 +157,8 @@
                                     <!-- <a href="index.html" class="logo"><img src="images/logo.png" alt="logo"></a> -->
                                     <a href="/" class="logo"><img src="{{ asset('images/logo.png') }}"
                                             alt="logo" class="custLogo"></a>
-                                    <p class="w-100 mt-lg-5 mt-4">293/2330,Ashirwad CHS Ltd.<br /> Motilal Nagar,
-                                        M.G.Road, Opp. Ganesh Maidan, Goregoan (West) <br /> Mumbai – 400104
+                                    <p class="w-100 mt-lg-5 mt-4">98-103, 4 Floor, Aditya Industrial Estate Co-op Premises Ltd<br /> Mindspace Behind Evershine 
+                                        Mall Off Link Road Malad West <br /> Mumbai -400064.
                                     </p>
                                 </div>
                                 <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
@@ -181,8 +181,8 @@
                                 </div>
                                 <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
                                     <h5 class="mb-3">Office</h5>
-                                    <p style="width: 100%;">293/2330,Ashirwad CHS Ltd., Motilal Nagar, M.G.Road, Opp.
-                                        Ganesh Maidan, Goregoan (West), Mumbai – 400104
+                                    <p style="width: 100%;">98-103, 4 Floor, Aditya Industrial Estate Co-op Premises Ltd Mindspace Behind Evershine 
+                                        Mall Off Link Road Malad (West) Mumbai 400064.
                                     </p>
                                 </div>
                                 <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6 md-mb25">

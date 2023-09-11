@@ -3,7 +3,7 @@
 
 	error_reporting(0);
 	
-	$workingKey=config('auth.working_key');		//Working Key should be provided here.
+	$workingKey=config('paymentconfig.working_key');		//Working Key should be provided here.
 	$encResponse=$_POST["encResp"];			//This is the response sent by the CCAvenue Server
 	$rcvdString=decryptCCAvenue($encResponse,$workingKey);		//Crypto Decryption used as per the specified working key.
 	$order_status="";

@@ -25,7 +25,7 @@
 					<td>TID	:</td><td><input type="text" name="tid" id="tid" readonly /></td>
 				</tr>
 				<tr>
-					<td>Merchant Id	:</td><td><input type="text" name="merchant_id" value="{{config('auth.merchant_id')}}"/></td>
+					<td>Merchant Id	:</td><td><input type="text" name="merchant_id" value="{{config('paymentconfig.merchant_id')}}"/></td>
 				</tr>
 				<tr>
 					<td>Order Id	:</td><td><input type="text" name="order_id" value="123654789"/></td>
@@ -235,7 +235,7 @@
 	 	6)error -  This parameter will enable you to troubleshoot any configuration related issues. It will provide error description.
 	 */	  
   	  var jsonData;
-  	  var access_code="{{config('auth.access_code')}}"; // shared by CCAVENUE 
+  	  var access_code="{{config('paymentconfig.access_code')}}"; // shared by CCAVENUE 
 	  var amount="6000.00";
   	  var currency="INR";
   	  

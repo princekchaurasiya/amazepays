@@ -250,7 +250,7 @@ class UserPanelController extends Controller
             $userOrder->is_gifted = session::get('gift_send_option') == 'send_as_gift' ? 1 : 0;
             $userOrder->save();
             $request['order_id'] = $status['orderId'];
-            $request['merchant_id'] = config('auth.merchant_id');
+            $request['merchant_id'] = config('paymentconfig.merchant_id');
             $data = $request->all();
             $allSessionData = session()->all();
 

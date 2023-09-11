@@ -92,8 +92,9 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', 'it@amazepays.in'),
+        'name' => env('MAIL_FROM_NAME', '
+Frenetic India Services Private Limited '),
     ],
 
     /*

@@ -147,3 +147,4 @@ Route::get('/export', [PaymentDetailsExportController::class, 'export']);
 
 
 
+// Route::get('/send-test-sms', [SmsController::class, 'sendTestSms'])->name('send-test-sms');

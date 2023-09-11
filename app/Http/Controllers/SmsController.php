@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Response;
 use Config;
 use App\Models\User;
+use Mail;
 
 class SmsController extends Controller
 {
@@ -124,4 +125,19 @@ class SmsController extends Controller
             }
         }
     }
+    // public function sendTestSms(Request $request)
+    // {
+    //     $email = 'chp9876@gmail.com'; // Replace with the recipient's email
+
+    //     // Send the test email
+    //     Mail::send(['html' => 'layouts.testMail'], [], function ($message) use ($email) {
+    //         $message
+    //             ->to($email)
+    //             ->subject('Test Email Subject');
+    //     });
+
+    //     // Email sent successfully
+    //     return 'Test email sent successfully!';
+    // }
+    
 }

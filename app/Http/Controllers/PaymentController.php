@@ -122,7 +122,7 @@ class PaymentController extends Controller
 
     public function responseCcavenue(Request $request)
     {
-        $workingKey = config('auth.working_key');
+        $workingKey = config('paymentconfig.working_key');
         $encResponse = $request->encResp; //This is the response sent by the CCAvenue Server
         $rcvdString = $this->decrypt($encResponse, $workingKey); //Crypto Decryption used as per the specified working key.
         $order_status = '';

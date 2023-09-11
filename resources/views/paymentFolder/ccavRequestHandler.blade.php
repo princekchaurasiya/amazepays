@@ -11,8 +11,8 @@
         error_reporting(0);
 
         $merchant_data = '';
-        $working_key = config('auth.working_key'); // Shared by CCAVENUES
-        $access_code = config('auth.access_code'); // Shared by CCAVENUES
+        $working_key = config('paymentconfig.working_key'); // Shared by CCAVENUES
+        $access_code = config('paymentconfig.access_code'); // Shared by CCAVENUES
 
         foreach ($data as $key => $value) {
             $merchant_data .= $key . '=' . urlencode($value) . '&';

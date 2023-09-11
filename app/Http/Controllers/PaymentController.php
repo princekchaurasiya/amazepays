@@ -311,7 +311,7 @@ class PaymentController extends Controller
            
             // dd(config('companyDefaultValues.comapny_email'));
             // here we are directly sending data so we will be able to access directly values by using key in balde file
-            Mail::send(['html' => 'layouts.mail'], $data, function ($message) use ($email, $name, $pdf) {
+            Mail::send(['html' => 'layouts.mail'], $data , function ($message) use ($email, $name, $pdf) {
                 $message
                     ->to($email, $name)
                     ->subject(config('companyDefaultValues.default_subject'))

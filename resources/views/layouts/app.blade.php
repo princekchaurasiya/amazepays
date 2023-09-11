@@ -140,6 +140,9 @@
                                 <a href="#"
                                     class="header-btn bg-current fw-500 text-white font-xssss register-form"
                                     data-toggle="modal" data-target="#ModalregisterD">Register</a>
+                                    {{-- <a href="{{ route('send-test-sms') }}" class="header-btn bg-current fw-500 text-white font-xssss">Send SMS</a> --}}
+
+
                             @endif
                         </div>
                     </div>
@@ -157,7 +160,8 @@
                                     <!-- <a href="index.html" class="logo"><img src="images/logo.png" alt="logo"></a> -->
                                     <a href="/" class="logo"><img src="{{ asset('images/logo.png') }}"
                                             alt="logo" class="custLogo"></a>
-                                    <p class="w-100 mt-lg-5 mt-4">98-103, 4 Floor, Aditya Industrial Estate Co-op Premises Ltd<br /> Mindspace Behind Evershine 
+                                    <p class="w-100 mt-lg-5 mt-4">98-103, 4 Floor, Aditya Industrial Estate Co-op
+                                        Premises Ltd<br /> Mindspace Behind Evershine
                                         Mall Off Link Road Malad West <br /> Mumbai -400064.
                                     </p>
                                 </div>
@@ -181,7 +185,8 @@
                                 </div>
                                 <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
                                     <h5 class="mb-3">Office</h5>
-                                    <p style="width: 100%;">98-103, 4 Floor, Aditya Industrial Estate Co-op Premises Ltd Mindspace Behind Evershine 
+                                    <p style="width: 100%;">98-103, 4 Floor, Aditya Industrial Estate Co-op Premises
+                                        Ltd Mindspace Behind Evershine
                                         Mall Off Link Road Malad (West) Mumbai 400064.
                                     </p>
                                 </div>

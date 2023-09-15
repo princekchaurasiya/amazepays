@@ -38,6 +38,7 @@ return [
     'generated_otp' => $otp,
     'sms_message' => $sms_message,
     'otpExpiration' => $otpExpiration,
+    'sendMailFrom' => 'it@amazepays.in',
 ];
 
 ?>

@@ -13,6 +13,7 @@ use App\Http\Controllers\SmsController;
 use App\Http\Controllers\OtpLoginController;
 use App\Http\Controllers\OtpVerificationController;
 use App\Http\Controllers\PaymentDetailsExportController;
+use App\Http\Controllers\ProfileController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -152,3 +153,5 @@ Route::get('/export', [PaymentDetailsExportController::class, 'export']);
 Route::get('/error', function () {
     return view('userpanel.wentWrong');
 })->name('error');
+
+Route::post('/update-profile', [ProfileController::class, 'update'])->name('update-profile');

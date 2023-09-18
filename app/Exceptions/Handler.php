@@ -38,4 +38,15 @@ class Handler extends ExceptionHandler
             //
         });
     }
+
+    public function render($request, Throwable $exception)
+    {
+        // Check if it's a general exception (not specifically handled)
+        if (!($exception instanceof \Symfony\Component\HttpKernel\Exception\HttpException)) {
+            return response()->view('userpanel.wentWrong', [], 500);
+        }
+
+        return parent::render($request, $exception);
+    }
+    
 }

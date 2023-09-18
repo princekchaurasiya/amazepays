@@ -12501,7 +12501,7 @@ strong,
 .header-wrapper {
   padding: 20px 0;
   background-color: transparent;
-  box-shadow: 1px 1px 1px 1px rgb(237 237 237) !important;
+  box-shadow: 1px 1px 1px 1px rgba(237, 237, 237, 1) !important;
 }
 .header-wrapper.b-bottom {
   border-bottom: 3px solid var(--theme-color);
@@ -12974,7 +12974,7 @@ strong,
 }
 
 .banner-wrapper.style1 {
-  height: 500px;
+ 
   position: relative;
   background-size: cover;
   background-position: top 0px center;

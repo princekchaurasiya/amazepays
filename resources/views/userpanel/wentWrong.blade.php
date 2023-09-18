@@ -15,7 +15,7 @@
                 <br>
     <p>We apologize, but something went wrong while processing your request.
     <br>
-    Please try again later or contact our support team for assistance.</p>
+    Please try again later </p>
     <p><a href="/">Back to Home</a></p>
             </div>
         </div>

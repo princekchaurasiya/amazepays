@@ -19,17 +19,17 @@
           <div class="carousel-inner">
             <!-- Slide 1 -->
             <div class="carousel-item active">
-              <img src="{{ asset('images/Amazepay-banner-1.png') }}" alt="Amazepay Banner 1" class="d-block w-100">
+              <img src="{{ asset('images/amazepay-desk-4.png') }}" alt="Amazepay Banner 1" class="d-block w-100">
             </div>
       
             <!-- Slide 2 -->
             <div class="carousel-item">
-              <img src="{{ asset('images/Amazepay-banner-2.png') }}" alt="Amazepay Banner 2" class="d-block w-100">
+              <img src="{{ asset('images/amazepay-desk-5.png') }}" alt="Amazepay Banner 2" class="d-block w-100">
             </div>
       
             <!-- Slide 3 -->
             <div class="carousel-item">
-              <img src="{{ asset('images/Amazepay-banner-3.png') }}" alt="Amazepay Banner 3" class="d-block w-100">
+              <img src="{{ asset('images/amazepay-desk-6.png') }}" alt="Amazepay Banner 3" class="d-block w-100">
             </div>
           </div>
       
@@ -57,17 +57,17 @@
           <div class="carousel-inner">
             <!-- Slide 1 -->
             <div class="carousel-item active">
-              <img src="{{ asset('images/amazepay-mob-banner-1.png') }}" alt="Mobile Banner 1" class="d-block w-100">
+              <img src="{{ asset('images/amazepay-mob-4.png') }}" alt="Mobile Banner 1" class="d-block w-100">
             </div>
       
             <!-- Slide 2 -->
             <div class="carousel-item">
-              <img src="{{ asset('images/amazepay-mob-banner-2.png') }}" alt="Mobile Banner 2" class="d-block w-100">
+              <img src="{{ asset('images/amazepay-mob-5.png') }}" alt="Mobile Banner 2" class="d-block w-100">
             </div>
       
             <!-- Slide 3 -->
             <div class="carousel-item">
-              <img src="{{ asset('images/amazepay-mob-banner-3.png') }}" alt="Mobile Banner 3" class="d-block w-100">
+              <img src="{{ asset('images/amazepay-mob-6.png') }}" alt="Mobile Banner 3" class="d-block w-100">
             </div>
           </div>
       
@@ -87,23 +87,23 @@
     <!-- banner wrapper -->
 
 
-    <div class="product-wrapper pt-lg--7 pt-5 pb-lg--7 pb-5">
+    <div class="product-wrapper  pt-5 pb-5">
         <div class="container">
             <div class="row">
-                <div class="col-lg-6 col-xs-6">
-                    <h2 class="text-grey-900 fw-700 font-xxl pb-0 mb-4 d-block text-left">{{ $getCategory->name }}</h2>
+                <div class="col-12">
+                    <h2 class="text-grey-900 fw-700 font-sm pb-0 mb-4 d-block text-left">{{ $getCategory->name }}</h2>
                 </div>
-                <div class="col-lg-6 col-xs-6">
+                {{-- <div class="col-4">
                     <a href="{{ route('view-all-product') }}" class="fw-600 font-xsss text-current d-block text-right">View
                         More <i class="ti-angle-right font-xssss"></i></a>
-                </div>
+                </div> --}}
             </div>
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="row">
+                    <div class="row justify-content-center ">
                         <!-- loop product here -->
                         @foreach ($allProducts as $product)
-                            <div class="col-lg-3 bg-white p-3 border">
+                            <div class="col-lg-2 m-2 col-5 p-3 border ">
 
                                 {{-- <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4> --}}
                                 <a href="{{ route('get-product-sku', ['slug' => $product->sku]) }}"

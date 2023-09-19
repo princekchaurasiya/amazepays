@@ -13,8 +13,7 @@
                 <h1>Something Went Wrong</h1>
                 
                 <br>
-    <p>We apologize, but something went wrong while processing your request.
-    <br>
+    <p>
     Please try again later </p>
     <p><a href="/">Back to Home</a></p>
             </div>

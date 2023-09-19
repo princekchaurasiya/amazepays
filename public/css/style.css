@@ -15324,13 +15324,9 @@ body {
     padding: 0;
   }
 
-  .pt-lg--7 {
-    padding-top: 75px !important;
-  }
+  
 
-  .pb-lg--7 {
-    padding-bottom: 75px !important;
-  }
+  
 
   .pt-lg--10 {
     padding-top: 125px !important;
@@ -15755,7 +15751,7 @@ body {
  }
 
  .custLogo{
-  max-height: 80px !important;
+  max-height: 60px !important;
  }
 
  
@@ -15873,3 +15869,79 @@ body {
   text-decoration: underline;
   background-color: transparent !important;
 }
+
+.navbar-mobile{
+  position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.custMobLogo{
+  margin-left: 20px;
+}
+
+/* Hide the side navigation bar off-screen */
+.sidenav {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  top: 0;
+  left: -250px; /* Start off-screen */
+  z-index: 1;
+  background-color: #fff; /* Adjust background color as needed */
+  overflow-x: hidden;
+  transition: 0.5s;
+}
+
+/* Style for the side navigation links */
+.sidenav-list {
+  list-style: none;
+  padding: 0;
+}
+
+.sidenav-item {
+  margin: 0;
+}
+
+.sidenav-link {
+  padding: 10px 15px;
+  text-decoration: none;
+  font-size: 18px;
+  color: #333; /* Adjust text color as needed */
+  display: block;
+  transition: 0.3s;
+}
+
+/* When the side navigation bar is open, push the content to the right */
+.navbar.collapsed + .sidenav {
+  width: 250px; /* Adjust width as needed */
+  left: 0;
+}
+
+
+.close-sideNav-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: transparent;
+  border: none;
+  color: #333; /* Adjust color as needed */
+  font-size: 24px;
+  cursor: pointer;
+}
+
+/* Add this CSS code to your stylesheet */
+.user-profile {
+  position: absolute;
+  top: 0;
+  right: 20px; /* Adjust the right distance as needed */
+}
+
+.user-profile .profile-link {
+  font-size: 34px;
+  color: #333; /* Adjust the color as needed */
+  text-decoration: none;
+}
+

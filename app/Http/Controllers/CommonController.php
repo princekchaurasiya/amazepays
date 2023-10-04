@@ -6,9 +6,12 @@ use Illuminate\Support\Facades\Http;
 use Carbon;
 use DB;
 use App\QsCategory;
+use App\Models\QsOrder;
 use App\QsProduct;
+use App\Jobs\StatusCheckJob;
 use Illuminate\Support\Facades\Log;
 use View;
+use App\Helpers\CommonHelper;
 
 class CommonController extends Controller
 {
@@ -55,72 +58,69 @@ class CommonController extends Controller
     // }
 
     // keep this function in helper call
-    function generateSignature($requestBody = null, $requestHttpMethod, $absApiUrl, $clientSecret)
-    {
-        $requestBody = $requestBody;
+    // function generateSignature($requestBody = null, $requestHttpMethod, $absApiUrl, $clientSecret)
+    // {
+    //     $requestBody = $requestBody;
+    //     $requestHttpMethod = $requestHttpMethod;
+    //     $absApiUrl = $absApiUrl;
+    //     $clientSecret = $clientSecret;
 
-        $requestHttpMethod = $requestHttpMethod;
+    //     function sortParams(array &$params)
+    //     {
+    //         ksort($params);
+    //         foreach ($params as $key => &$value) {
+    //             $value = is_object($value) ? (array) $value : $value;
+    //             if (is_array($value)) {
+    //                 sortParams($value);
+    //             }
+    //         }
+    //     }
 
-        $absApiUrl = $absApiUrl;
+    //     function sortQueryParams($queryParam)
+    //     {
+    //         $query = explode('&', $queryParam);
+    //         asort($query, SORT_STRING);
+    //         return implode('&', $query);
+    //     }
 
-        $clientSecret = $clientSecret;
+    //     function getConcatenateBaseString($absApiUrl, $requestHttpMethod, $requestBody)
+    //     {
+    //         $baseStrings = [];
+    //         $baseStrings[] = strtoupper($requestHttpMethod);
+    //         $url = explode('?', $absApiUrl);
+    //         $apiUrl = $url[0];
+    //         if (isset($url[1])) {
+    //             $baseStrings[] = rawurlencode($apiUrl . '?' . sortQueryParams($url[1]));
+    //         } else {
+    //             $baseStrings[] = rawurlencode($apiUrl);
+    //         }
 
-        function sortParams(array &$params)
-        {
-            ksort($params);
-            foreach ($params as $key => &$value) {
-                $value = is_object($value) ? (array) $value : $value;
-                if (is_array($value)) {
-                    sortParams($value);
-                }
-            }
-        }
+    //         if ($requestBody) {
+    //             $jsonDecodedRequestBody = json_decode($requestBody, true);
+    //             sortParams($jsonDecodedRequestBody);
+    //             $baseStrings[] = rawurlencode(json_encode($jsonDecodedRequestBody, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    //         }
+    //         return implode('&', $baseStrings);
+    //     }
 
-        function sortQueryParams($queryParam)
-        {
-            $query = explode('&', $queryParam);
-            asort($query, SORT_STRING);
+    //     //echo hash_hmac('sha512', getConcatenateBaseString($absApiUrl, $requestHttpMethod, $requestBody), $clientSecret);
+    //     return hash_hmac('sha512', getConcatenateBaseString($absApiUrl, $requestHttpMethod, $requestBody), $clientSecret);
+    // }
 
-            return implode('&', $query);
-        }
-
-        function getConcatenateBaseString($absApiUrl, $requestHttpMethod, $requestBody)
-        {
-            $baseStrings = [];
-
-            $baseStrings[] = strtoupper($requestHttpMethod);
-            $url = explode('?', $absApiUrl);
-            $apiUrl = $url[0];
-            if (isset($url[1])) {
-                $baseStrings[] = rawurlencode($apiUrl . '?' . sortQueryParams($url[1]));
-            } else {
-                $baseStrings[] = rawurlencode($apiUrl);
-            }
-
-            if ($requestBody) {
-                $jsonDecodedRequestBody = json_decode($requestBody, true);
-                sortParams($jsonDecodedRequestBody);
-                $baseStrings[] = rawurlencode(json_encode($jsonDecodedRequestBody, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-            }
-
-            return implode('&', $baseStrings);
-        }
-
-        //echo hash_hmac('sha512', getConcatenateBaseString($absApiUrl, $requestHttpMethod, $requestBody), $clientSecret);
-        return hash_hmac('sha512', getConcatenateBaseString($absApiUrl, $requestHttpMethod, $requestBody), $clientSecret);
-    }
-
+    //category api should be called once and stored in database for further uses
     public function getCategory()
     {
         try {
+            // $categoryId = 121;
             $requestBody = '';
             $requestHttpMethod = 'get';
-            $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/catalog/categories';
+            $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/catalog/categories/';
+            // $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/catalog/categories/' . $categoryId;
+            // dd($absApiUrl);
             $clientSecret = setting('api.qs_clientSecret');
             $bearerToken = setting('api.bearer_token');
-            $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
-            //dd($signature);
-
+            $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+            // dd($signature);
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
 
             // Sending a GET request to retrieve categories from an API
@@ -130,10 +130,8 @@ class CommonController extends Controller
                     'dateAtClient' => $dateAtClient,
                     'signature' => $signature,
                 ])
-                ->get('https://sandbox.woohoo.in/rest/v3/catalog/categories');
-
-            // dd($category_resp);
-
+                ->get($absApiUrl);
+            // dd($category_resp->body());
             if ($category_resp->status == 200) {
                 // If the API response status is 200, save category data into the database
                 $category_resp = $category_resp->json($key = null);
@@ -158,26 +156,29 @@ class CommonController extends Controller
         }
     }
 
-    public function getProducts()
+    //product api should be called once and stored in database for further uses
+    public function getProductList()
     {
         try {
             // Retrieve the ID of the first category from the 'qs_categories' table
+            $qsCat = QsCategory::all();
             $qsCat = QsCategory::pluck('id')->first();
+            // $qsCat =122;
             // dd($qsCat);
-
             // Initialize variables for API request
             $requestBody = '';
             $requestHttpMethod = 'get';
 
             // Create the API URL to retrieve products of a specific category
             $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/catalog/categories/' . $qsCat . '/products';
+            // dd($absApiUrl);
 
             // Get client secret and bearer token from settings
             $clientSecret = setting('api.qs_clientSecret');
             $bearerToken = setting('api.bearer_token');
 
             // Generate a signature for the API request
-            $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+            $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
 
             // Get the current time in ISO8601 format
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
@@ -189,7 +190,7 @@ class CommonController extends Controller
                     'dateAtClient' => $dateAtClient,
                     'signature' => $signature,
                 ])
-                ->get('https://' . setting('api.woohoo_url') . '/rest/v3/catalog/categories/' . $qsCat . '/products');
+                ->get($absApiUrl);
             $responseBody = $products_resp->body();
             // dd($responseBody);
 
@@ -199,7 +200,7 @@ class CommonController extends Controller
             if ($products_resp->status() == 200) {
                 // Extract the list of products from the API response
                 $collection = collect($products_resp->json($key = null)['products']);
-
+                // dd( $collection);
                 // Process each product item in the collection
                 $collection->map(function ($item, $key) use ($qsCat) {
                     // Define the data to be inserted or updated in the 'qs_products' table
@@ -233,22 +234,26 @@ class CommonController extends Controller
         }
     }
 
+    //prodcut list api for woohoo should be called once only
     public function getProductbySKU(Request $request)
     {
         try {
             // Initialize variables for API request
+
+            // $request->slug ="my-random-slug";
             $requestBody = '';
             $requestHttpMethod = 'get';
 
             // Create the API URL to retrieve product details by SKU
             $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/catalog/products/' . $request->slug;
+            // dd($absApiUrl);
 
             // Get client secret and bearer token from settings
             $clientSecret = setting('api.qs_clientSecret');
             $bearerToken = setting('api.bearer_token');
 
             // Generate a signature for the API request
-            $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+            $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
 
             // Get the current time in ISO8601 format
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
@@ -260,13 +265,12 @@ class CommonController extends Controller
                     'dateAtClient' => $dateAtClient,
                     'signature' => $signature,
                 ])
-                ->get('https://' . setting('api.woohoo_url') . '/rest/v3/catalog/products/' . $request->slug);
+                ->get($absApiUrl);
 
             $responseContent = $products_resp->getBody()->getContents();
 
             // Extract product details from the API response
             $prdtDetails = $products_resp->json();
-
             // dd($prdtDetails);
 
             // Define data to be inserted or updated in the database
@@ -328,83 +332,91 @@ class CommonController extends Controller
     }
 
     // wohoo ordercard api call integration
-    public function orderCard()
-    {
-        // Create the request body with required information for placing an order
-        $body = '{
-            "address":
-            {
-                "firstname":"kevin",
-                "lastname":"",
-                "email":"kevin.toutle@gmail.com",
-                "telephone":"+918652868765",
-                "line1":"86/80",
-                "line2":"goregaon",
-                "city":"mumbai",
-                "region":"maharashtra",
-                "country":"IN",
-                "postcode":"400104",
-                "languages":"Hind",
-                "billToThis":true
-            },
-            "billing": {
-                "firstname":"kevin",
-                "lastname":"",
-                "email":"kevin.toutle@gmail.com",
-                "telephone":"+918652868765",
-                "line1":"86/80",
-                "line2":"goregaon",
-                "city":"mumbai",
-                "region":"maharashtra",
-                "country":"IN",
-                "postcode":"400104",
-                "languages":"Hind",
-                "billToThis":true
-            },
-            "payments":
-            [
-                {
-                    "code":"svc",
-                    "amount":1000 //take from selected front end
-                }
-            ],
-            "refno":"CLA3747408489",
-            "products":
-            [
-                {"sku":"CNPIN","price":1000,"qty":1,"currency":356}
-            ],
-            "syncOnly":true,
-            "delivery_mode":"API"
-        }';
+    // public function orderCard()
+    // {
+    //     // Create the request body with required information for placing an order
+    //     $body = '{
+    //         "address":
+    //         {
+    //             "firstname":"kevin",
+    //             "lastname":"",
+    //             "email":"kevin.toutle@gmail.com",
+    //             "telephone":"+918652868765",
+    //             "line1":"86/80",
+    //             "line2":"goregaon",
+    //             "city":"mumbai",
+    //             "region":"maharashtra",
+    //             "country":"IN",
+    //             "postcode":"400104",
+    //             "languages":"Hind",
+    //             "billToThis":true
+    //         },
+    //         "billing": {
+    //             "firstname":"kevin",
+    //             "lastname":"",
+    //             "email":"kevin.toutle@gmail.com",
+    //             "telephone":"+918652868765",
+    //             "line1":"86/80",
+    //             "line2":"goregaon",
+    //             "city":"mumbai",
+    //             "region":"maharashtra",
+    //             "country":"IN",
+    //             "postcode":"400104",
+    //             "languages":"Hind",
+    //             "billToThis":true
+    //         },
+    //         "payments":
+    //         [
+    //             {
+    //                 "code":"svc",
+    //                 "amount":1000 //take from selected front end
+    //             }
+    //         ],
+    //         "refno":"CLA3747408489",
+    //         "products":
+    //         [
+    //             {"sku":"CNPIN","price":1000,"qty":1,"currency":356}
+    //         ],
+    //         "syncOnly":true,
+    //         "delivery_mode":"API"
+    //     }';
 
-        $requestBody = $body;
-        $requestHttpMethod = 'post';
-        $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/orders';
-        $clientSecret = setting('api.qs_clientSecret');
-        $bearerToken = setting('api.bearer_token');
-        $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+    //     $requestBody = $body;
+    //     $requestHttpMethod = 'post';
+    //     $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/orders';
+    //     $clientSecret = setting('api.qs_clientSecret');
+    //     $bearerToken = setting('api.bearer_token');
+    //     $signature = $this->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
 
-        $response = Http::acceptJson()
-            ->withToken($bearerToken)
-            ->withHeaders([
-                'dateAtClient' => $dateAtClient,
-                'signature' => $signature,
-            ])
-            ->send('POST', 'https://sandbox.woohoo.in/rest/v3/orders', [
-                'body' => $body,
-            ])
-            ->get();
+    //     $response = Http::acceptJson()
+    //         ->withToken($bearerToken)
+    //         ->withHeaders([
+    //             'dateAtClient' => $dateAtClient,
+    //             'signature' => $signature,
+    //         ])
+    //         ->send('POST', 'https://sandbox.woohoo.in/rest/v3/orders', [
+    //             'body' => $body,
+    //         ])
+    //         ->get();
 
-        // dd($response);
-        // if($token_resp->status() == 200){
-        //     // save token  into database
-        //     DB::table('settings')->updateOrInsert(['display_name' => 'Bearer Token'],['value' => $token_resp->json()['token']]);
-        //     return json_encode(["status"=>$token_resp->status(), "data"=>$token_resp->json()['token']]);
-        // } else {
+    //     // dd($response);
+    //     // if($token_resp->status() == 200){
+    //     //     // save token  into database
+    //     //     DB::table('settings')->updateOrInsert(['display_name' => 'Bearer Token'],['value' => $token_resp->json()['token']]);
+    //     //     return json_encode(["status"=>$token_resp->status(), "data"=>$token_resp->json()['token']]);
+    //     // } else {
 
-        //     return json_encode(["status"=>$token_resp->status(), "data"=>$token_resp->failed()]);
-        // }
+    //     //     return json_encode(["status"=>$token_resp->status(), "data"=>$token_resp->failed()]);
+    //     // }
+    // }
+
+    public function handleRetryAttempt($refno, $data, $orderId)
+    {   
+        
+        StatusCheckJob::dispatch($refno, $data, $orderId)->delay(now()->addSeconds(10));
     }
+
+    
 
     // {
     //     "address":

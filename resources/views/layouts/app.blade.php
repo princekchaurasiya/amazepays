@@ -117,10 +117,10 @@
                                     </ul>
                                 </li>
                             @else
-                                <a href="#" class="header-btn bg-dark fw-500 text-white font-xssss"
+                                <a href="#" class="header-btn bg-dark fw-500 text-white font-xssss login-button-color"
                                     data-toggle="modal" data-target="#Modallogin">Login</a>
                                 <a href="#"
-                                    class="header-btn bg-current fw-500 text-white font-xssss register-form"
+                                    class="header-btn bg-current fw-500 text-white font-xssss register-form register-button-color"
                                     data-toggle="modal" data-target="#ModalregisterD">Register</a>
                                 {{-- <a href="{{ route('send-test-sms') }}" class="header-btn bg-current fw-500 text-white font-xssss">Send
                         SMS</a> --}}

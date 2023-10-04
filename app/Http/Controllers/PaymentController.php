@@ -1,12 +1,12 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use Illuminate\Http\Request;
 use App\Ccavenuekit\ccavRequestHandler;
 use App\Ccavenuekit\ccavResponseHandler;
 use App\Ccavenuekit\crypto;
 use App\Http\Controllers\CommonController;
+use App\Http\Controllers\UserPanelController;
 use Illuminate\Support\Facades\Http;
 use Carbon;
 use GuzzleHttp\Client;
@@ -29,6 +29,14 @@ class PaymentController extends Controller
 * @param2 : Working key provided by CCAvenue
 * @return : Decrypted String
 */
+
+    protected $commonController;
+
+    public function __construct()
+    {
+        $this->commonController = new CommonController();
+    }
+
     function encrypt($plainText, $key)
     {
         $key = $this->hextobin(md5($key));
@@ -70,43 +78,6 @@ class PaymentController extends Controller
         }
         return $binString;
     }
-    public function processPayment(Request $request)
-    {
-        // Generate a unique order ID or transaction ID
-        // dd($request);
-
-        $orderId = uniqid();
-
-        // Get the form input values
-        $billingName = $request->input('billing_name');
-        $billingAddress = $request->input('billing_address');
-        $billingState = $request->input('billing_state');
-        $billingZipCode = $request->input('billing_zip');
-        $billingCountry = $request->input('billing_country');
-        $billingTelephone = $request->input('billing_tel');
-        $billingEmail = $request->input('billing_email');
-
-        // Prepare the data array for checksum calculation
-        $data = [
-            'merchant_id' => config('paymentconfig.merchant_id'),
-            'order_id' => $orderId,
-            'currency' => 'INR',
-            'amount' => '1', // Change this to the actual payment amount
-            'redirect_url' => route('payment-success'),
-            'cancel_url' => route('payment-failed'),
-            'language' => 'EN',
-            'billing_name' => $billingName,
-            'billing_address' => $billingAddress,
-            'billing_state' => $billingState,
-            'billing_zip' => $billingZipCode,
-            'billing_country' => $billingCountry,
-            'billing_tel' => $billingTelephone,
-            'billing_email' => $billingEmail,
-        ];
-
-        return view('paymentFolder.ccavRequestHandler', compact('data'));
-    }
-
     public function paymentSuccess()
     {
         return view('paymentFolder.payment-success');
@@ -123,14 +94,15 @@ class PaymentController extends Controller
     {
         $workingKey = config('paymentconfig.working_key');
         $encResponse = $request->encResp; //This is the response sent by the CCAvenue Server
-        $rcvdString = $this->decrypt($encResponse, $workingKey); //Crypto Decryption used as per the specified working key.
+        $rcvdString = $this->decrypt($encResponse, $workingKey);
+        // dd($rcvdString); //Crypto Decryption used as per the specified working key.
         $order_status = '';
         $decryptValues = explode('&', $rcvdString);
         $dataSize = sizeof($decryptValues);
 
         for ($i = 0; $i < $dataSize; $i++) {
             $information = explode('=', $decryptValues[$i]);
-            $data[] = [
+            $ccAvenueCollectedDataArray[] = [
                 $information[0] => $information[1],
             ];
             if ($i == 3) {
@@ -139,113 +111,118 @@ class PaymentController extends Controller
         }
 
         // cc avenue collected data
+        // dd($order_status );
+        $qsOrderDetails = QsOrder::where('order_id', $ccAvenueCollectedDataArray[0]['order_id'])->first();
+        Auth::loginUsingId($qsOrderDetails['user_id']);
+        $newCcAvenueOrder = new CcAvenuePayment();
 
-        $order_details = QsOrder::where('order_id', $data[0]['order_id'])->first();
-        Auth::loginUsingId($order_details['user_id']);
-
-        $userOrder = new CcAvenuePayment();
-        $userOrder->user_id = $order_details['user_id'];
-        $userOrder->order_id = $data[0]['order_id'];
-        $userOrder->tracking_id = $data[1]['tracking_id'];
-        $userOrder->bank_ref_no = $data[2]['bank_ref_no'];
-        $userOrder->order_status = $data[3]['order_status'];
-        $userOrder->failure_message = $data[4]['failure_message'];
-        $userOrder->payment_mode = $data[5]['payment_mode'];
-        $userOrder->card_name = $data[6]['card_name'];
-        $userOrder->status_code = $data[7]['status_code'];
-        $userOrder->status_message = $data[8]['status_message'];
-        $userOrder->currency = $data[9]['currency'];
-        $userOrder->amount = $data[10]['amount'];
-        $userOrder->billing_details = json_encode(
+        $newCcAvenueOrder->user_id = $qsOrderDetails['user_id'];
+        $newCcAvenueOrder->order_id = $ccAvenueCollectedDataArray[0]['order_id'];
+        $newCcAvenueOrder->tracking_id = $ccAvenueCollectedDataArray[1]['tracking_id'];
+        $newCcAvenueOrder->bank_ref_no = $ccAvenueCollectedDataArray[2]['bank_ref_no'];
+        $newCcAvenueOrder->order_status = $ccAvenueCollectedDataArray[3]['order_status'];
+        $newCcAvenueOrder->failure_message = $ccAvenueCollectedDataArray[4]['failure_message'];
+        $newCcAvenueOrder->payment_mode = $ccAvenueCollectedDataArray[5]['payment_mode'];
+        $newCcAvenueOrder->card_name = $ccAvenueCollectedDataArray[6]['card_name'];
+        $newCcAvenueOrder->status_code = $ccAvenueCollectedDataArray[7]['status_code'];
+        $newCcAvenueOrder->status_message = $ccAvenueCollectedDataArray[8]['status_message'];
+        $newCcAvenueOrder->currency = $ccAvenueCollectedDataArray[9]['currency'];
+        $newCcAvenueOrder->amount = $ccAvenueCollectedDataArray[10]['amount'];
+        $newCcAvenueOrder->billing_details = json_encode(
             $billing_details = [
-                'firstname' => $data[11]['billing_name'],
-                'email' => $data[18]['billing_email'],
-                'telephone' => '+91' . $data[17]['billing_tel'],
-                'line1' => $data[12]['billing_address'],
-                'city' => $data[13]['billing_city'],
-                'region' => $data[14]['billing_state'],
+                'firstname' => $ccAvenueCollectedDataArray[11]['billing_name'],
+                'email' => $ccAvenueCollectedDataArray[18]['billing_email'],
+                'telephone' => '+91' . $ccAvenueCollectedDataArray[17]['billing_tel'],
+                'line1' => $ccAvenueCollectedDataArray[12]['billing_address'],
+                'city' => $ccAvenueCollectedDataArray[13]['billing_city'],
+                'region' => $ccAvenueCollectedDataArray[14]['billing_state'],
                 'country' => 'IN',
-                'postcode' => $data[15]['billing_zip'],
+                'postcode' => $ccAvenueCollectedDataArray[15]['billing_zip'],
             ],
         );
-        // dd($data);
-        $userOrder->delivery_details = json_encode(
+        // dd($ccAvenueCollectedDataArray);
+        $newCcAvenueOrder->delivery_details = json_encode(
             $delivery_details = [
-                'firstname' => $data[11]['billing_name'],
-                'email' => $data[18]['billing_email'],
-                'telephone' => '+91' . $data[17]['billing_tel'],
-                'line1' => $data[12]['billing_address'],
-                'city' => $data[13]['billing_city'],
-                'region' => $data[14]['billing_state'],
+                'firstname' => $ccAvenueCollectedDataArray[11]['billing_name'],
+                'email' => $ccAvenueCollectedDataArray[18]['billing_email'],
+                'telephone' => '+91' . $ccAvenueCollectedDataArray[17]['billing_tel'],
+                'line1' => $ccAvenueCollectedDataArray[12]['billing_address'],
+                'city' => $ccAvenueCollectedDataArray[13]['billing_city'],
+                'region' => $ccAvenueCollectedDataArray[14]['billing_state'],
                 'country' => 'IN',
-                'postcode' => $data[15]['billing_zip'],
+                'postcode' => $ccAvenueCollectedDataArray[15]['billing_zip'],
             ],
         );
-        $userOrder->merchant_params = json_encode(
+        $newCcAvenueOrder->merchant_params = json_encode(
             $merchant_params = [
-                'merchant_param1' => $data[26]['merchant_param1'],
-                'merchant_param2' => $data[27]['merchant_param2'],
-                'merchant_param3' => $data[28]['merchant_param3'],
-                'merchant_param4' => $data[29]['merchant_param4'],
-                'merchant_param5' => $data[30]['merchant_param5'],
+                'merchant_param1' => $ccAvenueCollectedDataArray[26]['merchant_param1'],
+                'merchant_param2' => $ccAvenueCollectedDataArray[27]['merchant_param2'],
+                'merchant_param3' => $ccAvenueCollectedDataArray[28]['merchant_param3'],
+                'merchant_param4' => $ccAvenueCollectedDataArray[29]['merchant_param4'],
+                'merchant_param5' => $ccAvenueCollectedDataArray[30]['merchant_param5'],
             ],
         );
-        $userOrder->vault = $data[31]['vault'];
-        $userOrder->offer_type = $data[32]['offer_type'];
-        $userOrder->offer_code = $data[33]['offer_code'];
-        $userOrder->discount_value = $data[34]['discount_value'];
-        $userOrder->mer_amount = $data[35]['mer_amount'];
-        $userOrder->eci_value = $data[36]['eci_value'];
-        $userOrder->retry = $data[37]['retry'];
-        $userOrder->response_code = $data[38]['response_code'];
-        $userOrder->billing_notes = $data[39]['billing_notes'];
-        $userOrder->trans_date = $data[40]['trans_date'];
-        $userOrder->bin_country = $data[41]['bin_country'];
-        $userOrder->price = $order_details['price'];
-        $userOrder->qty = $order_details['qty'];
-        // $userOrder->sku = $order_details['sku'];
-        // $userOrder->price = 2000;
-        // $userOrder->qty = 2;
-        // $userOrder->currency_code = 356;
-        $userOrder->save();
+        $newCcAvenueOrder->vault = $ccAvenueCollectedDataArray[31]['vault'];
+        $newCcAvenueOrder->offer_type = $ccAvenueCollectedDataArray[32]['offer_type'];
+        $newCcAvenueOrder->offer_code = $ccAvenueCollectedDataArray[33]['offer_code'];
+        $newCcAvenueOrder->discount_value = $ccAvenueCollectedDataArray[34]['discount_value'];
+        $newCcAvenueOrder->mer_amount = $ccAvenueCollectedDataArray[35]['mer_amount'];
+        $newCcAvenueOrder->eci_value = $ccAvenueCollectedDataArray[36]['eci_value'];
+        $newCcAvenueOrder->retry = $ccAvenueCollectedDataArray[37]['retry'];
+        $newCcAvenueOrder->response_code = $ccAvenueCollectedDataArray[38]['response_code'];
+        $newCcAvenueOrder->billing_notes = $ccAvenueCollectedDataArray[39]['billing_notes'];
+        $newCcAvenueOrder->trans_date = $ccAvenueCollectedDataArray[40]['trans_date'];
+        $newCcAvenueOrder->bin_country = $ccAvenueCollectedDataArray[41]['bin_country'];
+        $newCcAvenueOrder->price = $qsOrderDetails['price'];
+        $newCcAvenueOrder->qty = $qsOrderDetails['qty'];
+        // $newCcAvenueOrder->sku = $qsOrderDetails['sku'];
+        // $newCcAvenueOrder->price = 2000;
+        // $newCcAvenueOrder->qty = 2;
+        // $newCcAvenueOrder->currency_code = 356;
+        $newCcAvenueOrder->save();
 
-        $orderData = [
-            'order_id' => $data[0]['order_id'],
-            'reference_id' => $data[1]['tracking_id'],
-            'order_date' => $data[40]['trans_date'],
-            'billing_name' => $data[11]['billing_name'],
-            'billing_email' => $data[18]['billing_email'],
-            'billing_tel' => $data[17]['billing_tel'],
-            'billing_address' => $data[12]['billing_address'] . ', ' . $data[13]['billing_city'] . ', ' . $data[14]['billing_state'] . ' ' . $data[15]['billing_zip'] . '. ' . $data[16]['billing_country'],
-            'payment_mode' => $data[5]['payment_mode'] . ' - ' . $data[6]['card_name'],
-            'bank_ref_no' => $data[2]['bank_ref_no'],
-            'order_amount' => 'INR ' . $data[10]['amount'],
-            'net_payable' => 'INR ' . $data[10]['amount'],
-            'contact_person' => $data[19]['delivery_name'] . ' | ' . $data[25]['delivery_tel'],
-            'shipping_address' => $data[20]['delivery_address'] . ', ' . $data[21]['delivery_city'] . ', ' . $data[22]['delivery_state'] . ' ' . $data[23]['delivery_zip'] . '. ' . $data[24]['delivery_country'],
+        $prepareBillingDetails = [
+            'order_id' => $ccAvenueCollectedDataArray[0]['order_id'],
+            'reference_id' => $ccAvenueCollectedDataArray[1]['tracking_id'],
+            'order_date' => $ccAvenueCollectedDataArray[40]['trans_date'],
+            'billing_name' => $ccAvenueCollectedDataArray[11]['billing_name'],
+            'billing_email' => $ccAvenueCollectedDataArray[18]['billing_email'],
+            'billing_tel' => $ccAvenueCollectedDataArray[17]['billing_tel'],
+            'billing_address' => $ccAvenueCollectedDataArray[12]['billing_address'] . ', ' . $ccAvenueCollectedDataArray[13]['billing_city'] . ', ' . $ccAvenueCollectedDataArray[14]['billing_state'] . ' ' . $ccAvenueCollectedDataArray[15]['billing_zip'] . '. ' . $ccAvenueCollectedDataArray[16]['billing_country'],
+            'payment_mode' => $ccAvenueCollectedDataArray[5]['payment_mode'] . ' - ' . $ccAvenueCollectedDataArray[6]['card_name'],
+            'bank_ref_no' => $ccAvenueCollectedDataArray[2]['bank_ref_no'],
+            'order_amount' => 'INR ' . $ccAvenueCollectedDataArray[10]['amount'],
+            'net_payable' => 'INR ' . $ccAvenueCollectedDataArray[10]['amount'],
+            'contact_person' => $ccAvenueCollectedDataArray[19]['delivery_name'] . ' | ' . $ccAvenueCollectedDataArray[25]['delivery_tel'],
+            'shipping_address' => $ccAvenueCollectedDataArray[20]['delivery_address'] . ', ' . $ccAvenueCollectedDataArray[21]['delivery_city'] . ', ' . $ccAvenueCollectedDataArray[22]['delivery_state'] . ' ' . $ccAvenueCollectedDataArray[23]['delivery_zip'] . '. ' . $ccAvenueCollectedDataArray[24]['delivery_country'],
         ];
 
         $productAllData = QsProduct::all();
 
-        $order = QsOrder::where('order_id', $orderData['order_id'])->first();
-        $cardsArray = json_decode($order_details['cards'], true);
+        $order = QsOrder::where('order_id', $prepareBillingDetails['order_id'])->first();
+
+        // $cardsArray = json_decode($qsOrderDetails['cards'], true);
+        $cardsArray = json_decode(decrypt($qsOrderDetails['cards'], env('ENCRYPTION_KEY')), true);
 
         // Retrieve data from the gift_card table to reciver detail purpose
-        $giftCardData = GiftCard::where('order_id', $orderData['order_id'])->first();
+        $giftCardData = GiftCard::where('order_id', $prepareBillingDetails['order_id'])->first();
 
         $shipToName = $giftCardData->receiver_name;
         $shipToEmail = $giftCardData->receiver_email;
         $shipToContactNo = $giftCardData->receiver_mobile;
         $giftSendOption = $giftCardData->gift_send_option;
-
+        $deliveryMode = $giftCardData->delivery_mode;
+        // dd($deliveryMode);
         // Decode the JSON fields
-        $cardsData = json_decode($order->cards);
+        $cardsData = json_decode(decrypt($order->cards, env('ENCRYPTION_KEY')));
 
+        // dd($order->cards, $cardsData);
         $cardSku = $cardsData[0]->sku;
         $cardProductName = $cardsData[0]->productName;
 
         // Retrieve the product with the matching sku from the QsProduct table
         $product = QsProduct::where('sku', $cardSku)->first();
+        // dd($product);
 
         if ($product) {
             // The product with the specified sku was found
@@ -275,21 +252,21 @@ class PaymentController extends Controller
             $invoiceDate = date('d-m-Y');
 
             // Send mail to the buyer
-            $data = [
+            $prepareMailDetails = [
                 'name' => $name,
-                'order_id' => $orderData['order_id'],
-                'reference_id' => $orderData['reference_id'],
-                'order_date' => $orderData['order_date'],
-                'billing_name' => $orderData['billing_name'],
-                'billing_email' => $orderData['billing_email'],
-                'billing_tel' => $orderData['billing_tel'],
-                'billing_address' => $orderData['billing_address'],
-                'payment_mode' => $orderData['payment_mode'],
-                'bank_ref_no' => $orderData['bank_ref_no'],
-                'order_amount' => $orderData['order_amount'],
-                'net_payable' => $orderData['net_payable'],
-                'contact_person' => $orderData['contact_person'],
-                'shipping_address' => $orderData['shipping_address'],
+                'order_id' => $prepareBillingDetails['order_id'],
+                'reference_id' => $prepareBillingDetails['reference_id'],
+                'order_date' => $prepareBillingDetails['order_date'],
+                'billing_name' => $prepareBillingDetails['billing_name'],
+                'billing_email' => $prepareBillingDetails['billing_email'],
+                'billing_tel' => $prepareBillingDetails['billing_tel'],
+                'billing_address' => $prepareBillingDetails['billing_address'],
+                'payment_mode' => $prepareBillingDetails['payment_mode'],
+                'bank_ref_no' => $prepareBillingDetails['bank_ref_no'],
+                'order_amount' => $prepareBillingDetails['order_amount'],
+                'net_payable' => $prepareBillingDetails['net_payable'],
+                'contact_person' => $prepareBillingDetails['contact_person'],
+                'shipping_address' => $prepareBillingDetails['shipping_address'],
                 'invoice_number' => $invoiceNumber,
                 'invoice_date' => $invoiceDate,
                 'cardSku' => $cardSku,
@@ -302,37 +279,54 @@ class PaymentController extends Controller
                 'smallImageUrl' => $smallImageUrl,
                 'giftSendOption' => $giftSendOption,
             ];
+            // dd($prepareMailDetails);
+            // Send mail to the buyer
+            $prepareSmsDetails = [
+                'name' => $name,
+                'order_id' => $prepareBillingDetails['order_id'],
+                'reference_id' => $prepareBillingDetails['reference_id'],
+                'order_date' => $prepareBillingDetails['order_date'],
+                'billing_name' => $prepareBillingDetails['billing_name'],
+                'order_amount' => $prepareBillingDetails['order_amount'],
+                'cardSku' => $cardSku,
+                'cardProductName' => $cardProductName,
+                'shipToName' => $shipToName,
+                'shipToContactNo' => $shipToContactNo,
+                'perOrderPrice' => $order->price,
+                'perOrderQuantity' => $order->qty,
+                'giftSendOption' => $giftSendOption,
+                'billing_tel' => $prepareBillingDetails['billing_tel'],
+            ];
+            // dd($prepareSmsDetails);
 
-            $pdf = PDF::loadView('layouts.invoice', $data);
+            if ($deliveryMode == 'both') {
+                $this->sendTransactionMail($prepareMailDetails, $email, $name);
+                $this->sendTransactionalMessage($prepareSmsDetails);
+                $this->sendGiftMail($prepareMailDetails, $cardsArray, $shipToEmail, $shipToName);
+                // $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
+            }
 
-            // dd(config('companyDefaultValues.comapny_email'));
-            // here we are directly sending data so we will be able to access directly values by using key in balde file
-            Mail::send(['html' => 'layouts.mail'], $data, function ($message) use ($email, $name, $pdf) {
-                $message
-                    ->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
-                    ->to($email, $name)
-                    ->subject(config('companyDefaultValues.default_subject'))
-                    ->attachData($pdf->output(), 'invoice.pdf');
-            });
+            if ($deliveryMode == 'email') {
+                $this->sendTransactionMail($prepareMailDetails, $email, $name);
+                $this->sendTransactionalMessage($prepareSmsDetails);
+                $this->sendGiftMail($prepareMailDetails, $cardsArray, $shipToEmail, $shipToName);
+            }
 
-            // Check if gift name is present before sending gift mail
-            if (isset($data['giftSendOption'])) {
-                // Here we are sending data in an array, with only 'giftSendOption'
-                Mail::send(['html' => 'layouts.giftmail'], ['data' => $data, 'cardsArray' => $cardsArray], function ($message) use ($shipToEmail, $shipToName) {
-                    $message
-                        ->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
-                        ->to($shipToEmail, $shipToName)
-                        ->subject(config('companyDefaultValues.gift_subject'));
-                });
+            if ($deliveryMode == 'mobile') {
+                $this->sendTransactionMail($prepareMailDetails, $email, $name);
+                $this->sendTransactionalMessage($prepareSmsDetails);
+                // $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
             }
 
             $msg = 'Order created successfully!';
             $status = 'success';
+            
         } elseif ($order_status === 'Aborted' || $order_status === 'Failure') {
             $order->update(['order_status' => 'CANCELED']);
             $msg = 'Something went wrong. Please contact the support team if any money got deducted.';
             $status = 'failure';
-
+            $name = Auth::user()->name;
+            $email = Auth::user()->email;
             // Send a message to the buyer for payment failure or abortion
             $messageData = [
                 'name' => $name,
@@ -348,82 +342,105 @@ class PaymentController extends Controller
         }
 
         return view('paymentFolder.paymentStatus', compact('msg', 'status'));
-
-        // for($i = 0; $i < $dataSize; $i++)
-        // {
-        //     $information=explode('=',$decryptValues[$i]);
-        //         echo '<tr><td>'.$information[0].'</td><td>'.$information[1].'</td></tr>';
-        // }
-        // $dataSize=sizeof($decryptValues);
+    }
+    public function sendTransactionMail($prepareMailDetails, $email, $name)
+    {
+        $pdf = PDF::loadView('layouts.invoice', $prepareMailDetails);
+        Mail::send(['html' => 'layouts.mail'], $prepareMailDetails, function ($message) use ($email, $name, $pdf) {
+            $message
+                ->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
+                ->to($email, $name)
+                ->subject(config('companyDefaultValues.default_subject'))
+                ->attachData($pdf->output(), 'invoice.pdf');
+        });
+    }
+    public function sendGiftMail($prepareMailDetails, $cardsArray, $shipToEmail, $shipToName)
+    {
+        // Check if gift name is present before sending gift mail
+        if (isset($prepareMailDetails['giftSendOption'])) {
+            Mail::send(['html' => 'layouts.giftmail'], ['prepareMailDetails' => $prepareMailDetails, 'cardsArray' => $cardsArray], function ($message) use ($shipToEmail, $shipToName) {
+                $message
+                    ->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
+                    ->to($shipToEmail, $shipToName)
+                    ->subject(config('companyDefaultValues.gift_subject'));
+            });
+        }
+        $msg = 'Order created successfully!';
+        $status = 'success';
     }
 
-    public function orderCard($respData, $datasize)
+    public function sendTransactionalMessage($prepareSmsDetails)
     {
-        for ($i = 0; $i < $datasize; $i++) {
-            $information = explode('=', $respData[$i]);
-            $data[] = [
-                $information[0] => $information[1],
-            ];
-            // echo '<tr><td>'.$information[0].'</td><td>'.$information[1].'</td></tr>';
+        // Extract values from $prepareSmsDetails
+        $name = $prepareSmsDetails['name'];
+        $orderAmount = $prepareSmsDetails['order_amount'];
+        $orderNumber = $prepareSmsDetails['order_id'];
+        $productName = $prepareSmsDetails['cardProductName'];
+        $destination = $prepareSmsDetails['billing_tel'];
+
+        // Configure SMS API parameters
+        $sms_api_url = config('transactionSms.sms_api_url');
+        $sms_user_name = config('transactionSms.sms_user_name');
+        $sms_user_password = config('transactionSms.sms_user_password');
+        $sms_source = config('transactionSms.sms_source');
+        $sms_message = 'Hello ' . $name . ', Your order no ' . $orderNumber . ' of ' . $orderAmount . ' is generated successfully. Please check out respected Email for that. Thanks - FRENETIC INDIA.';
+        $sms_entity_id = config('transactionSms.sms_entity_id');
+        $sms_temp_id = config('transactionSms.sms_temp_id');
+
+        // Construct the API URL with the message
+        $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
+        // dd($apiUrl);
+
+        // Send the HTTP GET request to the API
+        $response = Http::get($apiUrl);
+
+        // Log the response for debugging
+        // \Log::info('API Response:', ['response' => $response]);
+        // \Log::info('response status:', ['response status' => $response->status()]);
+        // \Log::info('API URL IS:', ['API URL' => $apiUrl]);
+    }
+
+    public function sendGiftMessage($prepareSmsDetails, $cardsArray)
+    {
+        // Extract values from $prepareSmsDetails
+        $name = $prepareSmsDetails['shipToName'];
+        $orderNumber = $prepareSmsDetails['order_id'];
+        $orderAmount = $prepareSmsDetails['order_amount'];
+        $destination = $prepareSmsDetails['billing_tel'];
+
+        // Configure SMS API parameters
+        $sms_api_url = config('transactionSms.sms_api_url');
+        $sms_user_name = config('transactionSms.sms_user_name');
+        $sms_user_password = config('transactionSms.sms_user_password');
+        $sms_source = config('transactionSms.sms_source');
+        $sms_entity_id = config('transactionSms.sms_entity_id');
+        $sms_temp_id = config('transactionSms.sms_temp_id');
+
+        $sms_message = 'Hello ' . $name . ', Your order no ' . $orderNumber . ' of ' . $orderAmount . ' is generated successfully. Please check out respected Email for that. Thanks - FRENETIC INDIA.';
+
+        foreach ($cardsArray as $card) {
+            $cardId = $card['cardNumber'];
+            $cardPin = $card['cardPin'];
+            $cardAmount = $card['amount'];
+            $cardActivationCode = $card['activationCode'];
+            $cardActivationURL = $card['activationUrl'];
+            $cardValidity = date('d-M-Y', strtotime($card['validity']));
+
         }
-        $new_data = [
-            'tracking_id' => $data[1]['tracking_id'],
-            'bank_ref_no' => $data[2]['bank_ref_no'],
-            'order_status' => $data[3]['order_status'],
-            'failure_message' => $data[4]['failure_message'],
-            'payment_mode' => $data[5]['payment_mode'],
-            'card_name' => $data[6]['card_name'],
-            'status_code' => $data[7]['status_code'],
-            'status_message' => $data[8]['status_message'],
-            'currency' => $data[9]['currency'],
-            'amount' => $data[10]['amount'],
-            'billing_details' => [
-                'firstname' => $data[11]['billing_name'],
-                'email' => $data[18]['billing_email'],
-                'telephone' => '+91' . $data[17]['billing_tel'],
-                'line1' => $data[12]['billing_address'],
-                'city' => $data[13]['billing_city'],
-                'region' => $data[14]['billing_state'],
-                'country' => 'IN',
-                'postcode' => $data[15]['billing_zip'],
-            ],
 
-            'delivery_details' => [
-                'firstname' => $data[11]['billing_name'],
-                'email' => $data[18]['billing_email'],
-                'telephone' => '+91' . $data[17]['billing_tel'],
-                'line1' => $data[12]['billing_address'],
-                'city' => $data[13]['billing_city'],
-                'region' => $data[14]['billing_state'],
-                'country' => 'IN',
-                'postcode' => $data[15]['billing_zip'],
-            ],
+        $sms_message = 'Hello ' . $name . ', Your order no ' . $orderNumber . ' is generated successfully. Please check out respected Email for that. Thanks - FRENETIC INDIA.' .$cardId. 'cardPin' .$cardPin;
 
-            'merchant_params' => [
-                'merchant_param1' => $data[26]['merchant_param1'],
-                'merchant_param2' => $data[27]['merchant_param2'],
-                'merchant_param3' => $data[28]['merchant_param3'],
-                'merchant_param4' => $data[29]['merchant_param4'],
-                'merchant_param5' => $data[30]['merchant_param5'],
-            ],
-            'vault' => $data[31]['vault'],
-            'offer_type' => $data[32]['offer_type'],
-            'offer_code' => $data[33]['offer_code'],
-            'discount_value' => $data[34]['discount_value'],
-            'mer_amount' => $data[35]['mer_amount'],
-            'eci_value' => $data[36]['eci_value'],
-            'retry' => $data[37]['retry'],
-            'response_code' => $data[38]['response_code'],
-            'billing_notes' => $data[39]['billing_notes'],
-            'trans_date' => $data[40]['trans_date'],
-            'bin_country' => $data[41]['bin_country'],
-        ];
-        // dd($new_data);
+        // Construct the API URL with the message
+        $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
 
-        $payment_update = CcAvenuePayment::where('order_id', '=', $data[0]['order_id'])->update($new_data);
-        if ($payment_update == true) {
-            $user_data = CcAvenuePayment::where('order_id', $data[0]['order_id'])->first();
-        }
-        return $user_data;
+        // dd($apiUrl);
+
+        // Send the HTTP GET request to the API
+        // $response = Http::get($apiUrl);
+
+        // Log the response for debugging
+        \Log::info('API Response:', ['response' => $response]);
+        \Log::info('response status:', ['response status' => $response->status()]);
+        \Log::info('API URL IS:', ['API URL' => $apiUrl]);
     }
 }

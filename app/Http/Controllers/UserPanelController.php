@@ -12,10 +12,20 @@ use Illuminate\Support\Facades\Http;
 use App\Models\QsOrder;
 use App\Models\GiftCard;
 use Auth;
+use App\Helpers\CommonHelper;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Redirect;
+use App\Http\Controllers\CommonController;
 use Illuminate\Support\Facades\Log;
 class UserPanelController extends Controller
 {
+    protected $commonController;
+
+    public function __construct()
+    {
+        $this->commonController = new CommonController();
+    }
+
     public function homePage()
     {
         try {
@@ -101,8 +111,8 @@ class UserPanelController extends Controller
             } else {
                 // If authentication using password fails, try OTP validation
                 return $data = [
-                'status' => 401,
-            ];
+                    'status' => 401,
+                ];
             }
 
             return response()->json($data);
@@ -210,7 +220,7 @@ class UserPanelController extends Controller
         $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/orders';
         $clientSecret = setting('api.qs_clientSecret');
         $bearerToken = setting('api.bearer_token');
-        $signature = $commonController->generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
 
         $dateAtClient = Carbon\Carbon::now()->toIso8601String();
         $response = Http::acceptJson()
@@ -222,69 +232,129 @@ class UserPanelController extends Controller
                 'dateAtClient' => $dateAtClient,
                 'signature' => $signature,
             ])
+            // ->timeout(10) // Set a timeout of 10 seconds
             ->send('POST', 'https://sandbox.woohoo.in/rest/v3/orders', [
                 'body' => $requestBody,
             ]);
+        $status_code = $response->getStatusCode();
+        // dd($status_code);
+        $status = json_decode($response->getBody(), true);
+        if ($status_code == 201 || $status_code == 202) {
+            $refno = $response['refno'];
+            $orderId = $response['orderId'];
+            if ($status['status'] == 'COMPLETE') {
+                $qsOrder = new QsOrder();
+                $qsOrder->user_id = Auth::user()->id;
+                // $qsOrder->product = json_encode($response['payments']);
+                $qsOrder->reference_id = $response['refno'];
+                $qsOrder->order_id = $response['orderId'];
+                $qsOrder->order_created_status = 'COMPLETE';
+                $qsOrder->cards = encrypt(json_encode($response['cards']), env('ENCRYPTION_KEY'));
+                $qsOrder->order_cancel = json_encode($response['cancel']);
+                $qsOrder->order_payment = json_encode($response['payments']);
+                $qsOrder->currency = json_encode($response['currency']);
+                $qsOrder->additionalTxnFields = json_encode($response['additionalTxnFields']);
+                $qsOrder->sku = $request->sku;
+                $qsOrder->price = session::get('denomination');
+                $qsOrder->qty = session::get('quantity');
+                $qsOrder->is_gifted = session::get('gift_send_option') == 'send_as_gift' ? 1 : 0;
+                $qsOrder->save();
+                $request['order_id'] = $status['orderId'];
+                $request['merchant_id'] = config('paymentconfig.merchant_id');
+                $data = $request->all();
+                $allSessionData = session()->all();
+                if (session::get('gift_send_option') == 'send_as_gift') {
+                    $gift_card = new GiftCard();
+                    $gift_card->sender_id = Auth::user()->id;
+                    $gift_card->order_id = $status['orderId'];
+                    $gift_card->receiver_name = session::get('receiver_name');
+                    $gift_card->receiver_email = session::get('receiver_email');
+                    $gift_card->receiver_mobile = session::get('receiver_mobile');
+                    $gift_card->receiver_msg = session::get('receiver_msg');
+                    $gift_card->card = json_encode($response['cards']);
+                    $gift_card->gift_send_option = session::get('gift_send_option');
+                    $gift_card->amount = session::get('denomination') * session::get('quantity');
+                    $gift_card->delivery_mode = session::get('delivery_mode');
+                    $gift_card->save();
+                }
+                if (session::get('gift_send_option') == 'buy_for_self') {
+                    $gift_card = new GiftCard();
+                    $gift_card->sender_id = Auth::user()->id;
+                    $gift_card->order_id = $status['orderId'];
+                    $gift_card->receiver_name = $modfy_user_data['billing']['firstname'];
+                    $gift_card->receiver_email = $modfy_user_data['billing']['email'];
+                    $gift_card->receiver_mobile = $modfy_user_data['billing']['telephone'];
+                    $gift_card->receiver_msg = null;
+                    $qsOrder->cards = encrypt(json_encode($response['cards']), env('ENCRYPTION_KEY'));
+                    $gift_card->amount = session::get('denomination') * session::get('quantity');
+                    $gift_card->gift_send_option = session::get('gift_send_option');
+                    $gift_card->delivery_mode = session::get('delivery_mode');
+                    $gift_card->save();
+                }
+                return view('paymentFolder.ccavRequestHandler', compact('data'));
+            } elseif ($status['status'] == 'PROCESSING') {
+                $qsOrder = new QsOrder();
+                $qsOrder->user_id = Auth::user()->id;
+                $qsOrder->reference_id = $response['refno'];
+                // dd($response['refno']);
+                $qsOrder->order_id = $response['orderId'];
+                $qsOrder->order_created_status = 'PROCESSING';
+                // $qsOrder->cards = encrypt(json_encode($response['cards']), env('ENCRYPTION_KEY'));
+                $qsOrder->order_cancel = json_encode($response['cancel']);
+                $qsOrder->order_payment = json_encode($response['payments']);
+                $qsOrder->currency = json_encode($response['currency']);
+                // $qsOrder->additionalTxnFields = json_encode($response['additionalTxnFields']);
+                // $qsOrder->sku = $request->sku;
+                $qsOrder->price = session::get('denomination');
+                $qsOrder->qty = session::get('quantity');
+                $qsOrder->is_gifted = session::get('gift_send_option') == 'send_as_gift' ? 1 : 0;
+                $qsOrder->save();
+                $request['order_id'] = $status['orderId'];
+                $request['merchant_id'] = config('paymentconfig.merchant_id');
+                $data = $request->all();
+                $allSessionData = session()->all();
 
-            
-    
-        // dd($response->json());
-        $status = $response->json();
-        // dd($status);
-
-        if ($status['status'] == 'COMPLETE') {
-            $userOrder = new QsOrder();
-            $userOrder->user_id = Auth::user()->id;
-            $userOrder->product = json_encode($response['payments']);
-            $userOrder->reference_id = $response['refno'];
-            $userOrder->order_id = $response['orderId'];
-            $userOrder->order_status = 'PENDING';
-            $userOrder->cards = json_encode($response['cards']);
-            $userOrder->order_cancel = json_encode($response['cancel']);
-            $userOrder->order_payment = json_encode($response['payments']);
-            $userOrder->currency = json_encode($response['currency']);
-            $userOrder->additionalTxnFields = json_encode($response['additionalTxnFields']);
-            $userOrder->sku = $request->sku;
-            $userOrder->price = session::get('denomination');
-            $userOrder->qty = session::get('quantity');
-            $userOrder->is_gifted = session::get('gift_send_option') == 'send_as_gift' ? 1 : 0;
-            $userOrder->save();
-            $request['order_id'] = $status['orderId'];
-            $request['merchant_id'] = config('paymentconfig.merchant_id');
-            $data = $request->all();
-            $allSessionData = session()->all();
-
-            if (session::get('gift_send_option') == 'send_as_gift') {
-                $gift_card = new GiftCard();
-                $gift_card->sender_id = Auth::user()->id;
-                $gift_card->order_id = $status['orderId'];
-                $gift_card->receiver_name = session::get('receiver_name');
-                $gift_card->receiver_email = session::get('receiver_email');
-                $gift_card->receiver_mobile = session::get('receiver_mobile');
-                $gift_card->receiver_msg = session::get('receiver_msg');
-                $gift_card->card = json_encode($response['cards']);
-                $gift_card->gift_send_option = session::get('gift_send_option');
-                $gift_card->amount = session::get('denomination') * session::get('quantity');
-                $gift_card->save();
+                if (session::get('gift_send_option') == 'send_as_gift') {
+                    $gift_card = new GiftCard();
+                    $gift_card->sender_id = Auth::user()->id;
+                    $gift_card->order_id = $status['orderId'];
+                    $gift_card->receiver_name = session::get('receiver_name');
+                    $gift_card->receiver_email = session::get('receiver_email');
+                    $gift_card->receiver_mobile = session::get('receiver_mobile');
+                    $gift_card->receiver_msg = session::get('receiver_msg');
+                    $gift_card->gift_send_option = session::get('gift_send_option');
+                    $gift_card->amount = session::get('denomination') * session::get('quantity');
+                    $gift_card->delivery_mode = session::get('delivery_mode');
+                    $gift_card->save();
+                }
+                if (session::get('gift_send_option') == 'buy_for_self') {
+                    $gift_card = new GiftCard();
+                    $gift_card->sender_id = Auth::user()->id;
+                    $gift_card->order_id = $status['orderId'];
+                    $gift_card->receiver_name = $modfy_user_data['billing']['firstname'];
+                    $gift_card->receiver_email = $modfy_user_data['billing']['email'];
+                    $gift_card->receiver_mobile = $modfy_user_data['billing']['telephone'];
+                    $gift_card->receiver_msg = null;
+                    // $gift_card->card = encrypt(json_encode($response['cards']), env('ENCRYPTION_KEY'));
+                    $gift_card->amount = session::get('denomination') * session::get('quantity');
+                    $gift_card->gift_send_option = session::get('gift_send_option');
+                    $gift_card->delivery_mode = session::get('delivery_mode');
+                    $gift_card->save();
+                }
+                // dd($refno);
+                $this->commonController->handleRetryAttempt($refno, $data, $orderId);
+            } else {
+                $msg = 'Something went wrong';
+                return redirect('checkout', ['sku', $request->sku])->with('msg', $msg);
             }
-            if (session::get('gift_send_option') == 'buy_for_self') {
-                $gift_card = new GiftCard();
-                $gift_card->sender_id = Auth::user()->id;
-                $gift_card->order_id = $status['orderId'];
-                $gift_card->receiver_name = $modfy_user_data['billing']['firstname'];
-                $gift_card->receiver_email = $modfy_user_data['billing']['email'];
-                $gift_card->receiver_mobile = $modfy_user_data['billing']['telephone'];
-                $gift_card->receiver_msg = null;
-                $gift_card->card = json_encode($response['cards']);
-                $gift_card->amount = session::get('denomination') * session::get('quantity');
-                $gift_card->gift_send_option = session::get('gift_send_option');
-                $gift_card->save();
-            }
-            return view('paymentFolder.ccavRequestHandler', compact('data'));
         } else {
-            $msg = 'Something went wrong';
-            return redirect('checkout', ['sku', $request->sku])->with('msg', $msg);
+            // Handle a server error 500 response
+            return redirect()->route('order-failed');
         }
+        $status = json_decode($response->getBody(), true);
+
+        // dd($status);
+        // dd($status['status']);
     }
 
     // public function applyCoupan(Request $request)

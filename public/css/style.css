@@ -12590,6 +12590,7 @@ strong,
   line-height: 40px;
   border-radius: 25px;
   color: #f27b51;
+ 
   font-size: 14px;
   display: inline-block;
   text-align: center;
@@ -15945,3 +15946,10 @@ body {
   text-decoration: none;
 }
 
+.login-button-color{
+  background-color: #ff6601 !important
+}
+
+.register-button-color{
+  background-color: #01007f !important
+}

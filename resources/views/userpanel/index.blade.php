@@ -102,13 +102,16 @@
                 <div class="col-lg-12">
                     <div class="row justify-content-center ">
                         <!-- loop product here -->
+                       
                         @foreach ($allProducts as $product)
                             <div class="col-lg-2 m-2 col-5 p-3 border ">
+
+                               
 
                                 {{-- <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4> --}}
                                 <a href="{{ route('get-product-sku', ['slug' => $product->sku]) }}"
                                     class="d-block text-center"><img
-                                        src="{{ $product->images->small == null ? URL::asset('/images/hamburger.jpg') : $product->images->small }}"
+                                        src="{{ $product->images->small == null ? URL::asset('/images/no-image.png') : $product->images->small }}"
                                         alt="product-image" class="w-100 mt-1 d-inline-block"></a>
                                 <a href="{{ route('get-product-sku', ['slug' => $product->sku]) }}">
                                     <div class="container" style="background-color:white">
@@ -213,7 +216,7 @@
                                     <span class="code-name" >Use Promo Code: <span class="promo">BOH232</span></span>
                                 </div>
                             </div>
-                        </div>
+                        </div> 
 
                     </div>
                    
@@ -682,7 +685,7 @@
 
     <!-- <a href="{{ route('generate-authcode') }}"><button class="bg-current w-25 form-bttn fw-500 rounded-lg text-white">Click<i class="ti-arrow-right"></i></button></a> -->
 
-    <!-- <a href="{{ route('get-product') }}"><button class="bg-current w-25 form-bttn fw-500 rounded-lg text-white">Category<i class="ti-arrow-right"></i></button></a> -->
+    <!-- <a href="{{ route('get-product-list') }}"><button class="bg-current w-25 form-bttn fw-500 rounded-lg text-white">Category<i class="ti-arrow-right"></i></button></a> -->
 @endsection
 
 @push('scripts')

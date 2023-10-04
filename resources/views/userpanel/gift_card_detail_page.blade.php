@@ -34,7 +34,7 @@
                                 </div>
                                 <div class="row copuan-quantity">
                                     <div class="col-sm-6">
-                                        @if ($getprdtDetails['price']->type == 'RANGE')
+                                        @if ($getprdtDetails['price']->type === 'SLAB' || $getprdtDetails['price']->type == 'RANGE')
                                             <div class="radio-btn-row">
                                                 @foreach ($getprdtDetails['price']->denominations as $denomination)
                                                     <div class="custom-control mr-4 custom-radio custom-control-inline">

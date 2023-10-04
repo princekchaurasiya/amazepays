@@ -21,7 +21,7 @@
                                         <div class="form-gorup">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">First Name</label>
                                             <input type="text" name="billing_name" class="form-control billingFormInput"
-                                                value="{{ \Auth::user()->name }}">
+                                                value="{{ old('billing_name', \Auth::user()->name) }}">
                                         </div>
                                     </div>
                                     <div class="col-lg-6 mb-3">
@@ -36,7 +36,9 @@
                                     <div class="col-lg-6 mb-3">
                                         <div class="form-gorup">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">Phone</label>
-                                            <input type="text" name="billing_tel" class="form-control billingFormInput inputDiv">
+                                            <input type="text" name="billing_tel"
+                                                class="form-control billingFormInput inputDiv"
+                                                value="{{ \Auth::user()->mobile }}">
                                             {{-- <i class="fa-solid fa-triangle-exclamation inputDivIcon failureIcon"></i>
                                             <i class="fa-sharp fa-solid fa-circle-check inputDivIcon successIcon"></i> --}}
                                         </div>
@@ -44,7 +46,8 @@
                                     <div class="col-lg-6 mb-3">
                                         <div class="form-gorup">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">Postcode</label>
-                                            <input type="text" name="billing_zip" class="form-control billingFormInput">
+                                            <input type="text" name="billing_zip" class="form-control billingFormInput"
+                                                value="">
                                         </div>
                                     </div>
                                 </div>
@@ -53,14 +56,14 @@
                                         <div class="form-gorup">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">Address 1</label>
                                             <input type="text" name="billing_address"
-                                                class="form-control billingFormInput">
+                                                class="form-control billingFormInput" value="">
                                         </div>
                                     </div>
                                     <div class="col-lg-6 mb-3">
                                         <div class="form-gorup">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">Address 2</label>
                                             <input type="text" name="billing_address_two"
-                                                class="form-control billingFormInput">
+                                                class="form-control billingFormInput" value="">
                                         </div>
                                     </div>
                                 </div>
@@ -68,14 +71,15 @@
                                     <div class="col-lg-6 mb-3">
                                         <div class="form-gorup">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">Town / City</label>
-                                            <input type="text" name="billing_city" class="form-control billingFormInput">
+                                            <input type="text" name="billing_city" class="form-control billingFormInput"
+                                                value="">
                                         </div>
                                     </div>
                                     <div class="col-lg-6 mb-3">
                                         <div class="form-gorup">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">State</label>
-                                            <input type="text" name="billing_state"
-                                                class="form-control billingFormInput">
+                                            <input type="text" name="billing_state" class="form-control billingFormInput"
+                                                value="">
                                         </div>
                                     </div>
                                 </div>
@@ -176,7 +180,11 @@
                         <div class="card shadow-none border-0">
                             <input
                                 class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-600 ls-3"
-                                type="submit" value="Place Order">
+                                type="submit" value="Place Order" id="placeOrder">
+                        </div>
+                        <div class="tex-center justify-content-center">
+                            <img src="{{ URL::asset('images/preloader.svg') }}" alt="" id="custLoaderImage"
+                                class="custLoaderImage img-responsive hideLoader text-center">
                         </div>
                     </div>
                 </div>
@@ -187,7 +195,7 @@
         <script type="text/javascript">
             $(document).ready(function() {
                 var storageData = JSON.parse(window.localStorage.getItem('data'));
-               
+
             });
             $('.coupan-code-amount').css('display', 'none');
             $('#remove-coupan-code').css('display', 'none');
@@ -269,6 +277,7 @@
 
             const applyButton = $('#apply-coupan');
             const loaderImage = $('#custLoaderImage');
+            const placeOrder = $('#placeOrder');
             isHideLoaderPresent = loaderImage.hasClass('hideLoader');
             const inputFeild = $('#coupan-code');
             const discoutDiv = $('#discoutDiv');
@@ -276,58 +285,69 @@
             // couponCode = false;
             couponCode = true;
 
-            function showLoader() {
-                if (isHideLoaderPresent) {
-                    loaderImage.removeClass("hideLoader");
-                    setTimeout(function() {
-                        loaderImage.addClass('hideLoader');
-                    }, 1000);
-                }
-            };
-
-            function applyDiscount() {
-                if (applyButton.html() === "Apply") {
-                    couponCodeasd();
-                    applyButton.html("Remove");
-                    applyButton.addClass("red");
-                    inputFeild.addClass("custDisabled");
-                    $(".error-coupon-code").text('Coupon apllied successfully');
-                    $(".error-coupon-code").addClass('greenColor');
-                    console.log(applyButton.html());
-                } else {
-                    removeDiscount();
-                    applyButton.html("Apply");
-                    applyButton.removeClass("red");
-                    inputFeild.removeClass("custDisabled");
-                    discoutDiv.css("display", "none");
-                    $(".error-coupon-code").css('display', 'none');
-                };
-            };
+            // function showLoader() {
+            //     if (isHideLoaderPresent) {
+            //         loaderImage.removeClass("hideLoader");
+            //         setTimeout(function() {
+            //             loaderImage.addClass('hideLoader');
+            //         }, 1000);
+            //     }
+            // };
 
 
+            
+
+            // // function placeOrder() {
+            // //     if (applyButton.html() === "Apply") {
+            // //         couponCodeasd();
+            // //         applyButton.html("Remove");
+            // //         applyButton.addClass("red");
+            // //         inputFeild.addClass("custDisabled");
+            // //         $(".error-coupon-code").text('Coupon apllied successfully');
+            // //         $(".error-coupon-code").addClass('greenColor');
+            // //         console.log(applyButton.html());
+            // //     } else {
+            // //         removeDiscount();
+            // //         applyButton.html("Apply");
+            // //         applyButton.removeClass("red");
+            // //         inputFeild.removeClass("custDisabled");
+            // //         discoutDiv.css("display", "none");
+            // //         $(".error-coupon-code").css('display', 'none');
+            // //     };
+            // // };
 
 
-            applyButton.click(function(e) {
-                e.preventDefault();
-                if (!($("#coupan-code").val() == "")) { // value not empty
-                    if (couponCode) {
-                        showLoader();
-                        applyDiscount();
-                    } else {
-                        $(".error-coupon-code").text('This is not a valid code');
-                        $(".error-coupon-code").addClass('redColor');
+            // applyButton.click(function(e) {
+            //     e.preventDefault();
+            //     if (!($("#coupan-code").val() == "")) { // value not empty
+            //         if (couponCode) {
+            //             showLoader();
+            //             applyDiscount();
+            //         } else {
+            //             $(".error-coupon-code").text('This is not a valid code');
+            //             $(".error-coupon-code").addClass('redColor');
 
-                    }
-                } else {
-                    $(".error-coupon-code").text('Coupon code can not be BLANK');
-                    $(".error-coupon-code").addClass('redColor');
-                };
-            });
+            //         }
+            //     } else {
+            //         $(".error-coupon-code").text('Coupon code can not be BLANK');
+            //         $(".error-coupon-code").addClass('redColor');
+            //     };
+            // });
 
             // on click apply button code ends here
 
             //  coupon code blank validation code starts here 
 
+
+
+
+            
+            // function orderProcessingTimeOut() {
+            //     placeOrder.click(function(e) {
+            //         e.preventDefault();
+            //         showLoader();
+            //     });
+            // }
 
 
             //  coupon code blank validation code ends here

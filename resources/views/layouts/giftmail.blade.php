@@ -15,7 +15,8 @@
         <tr>
             <td style="text-align: left; width:70%;">
                 <p style="font-weight: 600; font-size: 13px">Dear <span
-                        style="font-size: 15px; font-weight: 600">{{ ucfirst($data['shipToName']) }}</span>, you've
+                        style="font-size: 15px; font-weight: 600">{{ ucfirst
+                        ($prepareMailDetails['shipToName']) }}</span>, you've
                     received {{ count($cardsArray) }} Amazon Pay E-Gift Card's! Worth ₹ {{ $cardsArray[0]['amount'] }}
                     each.</p>
             </td>
@@ -32,7 +33,7 @@
             <tr>
                 <td
                     style="width: 50%; font-size: 16px; vertical-align: middle; padding: 10px; max-width: 40%;padding-left: 10%">
-                    <img src="{{ $data['smallImageUrl'] }}" alt="Logo" style="max-width: 200px;" type="image/png">
+                    <img src="{{ $prepareMailDetails['smallImageUrl'] }}" alt="Logo" style="max-width: 200px;" type="image/png">
                     <p style="font-size: 12px; ">
                         <span style="font-weight: 600; font-size: 14px">Gift Card Id</span>
                         <br>
@@ -67,7 +68,7 @@
         style="width: 100%; max-width: 600px; margin: 0 auto; border: 1px solid #ccc; font-family: Arial, sans-serif; padding: 20px">
         <tr>
             <td style="width: 50%; padding-left: 20px">
-                Order Number : {{ $data['order_id'] }}
+                Order Number : {{ $prepareMailDetails['order_id'] }}
             </td>
         </tr>
     </table>

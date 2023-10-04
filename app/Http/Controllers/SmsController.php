@@ -66,6 +66,7 @@ class SmsController extends Controller
 
             // Build the API URL with the encoded credentials and Template ID
             $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
+            
 
             // Store the OTP in the database along with the user ID and expiration time
             $otpExpiration = config('companyDefaultValues.otpExpiration');
@@ -125,19 +126,4 @@ class SmsController extends Controller
             }
         }
     }
-    // public function sendTestSms(Request $request)
-    // {
-    //     $email = 'chp9876@gmail.com'; // Replace with the recipient's email
-
-    //     // Send the test email
-    //     Mail::send(['html' => 'layouts.testMail'], [], function ($message) use ($email) {
-    //         $message
-    //             ->to($email)
-    //             ->subject('Test Email Subject');
-    //     });
-
-    //     // Email sent successfully
-    //     return 'Test email sent successfully!';
-    // }
-    
 }

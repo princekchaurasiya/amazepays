@@ -233,7 +233,7 @@ class UserPanelController extends Controller
                 'signature' => $signature,
             ])
             // ->timeout(10) // Set a timeout of 10 seconds
-            ->send('POST', 'https://sandbox.woohoo.in/rest/v3/orders', [
+            ->send('POST', $absApiUrl, [
                 'body' => $requestBody,
             ]);
         $status_code = $response->getStatusCode();

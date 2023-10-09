@@ -236,6 +236,7 @@ class UserPanelController extends Controller
             ->send('POST', $absApiUrl, [
                 'body' => $requestBody,
             ]);
+            // dd($response->json());
         $status_code = $response->getStatusCode();
         // dd($status_code);
         $status = json_decode($response->getBody(), true);

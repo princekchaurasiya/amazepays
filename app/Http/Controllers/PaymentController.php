@@ -303,7 +303,7 @@ class PaymentController extends Controller
                 $this->sendTransactionMail($prepareMailDetails, $email, $name);
                 $this->sendTransactionalMessage($prepareSmsDetails);
                 $this->sendGiftMail($prepareMailDetails, $cardsArray, $shipToEmail, $shipToName);
-                // $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
+                $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
             }
 
             if ($deliveryMode == 'email') {
@@ -315,12 +315,11 @@ class PaymentController extends Controller
             if ($deliveryMode == 'mobile') {
                 $this->sendTransactionMail($prepareMailDetails, $email, $name);
                 $this->sendTransactionalMessage($prepareSmsDetails);
-                // $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
+                $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
             }
 
             $msg = 'Order created successfully!';
             $status = 'success';
-            
         } elseif ($order_status === 'Aborted' || $order_status === 'Failure') {
             $order->update(['order_status' => 'CANCELED']);
             $msg = 'Something went wrong. Please contact the support team if any money got deducted.';
@@ -401,46 +400,50 @@ class PaymentController extends Controller
     }
 
     public function sendGiftMessage($prepareSmsDetails, $cardsArray)
-    {
-        // Extract values from $prepareSmsDetails
-        $name = $prepareSmsDetails['shipToName'];
-        $orderNumber = $prepareSmsDetails['order_id'];
-        $orderAmount = $prepareSmsDetails['order_amount'];
-        $destination = $prepareSmsDetails['billing_tel'];
+{
+    // Extract values from $prepareSmsDetails
+    $name = $prepareSmsDetails['shipToName'];
+    $orderNumber = $prepareSmsDetails['order_id'];
+    $orderAmount = $prepareSmsDetails['order_amount'];
+    $destination = $prepareSmsDetails['billing_tel'];
 
-        // Configure SMS API parameters
-        $sms_api_url = config('transactionSms.sms_api_url');
-        $sms_user_name = config('transactionSms.sms_user_name');
-        $sms_user_password = config('transactionSms.sms_user_password');
-        $sms_source = config('transactionSms.sms_source');
-        $sms_entity_id = config('transactionSms.sms_entity_id');
-        $sms_temp_id = config('transactionSms.sms_temp_id');
+    // Configure SMS API parameters
+    $sms_api_url = config('giftSms.sms_api_url');
+    $sms_user_name = config('giftSms.sms_user_name');
+    $sms_user_password = config('giftSms.sms_user_password');
+    $sms_source = config('giftSms.sms_source');
+    $sms_entity_id = config('giftSms.sms_entity_id');
+    $sms_temp_id = config('giftSms.sms_temp_id');
 
-        $sms_message = 'Hello ' . $name . ', Your order no ' . $orderNumber . ' of ' . $orderAmount . ' is generated successfully. Please check out respected Email for that. Thanks - FRENETIC INDIA.';
+    foreach ($cardsArray as $card) {
+        $cardId = $card['cardNumber'];
+        $cardPin = $card['cardPin'];
+        $cardAmount = $card['amount'];
+        $cardActivationCode = $card['activationCode'];
+        $cardActivationURL = $card['activationUrl'];
+        $cardValidity = date('d-M-Y', strtotime($card['validity']));
 
-        foreach ($cardsArray as $card) {
-            $cardId = $card['cardNumber'];
-            $cardPin = $card['cardPin'];
-            $cardAmount = $card['amount'];
-            $cardActivationCode = $card['activationCode'];
-            $cardActivationURL = $card['activationUrl'];
-            $cardValidity = date('d-M-Y', strtotime($card['validity']));
-
-        }
-
-        $sms_message = 'Hello ' . $name . ', Your order no ' . $orderNumber . ' is generated successfully. Please check out respected Email for that. Thanks - FRENETIC INDIA.' .$cardId. 'cardPin' .$cardPin;
+        // Build the SMS message for this card
+        $sms_message = 'Hello ' . $name . ' You received a gift card and your Card details: ' .
+            'Card ID: ' . $cardId .
+            ' Card Pin: ' . $cardPin .
+            ' Amount ' . $cardAmount . 
+            ' Activation Code ' .  $cardActivationCode . 
+            ' Activation URL ' . $cardActivationURL . 
+            ' Validity ' . $cardValidity .
+            ' Please check your respected Email for more information. Thanks - FRENETIC INDIA';
 
         // Construct the API URL with the message
         $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
 
-        // dd($apiUrl);
-
-        // Send the HTTP GET request to the API
-        // $response = Http::get($apiUrl);
+        // Send the HTTP GET request to the API for this card
+        $response = Http::get($apiUrl);
 
         // Log the response for debugging
         \Log::info('API Response:', ['response' => $response]);
         \Log::info('response status:', ['response status' => $response->status()]);
         \Log::info('API URL IS:', ['API URL' => $apiUrl]);
     }
+}
+
 }

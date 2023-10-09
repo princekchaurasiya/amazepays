@@ -405,7 +405,7 @@ class PaymentController extends Controller
     $name = $prepareSmsDetails['shipToName'];
     $orderNumber = $prepareSmsDetails['order_id'];
     $orderAmount = $prepareSmsDetails['order_amount'];
-    $destination = $prepareSmsDetails['billing_tel'];
+    $destination = prepareSmsDetails['shipToContactNo'];
 
     // Configure SMS API parameters
     $sms_api_url = config('giftSms.sms_api_url');

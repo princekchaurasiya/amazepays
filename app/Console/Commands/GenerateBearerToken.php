@@ -15,24 +15,28 @@ class GenerateBearerToken extends Command
     public function handle()
     {
         try {
-           
+            $absApiUrl = 'https://' . setting('api.woohoo_url') . '/oauth2/verify';
+
             
-            $authorizationCodeResp = Http::post('https://sandbox.woohoo.in/oauth2/verify', [
+
+            $authorizationCodeResp = Http::post($absApiUrl, [
                 'clientId' => setting('api.clientId'),
                 'username' => setting('api.qs_username'),
                 'password' => setting('api.qs_password'),
             ]);
-            
 
             if ($authorizationCodeResp->successful()) {
                 $authorizationCode = $authorizationCodeResp->json();
-                $tokenResp = Http::post('https://sandbox.woohoo.in/oauth2/token', [
+               
+                $tokenUrl = 'https://' . setting('api.woohoo_url') . '/oauth2/token';
+
+            
+
+                $tokenResp = Http::post($tokenUrl, [
                     'clientId' => setting('api.clientId'),
                     'clientSecret' => setting('api.qs_clientSecret'),
                     'authorizationCode' => $authorizationCode['authorizationCode'],
                 ]);
-                
-
                 if ($tokenResp->successful()) {
                     $token = $tokenResp->json()['token'];
 
@@ -43,7 +47,7 @@ class GenerateBearerToken extends Command
                             [
                                 'value' => $token,
                                 'details' => json_encode(['update_time' => $updateTime]),
-                            ]
+                            ],
                         );
                     });
 

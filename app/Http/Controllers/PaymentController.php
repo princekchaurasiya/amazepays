@@ -114,6 +114,7 @@ class PaymentController extends Controller
         // dd($order_status );
         $qsOrderDetails = QsOrder::where('order_id', $ccAvenueCollectedDataArray[0]['order_id'])->first();
         Auth::loginUsingId($qsOrderDetails['user_id']);
+        
         $newCcAvenueOrder = new CcAvenuePayment();
 
         $newCcAvenueOrder->user_id = $qsOrderDetails['user_id'];

@@ -54,10 +54,10 @@
                             style="font-size: 12px; font-weight: 400;">{{ date('Y/m/d', strtotime($card['validity'])) }}</span>
                         <br>
                         <span style="font-size: 12px; font-weight: 600;">Activation Code:</span>
-                        <span style="font-size: 12px; font-weight: 400;">ACT123456</span>
+                        <span style="font-size: 12px; font-weight: 400;">{{ $card['activationCode'] }}</span>
                         <br>
                         <span style="font-size: 12px; font-weight: 600;">Activation URL:</span>
-                        <span style="font-size: 12px; font-weight: 400;">https://example.com/activate/ACT123456</span>
+                        <span style="font-size: 12px; font-weight: 400;">{{ $card['activationUrl'] }}</span>
                     </p>
                 </td>
 

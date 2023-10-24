@@ -14,6 +14,7 @@ use App\Http\Controllers\OtpLoginController;
 use App\Http\Controllers\OtpVerificationController;
 use App\Http\Controllers\PaymentDetailsExportController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProductSkuController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -41,7 +42,9 @@ Route::get('/get-category', [CommonController::class, 'getCategory'])->name('get
 Route::get('/get-product-list', [CommonController::class, 'getProductList'])->name('get-product-list');
 
 //prodcut api for woohoo should be called once only 
-Route::get('/get-product-sku/{slug}', [CommonController::class, 'getProductbySKU'])->name('get-product-sku');
+// Route::get('/get-product-sku/{slug}', [CommonController::class, 'getProductbySKU'])->name('get-product-sku');
+
+Route::get('/get-product-sku/{slug}', [ProductSkuController::class, 'getProductbySKU'])->name('get-product-sku');
 
 
 

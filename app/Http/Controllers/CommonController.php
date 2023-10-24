@@ -8,7 +8,6 @@ use DB;
 use App\QsCategory;
 use App\Models\QsOrder;
 use App\QsProduct;
-use App\Jobs\StatusCheckJob;
 use Illuminate\Support\Facades\Log;
 use View;
 use App\Helpers\CommonHelper;
@@ -128,10 +127,5 @@ class CommonController extends Controller
         } catch (Exception $e) {
             return $e->getMessage();
         }
-    }
-
-    public function handleRetryAttempt($refno, $data, $orderId)
-    {
-        StatusCheckJob::dispatch($refno, $data, $orderId)->delay(now()->addSeconds(10));
     }
 }

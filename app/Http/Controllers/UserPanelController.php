@@ -210,7 +210,7 @@ class UserPanelController extends Controller
                     'currency' => $request['numericCode'],
                 ],
             ],
-            'syncOnly' => $request['quantity'] > 3 ? false : true, // If 'quantity' in $request is greater than 10,
+            'syncOnly' => $request['quantity'] > 10 ? false : true, // If 'quantity' in $request is greater than 10,
             // then set 'syncOnly' to false, otherwise set it to true.
             'delivery_mode' => 'API',
         ];
@@ -289,10 +289,10 @@ class UserPanelController extends Controller
             }
         } catch (ConnectionException $e) {
             // Handle the cURL error here
-            Log::error('cURL Eroor happened request broken in between ' . $e->getMessage());
-            Log::alert('Curl eroors happened Logging before 30 second delay ' . now());
+            Log::error('cURL Error happened request broken in between ' . $e->getMessage());
+            Log::alert('Curl errors happened Logging before 30 second delay ' . now());
             sleep(30);
-            Log::alert('Curl Eroors happened Hitting  order status API after a 30 - second delay that is total 40 second delay after order creation API Hit ' . now());
+            Log::alert('Curl Errors happened Hitting  order status API after a 30 - second delay that is total 40 second delay after order creation API Hit ' . now());
             $statusFunctionResponse = $this->getStatusByReferenceNumber($refno);
             return $statusFunctionResponse;
             // $this->getStatusByReferenceNumber($refno);
@@ -397,18 +397,18 @@ class UserPanelController extends Controller
                     sleep($retry_interval);
                 } else {
                     Log::info('Anything other than processing or complete status');
-                    return null;
+                    return false;
                 }
             } else {
                 Log::info('Order failed, response 200 not received');
-                return null;
+                return false;
             }
 
             $attempt++;
         }
 
         Log::info('Max retries reached without reaching a complete status.');
-        return null;
+        return false;
 
         // You can handle the case where the maximum number of retries is reached without a complete status here.
     }
@@ -442,7 +442,7 @@ class UserPanelController extends Controller
             return $combinedData;
         } else {
             Log::info('Order failed, response 200 not received');
-            return view('order.order-failed');
+            return false;
         }
     }
 

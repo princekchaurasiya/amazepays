@@ -267,7 +267,7 @@ class UserPanelController extends Controller
                 ->send('POST', $absApiUrl, [
                     'body' => $requestBody,
                 ]);
-
+            Log::info('Get Response from woohoo server '. $createOrderResponse);
             if ($createOrderResponse->successful()) {
                 Log::info('Order creation was successful within 10 seconds');
                 $responseData = $createOrderResponse->json();
@@ -301,7 +301,7 @@ class UserPanelController extends Controller
 
     private function createQsOrder($createOrderResponse, $modify_user_data, $refno)
     {
-        
+
         $qsOrder = new QsOrder();
         $qsOrder->user_id = Auth::user()->id;
         $qsOrder->reference_id = $refno;

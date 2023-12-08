@@ -56,8 +56,10 @@ class CommonController extends Controller
                 'data' => $category_resp->json(),
             ]);
 
-            // dd($category_resp->body());
-            if ($category_resp->status == 200) {
+            // dd($category_resp->status());
+            if ($category_resp->status() == 200) {
+
+                Log::info('Prince chaurasiya');
                 // If the API response status is 200, save category data into the database
                 $category_resp = $category_resp->json($key = null);
                 $data = [
@@ -73,11 +75,11 @@ class CommonController extends Controller
                 // Update or insert the category data into the 'qs_categories' table based on the ID
                 DB::table('qs_categories')->updateOrInsert(['id' => $category_resp['id']], $data);
                 Log::info('Category stored successfully in the database.');
-                return json_encode(['status' => $token_resp->status(), 'data' => 'Stored Successfully']);
+                return json_encode(['status' => 200, 'data' => 'Stored Successfully']);
 
             } else {
                 Log::error('Something went wrong while fetching the category.', ['error' => $category_resp->body()]);
-                return json_encode(['status' => $token_resp->status(), 'data' => 'Something went wrong']);
+                return json_encode(['status' => 400, 'data' => 'Something went wrong']);
             }
         } catch (\Exception $e) {
             Log::error('An error occurred: ' . $e->getMessage());

@@ -34,6 +34,15 @@ class CommonController extends Controller
             $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
 
+            Log::info('Category Request:', [
+                'url' => $absApiUrl,
+                'method' => $requestHttpMethod,
+                'data' => [
+                    'dateAtClient' => $dateAtClient,
+                    'signature' => $signature,
+                ],
+            ]);
+
             $category_resp = Http::acceptJson()
                 ->withToken($bearerToken)
                 ->withHeaders([
@@ -41,6 +50,12 @@ class CommonController extends Controller
                     'signature' => $signature,
                 ])
                 ->get($absApiUrl);
+
+            Log::info('Category Response:', [
+                'status_code' => $category_resp->status(),
+                'data' => $category_resp->json(),
+            ]);
+
             // dd($category_resp->body());
             if ($category_resp->status == 200) {
                 // If the API response status is 200, save category data into the database
@@ -57,11 +72,15 @@ class CommonController extends Controller
 
                 // Update or insert the category data into the 'qs_categories' table based on the ID
                 DB::table('qs_categories')->updateOrInsert(['id' => $category_resp['id']], $data);
+                Log::info('Category stored successfully in the database.');
                 return json_encode(['status' => $token_resp->status(), 'data' => 'Stored Successfully']);
+
             } else {
+                Log::error('Something went wrong while fetching the category.', ['error' => $category_resp->body()]);
                 return json_encode(['status' => $token_resp->status(), 'data' => 'Something went wrong']);
             }
         } catch (\Exception $e) {
+            Log::error('An error occurred: ' . $e->getMessage());
             return $e->getMessage();
         }
     }

@@ -29,7 +29,7 @@ class Kernel extends ConsoleKernel
         // Add the schedule to run the GenerateBearerToken command every minute for testing purpose
         $schedule->command('generate:bearerToken')->weekly()->mondays()->at('01:00');
 
-        $schedule->command('fetch:productData')->monthlyOn(4, '15:00');
+        $schedule->command('fetch:productData')->monthlyOn(4, '03:00');
 
     }
 
@@ -39,7 +39,7 @@ class Kernel extends ConsoleKernel
      * @return void
      */
 
-     
+
     protected function commands()
     {
         $this->load(__DIR__.'/Commands');

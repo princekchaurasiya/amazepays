@@ -252,7 +252,8 @@ class UserPanelController extends Controller
         $dateAtClient = Carbon\Carbon::now()->toIso8601String();
         $refno = $modify_user_data['refno'];
 
-        Log::info('Before hitting API time is ' . now());
+        Log::info('**************** Order Creation Api *************************' . "\n");
+        Log::info('Before hitting API time is ' . now() . "\n");
         try {
             // Make the HTTP request
             $createOrderResponse = Http::acceptJson()
@@ -267,7 +268,25 @@ class UserPanelController extends Controller
                 ->send('POST', $absApiUrl, [
                     'body' => $requestBody,
                 ]);
-            Log::info('Get Response from woohoo server '. $createOrderResponse);
+
+            Log::info('API Request:', [
+                'url' => $absApiUrl,
+                'method' => $requestHttpMethod,
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . $bearerToken,
+                    'Accept' => '*/*',
+                    'dateAtClient' => $dateAtClient,
+                    'signature' => $signature,
+                ],
+                'data' => $requestBody,
+            ]);
+
+
+            Log::info("\n");
+            Log::info('********************** check order api hit response whether received or not ***************************' . "\n");
+
+            Log::info('Get Response from woohoo server ' . $createOrderResponse . "\n");
             if ($createOrderResponse->successful()) {
                 Log::info('Order creation was successful within 10 seconds');
                 $responseData = $createOrderResponse->json();
@@ -301,7 +320,6 @@ class UserPanelController extends Controller
 
     private function createQsOrder($createOrderResponse, $modify_user_data, $refno)
     {
-
         $qsOrder = new QsOrder();
         $qsOrder->user_id = Auth::user()->id;
         $qsOrder->reference_id = $refno;

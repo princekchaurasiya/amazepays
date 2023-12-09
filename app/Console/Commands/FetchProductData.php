@@ -63,6 +63,16 @@ class FetchProductData extends Command
                         'signature' => $signature,
                     ])
                     ->get($absApiUrl);
+
+                Log::info('Product Request:', [
+                    'url' => $absApiUrl,
+                ]);
+
+                Log::info('Product Response:', [
+                    'status_code' => $products_resp->status(),
+                    'data' => $products_resp->json(),
+                ]);
+
                 $responseContent = $products_resp->getBody()->getContents();
                 // Extract product details from the API response
                 $prdtDetails = $products_resp->json();

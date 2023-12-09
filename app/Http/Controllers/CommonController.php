@@ -58,8 +58,6 @@ class CommonController extends Controller
 
             // dd($category_resp->status());
             if ($category_resp->status() == 200) {
-
-                Log::info('Prince chaurasiya');
                 // If the API response status is 200, save category data into the database
                 $category_resp = $category_resp->json($key = null);
                 $data = [
@@ -76,7 +74,6 @@ class CommonController extends Controller
                 DB::table('qs_categories')->updateOrInsert(['id' => $category_resp['id']], $data);
                 Log::info('Category stored successfully in the database.');
                 return json_encode(['status' => 200, 'data' => 'Stored Successfully']);
-
             } else {
                 Log::error('Something went wrong while fetching the category.', ['error' => $category_resp->body()]);
                 return json_encode(['status' => 400, 'data' => 'Something went wrong']);
@@ -91,24 +88,26 @@ class CommonController extends Controller
     public function getProductList()
     {
         try {
-            // Retrieve the ID of the first category from the 'qs_categories' table
-            $qsCat = QsCategory::all();
             $qsCat = QsCategory::pluck('id')->first();
-            // $qsCat =122;
-            // dd($qsCat);
-            // Initialize variables for API request
             $requestBody = '';
             $requestHttpMethod = 'get';
-
             $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/catalog/categories/' . $qsCat . '/products';
-            // dd($absApiUrl);
-
             $clientSecret = setting('api.qs_clientSecret');
             $bearerToken = setting('api.bearer_token');
             $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
 
             // Get the current time in ISO8601 format
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
+
+            Log::info('Product List Request:', [
+                'url' => $absApiUrl,
+                'method' => $requestHttpMethod,
+                'requestBody' =>  $requestBody,
+                'headers' => [
+                    'dateAtClient' => $dateAtClient,
+                    'signature' => $signature,
+                ],
+            ]);
 
             // Send a GET request to retrieve products from the API
             $products_resp = Http::acceptJson()
@@ -119,8 +118,12 @@ class CommonController extends Controller
                 ])
                 ->get($absApiUrl);
             $responseBody = $products_resp->body();
-            // $responseJson = $products_resp->json();
-            // dd($responseJson);
+
+
+            Log::info('Product List Response:', [
+            'status_code' => $products_resp->status(),
+            'data' => $products_resp->json(),
+        ]);
 
             if ($products_resp->status() == 200) {
                 $collection = collect($products_resp->json($key = null)['products']);
@@ -140,12 +143,16 @@ class CommonController extends Controller
                     ];
                     DB::table('qs_products')->updateOrInsert(['sku' => $item['sku']], $data);
                 });
+                Log::info('Products stored successfully in the database.');
 
                 return json_encode(['status' => $products_resp->status(), 'data' => 'Stored Successfully']);
             } else {
+
+                Log::error('Something went wrong while fetching the product list.', ['error' => $products_resp->body()]);
                 return json_encode(['status' => $products_resp->status(), 'data' => 'Something went wrong']);
             }
         } catch (Exception $e) {
+            Log::error('An error occurred: ' . $e->getMessage());
             return $e->getMessage();
         }
     }

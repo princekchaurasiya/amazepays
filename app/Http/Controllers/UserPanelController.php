@@ -252,8 +252,8 @@ class UserPanelController extends Controller
         $dateAtClient = Carbon\Carbon::now()->toIso8601String();
         $refno = $modify_user_data['refno'];
 
-        Log::info('**************** Order Creation Api *************************');
-        Log::info('Before hitting API time is ' . now());
+        Log::info('**************** Order Creation Api *************************' . "\n");
+        Log::info('Before hitting API time is ' . now() . "\n");
         try {
             // Make the HTTP request
             $createOrderResponse = Http::acceptJson()
@@ -282,9 +282,11 @@ class UserPanelController extends Controller
                 'data' => $requestBody,
             ]);
 
-            Log::info('********************** check order api hit response whether received or not ***************************');
 
-            Log::info('Get Response from woohoo server ' . $createOrderResponse);
+            Log::info("\n");
+            Log::info('********************** check order api hit response whether received or not ***************************' . "\n");
+
+            Log::info('Get Response from woohoo server ' . $createOrderResponse . "\n");
             if ($createOrderResponse->successful()) {
                 Log::info('Order creation was successful within 10 seconds');
                 $responseData = $createOrderResponse->json();

@@ -6,8 +6,19 @@
     <div class="gift-card-detail-page pt-lg--7 pb-lg--7 pb-5 pt-5">
         <div class="container">
             <div class="row">
-                <form action="{{ route('checkout', ['sku' => $getprdtDetails['sku']]) }}" method="POST" id="giftCardPageForm">
+                <form action="{{ route('storePayNowData-and-go-to-CheckoutPage', ['sku' => $getprdtDetails['sku']]) }}" method="POST" id="giftCardPageForm">
                     {{ csrf_field() }}
+                    <div>
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                    </div>
                     <div class="col-lg-12 mb-lg-4 mb-4 pb-3">
                         <h6 class="text-grey-900 fw-400 font-xl">E-Gift Card</h6>
                         <hr>
@@ -62,28 +73,19 @@
                                         <span class="font-xssss fw-400 error-rec-qnty text-danger"></span>
                                     </div>
                                 </div>
-                                {{-- 
-                     <div class="col-sm-12 mb-4">
-                        <h6 class="mb-3 fw-600 font-xs mt-2 pb-3">Gift Send Option</h6>
-                        <div class="custom-control mr-4 custom-radio custom-control-inline">
-                           <input type="radio" class="custom-control-input" id="customRadio" name="gift_send_option" value="send_as_gift" checked>
-                           <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="customRadio">Send as Gift</label>
-                        </div>
-                        <div class="custom-control mr-0 custom-radio custom-control-inline">
-                           <input type="radio" class="custom-control-input" id="customRadio1" name="gift_send_option" value="buy_for_self">
-                           <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="customRadio1">Buy for Self (This E-gift card will be added to your account)</label>
-                        </div>
-                     </div>
-                     --}}
-                                <!-- <h6 class="text-grey-900 fw-400 font-xs mt-2">Offers</h6>
-                                                                <ul class="square-type-unordered">
-                                                                    <li>Only UPI payment is accepted for this gift card. --- On Amazon Pay Special E-Gift Card (woohoo.in/amazon-pay-special-e-gift-card) Credit/Debit card and Net Banking options are available.</li>
-                                                                </ul> -->
+
+
+                                {{-- <h6 class="text-grey-900 fw-400 font-xs mt-2">Offers</h6>
+                                <ul class="square-type-unordered">
+                                    <li>Only UPI payment is accepted for this gift card. --- On Amazon Pay Special E-Gift
+                                        Card (woohoo.in/amazon-pay-special-e-gift-card) Credit/Debit card and Net Banking
+                                        options are available.</li>
+                                </ul> --}}
                             </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="container">
-                                {{-- 
+                                {{--
                      <div class="row">
                         <div class="row">
                            <div class="col-sm-6">
@@ -265,7 +267,7 @@
                 $('.preview > img').attr("src", $('.active:first').find('img').attr('src'));
 
 
-                // Preview Image   
+                // Preview Image
                 $('.active').on('click', function() {
                     $('.active').removeClass('border-black');
                     $(this).addClass('border-black');
@@ -340,7 +342,7 @@
             $('form').on('submit', function(e) {
 
                 e.preventDefault();
-                
+
 
 
                 // Denomination validation
@@ -448,10 +450,10 @@
                         quantity: quantity
                     };
                     window.localStorage.setItem('data', JSON.stringify(data));
-                    if(!denominationInvalid){
+                    if (!denominationInvalid) {
                         this.submit();
                     }
-                    
+
                 } else {
                     return false;
                 }

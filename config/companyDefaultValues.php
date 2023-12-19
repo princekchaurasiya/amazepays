@@ -18,7 +18,7 @@ $sms_message = 'Dear User,  Your  one  time  password is  ' . $otp . '  and  its
 return [
     'gst_number' => '27AAFCF2328E1ZX',
     'company_name' => $company_name,
-    'company_address' => '98-103, 4 Floor, Aditya Industrial Estate Co-op Premises Ltd Mindspace Behind Evershine 
+    'company_address' => '98-103, 4 Floor, Aditya Industrial Estate Co-op Premises Ltd Mindspace Behind Evershine
       Mall Off Link Road Malad West Mumbai 400064.',
     'company_cin' => 'U72900MH2022PTC391272',
     'company_pan' => 'AAFCF2328E',

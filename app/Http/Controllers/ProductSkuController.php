@@ -29,7 +29,7 @@ class ProductSkuController extends Controller
             $getprdtDetails['images'] = json_decode($getprdtDetails['images']);
             $getprdtDetails['tnc'] = json_decode($getprdtDetails['tnc']);
 
-            Log::info($getprdtDetails);
+            // Log::info($getprdtDetails);
 
             // Pass the product details to the view and render it
             return view('userpanel/gift_card_detail_page', compact('getprdtDetails'));

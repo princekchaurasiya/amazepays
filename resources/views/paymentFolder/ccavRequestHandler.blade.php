@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Custom Form Kit</title>
 </head>
+
 <body>
+
     <center>
         @include('paymentFolder.crypto')
 
@@ -21,7 +24,7 @@
         $encrypted_data = encryptCCAvenue($merchant_data, $working_key); // Method for encrypting the data.
         ?>
 
-        <form method="post" name="redirect" action="https://secure.ccavenue.com/transaction/transaction.do?command=initiateTransaction">
+        <form method="post" name="redirect" action="{{ config('paymentconfig.ccavenue_api_endpoint') }}">
             <input type="hidden" name="encRequest" value="<?php echo $encrypted_data; ?>">
             <input type="hidden" name="access_code" value="<?php echo $access_code; ?>">
         </form>
@@ -31,4 +34,5 @@
         document.redirect.submit();
     </script>
 </body>
+
 </html>

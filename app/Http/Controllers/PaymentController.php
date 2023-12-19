@@ -7,12 +7,13 @@ use App\Ccavenuekit\ccavResponseHandler;
 use App\Ccavenuekit\crypto;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\UserPanelController;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Carbon;
 use GuzzleHttp\Client;
 use Session;
 use App\Models\QsOrder;
-use Illuminate\Support\Facades\Auth;
+use Auth;
 use App\Models\CcAvenuePayment;
 use DB;
 use Mail;
@@ -35,6 +36,7 @@ class PaymentController extends Controller
     public function __construct()
     {
         $this->commonController = new CommonController();
+        $this->userPanelController = new UserPanelController();
     }
 
     function encrypt($plainText, $key)
@@ -92,6 +94,7 @@ class PaymentController extends Controller
 
     public function responseCcavenue(Request $request)
     {
+
         $workingKey = config('paymentconfig.working_key');
         $encResponse = $request->encResp; //This is the response sent by the CCAvenue Server
         $rcvdString = $this->decrypt($encResponse, $workingKey);
@@ -110,13 +113,10 @@ class PaymentController extends Controller
             }
         }
 
-        // cc avenue collected data
-        // dd($order_status );
         $qsOrderDetails = QsOrder::where('order_id', $ccAvenueCollectedDataArray[0]['order_id'])->first();
-        Auth::loginUsingId($qsOrderDetails['user_id']);
-        
-        $newCcAvenueOrder = new CcAvenuePayment();
+        // Auth::loginUsingId($qsOrderDetails['user_id']);
 
+        $newCcAvenueOrder = new CcAvenuePayment();
         $newCcAvenueOrder->user_id = $qsOrderDetails['user_id'];
         $newCcAvenueOrder->order_id = $ccAvenueCollectedDataArray[0]['order_id'];
         $newCcAvenueOrder->tracking_id = $ccAvenueCollectedDataArray[1]['tracking_id'];
@@ -141,7 +141,6 @@ class PaymentController extends Controller
                 'postcode' => $ccAvenueCollectedDataArray[15]['billing_zip'],
             ],
         );
-        // dd($ccAvenueCollectedDataArray);
         $newCcAvenueOrder->delivery_details = json_encode(
             $delivery_details = [
                 'firstname' => $ccAvenueCollectedDataArray[11]['billing_name'],
@@ -176,10 +175,6 @@ class PaymentController extends Controller
         $newCcAvenueOrder->bin_country = $ccAvenueCollectedDataArray[41]['bin_country'];
         $newCcAvenueOrder->price = $qsOrderDetails['price'];
         $newCcAvenueOrder->qty = $qsOrderDetails['qty'];
-        // $newCcAvenueOrder->sku = $qsOrderDetails['sku'];
-        // $newCcAvenueOrder->price = 2000;
-        // $newCcAvenueOrder->qty = 2;
-        // $newCcAvenueOrder->currency_code = 356;
         $newCcAvenueOrder->save();
 
         $prepareBillingDetails = [
@@ -197,6 +192,13 @@ class PaymentController extends Controller
             'contact_person' => $ccAvenueCollectedDataArray[19]['delivery_name'] . ' | ' . $ccAvenueCollectedDataArray[25]['delivery_tel'],
             'shipping_address' => $ccAvenueCollectedDataArray[20]['delivery_address'] . ', ' . $ccAvenueCollectedDataArray[21]['delivery_city'] . ', ' . $ccAvenueCollectedDataArray[22]['delivery_state'] . ' ' . $ccAvenueCollectedDataArray[23]['delivery_zip'] . '. ' . $ccAvenueCollectedDataArray[24]['delivery_country'],
         ];
+
+        if ($ccAvenueCollectedDataArray[3]['order_status'] == 'Success') {
+            $data = [
+
+            ];
+            $this->userPanelController->prepareBillingData($data);
+        }
 
         $productAllData = QsProduct::all();
 
@@ -401,50 +403,42 @@ class PaymentController extends Controller
     }
 
     public function sendGiftMessage($prepareSmsDetails, $cardsArray)
-{
-    // Extract values from $prepareSmsDetails
-    $name = $prepareSmsDetails['shipToName'];
-    $orderNumber = $prepareSmsDetails['order_id'];
-    $orderAmount = $prepareSmsDetails['order_amount'];
-    $destination = $prepareSmsDetails['shipToContactNo'];
+    {
+        // Extract values from $prepareSmsDetails
+        $name = $prepareSmsDetails['shipToName'];
+        $orderNumber = $prepareSmsDetails['order_id'];
+        $orderAmount = $prepareSmsDetails['order_amount'];
+        $destination = $prepareSmsDetails['shipToContactNo'];
 
-    // Configure SMS API parameters
-    $sms_api_url = config('giftSms.sms_api_url');
-    $sms_user_name = config('giftSms.sms_user_name');
-    $sms_user_password = config('giftSms.sms_user_password');
-    $sms_source = config('giftSms.sms_source');
-    $sms_entity_id = config('giftSms.sms_entity_id');
-    $sms_temp_id = config('giftSms.sms_temp_id');
+        // Configure SMS API parameters
+        $sms_api_url = config('giftSms.sms_api_url');
+        $sms_user_name = config('giftSms.sms_user_name');
+        $sms_user_password = config('giftSms.sms_user_password');
+        $sms_source = config('giftSms.sms_source');
+        $sms_entity_id = config('giftSms.sms_entity_id');
+        $sms_temp_id = config('giftSms.sms_temp_id');
 
-    foreach ($cardsArray as $card) {
-        $cardId = $card['cardNumber'];
-        $cardPin = $card['cardPin'];
-        $cardAmount = $card['amount'];
-        $cardActivationCode = $card['activationCode'];
-        $cardActivationURL = $card['activationUrl'];
-        $cardValidity = date('d-M-Y', strtotime($card['validity']));
+        foreach ($cardsArray as $card) {
+            $cardId = $card['cardNumber'];
+            $cardPin = $card['cardPin'];
+            $cardAmount = $card['amount'];
+            $cardActivationCode = $card['activationCode'];
+            $cardActivationURL = $card['activationUrl'];
+            $cardValidity = date('d-M-Y', strtotime($card['validity']));
 
-        // Build the SMS message for this card
-        $sms_message = 'Hello ' . $name . ' You received a gift card and your Card details: ' .
-            'Card ID: ' . $cardId .
-            ' Card Pin: ' . $cardPin .
-            ' Amount ' . $cardAmount . 
-            ' Activation Code ' .  $cardActivationCode . 
-            ' Activation URL ' . $cardActivationURL . 
-            ' Validity ' . $cardValidity .
-            ' Please check your respected Email for more information. Thanks - FRENETIC INDIA';
+            // Build the SMS message for this card
+            $sms_message = 'Hello ' . $name . ' You received a gift card and your Card details: ' . 'Card ID: ' . $cardId . ' Card Pin: ' . $cardPin . ' Amount ' . $cardAmount . ' Activation Code ' . $cardActivationCode . ' Activation URL ' . $cardActivationURL . ' Validity ' . $cardValidity . ' Please check your respected Email for more information. Thanks - FRENETIC INDIA';
 
-        // Construct the API URL with the message
-        $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
+            // Construct the API URL with the message
+            $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
 
-        // Send the HTTP GET request to the API for this card
-        $response = Http::get($apiUrl);
+            // Send the HTTP GET request to the API for this card
+            $response = Http::get($apiUrl);
 
-        // Log the response for debugging
-        \Log::info('API Response:', ['response' => $response]);
-        \Log::info('response status:', ['response status' => $response->status()]);
-        \Log::info('API URL IS:', ['API URL' => $apiUrl]);
+            // Log the response for debugging
+            \Log::info('API Response:', ['response' => $response]);
+            \Log::info('response status:', ['response status' => $response->status()]);
+            \Log::info('API URL IS:', ['API URL' => $apiUrl]);
+        }
     }
-}
-
 }

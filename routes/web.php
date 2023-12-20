@@ -129,9 +129,9 @@ Route::get('payment-cancel', function () {
 })->name('cancel');
 
 
-// Route::get('payment-success', function () {
-//     return view('paymentFolder.payment-success');
-// })->name('success');
+Route::get('payment-success', function () {
+    return view('paymentFolder.payment-success');
+})->name('success');
 
 // Route::view('/success', 'paymentFolder.payment-success')->name('payment-success');
 

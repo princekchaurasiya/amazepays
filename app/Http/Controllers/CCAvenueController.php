@@ -217,8 +217,11 @@ class CCAvenueController extends Controller
             Log::info('************* CC Avenue Data Stored Successfully ***************');
 
             if ($order_status === 'Success') {
+
                 $qsOrderDetails = QsOrder::where('id', $ccAvenueCollectedDataArray[0]['order_id'])->first();
                 $orderCreatedResponse = $this->createOrderRequest($qsOrderDetails);
+                return view('order.myOrder', compact('orderCreatedResponse'));
+
             } else {
                 $errorMessage = 'Payment failed Place new order and try payment again';
                 session()->flash('error_message', $errorMessage);
@@ -334,38 +337,38 @@ class CCAvenueController extends Controller
             Log::info('Get Response from woohoo server ' . $createOrderResponse . "\n");
 
             if ($createOrderResponse->successful()) {
-                Log::info('Order creation was successful within 10 seconds');
-                $responseData = $createOrderResponse->json();
-                Log::info($responseData);
+                // Log::info('Order creation was successful within 10 seconds');
 
-                // Flash success message
-                Session::flash('success', 'Order created successfully!');
+                $createOrderResponseData = $createOrderResponse->json();
+                // Log::info($createOrderResponseData);
 
-                // Redirect to success route
-                return redirect()->route('success.route');
+
+                // $status = $this->updateQsOrder($createOrderResponseData);
+                return $createOrderResponseData;
+
             } elseif ($createOrderResponse->clientError()) {
                 // Log client error and store error message and code in flash
                 Log::error('Client error: ' . $createOrderResponse);
                 $errorCode = $createOrderResponse->status();
                 Session::flash('error', "Client error occurred (Code: $errorCode). Please try again.");
-                return redirect()->route('error.route');
+                return redirect()->route('error');
             } elseif ($createOrderResponse->serverError()) {
                 Log::error('Server error: ' . $createOrderResponse);
                 $errorCode = $createOrderResponse->status();
                 $errorMessage = $createOrderResponse->body();
                 Session::flash('error', "Server error occurred (Code: $errorCode). $errorMessage");
-                return redirect()->route('error.route');
+                return redirect()->route('error');
             } elseif ($createOrderResponse->failed()) {
                 Log::error('Order failed check status' . $createOrderResponse);
                 $errorCode = $createOrderResponse->status();
                 Session::flash('error', "Order creation failed (Code: $errorCode). Please try again.");
-                return redirect()->route('error.route');
+                return redirect()->route('error');
             } else {
                 // Log unexpected status code and store error message in flash
                 Log::error('Unexpected status code: ' . $createOrderResponse);
                 $errorCode = $createOrderResponse->status();
                 Session::flash('error', "Unexpected error occurred (Code: $errorCode). Please try again.");
-                return redirect()->route('error.route');
+                return redirect()->route('error');
             }
         } catch (ConnectionException $e) {
             // Handle the cURL error here
@@ -379,7 +382,35 @@ class CCAvenueController extends Controller
             Log::error('Status function response: ' . $statusFunctionResponse);
             Session::flash('error', 'An error occurred while checking order status. Please try again.');
 
-            return redirect()->route('error.route');
+            return redirect()->route('error');
+        }
+
+
+    }
+
+    public function updateQsOrder($createOrderResponseData)
+    {
+        $qsOrderUpdate = QsOrder::where('id', $createOrderResponseData['refno'])->first();
+
+        if ($qsOrderUpdate) {
+            $qsOrderUpdate->update([
+                'woohoo_order_id' => $createOrderResponseData['orderId'],
+                'order_status' => $createOrderResponseData['status'],
+                'cards' => encrypt(json_encode($createOrderResponseData['cards']), env('ENCRYPTION_KEY')),
+                'order_cancel' => json_encode($createOrderResponseData['cancel']),
+                'order_payment' => json_encode($createOrderResponseData['payments']),
+                'currency' => json_encode($createOrderResponseData['currency']),
+                'additionalTxnFields' => json_encode($createOrderResponseData['additionalTxnFields']),
+            ]);
+
+            return true;
+        } else {
+            $errorMessage = "Order with ID $refno not found.";
+            Log::error($errorMessage);
+
+            Session::flash('error', $errorMessage);
+
+            return Redirect::route('error');
         }
     }
 }

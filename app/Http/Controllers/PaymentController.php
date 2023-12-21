@@ -253,6 +253,7 @@ class PaymentController extends Controller
             // Generate Invoice Number and Invoice Date
             $invoiceNumber = 'AMZ-' . date('Ymd') . '-' . mt_rand(1000, 9999);
             $invoiceDate = date('d-m-Y');
+       
 
             // Send mail to the buyer
             $prepareMailDetails = [
@@ -281,6 +282,7 @@ class PaymentController extends Controller
                 'perOrderQuantity' => $order->qty,
                 'smallImageUrl' => $smallImageUrl,
                 'giftSendOption' => $giftSendOption,
+
             ];
             // dd($prepareMailDetails);
             // Send mail to the buyer

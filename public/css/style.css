@@ -6,7 +6,7 @@
     Version: 1.0.0
 -------------------------------------------------------------*/
 /*-----------------------------------------------------------
-    Table of Content: 
+    Table of Content:
 
 
     2. Bootstrap CSS
@@ -67,7 +67,7 @@ body{
 
 .tabs {
 	display: flex;
-	flex-wrap: wrap; 
+	flex-wrap: wrap;
 }
 .tabs label {
   font-size: 13px;
@@ -81,7 +81,7 @@ body{
   transition: background ease 0.2s;
 }
 .tabs .tab {
-  order: 99; 
+  order: 99;
   flex-grow: 1;
 	width: 100%;
 	display: none;
@@ -127,7 +127,7 @@ body{
   background: rgba(255, 255, 255, 0.3);
 }
 
-.square-type-unordered li{  
+.square-type-unordered li{
   list-style-type: square;
   margin-left: 5%;
   padding-left: 2%;
@@ -156,20 +156,20 @@ body{
 
 /* for filter select */
 
-#nav-recharge .card 
+#nav-recharge .card
 {
   padding-top: 10px !important;
   padding-bottom: 10px !important;
 }
 
 .all-category{
-  color: #291E29 !important; 
+  color: #291E29 !important;
 }
 
 .select2.select2-container{
   width: 100% !important;
 }
- 
+
 /* .logo{
   color: #4d64c2 !important;
 } */
@@ -185,7 +185,7 @@ body{
   transition: all .15s ease-in-out;
   text-align-last: center;
 }
-  
+
 
 .select2.select2-container .select2-selection .select2-selection__rendered{
   color: #333;
@@ -193,7 +193,7 @@ body{
   padding-right: 33px;
   margin: 8px;
 }
-  
+
 
 .select2.select2-container .select2-selection .select2-selection__arrow{
   background: #f8f8f8;
@@ -204,44 +204,44 @@ body{
   height: 48px;
   width: 33px;
 }
-  
+
 
 .select2.select2-container.select2-container--open .select2-selection.select2-selection--single{
   background: #f8f8f8;
 }
-  
+
 
 .select2.select2-container.select2-container--open .select2-selection.select2-selection--single .select2-selection__arrow{
   -webkit-border-radius: 0 3px 0 0;
   -moz-border-radius: 0 3px 0 0;
   border-radius: 0 3px 0 0;
-  
+
 }
-  
+
 
 .select2.select2-container.select2-container--focus .select2-selection{
   border: 1px solid #34495e;
 }
- 
+
 
 .select2.select2-container .select2-selection--multiple{
   height: auto;
   min-height: 34px;
 }
-  
+
 
 .select2.select2-container .select2-selection--multiple .select2-search--inline .select2-search__field{
   margin-top: 0;
   height: 32px;
 }
- 
+
 
 .select2.select2-container .select2-selection--multiple .select2-selection__rendered{
   display: block;
   padding: 0 4px;
   line-height: 29px;
 }
-  
+
 
 /* end filter select */
 
@@ -262,7 +262,7 @@ body{
   margin-right: 12px;
   padding: 0 5px 8px 5px;
   font-weight: 700;
-  font-size: 16px; 
+  font-size: 16px;
   cursor: pointer;
   position: relative;
   margin-bottom: -2px;
@@ -279,7 +279,7 @@ body{
 .filters ul li:last-child{
   margin-right: 0;
 }
- 
+
 
 .grid .grid-item h1{
   background: #EEEEEE;
@@ -290,19 +290,19 @@ body{
   text-align: center;
   margin-bottom: 30px;
 }
- 
+
 /* end isotope filter for cards */
 
 /* for home page slider */
 
 .slider,
 .slider > div {
- 
+
   background-position: center center;
   display: block;
   width: 100%;
   height: 500px;
- 
+
   position: relative;
   background-size: cover;
   background-repeat: no-repeat;
@@ -479,7 +479,7 @@ body{
 /* end slider */
 
 .show-more-card{
-  margin-left: 50%;  
+  margin-left: 50%;
 }
 
 @keyframes boing {
@@ -12307,7 +12307,7 @@ strong,
 .main-wrapper {
   opacity: 1;
   transition: all 0.25s ease-in;
-  overflow: hidden;
+  /* overflow: hidden; */
   position: relative;
   z-index: 1;
 }
@@ -12590,7 +12590,7 @@ strong,
   line-height: 40px;
   border-radius: 25px;
   color: #f27b51;
- 
+
   font-size: 14px;
   display: inline-block;
   text-align: center;
@@ -12975,7 +12975,7 @@ strong,
 }
 
 .banner-wrapper.style1 {
- 
+
   position: relative;
   background-size: cover;
   background-position: top 0px center;
@@ -15325,9 +15325,9 @@ body {
     padding: 0;
   }
 
-  
 
-  
+
+
 
   .pt-lg--10 {
     padding-top: 125px !important;
@@ -15368,7 +15368,7 @@ body {
     flex: 0 0 50%;
     max-width: 50%;
   }
- 
+
   .col-xs-12 {
     flex: 0 0 100%;
     max-width: 100%;
@@ -15521,7 +15521,7 @@ body {
   border-bottom: 2px dotted #bbb;
   border-left: 2px dotted #bbb;
   border-right: 2px dotted #bbb;
-  width: 100%; 
+  width: 100%;
   border-radius:0px 0px 15px 15px;
   margin: 0 auto;
   max-width: 600px;
@@ -15620,7 +15620,7 @@ body {
   font-weight: bold;
   text-transform: uppercase;
   font-size: 13px;
-  
+
 }
 .total-amount .amount{
   font-weight: bold;
@@ -15688,8 +15688,8 @@ body {
   line-height: 26px;
   /* outline: none; */
   padding: 5px !important;
-  
-  
+
+
 }
 
 .radio-btn-selected {
@@ -15738,7 +15738,7 @@ body {
 
  /* input  field disabled code starts here */
 
- .custDisabled 
+ .custDisabled
     {
         cursor: not-allowed;
         background-color: rgb(229, 229, 229) !important;
@@ -15755,7 +15755,7 @@ body {
   max-height: 60px !important;
  }
 
- 
+
 .header-wrapper{
   padding: 10px;
 }

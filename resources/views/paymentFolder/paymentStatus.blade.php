@@ -16,7 +16,7 @@
                 <p>
                     Thank you for your purchase! We have received your order.
                 </p>
-                <p><a href="{{ route('myOrder') }}" class="payment-status-link">View your recent order.</a></p>
+                {{-- <p><a href="{{ route('myOrder') }}" class="payment-status-link">View your recent order.</a></p> --}}
             </div>
         </div>
     @else

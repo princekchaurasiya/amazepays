@@ -11,6 +11,14 @@ use App\Models\QsOrder;
 use App\Models\CcAvenuePayment;
 use App\Helpers\CommonHelper;
 use Carbon;
+use GuzzleHttp\Client;
+use Auth;
+use DB;
+use Mail;
+use App\QsProduct;
+use PDF;
+use App\Models\GiftCard;
+use Config;
 
 class CCAvenueController extends Controller
 {
@@ -175,53 +183,18 @@ class CCAvenueController extends Controller
             foreach ($commonFields as $index => $field) {
                 $newCcAvenueOrder->{$field} = $ccAvenueCollectedDataArray[$index][$field];
             }
-            Log::info('this is common fileds');
-            Log::debug($commonFields);
+
             $newCcAvenueOrder->save();
-
-            // $billingDetailsFields = ['11' => 'billing_name', '18' => 'billing_email', '17' => 'billing_tel', '12' => 'billing_address', '13' => 'billing_city', '14' => 'billing_state', '15' => 'billing_zip'];
-
-            // $newCcAvenueOrder->billing_details = json_encode(
-            //     array_combine(
-            //         array_values($billingDetailsFields), // Use array_values to get the values (indices) as keys
-            //         array_map(function ($index) use ($ccAvenueCollectedDataArray) {
-            //             return $ccAvenueCollectedDataArray[$index];
-            //         }, array_keys($billingDetailsFields)),
-            //     ),
-            // );
-
-            // // Set delivery details (assuming it's the same as billing details)
-            // $newCcAvenueOrder->delivery_details = $newCcAvenueOrder->billing_details;
-
-            // // Set merchant params
-            // $merchantParamsFields = ['26' => 'merchant_param1', '27' => 'merchant_param2', '28' => 'merchant_param3', '29' => 'merchant_param4', '30' => 'merchant_param5'];
-
-            // $newCcAvenueOrder->merchant_params = json_encode(
-            //     array_combine(
-            //         array_values($merchantParamsFields),
-            //         array_map(function ($index) use ($ccAvenueCollectedDataArray) {
-            //             return $ccAvenueCollectedDataArray[$index];
-            //         }, array_keys($merchantParamsFields)),
-            //     ),
-            // );
-
-            // // Set other fields
-            // $otherFields = ['31' => 'vault', '32' => 'offer_type', '33' => 'offer_code', '34' => 'discount_value', '35' => 'mer_amount', '36' => 'eci_value', '37' => 'retry', '38' => 'response_code', '39' => 'billing_notes', '40' => 'trans_date', '41' => 'bin_country'];
-
-            // foreach ($otherFields as $index => $field) {
-            //     $newCcAvenueOrder->{$field} = $ccAvenueCollectedDataArray[$index][$field];
-            // }
-
-            // $newCcAvenueOrder->save();
 
             Log::info('************* CC Avenue Data Stored Successfully ***************');
 
             if ($order_status === 'Success') {
-
                 $qsOrderDetails = QsOrder::where('id', $ccAvenueCollectedDataArray[0]['order_id'])->first();
-                $orderCreatedResponse = $this->createOrderRequest($qsOrderDetails);
-                return view('order.myOrder', compact('orderCreatedResponse'));
 
+                $orderCreatedResponse = $this->createOrderRequest($qsOrderDetails);
+
+                // return view('order.myOrder', compact('orderCreatedResponse'));
+                return view('paymentFolder.payment-success');
             } else {
                 $errorMessage = 'Payment failed Place new order and try payment again';
                 session()->flash('error_message', $errorMessage);
@@ -337,15 +310,89 @@ class CCAvenueController extends Controller
             Log::info('Get Response from woohoo server ' . $createOrderResponse . "\n");
 
             if ($createOrderResponse->successful()) {
-                // Log::info('Order creation was successful within 10 seconds');
+                Log::info('Order creation was successful within 10 seconds');
 
                 $createOrderResponseData = $createOrderResponse->json();
-                // Log::info($createOrderResponseData);
+                $orderId = $this->updateQsOrder($createOrderResponseData);
+
+                $order = QsOrder::join('cc_avenue_payment', 'cc_avenue_payment.order_id', '=', 'qs_ordered.id')
+                    ->join('qs_products', 'qs_products.sku', '=', 'qs_ordered.sku')
+                    ->where('qs_ordered.id', $orderId)
+                    ->select('qs_ordered.*', 'cc_avenue_payment.*', 'qs_products.*')
+                    ->first();
 
 
-                // $status = $this->updateQsOrder($createOrderResponseData);
+                $invoiceNumber = 'AMZ-' . date('Ymd') . '-' . mt_rand(1000, 9999);
+                $invoiceDate = date('d-m-Y');
+                $cardsArray = json_decode(decrypt($order['cards'], env('ENCRYPTION_KEY')), true);
+                $images = json_decode($order['images'], true);
+
+                if ($images && isset($images['small'])) {
+                    $smallImageUrl = $images['small'];
+                }
+
+                $prepareMailDetails = [
+                    'name' => $order['sender_first_name'],
+                    'order_id' => $order['woohoo_order_id'],
+                    'reference_id' => $order['id'],
+                    'order_date' => $order['created_at'],
+                    'billing_name' => $order['sender_first_name'],
+                    'billing_email' => $order['sender_email'],
+                    'billing_tel' => $order['sender_phone_no'],
+                    'billing_address' => $order['sender_address_1'] . ' ' . $order['sender_address_2'] . ', ' . $order['sender_city'] . ', ' . $order['sender_state'] . ' ' . $order['sender_post_code'],
+                    'payment_mode' => $order['payment_mode'],
+                    'bank_ref_no' => $order['bank_ref_no'],
+                    'order_amount' => $order['amount'],
+
+                    'net_payable' => $order['amount'],
+                    'contact_person' => $order['sender_first_name'],
+                    'shipping_address' => $order['delivery_mode'] === 'email' ? $order['sender_email'] : $order['sender_address_1'] . ' ' . $order['sender_address_2'] . ', ' . $order['sender_city'] . ', ' . $order['sender_state'] . ' ' . $order['sender_post_code'],
+                    'invoice_number' => $invoiceNumber,
+                    'invoice_date' => $invoiceDate,
+                    'cardSku' => $order['sku'],
+                    'cardProductName' => $order['sku'],
+                    'shipToName' => $order['receiver_name'] ?? $order['sender_first_name'],
+                    'shipToEmail' => $order['receiver_email'] ?? $order['sender_email'],
+                    'shipToContactNo' => $order['receiver_mobile'] ?? $order['sender_phone_no'],
+                    'perOrderPrice' => $order['amount'],
+                    'perOrderQuantity' => $order['quantity'],
+                    'smallImageUrl' => $smallImageUrl,
+                    'giftSendOption' => $order['gift_send_option'],
+                ];
+
+                $prepareSmsDetails = [
+                    'name' => $order['sender_first_name'],
+                    'order_id' => $order['woohoo_order_id'],
+                    'reference_id' => $order['id'],
+                    'order_date' => $order['created_at'],
+                    'billing_name' => $order['sender_first_name'],
+                    'order_amount' => $order['amount'],
+                    'cardSku' => $order['sku'],
+                    'cardProductName' => $order['sku'],
+                    'shipToName' => $order['receiver_name'] ?? $order['sender_first_name'],
+                    'shipToContactNo' => $order['receiver_mobile'] ?? $order['sender_phone_no'],
+                    'perOrderPrice' => $order['amount'],
+                    'perOrderQuantity' => $order['quantity'],
+                    'giftSendOption' => $order['gift_send_option'],
+                    'billing_tel' => $order['sender_phone_no'],
+                ];
+
+                if ($order['delivery_mode'] == 'both') {
+                    $this->sendTransactionMail($prepareMailDetails);
+                    $this->sendTransactionalMessage($prepareSmsDetails);
+                    $this->sendGiftMail($prepareMailDetails, $cardsArray);
+                    $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
+                } elseif ($order['delivery_mode'] == 'email') {
+                    $this->sendTransactionMail($prepareMailDetails);
+                    $this->sendTransactionalMessage($prepareSmsDetails);
+                    $this->sendGiftMail($prepareMailDetails, $cardsArray);
+                } elseif ($order['delivery_mode'] == 'mobile') {
+                    $this->sendTransactionMail($prepareMailDetails);
+                    $this->sendTransactionalMessage($prepareSmsDetails);
+                    $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
+                }
+
                 return $createOrderResponseData;
-
             } elseif ($createOrderResponse->clientError()) {
                 // Log client error and store error message and code in flash
                 Log::error('Client error: ' . $createOrderResponse);
@@ -384,8 +431,92 @@ class CCAvenueController extends Controller
 
             return redirect()->route('error');
         }
+    }
 
+    private function getStatusByReferenceNumber($refno)
+    {
+        Log::info($refno);
+        Log::info('You are in get Status Function');
+        Log::info('attempt 1 has happened, go for step 2');
+        $attempt = 1;
+        $max_retries = 2; // Change this to the desired number of retries
+        $retry_interval = 40; // Retry interval in seconds
+        $requestHttpMethod = 'GET';
+        $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/order/' . $refno . '/status';
+        $clientSecret = setting('api.qs_clientSecret');
+        $bearerToken = setting('api.bearer_token');
+        $requestBody = '';
+        $dateAtClient = Carbon\Carbon::now()->toIso8601String();
+        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
 
+        while ($attempt <= $max_retries) {
+            $cardStatusApiResponse = Http::acceptJson()
+                ->withToken($bearerToken)
+                ->withHeaders([
+                    'signature' => $signature,
+                    'dateAtClient' => $dateAtClient,
+                ])
+                ->get($absApiUrl);
+
+            if ($cardStatusApiResponse->status() == 200) {
+                $cardStatusApiResponseData = json_decode($cardStatusApiResponse->getBody(), true);
+
+                if ($cardStatusApiResponseData['status'] === 'COMPLETE') {
+                    $orderId = $cardStatusApiResponseData['orderId'];
+                    $activatedCardReponseFromFunction = $this->callCardActivation($cardStatusApiResponseData);
+                    return $activatedCardReponseFromFunction;
+                } elseif ($cardStatusApiResponseData['status'] === 'PROCESSING') {
+                    // If the order is still processing, wait for the retry interval
+                    sleep($retry_interval);
+                } else {
+                    Log::info('Anything other than processing or complete status');
+                    return false;
+                }
+            } else {
+                Log::info('Order failed, response 200 not received');
+                return false;
+            }
+
+            $attempt++;
+        }
+
+        Log::info('Max retries reached without reaching a complete status.');
+        return false;
+
+        // You can handle the case where the maximum number of retries is reached without a complete status here.
+    }
+
+    public function callCardActivation($cardStatusApiResponseData)
+    {
+        Log::info('You are in Card Activation Function');
+        $orderId = $cardStatusApiResponseData['orderId'];
+        $clientSecret = setting('api.qs_clientSecret'); // Your client secret
+        $bearerToken = setting('api.bearer_token'); // Your bearer token
+        $apiUrl = 'https://' . setting('api.woohoo_url');
+        $absApiUrl = "$apiUrl/rest/v3/order/{$orderId}/cards";
+        $requestBody = '';
+        $requestHttpMethod = 'GET';
+        $dateAtClient = Carbon\Carbon::now()->toIso8601String();
+        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+        $activatedCardApiResponse = Http::acceptJson()
+            ->withToken($bearerToken)
+            ->withHeaders([
+                'signature' => $signature,
+                'dateAtClient' => $dateAtClient,
+            ])
+            ->get($absApiUrl);
+
+        if ($activatedCardApiResponse->status() == 200) {
+            Log::alert('card activation successfull');
+            $activatedCardApiResponseData = $activatedCardApiResponse->json();
+
+            // Create a new array by merging the two response data arrays
+            $combinedData = array_merge($cardStatusApiResponseData, $activatedCardApiResponseData);
+            return $combinedData;
+        } else {
+            Log::info('Order failed, response 200 not received');
+            return false;
+        }
     }
 
     public function updateQsOrder($createOrderResponseData)
@@ -403,14 +534,110 @@ class CCAvenueController extends Controller
                 'additionalTxnFields' => json_encode($createOrderResponseData['additionalTxnFields']),
             ]);
 
-            return true;
+            return $qsOrderUpdate->id;
+
+            // return ['joinedData' => $order, 'qsOrderUpdate' => $qsOrderUpdate];
         } else {
             $errorMessage = "Order with ID $refno not found.";
             Log::error($errorMessage);
 
             Session::flash('error', $errorMessage);
-
             return Redirect::route('error');
+        }
+    }
+
+    public function sendTransactionMail($prepareMailDetails)
+    {
+        $pdf = PDF::loadView('layouts.invoice', $prepareMailDetails);
+        Mail::send(['html' => 'layouts.mail'], compact('prepareMailDetails', 'pdf'), function ($message) use ($prepareMailDetails, $pdf) {
+            $message
+                ->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
+                ->to($prepareMailDetails['billing_email'], $prepareMailDetails['billing_name'])
+                ->subject(config('companyDefaultValues.default_subject'))
+                ->attachData($pdf->output(), 'invoice.pdf');
+        });
+        $msg = 'Trasnaction Mail created successfully!';
+        $status = 'success';
+    }
+
+    public function sendGiftMail($prepareMailDetails, $cardsArray)
+    {
+        Mail::send(['html' => 'layouts.giftmail'], compact('prepareMailDetails', 'cardsArray'), function ($message) use ($prepareMailDetails) {
+            $message
+                ->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
+                ->to($prepareMailDetails['shipToEmail'], $prepareMailDetails['shipToName'])
+                ->subject(config('companyDefaultValues.gift_subject'));
+        });
+
+        $msg = 'Gift Mail created successfully!';
+        $status = 'success';
+    }
+
+    public function sendTransactionalMessage($prepareSmsDetails)
+    {
+        $name = $prepareSmsDetails['name'];
+        $orderAmount = $prepareSmsDetails['order_amount'];
+        $orderNumber = $prepareSmsDetails['order_id'];
+        $productName = $prepareSmsDetails['cardProductName'];
+        $destination = $prepareSmsDetails['billing_tel'];
+        $sms_api_url = config('transactionSms.sms_api_url');
+        $sms_user_name = config('transactionSms.sms_user_name');
+        $sms_user_password = config('transactionSms.sms_user_password');
+        $sms_source = config('transactionSms.sms_source');
+        $sms_message = 'Hello ' . $name . ', Your order no ' . $orderNumber . ' of ' . $orderAmount . ' is generated successfully. Please check out respected Email for that. Thanks - FRENETIC INDIA.';
+        $sms_entity_id = config('transactionSms.sms_entity_id');
+        $sms_temp_id = config('transactionSms.sms_temp_id');
+
+        // Construct the API URL with the message
+        $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
+
+
+        // Send the HTTP GET request to the API
+        $response = Http::get($apiUrl);
+
+        // Log the response for debugging
+        \Log::info('API Response:', ['response' => $response]);
+        \Log::info('response status:', ['response status' => $response->status()]);
+        \Log::info('API URL IS:', ['API URL' => $apiUrl]);
+    }
+
+    public function sendGiftMessage($prepareSmsDetails, $cardsArray)
+    {
+        // Extract values from $prepareSmsDetails
+        $name = $prepareSmsDetails['shipToName'];
+        $orderNumber = $prepareSmsDetails['order_id'];
+        $orderAmount = $prepareSmsDetails['order_amount'];
+        $destination = $prepareSmsDetails['shipToContactNo'];
+
+        // Configure SMS API parameters
+        $sms_api_url = config('giftSms.sms_api_url');
+        $sms_user_name = config('giftSms.sms_user_name');
+        $sms_user_password = config('giftSms.sms_user_password');
+        $sms_source = config('giftSms.sms_source');
+        $sms_entity_id = config('giftSms.sms_entity_id');
+        $sms_temp_id = config('giftSms.sms_temp_id');
+
+        foreach ($cardsArray as $card) {
+            $cardId = $card['cardNumber'];
+            $cardPin = $card['cardPin'];
+            $cardAmount = $card['amount'];
+            $cardActivationCode = $card['activationCode'];
+            $cardActivationURL = $card['activationUrl'];
+            $cardValidity = date('d-M-Y', strtotime($card['validity']));
+
+            // Build the SMS message for this card
+            $sms_message = 'Hello ' . $name . ' You received a gift card and your Card details: ' . 'Card ID: ' . $cardId . ' Card Pin: ' . $cardPin . ' Amount ' . $cardAmount . ' Activation Code ' . $cardActivationCode . ' Activation URL ' . $cardActivationURL . ' Validity ' . $cardValidity . ' Please check your respected Email for more information. Thanks - FRENETIC INDIA';
+
+            // Construct the API URL with the message
+            $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
+
+            // Send the HTTP GET request to the API for this card
+            $response = Http::get($apiUrl);
+
+            // Log the response for debugging
+            \Log::info('API Response:', ['response' => $response]);
+            \Log::info('response status:', ['response status' => $response->status()]);
+            \Log::info('API URL IS:', ['API URL' => $apiUrl]);
         }
     }
 }

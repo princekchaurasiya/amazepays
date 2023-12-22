@@ -53,6 +53,8 @@ class UserPanelController extends Controller
         //return View::make("userpanel/index", compact('allProducts'));
     }
 
+// user registration function
+
     public function userRegistration(Request $request)
     {
         try {
@@ -105,6 +107,7 @@ class UserPanelController extends Controller
         }
     }
 
+    // user login function
     public function userLogin(Request $request)
     {
         try {
@@ -138,6 +141,7 @@ class UserPanelController extends Controller
     }
     public function checkOut(Request $request, $sku)
     {
+
         try {
             session()->put('denomination', $request->denomination);
             session()->put('quantity', $request->quantity);
@@ -147,15 +151,22 @@ class UserPanelController extends Controller
             session()->put('receiver_mobile', $request->receiver_mobile);
             session()->put('receiver_msg', $request->receiver_msg);
             session()->put('delivery_mode', $request->delivery_mode);
+            Session::put('user_id', Auth::id());
+            // session()->put('user_id', Auth::id());
             $qsProd = QsProduct::where('sku', $sku)->first();
+
+            Log::alert("$qsProd");
             $qsProd['prodData'] = $request->all();
+
+            Log::alert("$qsProd");
             $currency = json_decode($qsProd['currency']);
             $qsProd['currency'] = $currency;
             $qsProd['images'] = json_decode($qsProd->images);
 
             // dd(json_decode($qsProd->images));
-            if (\Auth::user()) {
-                return view('userpanel/checkout', compact('qsProd'));
+
+            if (\Auth::check()) {
+                return view('userpanel.checkout', compact('qsProd'));
             } else {
                 return redirect('/');
             }
@@ -201,7 +212,8 @@ class UserPanelController extends Controller
                     'amount' => $request->amount, //take from selected front end
                 ],
             ],
-            'refno' => 'Amaz' . mt_rand(1111, 9999),
+            'refno' => 'order id' ,
+
             'products' => [
                 [
                     'sku' => $request->sku,
@@ -220,28 +232,45 @@ class UserPanelController extends Controller
     public function orderProceed(Request $request)
     {
         $modify_user_data = $this->prepareBillingData($request);
+        // Log::info($modify_user_data);
+        $order_id = $modify_user_data['amazepay_order_id'];
+        Log::info('amazepay order id for CCavenue transaction is ' . $order_id);
+        $qsOrder = new QsOrder();
+        $qsOrder->user_id = Auth::user()->id;
+        $qsOrder->reference_id = $modify_user_data['refno'];
+        $qsOrder->order_id = $modify_user_data['amazepay_order_id'];
+        $qsOrder->price = session::get('denomination');
+        $qsOrder->qty = session::get('quantity') ?? 0;
+        $qsOrder->sku = $modify_user_data['products'][0]['sku'];
+        $qsOrder->is_gifted = session::get('gift_send_option') == 'send_as_gift' ? 1 : 0;
+        $qsOrder->save();
 
-        $createOrderResponse = $this->createOrderRequest($modify_user_data);
+        $merchant_id = config('paymentconfig.merchant_id');
+        $requestAllData = $request->all();
+        $data = $requestAllData + compact('merchant_id', 'order_id');
 
-        if ($createOrderResponse) {
-            // $createOrderResponseData = $createOrderResponse->json();
-            // dd($createOrderResponseData);
-            $order_id = $createOrderResponse['orderId'];
-            $refno = $modify_user_data['refno'];
+        return view('paymentFolder.ccavRequestHandler', compact('data', 'modify_user_data'));
 
-            $merchant_id = config('paymentconfig.merchant_id');
-
-            $this->createQsOrder($createOrderResponse, $modify_user_data, $refno);
-
-            $requestAllData = $request->all();
-            $data = $requestAllData + compact('order_id', 'merchant_id');
-            return view('paymentFolder.ccavRequestHandler', compact('data'));
-        } else {
-            return view('order.order-failed');
-        }
+        // if($orderPaymentResponse == "Success"){
+        //    dd("payment success");
+        // }
+        // elseif ($orderPaymentResponse  == "Failure") {
+        //    dd("payment failure");
+        // }
+        // else{
+        //     dd("bhalta error");
+        // }
     }
 
-    private function createOrderRequest($modify_user_data)
+    // $orderPaymentResponse = public function paymentResponse($paymentResponse)
+    // {
+    //     return $paymentResponse;
+
+    // }
+
+    // public function orderPaymentResponse($orderPaymentResponse);
+
+    public function createOrderRequest($modify_user_data)
     {
         $requestBody = json_encode($modify_user_data);
         $requestHttpMethod = 'post';
@@ -282,7 +311,6 @@ class UserPanelController extends Controller
                 'data' => $requestBody,
             ]);
 
-
             Log::info("\n");
             Log::info('********************** check order api hit response whether received or not ***************************' . "\n");
 
@@ -321,14 +349,10 @@ class UserPanelController extends Controller
     private function createQsOrder($createOrderResponse, $modify_user_data, $refno)
     {
         $qsOrder = new QsOrder();
-        $qsOrder->user_id = Auth::user()->id;
-        $qsOrder->reference_id = $refno;
-        $qsOrder->order_id = isset($createOrderResponse['orderId']) ? $createOrderResponse['orderId'] : null;
+
         $qsOrder->order_created_status = $createOrderResponse['status'] ?? null;
         $qsOrder->cards = encrypt(json_encode($createOrderResponse['cards']), env('ENCRYPTION_KEY'));
-        $qsOrder->price = session::get('denomination');
-        $qsOrder->qty = session::get('quantity') ?? 0;
-        $qsOrder->sku = $modify_user_data['products'][0]['sku'];
+
         $cancelData = isset($createOrderResponse['cancel']) ? $createOrderResponse['cancel'] : null;
         $qsOrder->order_cancel = json_encode($cancelData);
 

@@ -33,9 +33,9 @@ class SmsController extends Controller
 
         // Extract the destination number from the request
         $destination = $request->input('destination');
-        
+
         $user = User::where('mobile', $destination)->first();
-        
+
 
         if (!$user) {
             return response()->json([
@@ -47,13 +47,13 @@ class SmsController extends Controller
         // Get the user's stored mobile number
         $userStoredMobileNumber = $user->mobile;
 
-       
+
 
         if ($destination == $userStoredMobileNumber) {
             // Generate the OTP (a 6-digit random number)
             $otp = config('companyDefaultValues.generated_otp');
 
-            
+
 
             // get the value from config file
             $sms_api_url = config('companyDefaultValues.sms_api_url');
@@ -65,8 +65,8 @@ class SmsController extends Controller
             $sms_temp_id = config('companyDefaultValues.sms_temp_id');
 
             // Build the API URL with the encoded credentials and Template ID
-            $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
-            
+            // $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
+
 
             // Store the OTP in the database along with the user ID and expiration time
             $otpExpiration = config('companyDefaultValues.otpExpiration');

@@ -15953,3 +15953,25 @@ body {
 .register-button-color{
   background-color: #01007f !important
 }
+
+.card-font{
+font-size: 12px !important;
+color: #01007f !important;
+}
+
+.single-image-wrapper{
+    border-radius: 25px;
+}
+
+.hot-deal-text{
+    color: #ff6601 !important;
+}
+
+.normalhr {
+    background-color: #01007f;
+    width: 5.5rem;
+    height: 4px;
+    margin-top: 0rem;
+    margin-bottom: 1rem;
+    border-radius: 20px;
+}

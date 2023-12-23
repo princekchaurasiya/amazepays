@@ -19,6 +19,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductSkuController;
 use App\Http\Controllers\ErrorController;
 use App\Http\Controllers\CreateOrderController;
+use App\Http\Controllers\ViewCardDetails;
 
 /*
 |--------------------------------------------------------------------------
@@ -182,3 +183,8 @@ Route::get('/order-list', [UserPanelController::class, 'orderList'])->name('orde
 Route::get('/order-failed', function () {
     return view('order.order-failed');
 })->name('order-failed');
+
+
+
+
+Route::post('/card-details', [ViewCardDetails::class, 'index'])->name('view-card-details');

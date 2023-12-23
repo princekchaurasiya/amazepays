@@ -330,64 +330,101 @@
     <!-- Modal Login -->
     <div class="modal bottom fade" id="Modallogin" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
         data-backdrop="true" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-dialog-centered modal-md modal-lg" role="document">
             <div class="modal-content border-0">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i
                         class="ti-close text-grey-500"></i></button>
-                <div class="modal-body p-3 d-flex align-items-center bg-none">
-                    <div class="card shadow-none rounded-0 w-100 p-2 pt-3 border-0">
-                        <div class="card-body rounded-0 text-left pt-0 pb-2">
-                            <h2 class="fw-600 display2-size mb-4">Login</h2>
-                            <span class="font-xssss fw-400 main-error text-center"></span>
-                            <form id="login-form">
-                                <div class="form-group mb-3">
-                                    <input type="text"
-                                        class="form-control h60 border-2 bg-color-none text-grey-700"
-                                        placeholder="Enter Your Mobile Number" id="loginMobNumb">
-                                    <span class="font-xssss fw-400 error-loginMobNumb text-danger"></span>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="login-signup">
+                                <div class="row ">
+                                    <div class="col-md-5 left-half d-lg-block d-none">
+                                        <div class="left-side-body rounded-0 w-100 p-2 pt-5 border-0">
+                                            <div class="card-body rounded-0 text-left pt-5 pb-2">
+                                                <div class="single-line mb-2">
+                                                    <p class="mr-3"><img src="https://www.gyftoo.com/public/assets/images/group1.png" alt="Group"></p>
+                                                    <p class="text-white">Buy or Send Gift Cards Instantly</p>
+                                                </div>
+                                            </div>
+                                            <div class="card-body rounded-0 text-left pt-3 pb-2">
+                                                <div class="single-line mb-2">
+                                                    <p class="mr-3"><img src="https://www.gyftoo.com/public/assets/images/group1.png" alt="Group"></p>
+                                                    <p class="text-white">Buy or Send Gift Cards Instantly</p>
+                                                </div>
+                                            </div>
+                                            <h4 class="fw-600 display2-size-sm mb-4 text-center">Cashback and Gift Cards</h4>
+                                            <p class="text-center"><img src="https://www.gyftoo.com/public/assets/images/logo-org.png" alt="Gyftoo" class="img-fluid" width="150"></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-7 right-half">
+                                        <div class="card shadow-none rounded-0 w-100 p-2 pt-3 border-0">
+                                            <div class="card-body rounded-0 text-left pt-0 pb-2">
+                                                <h2 class="fw-600 display2-size mb-4">Login</h2>
+                                                <span class="font-xssss fw-400 main-error text-center"></span>
+                                                <form id="login-form">
+                                                    <div class="form-group mb-3">
+                                                        <input type="text"
+                                                            class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
+                                                            placeholder="Enter Your Mobile Number" id="loginMobNumb">
+                                                        <span class="font-xssss fw-400 error-loginMobNumb text-danger"></span>
+                                                    </div>
+                                                    <div class="form-group mb-3">
+                                                        <input type="password"
+                                                            class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
+                                                            placeholder="Enter Password" id="loginPass">
+                                                        <span class="font-xssss fw-400 error-loginPass text-danger"></span>
+                                                    </div>
+                                                    <div class="form-check text-left mb-3">
+                                                        <input type="checkbox" class="form-check-input mt-2" id="exampleCheck1">
+                                                        <label class="form-check-label font-xsss text-grey-500"
+                                                            for="exampleCheck1">Remember me</label>
+                                                        <a href="#" class="fw-600 font-xsss text-grey-700 mt-1 float-right"
+                                                            data-toggle="modal" data-target="#Modalforgotpassword"
+                                                            data-dismiss="modal">Forgot your Password?</a>
+                                                    </div>
+                                                    <div class="form-group icon-tab mb-3">
+                                                        <div class="row">
+                                                            <div class="col-6 align-self-center">
+                                                                <button type="button" class="btn btn-primary login-otp-link p-0"
+                                                                id="loginWithOtpButton">Login With OTP</button>
+                                                            </div>
+                                                            <div class="col-6 align-self-center">
+                                                                <button type="submit"
+                                                                class="form-control rounded-lg h20 float-right bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 w100"
+                                                                id="loginUser">Login</button>
+                                                            </div>
+                                                        </div>          
+                                                    </div>
+                                                    <!-- Hidden input to store the mobile number for OTP -->
+                                                    <input type="hidden" class="destination-input" name="destination" id="destination"
+                                                        required>
+                                                </form>
+                                                <!-- Get OTP button to trigger OTP modal -->
+                                               
+                                                <!-- Success message div -->
+                                                <div class="col-sm-12 p-0 text-center">
+                                                    <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Don't have an account <a
+                                                            href="#" class="fw-700 ml-1 text-current register-form"
+                                                            data-toggle="modal" data-target="#ModalregisterD"
+                                                            data-dismiss="modal">Register</a></h6>
+                                                </div>
+                                                <div class="col-sm-12 p-0 text-center">
+                                                    <p class="fw-500 font-xssss text-grey-600 mt-2 pt-3 d-inline-block text-center">
+                                                        By continuing, you agree to Amazepay's <a href="{{ route('tnc') }}"
+                                                            class="text-current">Terms and Conditions</a> and <a href="{{ route('private-policy') }}"
+                                                            class="text-current">Privacy Policy</a>.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="form-group mb-3">
-                                    <input type="password"
-                                        class="form-control h60 border-2 bg-color-none text-grey-700"
-                                        placeholder="Enter Password" id="loginPass">
-                                    <span class="font-xssss fw-400 error-loginPass text-danger"></span>
-                                </div>
-                                <div class="form-check text-left mb-3">
-                                    <input type="checkbox" class="form-check-input mt-2" id="exampleCheck1">
-                                    <label class="form-check-label font-xsss text-grey-500"
-                                        for="exampleCheck1">Remember me</label>
-                                    <a href="#" class="fw-600 font-xsss text-grey-700 mt-1 float-right"
-                                        data-toggle="modal" data-target="#Modalforgotpassword"
-                                        data-dismiss="modal">Forgot your Password?</a>
-                                </div>
-                                <div class="form-group icon-tab mb-3">
-                                    <button type="submit"
-                                        class="text-center form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0"
-                                        id="loginUser">Login</button>
-                                </div>
-                                <!-- Hidden input to store the mobile number for OTP -->
-                                <input type="hidden" class="destination-input" name="destination" id="destination"
-                                    required>
-                            </form>
-                            <!-- Get OTP button to trigger OTP modal -->
-                            <button type="button" class="btn btn-primary login-otp-link"
-                                id="loginWithOtpButton">Login With OTP</button>
-                            <!-- Success message div -->
-                            <div class="col-sm-12 p-0 text-center">
-                                <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Don't have an account <a
-                                        href="#" class="fw-700 ml-1 text-current register-form"
-                                        data-toggle="modal" data-target="#ModalregisterD"
-                                        data-dismiss="modal">Register</a></h6>
-                            </div>
-                            <div class="col-sm-12 p-0 text-center">
-                                <p class="fw-900 font-xssss text-grey-600 mt-2 pt-3 d-inline-block text-center">
-                                    By continuing, you agree to Amazepay's <a href="{{ route('tnc') }}"
-                                        class="text-current">Terms and Conditions</a> and <a href="{{ route('private-policy') }}"
-                                        class="text-current">Privacy Policy</a>.
-                                </p>
                             </div>
                         </div>
+                        
                     </div>
+                    
                 </div>
             </div>
         </div>

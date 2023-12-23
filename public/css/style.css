@@ -46,7 +46,7 @@
 /* for recharge plan */
 
 body{
-  /* font-family: "Montserrat", sans-serif !important; */
+  font-family: "Montserrat", sans-serif !important;
 }
 
 #view-plan {
@@ -3656,6 +3656,13 @@ pre code {
   border-radius: 0.25rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
+.credentails-field{
+  outline: 0 !important;
+  border-width: 0 0 2px !important; 
+}
+.credentails-field:focus{
+  border-color: #ff8b00 !important;
+}
 @media (prefers-reduced-motion: reduce) {
   .form-control {
     transition: none;
@@ -6832,6 +6839,7 @@ a.badge-dark:focus, a.badge-dark.focus {
     margin-left: -1px;
     border-left-width: 1px;
   }
+  
 }
 @media (min-width: 1400) {
   .list-group-horizontal-xxl {
@@ -7180,8 +7188,13 @@ a.close.disabled {
 .modal-body {
   position: relative;
   flex: 1 1 auto;
-  padding: 1rem;
+  /* padding: 1rem; */
+  
 }
+/* .modal-body .right-half{
+  border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+} */
 
 .modal-footer {
   display: flex;
@@ -15975,3 +15988,19 @@ color: #01007f !important;
     margin-bottom: 1rem;
     border-radius: 20px;
 }
+
+@media only screen and (width > 576px) {
+  .modal-body .left-half{
+    background-color: #ff6601 !important;
+  }
+  /* .left-half .single-line{
+    display: flex;
+    align-items: center;
+  } */
+}
+
+/* @media only screen and (width < 768px) {
+   .modal-body .left-side-body{
+    display: none;
+  } 
+} */

@@ -15955,8 +15955,8 @@ body {
 }
 
 .card-font{
-font-size: 12px !important;
-color: #01007f !important;
+font-size: 14px !important;
+color: black !important;
 }
 
 .single-image-wrapper{
@@ -15972,6 +15972,23 @@ color: #01007f !important;
     width: 5.5rem;
     height: 4px;
     margin-top: 0rem;
-    margin-bottom: 1rem;
+    margin-bottom: 2.2rem;
     border-radius: 20px;
+}
+.outer-order-wrapper-div {
+    background: #fff;
+    padding: 5px 10px;
+
+}
+
+.product-card{
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,0.08);
+
+}
+.my-order-image-div
+{
+    border-radius: 20px;
+}
+.my-order-card-body{
+    margin-bottom: 1%;
 }

@@ -356,9 +356,9 @@
                                     <input type="checkbox" class="form-check-input mt-2" id="exampleCheck1">
                                     <label class="form-check-label font-xsss text-grey-500"
                                         for="exampleCheck1">Remember me</label>
-                                    <a href="#" class="fw-600 font-xsss text-grey-700 mt-1 float-right"
+                                    {{-- <a href="#" class="fw-600 font-xsss text-grey-700 mt-1 float-right"
                                         data-toggle="modal" data-target="#Modalforgotpassword"
-                                        data-dismiss="modal">Forgot your Password?</a>
+                                        data-dismiss="modal">Forgot your Password?</a> --}}
                                 </div>
                                 <div class="form-group icon-tab mb-3">
                                     <button type="submit"

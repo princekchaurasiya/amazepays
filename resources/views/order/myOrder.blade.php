@@ -29,8 +29,8 @@
                     </div>
                 </div>
                 <div class="col-md-9">
-                    @if(!empty($orderCreatedResponse['cards']))
-                        @foreach ($orderCreatedResponse['cards'] as $card)
+                    @if (!empty($order['cards']))
+                        @foreach ($order['cards'] as $card)
                             <div class="dashboard-tab cart-wrapper p-5 bg-white rounded-lg shadow-xs mb-3">
                                 <div class="row">
                                     <div class="col-md-3">
@@ -45,7 +45,8 @@
                                     </div>
                                     <div class="col-md-3">
                                         <div class="row">
-                                            <div class="col-md-12"><span class="my-order-heading">Activation Code</span></div>
+                                            <div class="col-md-12"><span class="my-order-heading">Activation Code</span>
+                                            </div>
                                             <div class="col-md-12">{{ $card['activationCode'] }}</div>
                                         </div>
                                         <div class="row">
@@ -55,7 +56,8 @@
                                     </div>
                                     <div class="col-md-3">
                                         <div class="row">
-                                            <div class="col-md-12"><span class="my-order-heading">Activation URL</span></div>
+                                            <div class="col-md-12"><span class="my-order-heading">Activation URL</span>
+                                            </div>
                                             <div class="col-md-12">{{ $card['activationUrl'] }}</div>
                                         </div>
                                         <!-- Add similar rows for other details specific to the third column -->

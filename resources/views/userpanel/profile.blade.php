@@ -18,12 +18,12 @@
                             <!-- <li class="d-block rounded-lg"><a href="saved.html"><i class="ti-heart font-sm"></i><span> Bookmark</span></a></li> -->
                             <li class="d-block rounded-lg active"><a href="{{ route('profile') }}"><i
                                         class="ti-user font-sm"></i><span> Profile</span></a></li>
-                            <li class="d-block rounded-lg"><a href="{{ route('myOrder') }}"><i
+                            <li class="d-block rounded-lg"><a href="{{ route('my-order') }}"><i
                                         class="ti-package font-sm"></i><span> My Order</span></a></li>
                             <li class="d-block rounded-lg "><a href="{{ route('change-password') }}"><i
                                         class="ti-lock font-sm"></i><span> Chnage Password</span></a></li>
                             <!-- <li class="d-block rounded-lg "><a href="payment.html"><i class="ti-credit-card font-sm"></i><span> Payment</span></a></li> -->
-                            <li class="d-block rounded-lg"><a href="#"><i class="ti-power-off font-sm"></i><span>
+                            <li class="d-block rounded-lg"><a href="{{ route('userLogOut') }}"><i class="ti-power-off font-sm"></i><span>
                                         Logout</span></a></li>
 
                             {{-- <div class="card d-none-md w-100 mt-3 shadow-none pt-0 border-0">

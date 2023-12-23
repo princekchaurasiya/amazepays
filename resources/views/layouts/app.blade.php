@@ -27,7 +27,7 @@
         <div class="preloader"></div>
         <div class="main-wrapper">
             <!-- header wrapper -->
-            {{-- 
+            {{--
             <div class="upper-header bg-greylight">
                <div class="container">
                   <div class="row">
@@ -74,7 +74,7 @@
                             <div class="collapse navbar-collapse" id="navbarNavDropdown">
                                 <ul class="navbar-nav nav-menu float-none text-center">
                                     <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                                    {{-- 
+                                    {{--
                               <li class="nav-item dropdown">
                                  <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Services <i
                                     class="ti-angle-down"></i></a>
@@ -84,7 +84,7 @@
                                  </div>
                               </li>
                               --}}
-                                    {{-- 
+                                    {{--
                               <li class="nav-item dropdown">
                                  <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Products <i
                                     class="ti-angle-down"></i></a>
@@ -94,8 +94,8 @@
                                  </div>
                               </li>
                               --}}
-                                    <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
-                                    <li class="nav-item"><a class="nav-link" href="/contact_us">Contact</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{{ route('about') }}">About</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{{ route('contact-us') }}">Contact</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -107,17 +107,18 @@
                                         {{ Auth::user()->name }}
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <li><a class="dropdown-item" href="/profile"><i class="ti-user font-sm"></i>
+                                        <li><a class="dropdown-item" href="{{ route('profile') }}"><i class="ti-user font-sm"></i>
                                                 Profile</a></li>
-                                        <li><a class="dropdown-item" href="/myOrder"><i
+                                        <li><a class="dropdown-item" href="{{ route('my-order') }}"><i
                                                     class="fa-sharp fa-solid fa-cart-shopping"></i> My Order</a>
                                         </li>
-                                        <li><a class="dropdown-item" href="/user-logout"><i
+                                        <li><a class="dropdown-item" href="{{ route('userLogOut') }}"><i
                                                     class="fa-sharp fa-solid fa-power-off"></i> Logout</a></li>
                                     </ul>
                                 </li>
                             @else
-                                <a href="#" class="header-btn bg-dark fw-500 text-white font-xssss login-button-color"
+                                <a href="#"
+                                    class="header-btn bg-dark fw-500 text-white font-xssss login-button-color"
                                     data-toggle="modal" data-target="#Modallogin">Login</a>
                                 <a href="#"
                                     class="header-btn bg-current fw-500 text-white font-xssss register-form register-button-color"
@@ -138,11 +139,11 @@
                     </button>
                     <a href="/" class="logo custMobLogo"><img src="{{ asset('images/logo.png') }}" alt="logo"
                             class="custLogo"></a>
-                            <div class="user-profile">
-                              <a href="/" class="profile-link" data-toggle="modal" data-target="">
-                                  <i class="fas fa-user-circle"></i>
-                              </a>
-                          </div>
+                    <div class="user-profile">
+                        <a href="{{ route('profile') }}" class="profile-link">
+                            <i class="fas fa-user-circle"></i>
+                        </a>
+                    </div>
 
                 </nav>
                 <!-- Side Navigation -->
@@ -186,14 +187,14 @@
                                     Mall Off Link Road Malad West <br /> Mumbai -400064.
                                 </p>
                             </div>
-                            <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
+                            {{-- <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
                                 <h5>Channel</h5>
                                 <ul>
                                     <li><a href="#">Gift Cards</a></li>
                                     <li><a href="#">bank Cards</a></li>
                                     <li><a href="#">Vouchers</a></li>
                                 </ul>
-                            </div>
+                            </div> --}}
                             <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
                                 <h5>About</h5>
                                 <ul>
@@ -204,7 +205,7 @@
                                     <li><a href="{{ url('private_policy') }}">Privacy Policy</a></li>
                                 </ul>
                             </div>
-                            <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
+                            <div class="col-md-3 col-lg-4 col-sm-4 col-xs-6">
                                 <h5 class="mb-3">Office</h5>
                                 <p style="width: 100%;">98-103, 4 Floor, Aditya Industrial Estate Co-op Premises
                                     Ltd Mindspace Behind Evershine
@@ -303,7 +304,7 @@
                                     <a href="#" class="fw-700 ml-1 text-current" data-toggle="modal"
                                         data-target="#Modallogin" data-dismiss="modal">Login</a>
                                 </h6>
-                                <div class="row">
+                                {{-- <div class="row">
                                     <div class="col-6 pr-1"><a href="#"
                                             class="form-control h60 p-0 pl-5 bg-lightblue text-grey-700 border-2 border-0 font-xssss fw-600  position-relative">Login
                                             with OTP</a>
@@ -312,7 +313,7 @@
                                             class="form-control h60 p-0 pl-5 bg-lightblue text-grey-700 border-2 border-0 font-xssss fw-600  position-relative">Forgot
                                             Password?</a>
                                     </div>
-                                </div>
+                                </div> --}}
                                 <p class="fw-900 font-xssss text-grey-600 mt-2 pt-3 d-inline-block">
                                     By continuing, you agree to Amazepay's <a href="blog-single.html"
                                         class="text-current">Term ans Condition</a> and <a href="blog-single.html"
@@ -380,8 +381,8 @@
                             </div>
                             <div class="col-sm-12 p-0 text-center">
                                 <p class="fw-900 font-xssss text-grey-600 mt-2 pt-3 d-inline-block text-center">
-                                    By continuing, you agree to Amazepay's <a href="blog-single.html"
-                                        class="text-current">Terms and Conditions</a> and <a href="blog-single.html"
+                                    By continuing, you agree to Amazepay's <a href="{{ route('tnc') }}"
+                                        class="text-current">Terms and Conditions</a> and <a href="{{ route('private-policy') }}"
                                         class="text-current">Privacy Policy</a>.
                                 </p>
                             </div>
@@ -463,8 +464,8 @@
                             </div>
                             <div class="col-sm-12 p-0 text-center">
                                 <p class="fw-900 font-xssss text-grey-600 mt-2 pt-3 d-inline-block text-center">
-                                    By continuing, you agree to Amazepay's <a href="blog-single.html"
-                                        class="text-current">Term ans Condition</a> and <a href="blog-single.html"
+                                    By continuing, you agree to Amazepay's <a href="{{ route('tnc') }} "
+                                        class="text-current">Term ans Condition</a> and <a href="{{ route('private-policy') }}"
                                         class="text-current">Privacy Policy </a>.
                                 </p>
                             </div>
@@ -677,7 +678,7 @@
         }
         // end login
 
-        //otp modal keyboard button handling code starts here 
+        //otp modal keyboard button handling code starts here
         $(document).ready(function() {
             function OTPInput() {
                 const inputs = $('#otp > *[id]');
@@ -707,7 +708,7 @@
 
             OTPInput();
         });
-        //otp modal keyboard button handling code ends here 
+        //otp modal keyboard button handling code ends here
 
 
         // login with otp validation starts here

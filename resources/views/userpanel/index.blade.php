@@ -34,14 +34,14 @@
             </div>
 
             <!-- Controls -->
-            <a class="carousel-control-prev" href="#desktopCarousel" role="button" data-slide="prev">
+            {{-- <a class="carousel-control-prev" href="#desktopCarousel" role="button" data-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                 <span class="sr-only">Previous</span>
             </a>
             <a class="carousel-control-next" href="#desktopCarousel" role="button" data-slide="next">
                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
                 <span class="sr-only">Next</span>
-            </a>
+            </a> --}}
         </div>
 
         <!-- Mobile Carousel (hidden on desktop) -->
@@ -105,8 +105,9 @@
                         <!-- loop product here -->
 
                         @foreach ($allProducts as $product)
-                            <div class="col-lg-3 col-5 p-3">
-                                {{-- <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4> --}}
+                            <div class="col-lg-3 col-5">
+                                <div class="border p-3">
+                                    {{-- <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4> --}}
                                 <a href="{{ route('get-product-sku', ['slug' => $product->sku]) }}"
                                     class="d-block text-center"><p class="single-image-wrapper p-2"><img
                                         src="{{ $product->images->small == null ? URL::asset('/images/no-image.png') : $product->images->small }}"
@@ -123,6 +124,8 @@
                                             <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
                                         </div> --}}
                                 </a>
+                                </div>
+
                             </div>
                         @endforeach
                     </div>
@@ -654,7 +657,7 @@
                         </div>
                     </div> -->
 
-    <div class="brand-wrapper pt-2 pb-7">
+    {{-- <div class="brand-wrapper pt-2 pb-7">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
@@ -673,7 +676,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
 
     <!-- <form method="POST" action=" {{ route('generate-authcode') }}">
                             {!! csrf_field() !!}

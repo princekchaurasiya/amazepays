@@ -13,7 +13,7 @@
         			</div>
         			<div class="col-lg-12 mt-5">
 						<h4 class="text-grey-900 fw-600 font-xl ls-2">WHAT WE DO</h4>
-						<h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4"> At Amazepays, we believe in making gifting a hassle-free and delightful experience. We are a leading gift voucher provider, offering a wide range of gift vouchers and digital gift cards from various popular brands across the globe. Our mission is to help you find the perfect gift for your loved ones, no matter what the occasion. 
+						<h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4"> At Amazepays, we believe in making gifting a hassle-free and delightful experience. We are a leading gift voucher provider, offering a wide range of gift vouchers and digital gift cards from various popular brands across the globe. Our mission is to help you find the perfect gift for your loved ones, no matter what the occasion.
 						</h4><h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">
 						We understand the importance of making a good impression with a gift, and that's why we strive to provide a seamless and user-friendly platform for our customers to choose and purchase gift vouchers. Our team of experts is dedicated to curating the best gift options for you, so you can find the perfect gift for any occasion, be it a birthday, anniversary, wedding, or corporate gifting.
 						</h4><h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">
@@ -131,5 +131,5 @@
 @endsection
 
 @push('scripts')
-  
+
 @endpush

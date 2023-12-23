@@ -36,6 +36,8 @@ Route::group(['prefix' => 'admin'], function () {
     Route::resource('cc-avenue', 'VoyagerCcAvenueController');
 });
 
+Route::get('logout', [UserPanelController::class, 'userLogOut'])->name('userLogOut');
+
 Route::get('/', [UserPanelController::class, 'homePage'])->name('home');
 
 //category api for woohoo should be called once only
@@ -62,9 +64,7 @@ Route::group(['middleware' => 'guest'], function () {
 Route::group(['middleware' => 'auth'], function () {
     // Route::post('/order-card', [CommonController::class, 'orderCard'])->name('order-card'); // auth user only
 
-
     Route::get('/user-logout', [UserPanelController::class, 'userLogOut'])->name('user-logout');
-
 
     Route::post('/apply-coupan', [UserPanelController::class, 'applyCoupan'])->name('apply-coupan'); //auth user only
 
@@ -72,8 +72,9 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::get('/profile', function () {
         return view('userpanel/profile');
-    })->name('profile'); //auth user only
-    Route::get('/my-order', [MyOrderController::class, 'displayOrder'])->name('myOrder'); //auth user only
+    })->name('profile');
+
+    Route::get('/my-order', [MyOrderController::class, 'displayOrder'])->name('my-order');
 });
 
 Route::post('/check-data', [CommonController::class, 'checkData'])->name('check-data');
@@ -85,36 +86,40 @@ Route::get('/change-password', function () {
 
 Route::get('/about', function () {
     return view('userpanel/about');
-});
+})->name('about');
+
+
+Route::get('/profile', function () {
+        return view('userpanel/profile');
+    })->name('profile');
+
+
+
+
 Route::get('/contact_us', function () {
     return view('userpanel/contact-form');
-});
+})->name('contact-us');
 // Route::get('/f&q', function () {
 //     return view('userpanel/f&q');
 // });
 Route::get('/terms_of_use', function () {
     return view('userpanel/terms_of_use');
-});
+})->name('tnc');
 Route::get('/private_policy', function () {
     return view('userpanel/private_policy');
-});
+})->name('private-policy');
+
 Route::get('/all_transaction', function () {
     return view('userpanel/all_transaction');
 });
-
 
 Route::post('/checkout/{sku}', [GiftPageController::class, 'storePayNowData'])->name('storePayNowData-and-go-to-CheckoutPage');
 
 // Routes for payment
 
-
 Route::post('/payment-process', [CCAvenueController::class, 'processPayment']);
 
-
-
 // Route::post('/payment-process', [UserPanelController::class, 'orderProceed']);
-
-
 
 Route::post('/response_ccavenue', [CCAvenueController::class, 'responseCcavenue'])->name('response_ccavenue');
 
@@ -128,7 +133,6 @@ Route::get('payment-cancel', function () {
     return view('paymentFolder.payment-failed');
 })->name('cancel');
 
-
 Route::get('payment-success', function () {
     return view('paymentFolder.payment-success');
 })->name('success');
@@ -141,10 +145,7 @@ Route::get('payment-success', function () {
 //     return view('userpanel/my-order');
 // })->name('my-order');
 
-
 Route::get('/create-order', [CreateOrderController::class, 'createOrder'])->name('create-order');
-
-
 
 Route::post('/send-sms', [SmsController::class, 'sendSms'])->name('send-sms');
 
@@ -162,7 +163,6 @@ Route::get('/error', function () {
     return view('userpanel.wentWrong');
 })->name('error');
 
-
 Route::get('/error', [ErrorController::class, 'handleError'])->name('error');
 
 Route::post('/update-profile', [ProfileController::class, 'update'])->name('update-profile');
@@ -179,8 +179,6 @@ Route::get('/order-details', [UserPanelController::class, 'orderDetails'])->name
 // order list api
 Route::get('/order-list', [UserPanelController::class, 'orderList'])->name('order-list');
 
-
 Route::get('/order-failed', function () {
     return view('order.order-failed');
 })->name('order-failed');
-

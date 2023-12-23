@@ -5,6 +5,7 @@
 @section('content')
     <div class="dashboard-wrapper bg-greylight">
         <div class="container">
+
             @if (session('status'))
                 <div class="alert alert-success">
                     {{ session('status') }}
@@ -18,7 +19,7 @@
                         <ul class="dash-menu-ul">
                             <li class="d-block rounded-lg"><a href="{{ route('profile') }}"><i
                                         class="ti-user font-sm"></i><span> Profile</span></a></li>
-                            <li class="d-block rounded-lg active"><a href="{{ route('myOrder') }}"><i
+                            <li class="d-block rounded-lg active"><a href="{{ route('my-order') }}"><i
                                         class="ti-package font-sm"></i><span> My Order</span></a></li>
                             <li class="d-block rounded-lg"><a href="{{ route('change-password') }}"><i
                                         class="ti-lock font-sm"></i><span> Change Password</span></a></li>
@@ -28,7 +29,7 @@
                         </ul>
                     </div>
                 </div>
-                <div class="col-md-9">
+                {{-- <div class="col-md-9">
                     @if (!empty($order['cards']))
                         @foreach ($order['cards'] as $card)
                             <div class="dashboard-tab cart-wrapper p-5 bg-white rounded-lg shadow-xs mb-3">
@@ -73,7 +74,23 @@
                             No Order Found
                         </div>
                     @endif
-                </div>
+                </div> --}}
+
+
+
+
+
+
+                @foreach ($order as $orderItem)
+                    <div class="col-lg-9">
+                        <div class="outer-order-wrapper-div">
+                            <h5>My Order</h5>
+                        </div>
+                    </div>
+                @endforeach
+
+
+
 
 
             </div>

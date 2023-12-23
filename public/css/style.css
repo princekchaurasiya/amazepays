@@ -15975,3 +15975,8 @@ color: #01007f !important;
     margin-bottom: 1rem;
     border-radius: 20px;
 }
+.outer-order-wrapper-div {
+    background: #fff;
+    padding: 20px;
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,0.08);
+}

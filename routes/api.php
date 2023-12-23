@@ -17,3 +17,13 @@ Route::get('signature-validation',[App\Http\Controllers\ApiController::class, 's
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::group(['middleware' => 'api'], function(){
+    Route::post('sendUserLoginOtp', [App\Http\Controllers\APIs\AuthenticationController::class, 'sendUserLoginOtp']);
+    Route::post('verifyUserLoginOtp', [App\Http\Controllers\APIs\AuthenticationController::class, 'verifyUserLoginOtp']);
+    Route::post('userRegistration', [App\Http\Controllers\APIs\AuthenticationController::class, 'userRegistration']);
+    Route::get('allProduct', [App\Http\Controllers\APIs\AuthenticationController::class, 'allProduct']);
+    Route::get('singleProductDetails', [App\Http\Controllers\APIs\AuthenticationController::class, 'singleProductDetails']);
+});
+
+

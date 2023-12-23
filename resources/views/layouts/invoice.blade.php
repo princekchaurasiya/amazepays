@@ -57,7 +57,7 @@
 
 <body>
     <table>
-        
+
         <tr>
             <th class="logo" colspan="3">
                 <img src="{{ asset('images/logo.png') }}" alt="Company Logo" width="100px">
@@ -105,8 +105,10 @@
             </td>
         </tr>
         <tr>
-            <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="3"> BILL TO</td>
-            <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="3">SHIP TO</td>
+            <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="3"> BILL TO
+            </td>
+            <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="3">SHIP TO
+            </td>
         </tr>
         <tr>
             {{-- biil to details --}}
@@ -147,15 +149,16 @@
         <tr>
             <td colspan="2" style="text-align: left; padding-left: 16px;">Total Amount: {{ $order_amount }}</td>
             <td colspan="2" style="text-align: left; padding-left: 16px;">Total Discount: - </td>
-            <td colspan="2" style="font-weight: 600; text-align: left; padding-left: 16px;">Gross Amount after Discount: {{ $order_amount }}</td>
+            <td colspan="2" style="font-weight: 600; text-align: left; padding-left: 16px;">Gross Amount after
+                Discount: {{ $order_amount }}</td>
         </tr>
-        
+
         <tr>
             <td colspan="3" style="text-align: left; padding-left: 16px;">
                 <p style="font-weight: 600; margin: 8px 0; font-size: 16px">Remittance Detail</p>
                 <p style="margin: 2px 0;"><span style="font-weight: 600">Beneficiary Name:</span>
                     {{ config('companyDefaultValues.company_name') }}</p>
-        
+
                 <p style="margin: 2px 0;"><span style="font-weight: 600">Bank Name:</span>
                     {{ config('companyDefaultValues.comapny_bank_name') }}</p>
                 <p style="margin: 2px 0;"><span style="font-weight: 600">Branch:</span>
@@ -171,7 +174,7 @@
                     are true and correct</p>
             </td>
         </tr>
-        
+
         <tr>
             <td colspan="6" style="text-align: center; font-size: 16px;">
                 <p>This is a System-generated Invoice and Does not Require a Signature</p>

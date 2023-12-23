@@ -35,7 +35,7 @@ Amazepay | Transaction
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link bg-white p-3 border-bottom-light w-100 fw-600 text-grey-500 font-xsss d-inline-block" id="nav-credit-card-tab" data-bs-toggle="pill" data-bs-target="#nav-credit-card" role="tab" aria-controls="nav-credit-card" aria-selected="false"><i class="ti-credit-card font-md float-left mr-3"></i> Credit Card <i class="ti-angle-right float-right text-grey-400 mt-1"></i></a>
                                 </li>
-                            </ul> 
+                            </ul>
                         </div>
                     </div>
                     <div class="col-lg-6 pl-md--2 pr-md--2 mt-sm--3 tab-content" id="pills-tabContent">
@@ -78,7 +78,7 @@ Amazepay | Transaction
                                                     <p class="pl-4 ml-2 fw-500 text-grey-500 mb-0 font-xssss d-block">200 lucky winners will get 100% cashback every day <a href="#" class="fw-900 font-xssss text-current ls-3 float-right">APPLY</a></p>
                                                 </div>
 
-                                                
+
 
                                             </div>
                                         </div>
@@ -88,7 +88,7 @@ Amazepay | Transaction
                                 <div class="member-2" style="display: none;">
                                     <div class="card w-100 shadow-xs rounded-lg border-0">
                                         <!-- <div class="card-body w-100 bg-greylight p-3 border-bottom"><a href="#" class="mb-0 text-grey-800 fw-500 font-xsss"><i class="ti-angle-left text-grey-800 dark-text-white font-xssss mr-1"></i> Go Back</a></div> -->
-                                        <div class="card-body w-100 p-4 border-0"> 
+                                        <div class="card-body w-100 p-4 border-0">
                                             <h4 class="float-left fw-600 mb-0 font-sm text-grey-900">Recharge or Bill payment Order <br>
                                                 <span class="font-xssss text-grey-500 fw-300">Transaction ID: 12679624220</span></h4>
                                             <!-- <h4 class="mb-0 float-right font-xl text-grey-900 mt-3 fw-600"><span class="font-xs">$</span> 129</b></h4>    -->
@@ -103,7 +103,7 @@ Amazepay | Transaction
                                             <div>
                                                 <h4 class="text-grey-700 mb-0 d-flex align-items-center justify-content-between mt-0 fw-600 lato-font font-xsss">
                                                     <img src="https://via.placeholder.com/50x20.png" alt="image" class="float-left mr-3">
-                                                    4321 4432 6565 **** 
+                                                    4321 4432 6565 ****
                                                 </h4>
                                             </div>
                                             <div class="round float-right mb-2">
@@ -134,7 +134,7 @@ Amazepay | Transaction
                                             <div>
                                                 <h4 class="text-grey-700 mb-0 d-flex align-items-center justify-content-between mt-0 fw-600 lato-font font-xsss">
                                                     <img src="https://via.placeholder.com/50x20.png" alt="image" class="float-left mr-3">
-                                                    6565 4321 4432  **** 
+                                                    6565 4321 4432  ****
                                                 </h4>
                                             </div>
                                             <div class="round float-right mb-2">
@@ -146,8 +146,8 @@ Amazepay | Transaction
                                     </div>
 
                                     <div class="card w-100 bg-greylight shadow-none rounded-lg border-0 mt-3">
-                                        <div class="card-body w-100 p-4 border-0"> 
-                                            <h4 class="mb-0 float-left font-xxl text-grey-700 mt-0 fw-900"><span class="font-xs">$</span> 129<br><span class="font-xssss text-grey-500 fw-300 d-block">inclusive tax*</span></h4>   
+                                        <div class="card-body w-100 p-4 border-0">
+                                            <h4 class="mb-0 float-left font-xxl text-grey-700 mt-0 fw-900"><span class="font-xs">$</span> 129<br><span class="font-xssss text-grey-500 fw-300 d-block">inclusive tax*</span></h4>
                                             <a href="#" class="mt-0 btn lh-32 member-bttn3 rounded-lg ls-3 bg-current border-0 font-xssss text-white fw-600 ls-md text-uppercase float-right w175">Next</a>
                                         </div>
                                     </div>
@@ -163,8 +163,8 @@ Amazepay | Transaction
                                         </div>
                                     </div>
                                     <div class="card w-100 bg-greylight shadow-none rounded-lg border-0 mt-3">
-                                        <div class="card-body w-100 p-4 border-0"> 
-                                            <h4 class="mb-0 float-left font-xssss text-grey-700 mt-1 fw-300 mb-0"><i class="ti-reload text-success mr-2"></i> 100% Secure Payments Powered by Paytm</h4>   
+                                        <div class="card-body w-100 p-4 border-0">
+                                            <h4 class="mb-0 float-left font-xssss text-grey-700 mt-1 fw-300 mb-0"><i class="ti-reload text-success mr-2"></i> 100% Secure Payments Powered by Paytm</h4>
                                             <img src="https://via.placeholder.com/300x30.png" alt="icon" class="float-right w250">
                                         </div>
                                     </div>
@@ -176,14 +176,14 @@ Amazepay | Transaction
                                     <form action="#">
                                         <div class="row">
                                             <div class="col-sm-12 mb-2"><h4 class="fw-700 font-xxl mb-3">Pay For Electricity</h4></div>
-                                           
+
                                             <div class="col-sm-6">
                                                 <select class="select-state">
                                                     <option></option>
                                                     <option value="maharashtra">Maharashtra</option>
                                                     <option value="Gujurat">Gujurat</option>
                                                     <option value="goa">Goa</option>
-                                                </select>   
+                                                </select>
                                             </div>
                                             <div class="col-sm-6">
                                                 <select class="select-electric-board">
@@ -191,10 +191,10 @@ Amazepay | Transaction
                                                     <option value="adani">Adani</option>
                                                     <option value="tata_power">Tata Power</option>
                                                     <option value="best">Best</option>
-                                                </select>   
+                                                </select>
                                             </div>
                                             <div class="col-sm-5"><input type="text" class="form-control mb-2" placeholder="Consumer Number"></div>
-                                            
+
                                             <div class="col-sm-5"><input type="text" class="form-control mb-3" placeholder="Amount"></div>
                                             <div class="col-sm-2"><a href="#" class="d-block text-center bg-current border-0 w-100 form-bttn fw-500 rounded-lg text-white member-bttn2">Proceed to Recharge</a></div>
                                         </div>
@@ -211,16 +211,16 @@ Amazepay | Transaction
                         <a href="#" class="d-none d-lg-block"><img src="{{URL::asset('/images/limited_offer.png')}}" alt="ad-banner" class="rounded-lg img-fluid"></a>
                     </div>
                 </div>
-            </div>            
+            </div>
         </div>
-        
+
 
         <div class="popular-wrapper pb-4">
             <div class="container">
                 <div class="row">
                     <div class="page-title style1 col-xl-6 offset-xl-3 col-lg-8 offset-lg-2 col-md-10 offset-md-1 text-center mb-5"><h2 class="text-grey-900 fw-300 display2-size pb-3 mb-0 d-block">Popular Coupon</h2> <p class="fw-300 font-xss lh-28 text-grey-500"></p></div>
                     <div class="col-lg-12">
-                        
+
                         <div class="offer-slider owl-carousel owl-theme overflow-visible dot-none">
                             <div class="owl-items text-center"><img src="{{URL::asset('/images/amz_card.png')}}" alt="icon" class="img-fluid rounded-lg"></div>
                             <div class="owl-items text-center"><img src="{{URL::asset('/images/bank_card_new.png')}}" alt="icon" class="img-fluid rounded-lg"></div>
@@ -234,7 +234,7 @@ Amazepay | Transaction
             </div>
         </div>
 
-        
+
         <div class="how-to-work pt-7 pb-7">
             <div class="container">
                 <div class="row">
@@ -271,9 +271,9 @@ Amazepay | Transaction
                                     <p class="font-xsss fw-500 text-grey-500 lh-32 mt-0 mb-4">Human coronaviruses are common and are typically associated with mild illnesses, similar to the common cold. We are digital agency.</p>
                                     <div class="card-body p-0">
                                         <img src="https://via.placeholder.com/80x80.png" alt="user" class="w60 float-left mr-3">
-                                        <h4 class="text-grey-900 fw-700 font-xsss mt-2 pt-1">Thomas Smith</h4>    
+                                        <h4 class="text-grey-900 fw-700 font-xsss mt-2 pt-1">Thomas Smith</h4>
                                         <h5 class="text-uppercase font-xsssss fw-700 mb-1 ls-3 text-grey-500">Ceo Zipto</h5>
-                                    </div>                            
+                                    </div>
                                 </div>
                             </div>
 
@@ -284,9 +284,9 @@ Amazepay | Transaction
                                     <p class="font-xsss fw-500 text-grey-500 lh-32 mt-0 mb-4">Human coronaviruses are common and are typically associated with mild illnesses, similar to the common cold. We are digital agency.</p>
                                     <div class="card-body p-0">
                                         <img src="https://via.placeholder.com/80x80.png" alt="user" class="w60 float-left mr-3">
-                                        <h4 class="text-grey-900 fw-700 font-xsss mt-2 pt-1">Thomas Smith</h4>    
+                                        <h4 class="text-grey-900 fw-700 font-xsss mt-2 pt-1">Thomas Smith</h4>
                                         <h5 class="text-uppercase font-xsssss fw-700 mb-1 ls-3 text-grey-500">Ceo Zipto</h5>
-                                    </div>                            
+                                    </div>
                                 </div>
                             </div>
 
@@ -297,9 +297,9 @@ Amazepay | Transaction
                                     <p class="font-xsss fw-500 text-grey-500 lh-32 mt-0 mb-4">Human coronaviruses are common and are typically associated with mild illnesses, similar to the common cold. We are digital agency.</p>
                                     <div class="card-body p-0">
                                         <img src="https://via.placeholder.com/80x80.png" alt="user" class="w60 float-left mr-3">
-                                        <h4 class="text-grey-900 fw-700 font-xsss mt-2 pt-1">Thomas Smith</h4>    
+                                        <h4 class="text-grey-900 fw-700 font-xsss mt-2 pt-1">Thomas Smith</h4>
                                         <h5 class="text-uppercase font-xsssss fw-700 mb-1 ls-3 text-grey-500">Ceo Zipto</h5>
-                                    </div>                            
+                                    </div>
                                 </div>
                             </div>
                             <div class="owl-items">
@@ -309,13 +309,13 @@ Amazepay | Transaction
                                     <p class="font-xsss fw-500 text-grey-500 lh-32 mt-0 mb-4">Human coronaviruses are common and are typically associated with mild illnesses, similar to the common cold. We are digital agency.</p>
                                     <div class="card-body p-0">
                                         <img src="https://via.placeholder.com/80x80.png" alt="user" class="w60 float-left mr-3">
-                                        <h4 class="text-grey-900 fw-700 font-xsss mt-2 pt-1">Thomas Smith</h4>    
+                                        <h4 class="text-grey-900 fw-700 font-xsss mt-2 pt-1">Thomas Smith</h4>
                                         <h5 class="text-uppercase font-xsssss fw-700 mb-1 ls-3 text-grey-500">Ceo Zipto</h5>
-                                    </div>                            
+                                    </div>
                                 </div>
                             </div>
-                        </div>   
-                    </div>              
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -344,13 +344,13 @@ Amazepay | Transaction
                     // for states
                     $('.select-state').select2({
                         placeholder: "Select State"
-                    }); 
+                    });
 
                     // for electric board
                     $('.select-electric-board').select2({
                         placeholder: "Select Electric Board"
                     });
-                    
+
                     // for dth operator
                     $('.dth-operator').select2({
                         placeholder: "Select Operator"

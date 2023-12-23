@@ -295,7 +295,7 @@
             // };
 
 
-            
+
 
             // // function placeOrder() {
             // //     if (applyButton.html() === "Apply") {
@@ -336,12 +336,12 @@
 
             // on click apply button code ends here
 
-            //  coupon code blank validation code starts here 
+            //  coupon code blank validation code starts here
 
 
 
 
-            
+
             // function orderProcessingTimeOut() {
             //     placeOrder.click(function(e) {
             //         e.preventDefault();

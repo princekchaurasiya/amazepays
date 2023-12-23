@@ -21,10 +21,8 @@ class MyOrderController extends Controller
             ->orderBy('qs_ordered.created_at', 'desc')
             ->get(['qs_ordered.*', 'qs_products.*']);
 
-        foreach ($recentOrders as $order) {
-            return view('order.myOrder')->with('order', $order);
-        }
 
 
+        return view('order.myOrder')->with('order', $recentOrders);
     }
 }

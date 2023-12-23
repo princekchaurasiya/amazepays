@@ -115,7 +115,7 @@
                                 <a href="{{ route('get-product-sku', ['slug' => $product->sku]) }}">
                                     <div class="container" style="background-color:white">
                                         <p class="text-center font-xsss mt-3 text-current card-font">
-                                            <b>{{ ucwords($product->name) }}</b>
+                                            {{ ucwords($product->name) }}
                                         </p>
                                         {{-- <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span> --}}
                                     </div>

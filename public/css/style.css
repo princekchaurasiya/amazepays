@@ -15571,18 +15571,20 @@ body {
 
 .gift-card-detail-page .copuan-quantity{
   margin-top: 3%;
+  margin-left: 0px !important;
+  margin-right: 0px !important;
 
 }
 .gift-card-detail-page .card-form{
   /* margin-top: 3%; */
   padding-top: 3%;
-  padding-bottom: 3%;
+  padding-bottom: 1%;
   background-color: #f9f9f9;
 }
 
 .personalise-gift-card{
   background-color: #f6f7fc;
-  margin-top:3% !important;
+  /* margin-top:3% !important; */
   padding: 1%;
 }
 

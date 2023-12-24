@@ -9,10 +9,10 @@
                 <span class="fa-regular fa-face-frown sad-icon"></span>
             </p>
             <i class="fas fa-exclamation-circle"></i> <strong>Something Went Wrong</strong><br>
-            @if (session('error_message'))
+            @if (session('error-message'))
                 <div class="alert alert-danger" role="alert">
 
-                    {{ session('error_message') }}
+                    {{ session('error-message') }}
                 </div>
                 <p><a href="/" class="btn btn-danger">Back to Home</a></p>
             @endif

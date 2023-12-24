@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title')
-    Amazepay | My Order
+    Amazepay | View Card
 @endsection
 @section('content')
     <div class="dashboard-wrapper bg-greylight">
@@ -23,6 +23,8 @@
                         </ul>
                     </div>
                 </div>
+
+                @dd($order)
                 <div class="col-lg-9">
                     <div class="row outer-order-wrapper-div">
                         <div>
@@ -54,7 +56,7 @@
                                                     <h2>
                                                         <span
                                                             class="{{ $orderItem->order_status == 'COMPLETE' ? 'text-success' : 'text-danger' }} font-weight-bold">
-                                                            Order {{ ucfirst(strtolower($orderItem->order_status)) }}
+                                                            Order {{ ucfirst($orderItem->order_status) }}
                                                         </span>
                                                     </h2>
                                                     <p class="mb-0">Order #: <b>{{ $orderItem->woohoo_order_id }}</b></p>
@@ -79,23 +81,5 @@
         </div>
     </div>
     @push('scripts')
-        <script>
-            $(document).ready(function() {
-                $('.order-link').on('click', function(e) {
-                    e.preventDefault();
-
-                    // Get the order ID and image detail from data attributes
-                    var orderId = $(this).data('order-id');
-                    var imageDetail = $(this).data('image');
-
-                    // Set the order ID and image detail in the hidden input fields
-                    $('#orderIdInput').val(orderId);
-                    $('#imageDetail').val(imageDetail);
-
-                    // Submit the form
-                    $('#orderForm').submit();
-                });
-            });
-        </script>
     @endpush
 @endsection

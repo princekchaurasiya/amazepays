@@ -88,7 +88,7 @@
 
 
     <div class="product-wrapper  pt-5 pb-5">
-        <div class="container">
+        <div class="container-fluid p-5">
             <div class="row justify-content-center">
                 <div class="col-12">
                     <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">Hot Deals, Exclusive Offers, and Special Picks!</h1>

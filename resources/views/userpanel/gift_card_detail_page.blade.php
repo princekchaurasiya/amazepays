@@ -102,44 +102,43 @@
                                 </ul> --}}
                             </div>
                         </div>
-                        <div class="col-lg-7">
-                            
-                               
-                                <div class="row copuan-quantity">
-                                    <div class="col-sm-6 pl-0">
-                                        
-                                        @if ($getprdtDetails['price']->type == 'RANGE')
-                                            <label class="small-size fw-600 text-grey-900 font-xsss">Select Denomination</label>
-                                            <div class="radio-btn-row boxed">
-                                                @foreach ($getprdtDetails['price']->denominations as $denomination)
-                                                    <div class="boxed">
-                                                        {{-- <input type="radio" id="customRadio-{{ $denomination }}" name="denomination"
-                                                        value="{{ $denomination }}"> --}}
-                                                        <input type="radio" class="custom-control-input range"
-                                                            id="customRadio-{{ $denomination }}" name="denomination"
-                                                            value="{{ $denomination }}">
-                                                        <label class="small-size fw-500 font-xsss" for="customRadio-{{ $denomination }}">{{ $denomination }}</label>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        @elseif ($getprdtDetails['price']->type === 'SLAB')
-                                            <label class="small-size fw-600 text-grey-900 font-xsss">Enter Denomination</label>
-                                            <input type="text" class="form-control mb-3 credentails-field"
-                                                placeholder="Select Denomination" name="denomination" id="denomination"
-                                                value="">
-                                        @else
 
-                                        @endif
-                                        <div>
-                                            <p class="font-xssss fw-400 error-rec-deno text-danger"></p>
+                        <div class="col-lg-6 offset-lg-1">
+                                <div class="row copuan-quantity">
+                                        <div class="col-sm-6 pl-0">
+                                            
+                                            @if ($getprdtDetails['price']->type == 'RANGE')
+                                                <label class="small-size fw-600 text-grey-900 font-xsss">Select Denomination</label>
+                                                <div class="radio-btn-row boxed">
+                                                    @foreach ($getprdtDetails['price']->denominations as $denomination)
+                                                        <div class="boxed">
+                                                            {{-- <input type="radio" id="customRadio-{{ $denomination }}" name="denomination"
+                                                            value="{{ $denomination }}"> --}}
+                                                            <input type="radio" class="custom-control-input range"
+                                                                id="customRadio-{{ $denomination }}" name="denomination"
+                                                                value="{{ $denomination }}">
+                                                            <label class="small-size fw-500 font-xsss" for="customRadio-{{ $denomination }}">{{ $denomination }}</label>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @elseif ($getprdtDetails['price']->type === 'SLAB')
+                                                <label class="small-size fw-600 text-grey-900 font-xsss">Enter Denomination</label>
+                                                <input type="text" class="form-control mb-3 credentails-field"
+                                                    placeholder="Select Denomination" name="denomination" id="denomination"
+                                                    value="">
+                                            @else
+
+                                            @endif
+                                            <div>
+                                                <p class="font-xssss fw-400 error-rec-deno text-danger"></p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-sm-6 pl-0">
-                                        <label class="small-size fw-600 text-grey-900 font-xsss">Quantity</label>
-                                        <input type="text" class="form-control mb-3 credentails-field" placeholder="Quantity"
-                                            name="quantity" id="quantity" value="">
-                                        <span class="font-xssss fw-400 error-rec-qnty text-danger"></span>
-                                    </div>
+                                        <div class="col-sm-6 pl-0">
+                                            <label class="small-size fw-600 text-grey-900 font-xsss">Quantity</label>
+                                            <input type="text" class="form-control mb-3 credentails-field" placeholder="Quantity"
+                                                name="quantity" id="quantity" value="">
+                                            <span class="font-xssss fw-400 error-rec-qnty text-danger"></span>
+                                        </div>
                                 </div>
                             
                         </div>

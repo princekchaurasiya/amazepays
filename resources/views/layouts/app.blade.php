@@ -182,7 +182,7 @@
                                 <!-- <a href="index.html" class="logo"><img src="images/logo.png" alt="logo"></a> -->
                                 <a href="/" class="logo"><img src="{{ asset('images/logo.png') }}"
                                         alt="logo" class="custLogo"></a>
-                                <p class="w-100 mt-lg-5 mt-4">98-103, 4 Floor, Aditya Industrial Estate Co-op
+                                <p class="w-100 mt-4 text-black">98-103, 4 Floor, Aditya Industrial Estate Co-op
                                     Premises Ltd<br /> Mindspace Behind Evershine
                                     Mall Off Link Road Malad West <br /> Mumbai -400064.
                                 </p>
@@ -195,25 +195,23 @@
                                     <li><a href="#">Vouchers</a></li>
                                 </ul>
                             </div> --}}
-                            <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
-                                <h5>About</h5>
+                            <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6">
+                                <h5 class="text-orange">Quick Read</h5>
                                 <ul>
-                                    {{--
-                              <li><a href="#">FAQ</a></li>
-                              --}}
-                                    <li><a href="{{ url('terms_of_use') }}">Term of use</a></li>
-                                    <li><a href="{{ url('private_policy') }}">Privacy Policy</a></li>
+                                    <li><a class="font-xsss text-black" href="{{ url('terms_of_use') }}">Term of use</a></li>
+                                    <li><a class="font-xsss text-black" href="{{ url('private_policy') }}">Privacy Policy</a></li>
                                 </ul>
                             </div>
-                            <div class="col-md-3 col-lg-4 col-sm-4 col-xs-6">
-                                <h5 class="mb-3">Office</h5>
-                                <p style="width: 100%;">98-103, 4 Floor, Aditya Industrial Estate Co-op Premises
-                                    Ltd Mindspace Behind Evershine
-                                    Mall Off Link Road Malad (West) Mumbai 400064.
-                                </p>
+                            <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6">
+                                <h5 class="text-orange">Easy Guide</h5>
+                                <ul>
+                                    <li><a class="font-xsss text-black" href="{{ url('/') }}">Home</a></li>
+                                    <li><a class="font-xsss text-black" href="{{ url('about') }}">About</a></li>
+                                    <li><a class="font-xsss text-black" href="{{ url('contact') }}">Contact</a></li>
+                                </ul>
                             </div>
-                            <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6 md-mb25">
-                                <h5 class="mb-3">Follow us on</h5>
+                            <div class="col-md-3 col-lg-3 col-sm-3 col-xs-6 md-mb25">
+                                <h5 class="mb-3 text-orange">Contact us on</h5>
                                 <ul class="list-inline">
                                     <li class="list-inline-item mr-3"><a href="#"><i
                                                 class="ti-facebook"></i></a>
@@ -226,6 +224,13 @@
                                     </li>
                                     <li class="list-inline-item"><a href="#"><i class="ti-instagram"></i></a>
                                     </li>
+                                </ul>
+                                <ul class="mt-3">
+
+                                    <li><a class="text-black" href="mail:support@amazepays.in"><i class="fas fa-envelope"></i> support@amazepays.in</a></li>
+        
+                                    <li><a class="text-black" href="phone:+91-98211 99497"><i class="fas fa-phone-alt"></i> +91 9821199497</a></li>
+        
                                 </ul>
                             </div>
                         </div>

@@ -665,6 +665,9 @@ h3 {
   color: #ff9500 !important;
 }
 
+.text-orange {
+  color: #ff6601 !important;
+}
 .text-black {
   color: #000 !important;
 }
@@ -15571,7 +15574,7 @@ body {
 
 }
 .gift-card-detail-page .card-form{
-  margin-top: 3%;
+  /* margin-top: 3%; */
   padding-top: 3%;
   padding-bottom: 3%;
   background-color: #f9f9f9;
@@ -16015,3 +16018,40 @@ color: black !important;
 .my-order-card-body{
     margin-bottom: 1%;
 }
+
+.boxed input[type="radio"] {
+  display: none;
+}
+
+.boxed input[type="radio"]:checked + label {
+  background: #ff6601;
+  color: #fff;
+  border: none;
+}
+
+.boxed label {
+  padding: 1rem;
+  display: inline-block;
+  border: 1px solid #bdbdbd;
+  cursor: pointer;
+  border-radius: 20px;
+  margin-left: 0.3rem;
+  background-color: white;
+  font-size: 1.1rem;
+  font-weight: 700 !important;
+}
+/*
+input[type="radio"]:checked + label {
+  background: grey;
+  color: #fff;
+}
+.blank-label {
+  display: none;
+}
+
+label {
+  padding: 2em;
+  display: inline-block;
+  border: 1px solid grey;
+  cursor: pointer;
+} */

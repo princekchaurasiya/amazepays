@@ -182,7 +182,7 @@
                                 <!-- <a href="index.html" class="logo"><img src="images/logo.png" alt="logo"></a> -->
                                 <a href="/" class="logo"><img src="{{ asset('images/logo.png') }}"
                                         alt="logo" class="custLogo"></a>
-                                <p class="w-100 mt-lg-5 mt-4">98-103, 4 Floor, Aditya Industrial Estate Co-op
+                                <p class="w-100 mt-4 text-black">98-103, 4 Floor, Aditya Industrial Estate Co-op
                                     Premises Ltd<br /> Mindspace Behind Evershine
                                     Mall Off Link Road Malad West <br /> Mumbai -400064.
                                 </p>
@@ -195,25 +195,23 @@
                                     <li><a href="#">Vouchers</a></li>
                                 </ul>
                             </div> --}}
-                            <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
-                                <h5>About</h5>
+                            <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6">
+                                <h5 class="text-orange">Quick Read</h5>
                                 <ul>
-                                    {{--
-                              <li><a href="#">FAQ</a></li>
-                              --}}
-                                    <li><a href="{{ url('terms_of_use') }}">Term of use</a></li>
-                                    <li><a href="{{ url('private_policy') }}">Privacy Policy</a></li>
+                                    <li><a class="font-xsss text-black" href="{{ url('terms_of_use') }}">Term of use</a></li>
+                                    <li><a class="font-xsss text-black" href="{{ url('private_policy') }}">Privacy Policy</a></li>
                                 </ul>
                             </div>
-                            <div class="col-md-3 col-lg-4 col-sm-4 col-xs-6">
-                                <h5 class="mb-3">Office</h5>
-                                <p style="width: 100%;">98-103, 4 Floor, Aditya Industrial Estate Co-op Premises
-                                    Ltd Mindspace Behind Evershine
-                                    Mall Off Link Road Malad (West) Mumbai 400064.
-                                </p>
+                            <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6">
+                                <h5 class="text-orange">Easy Guide</h5>
+                                <ul>
+                                    <li><a class="font-xsss text-black" href="{{ url('/') }}">Home</a></li>
+                                    <li><a class="font-xsss text-black" href="{{ url('about') }}">About</a></li>
+                                    <li><a class="font-xsss text-black" href="{{ url('contact') }}">Contact</a></li>
+                                </ul>
                             </div>
-                            <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6 md-mb25">
-                                <h5 class="mb-3">Follow us on</h5>
+                            <div class="col-md-3 col-lg-3 col-sm-3 col-xs-6 md-mb25">
+                                <h5 class="mb-3 text-orange">Contact us on</h5>
                                 <ul class="list-inline">
                                     <li class="list-inline-item mr-3"><a href="#"><i
                                                 class="ti-facebook"></i></a>
@@ -227,13 +225,20 @@
                                     <li class="list-inline-item"><a href="#"><i class="ti-instagram"></i></a>
                                     </li>
                                 </ul>
+                                <ul class="mt-3">
+
+                                    <li><a class="text-black" href="mail:support@amazepays.in"><i class="fas fa-envelope"></i> support@amazepays.in</a></li>
+        
+                                    <li><a class="text-black" href="phone:+91-98211 99497"><i class="fas fa-phone-alt"></i> +91 9821199497</a></li>
+        
+                                </ul>
                             </div>
                         </div>
                         <div class="middle-footer mt-5 pt-4"></div>
                     </div>
                     <div class="col-sm-12 lower-footer pt-0"></div>
                     <div class="col-sm-6 col-xs-12">
-                        <p class="copyright-text">© 2021 copyright. All rights reserved.</p>
+                        <p class="copyright-text">© 2023 copyright. All rights reserved.</p>
                     </div>
                     <div class="col-sm-6 col-xs-12 text-right">
                         <p class="copyright-text float-right">Design & Develop by <a href="#"
@@ -301,14 +306,14 @@
                                                         <span class="font-xssss fw-400 error-message error-email"></span>
                                                     </div>
                                                     <div class="form-group icon-tab mb-3">
-                                                        <input type="text"
+                                                        <input type="password"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Password" id="password">
                                                         <i class="ti-lock text-grey-700 pr-0"></i>
                                                         <span class="font-xssss fw-400 error-password error-message"></span>
                                                     </div>
                                                     <div class="form-group icon-tab mb-3">
-                                                        <input type="text"
+                                                        <input type="password"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Confirm Password" id="confmPassword">
                                                         <i class="ti-lock text-grey-700 pr-0"></i>
@@ -317,7 +322,7 @@
                                                     </div>
                                                     <div class="form-group icon-tab mb-3">
                                                         <a href="#"
-                                                            class="text-center form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0"
+                                                            class="text-center register-button-color form-control h60 bg-current text-white font-xss fw-500 border-0 p-0"
                                                             id="createUser">Create an account</a>
                                                     </div>
                                                 </form>
@@ -419,7 +424,7 @@
                                                             </div>
                                                             <div class="col-6 align-self-center">
                                                                 <button type="submit"
-                                                                class="form-control rounded-lg h20 float-right bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 w100"
+                                                                class="form-control h20 float-right bg-current text-white text-center font-xss fw-500 border-0 p-0 w100 login-button-color"
                                                                 id="loginUser">Login</button>
                                                             </div>
                                                         </div>          

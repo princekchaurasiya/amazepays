@@ -708,6 +708,9 @@ h3 {
     color: #ff9500 !important;
 }
 
+.text-orange {
+  color: #ff6601 !important;
+}
 .text-black {
     color: #000 !important;
 }
@@ -3656,6 +3659,14 @@ pre code {
 
 .table-hover .table-info:hover {
     background-color: #acbdf5;
+}
+
+.credentails-field{
+    outline: 0 !important;
+    border-width: 0 0 2px !important;
+}
+.credentails-field:focus{
+    border-color: #ff8b00 !important;
 }
 
 .table-hover .table-info:hover>td,
@@ -16990,22 +17001,23 @@ body {
 }
 
 
-.gift-card-detail-page .copuan-quantity {
-    margin-top: 3%;
+.gift-card-detail-page .copuan-quantity{
+  margin-top: 3%;
+  margin-left: 0px !important;
+  margin-right: 0px !important;
 
 }
-
-.gift-card-detail-page .card-form {
-    margin-top: 3%;
-    padding-top: 3%;
-    padding-bottom: 3%;
-    background-color: #f9f9f9;
+.gift-card-detail-page .card-form{
+  /* margin-top: 3%; */
+  padding-top: 3%;
+  padding-bottom: 1%;
+  background-color: #f9f9f9;
 }
 
-.personalise-gift-card {
-    background-color: #f6f7fc;
-    margin-top: 3% !important;
-    padding: 1%;
+.personalise-gift-card{
+  background-color: #f6f7fc;
+  /* margin-top:3% !important; */
+  padding: 1%;
 }
 
 .cart-item .order-data .order-summary {
@@ -17467,6 +17479,43 @@ body {
 .my-order-card-body {
     margin-bottom: 1%;
 }
+
+.boxed input[type="radio"] {
+  display: none;
+}
+
+.boxed input[type="radio"]:checked + label {
+  background: #ff6601;
+  color: #fff;
+  border: none;
+}
+
+.boxed label {
+  padding: 1rem;
+  display: inline-block;
+  border: 1px solid #bdbdbd;
+  cursor: pointer;
+  border-radius: 20px;
+  margin-left: 0.3rem;
+  background-color: white;
+  font-size: 1.1rem;
+  font-weight: 700 !important;
+}
+/*
+input[type="radio"]:checked + label {
+  background: grey;
+  color: #fff;
+}
+.blank-label {
+  display: none;
+}
+
+label {
+  padding: 2em;
+  display: inline-block;
+  border: 1px solid grey;
+  cursor: pointer;
+} */
 
 .product-card:hover {
     -webkit-box-shadow: 0px 0px 7px -1px rgba(0, 0, 0, 0.75);

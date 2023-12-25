@@ -16050,3 +16050,10 @@ color: black !important;
 .toggle-register-Password-icon{
   margin-left: 90% !important;
 }
+
+.product-card:hover {
+  -webkit-box-shadow: 0px 0px 7px -1px rgba(0, 0, 0, 0.75);
+  -moz-box-shadow: 0px 0px 7px -1px rgba(0, 0, 0, 0.75);
+  box-shadow: 0px 0px 7px -1px rgba(0, 0, 0, 0.75);
+
+}

@@ -19,6 +19,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductSkuController;
 use App\Http\Controllers\ErrorController;
 use App\Http\Controllers\CreateOrderController;
+use App\Http\Controllers\ViewCardDetailsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +77,12 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::get('/my-order', [MyOrderController::class, 'displayOrder'])->name('my-order');
 });
+
+
+Route::get('/unauthenticated', function () {
+    $message = session('message', 'You are not authenticated.');
+    return redirect()->route('error', ['message' => $message]);
+})->name('unauthenticated')->middleware('web');
 
 Route::post('/check-data', [CommonController::class, 'checkData'])->name('check-data');
 Route::get('/view-all-product', [UserPanelController::class, 'viewAllProduct'])->name('view-all-product');
@@ -159,10 +166,6 @@ Route::get('/export', [PaymentDetailsExportController::class, 'export']);
 
 // Route::get('/send-test-sms', [SmsController::class, 'sendTestSms'])->name('send-test-sms');
 
-Route::get('/error', function () {
-    return view('userpanel.wentWrong');
-})->name('error');
-
 Route::get('/error', [ErrorController::class, 'handleError'])->name('error');
 
 Route::post('/update-profile', [ProfileController::class, 'update'])->name('update-profile');
@@ -182,3 +185,8 @@ Route::get('/order-list', [UserPanelController::class, 'orderList'])->name('orde
 Route::get('/order-failed', function () {
     return view('order.order-failed');
 })->name('order-failed');
+
+
+
+
+Route::post('/card-details', [ViewCardDetailsController::class, 'index'])->name('view-card-details');

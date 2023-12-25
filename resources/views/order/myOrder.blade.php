@@ -5,12 +5,6 @@
 @section('content')
     <div class="dashboard-wrapper bg-greylight">
         <div class="container">
-
-            @if (session('status'))
-                <div class="alert alert-success">
-                    {{ session('status') }}
-                </div>
-            @endif
             <div class="row">
                 <div class="col-lg-3">
                     <div class="dashboard-nav bg-white rounded-lg shadow-xs sticky-top">
@@ -30,29 +24,54 @@
                     </div>
                 </div>
                 <div class="col-lg-9">
-                    <div class="row outer-order-wrapper-div">
-                        <div><h1 class="font-weight-bold pt-2 pb-1">My Orders</h1></div>
+                    <div class="row outer-order-wrapper-div pb-5">
+                        <div>
+                            <h1 class="font-weight-bold pt-2 pb-1">My Orders</h1>
+                        </div>
                         @foreach ($order as $orderItem)
-                            <div class="outer-order-wrapper-div">
-                                <div class="card product-card">
-                                    <div class="card-body my-order-card-body ">
-                                        <div class="row">
-                                            <div class="col-lg-5">
-                                                <?php
-                                                $images = json_decode($orderItem->images, true);
-                                                ?>
-                                                @if ($images && isset($images['mobile']))
-                                                @endif
-                                                <img class="my-order-image-div img-fluid" src="{{ $images['mobile'] }}" alt="">
+                            <?php
+                            $images = json_decode($orderItem->images, true);
+                            ?>
+                            <a href="#" class="order-link" data-order-id="{{ $orderItem->woohoo_order_id }}"
+                                data-image="{{ $images['small'] }}">
+                                <div class="outer-order-wrapper-div">
+                                    <div class="card product-card">
+                                        <div class="card-body my-order-card-body">
+                                            <div class="row">
+                                                <div class="col-lg-auto">
+                                                    @if ($images && isset($images['small']))
+                                                        <img class="my-order-image-div img-fluid mb-3 mb-lg-0"
+                                                            src="{{ $images['small'] }}" alt="">
+                                                    @endif
+                                                </div>
+                                                <div class="col-lg-auto">
+                                                    <h2>{{ $orderItem->sku }}</h2>
+                                                    <p class="mb-0">Brand: <b>{{ $orderItem->brandName }}</b></p>
+                                                    <p class="mb-0">Amount: <b>{{ $orderItem->denomination }}</b></p>
+                                                    <p class="mb-0">Quantity: <b>{{ $orderItem->quantity }}</b></p>
+                                                </div>
+                                                <div class="col-lg-auto ml-auto text-lg-right mt-3 mt-lg-0">
+                                                    <h2>
+                                                        <span
+                                                            class="{{ $orderItem->order_status == 'COMPLETE' ? 'text-success' : 'text-danger' }} font-weight-bold">
+                                                            Order {{ ucfirst(strtolower($orderItem->order_status)) }}
+                                                        </span>
+                                                    </h2>
+                                                    <p class="mb-0">Order #: <b>{{ $orderItem->woohoo_order_id }}</b></p>
+                                                    <p class="mb-0">Discount: <b>0</b></p>
+                                                    <p class="mb-0">Total Amount: <b>{{ $orderItem->amount }}</b></p>
+                                                </div>
                                             </div>
-                                            <div class="col-lg-3">
-<h2>{{ $orderItem->sku }}</h2>
-                                            </div>
-                                            <div class="col-lg-4"></div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                                <form action="{{ route('view-card-details') }}" method="post" id="orderForm"
+                                    style="display: none;">
+                                    @csrf
+                                    <input type="hidden" name="orderId" id="orderIdInput">
+                                    <input type="hidden" name="imageDetail" id="imageDetail">
+                                </form>
+                            </a>
                         @endforeach
                     </div>
                 </div>
@@ -60,6 +79,23 @@
         </div>
     </div>
     @push('scripts')
-        <script></script>
+        <script>
+            $(document).ready(function() {
+                $('.order-link').on('click', function(e) {
+                    e.preventDefault();
+
+                    // Get the order ID and image detail from data attributes
+                    var orderId = $(this).data('order-id');
+                    var imageDetail = $(this).data('image');
+
+                    // Set the order ID and image detail in the hidden input fields
+                    $('#orderIdInput').val(orderId);
+                    $('#imageDetail').val(imageDetail);
+
+                    // Submit the form
+                    $('#orderForm').submit();
+                });
+            });
+        </script>
     @endpush
 @endsection

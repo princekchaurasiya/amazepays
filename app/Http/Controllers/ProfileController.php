@@ -14,10 +14,8 @@ class ProfileController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . Auth::user()->id,
             'phone' => 'required|string|max:255',
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', 
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-
-       
 
         // Update the user's profile
         $user = Auth::user();
@@ -32,6 +30,8 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return redirect()->back()->with('success', 'Profile updated successfully!');
+        return redirect()
+            ->back()
+            ->with('success', 'Profile updated successfully!');
     }
 }

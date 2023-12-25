@@ -197,13 +197,13 @@ class CCAvenueController extends Controller
                 return view('paymentFolder.payment-success');
             } else {
                 $errorMessage = 'Payment failed Place new order and try payment again';
-                session()->flash('error_message', $errorMessage);
+                session()->flash('error-message', $errorMessage);
                 return redirect()->route('error');
             }
         } catch (\Exception $e) {
             Log::error('Exception in CC Avenue response handling: ' . $e->getMessage());
             $errorMessage = $e->getMessage();
-            session()->flash('error_message', $errorMessage);
+            session()->flash('error-message', $errorMessage);
             return redirect()->route('error');
         }
     }

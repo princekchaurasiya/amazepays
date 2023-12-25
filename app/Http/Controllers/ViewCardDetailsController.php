@@ -24,7 +24,7 @@ class ViewCardDetailsController extends Controller
 
         // $cardData =  {{ dd(decrypt($orderItem->cards, env('ENCRYPTION_KEY'))) }};
 
-        return view('order.viewCard')->with('order', $recentOrders);
+        return view('order.viewCard')->with(['cardArray' => $cardsData, 'imgDetail' => $imgDetail]);
 
     }
 }

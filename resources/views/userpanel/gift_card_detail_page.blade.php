@@ -27,7 +27,7 @@
                         <div class="col-lg-6">
                             <div class="card-container">
                                 <img src="{{ $getprdtDetails['images']->small == null ? URL::asset('/images/hamburger.jpg') : $getprdtDetails['images']->small }}"
-                                    alt="product-detail-image">
+                                    alt="product-detail-image" class="img-fluid">
                             </div>
                             <hr>
                             <div class="container">

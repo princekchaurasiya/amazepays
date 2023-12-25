@@ -18,13 +18,13 @@
                             <li class="d-block rounded-lg"><a href="{{ route('change-password') }}"><i
                                         class="ti-lock font-sm"></i><span> Change Password</span></a></li>
                             <!-- <li class="d-block rounded-lg "><a href="payment.html"><i class="ti-credit-card font-sm"></i><span> Payment</span></a></li> -->
-                            <li class="d-block rounded-lg"><a href="#"><i class="ti-power-off font-sm"></i><span>
-                                        Logout</span></a></li>
+                            <li class="d-block rounded-lg"><a href="{{ route('userLogOut') }}"><i class="ti-power-off font-sm"></i><span>
+                                Logout</span></a></li>
                         </ul>
                     </div>
                 </div>
                 <div class="col-lg-9">
-                    <div class="row outer-order-wrapper-div">
+                    <div class="row outer-order-wrapper-div pb-5">
                         <div>
                             <h1 class="font-weight-bold pt-2 pb-1">My Orders</h1>
                         </div>

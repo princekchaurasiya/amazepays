@@ -238,7 +238,7 @@
                     </div>
                     <div class="col-sm-12 lower-footer pt-0"></div>
                     <div class="col-sm-6 col-xs-12">
-                        <p class="copyright-text">© 2021 copyright. All rights reserved.</p>
+                        <p class="copyright-text">© 2023 copyright. All rights reserved.</p>
                     </div>
                     <div class="col-sm-6 col-xs-12 text-right">
                         <p class="copyright-text float-right">Design & Develop by <a href="#"
@@ -306,14 +306,14 @@
                                                         <span class="font-xssss fw-400 error-message error-email"></span>
                                                     </div>
                                                     <div class="form-group icon-tab mb-3">
-                                                        <input type="text"
+                                                        <input type="password"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Password" id="password">
                                                         <i class="ti-lock text-grey-700 pr-0"></i>
                                                         <span class="font-xssss fw-400 error-password error-message"></span>
                                                     </div>
                                                     <div class="form-group icon-tab mb-3">
-                                                        <input type="text"
+                                                        <input type="password"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Confirm Password" id="confmPassword">
                                                         <i class="ti-lock text-grey-700 pr-0"></i>
@@ -322,7 +322,7 @@
                                                     </div>
                                                     <div class="form-group icon-tab mb-3">
                                                         <a href="#"
-                                                            class="text-center form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0"
+                                                            class="text-center register-button-color form-control h60 bg-current text-white font-xss fw-500 border-0 p-0"
                                                             id="createUser">Create an account</a>
                                                     </div>
                                                 </form>
@@ -424,7 +424,7 @@
                                                             </div>
                                                             <div class="col-6 align-self-center">
                                                                 <button type="submit"
-                                                                class="form-control rounded-lg h20 float-right bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 w100"
+                                                                class="form-control h20 float-right bg-current text-white text-center font-xss fw-500 border-0 p-0 w100 login-button-color"
                                                                 id="loginUser">Login</button>
                                                             </div>
                                                         </div>          

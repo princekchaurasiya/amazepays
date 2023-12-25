@@ -26,10 +26,29 @@
                     <div class="row card-form">
                         <div class="col-lg-5">
                             <div class="card-container">
-                                <img src="{{ $getprdtDetails['images']->small == null ? URL::asset('/images/hamburger.jpg') : $getprdtDetails['images']->small }}"
+                                <div class="row">
+                                    <div class="col-lg-5">
+                                        
+                                        <img class="img-fluid" src="{{ $getprdtDetails['images']->small == null ? URL::asset('/images/hamburger.jpg') : $getprdtDetails['images']->small }}"
                                     alt="product-detail-image">
+                                    </div>
+                                    <div class="col-lg-7">
+                                        <h6 class=" fw-600 font-md mt-2" name="product_name"
+                                                value="{{ $getprdtDetails['name'] }}">{{ $getprdtDetails['name'] }}</h6>
+                                        <p class="mb-3 font-xssss fw-600 mt-2">Validity :
+                                            {{ $getprdtDetails['expiry'] }}</p>
+                                        <div>
+                                            <span class="mb-3 fw-600 font-xs mt-2 text-orange">Category </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2"> CN & PIN</span>
+                                        </div>
+                                        <div>
+                                            <span class="mb-3 fw-600 font-xs mt-2 text-orange">Brand </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2">AmazePays</span>        
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                                
                             </div>
-
+                            
                             <div class="container">
                                 <div class="row">
                                     {{-- <div class="row">
@@ -87,7 +106,7 @@
                         <div class="col-lg-6 offset-lg-1">
                                 <div class="row copuan-quantity">
                                         <div class="col-sm-6 pl-0">
-
+                                            
                                             @if ($getprdtDetails['price']->type == 'RANGE')
                                                 <label class="small-size fw-600 text-grey-900 font-xsss">Select Denomination</label>
                                                 <div class="radio-btn-row boxed">
@@ -121,7 +140,7 @@
                                             <span class="font-xssss fw-400 error-rec-qnty text-danger"></span>
                                         </div>
                                 </div>
-
+                            
                         </div>
                     </div>
                     <div class="row">
@@ -220,7 +239,7 @@
                             </div>
                         </div>
                     </div>
-
+                   
                     <div class="row personalise-gift-card">
                         <div class="tabs">
                             <input type="radio" name="tabs" id="tabone" checked="checked">

@@ -16043,18 +16043,10 @@ color: black !important;
   font-size: 1.1rem;
   font-weight: 700 !important;
 }
-/*
-input[type="radio"]:checked + label {
-  background: grey;
-  color: #fff;
-}
-.blank-label {
-  display: none;
+.toggle-login-Password-icon{
+  margin-left: -30px !important;
 }
 
-label {
-  padding: 2em;
-  display: inline-block;
-  border: 1px solid grey;
-  cursor: pointer;
-} */
+.toggle-register-Password-icon{
+  margin-left: 90% !important;
+}

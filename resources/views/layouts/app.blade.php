@@ -310,12 +310,14 @@
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Password" id="password">
                                                         <i class="ti-lock text-grey-700 pr-0"></i>
+                                                        <i class="ti-eye toggle-register-Password-icon" id="toggleRegstPassword"></i>
                                                         <span class="font-xssss fw-400 error-password error-message"></span>
                                                     </div>
                                                     <div class="form-group icon-tab mb-3">
                                                         <input type="password"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Confirm Password" id="confmPassword">
+                                                            <i class="ti-eye toggle-register-Password-icon" id="toggleRegstConfirmPassword"></i>
                                                         <i class="ti-lock text-grey-700 pr-0"></i>
                                                         <span
                                                             class="font-xssss fw-400 error-confmPass error-message error-confmPassword"></span>
@@ -329,7 +331,7 @@
                                                 <div class="col-sm-12 p-0 text-center">
                                                     <!-- <a href="#" class="form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0">Create an account</a> -->
                                                     <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-4 lh-32">Are you already member?
-                                                        <a href="#" class="fw-700 ml-1 text-current" data-toggle="modal"
+                                                        <a href="#" class="fw-700 ml-1 text-orange " data-toggle="modal"
                                                             data-target="#Modallogin" data-dismiss="modal">Login</a>
                                                     </h6>
                                                     {{-- <div class="row">
@@ -406,6 +408,7 @@
                                                         <input type="password"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Enter Password" id="loginPass">
+                                                            <i class="ti-eye toggle-login-Password-icon" id="togglePassword"></i>
                                                         <span class="font-xssss fw-400 error-loginPass text-danger"></span>
                                                     </div>
                                                     <div class="form-check text-left mb-3">
@@ -437,7 +440,7 @@
                                                
                                                 <!-- Success message div -->
                                                 <div class="col-sm-12 p-0 text-center">
-                                                    <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Don't have an account <a
+                                                    <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Don't have an account? <a
                                                             href="#" class="fw-700 ml-1 text-current register-form"
                                                             data-toggle="modal" data-target="#ModalregisterD"
                                                             data-dismiss="modal">Register</a></h6>
@@ -529,7 +532,7 @@
                                 <a href="#"
                                     class="form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0">Submit</a>
                                 <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Dont have account <a
-                                        href="#" class="fw-700 ml-1 text-current" data-toggle="modal"
+                                        href="#" class="fw-700 ml-1 text-orange" data-toggle="modal"
                                         data-target="#Modallogin" data-dismiss="modal">Login</a></h6>
                             </div>
                             <div class="col-sm-12 p-0 text-center">
@@ -579,6 +582,55 @@
         //     $(".error-email").text('');
         //     $(".error-password").text('');
         // });
+
+        // for hide and show login password
+
+        const togglePassword = document.querySelector("#togglePassword");
+        const loginPass = document.querySelector("#loginPass");
+
+        togglePassword.addEventListener("click", function () {
+            // toggle the type attribute
+            const type = loginPass.getAttribute("type") === "password" ? "text" : "password";
+            loginPass.setAttribute("type", type);
+            
+            // toggle the icon
+            // this.classList.toggle("fa fa-eye-slash");
+        });
+
+        // for hide and show Register password
+        
+        const toggleRegstPassword = document.querySelector("#toggleRegstPassword");
+        const password = document.querySelector("#password");
+
+        toggleRegstPassword.addEventListener("click", function () {
+            // toggle the type attribute
+            const type = password.getAttribute("type") === "password" ? "text" : "password";
+            password.setAttribute("type", type);
+            
+            // toggle the icon
+            // this.classList.toggle("fa fa-eye-slash");
+        });
+
+        // for hide and show Register Confirm password
+
+        const toggleRegstConfirmPassword = document.querySelector("#toggleRegstConfirmPassword");
+        const confmPassword = document.querySelector("#confmPassword");
+
+        toggleRegstConfirmPassword.addEventListener("click", function () {
+            // toggle the type attribute
+            const type = confmPassword.getAttribute("type") === "password" ? "text" : "password";
+            confmPassword.setAttribute("type", type);
+            
+            // toggle the icon
+            // this.classList.toggle("fa fa-eye-slash");
+        });
+        // End Register Confirm password
+
+        // prevent form submit
+        const form = document.querySelector("form");
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+        });
 
         $('#createUser').click(function(e) {
             e.preventDefault();

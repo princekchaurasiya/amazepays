@@ -88,7 +88,7 @@
 
 
     <div class="product-wrapper  pt-5 pb-5">
-        <div class="container-fluid p-5">
+        <div class="container-fluid">
             <div class="row justify-content-center">
                 <div class="col-12">
                     <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">Hot Deals, Exclusive Offers, and Special Picks!</h1>
@@ -105,27 +105,25 @@
                         <!-- loop product here -->
 
                         @foreach ($allProducts as $product)
-                            <div class="col-lg-3 col-5">
-                                <div class="border p-3">
+                            <div class="col-lg-3 col-6">
+                                
                                     {{-- <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4> --}}
-                                <a href="{{ route('get-product-sku', ['slug' => $product->sku]) }}"
-                                    class="d-block text-center"><p class="single-image-wrapper p-2"><img
-                                        src="{{ $product->images->small == null ? URL::asset('/images/no-image.png') : $product->images->small }}"
-                                        alt="product-image" class="w-100 mt-1 d-inline-block"></p></a>
-                                <a href="{{ route('get-product-sku', ['slug' => $product->sku]) }}">
-                                    <div class="container" style="background-color:white">
-                                        <p class="text-center font-xsss mt-3 text-current card-font">
-                                            {{ ucwords($product->name) }}
-                                        </p>
-                                        {{-- <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span> --}}
-                                    </div>
-                                    {{-- <div class="container">
-                                            <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
-                                            <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
-                                        </div> --}}
-                                </a>
-                                </div>
-
+                                    <a href="{{ route('get-product-sku', ['slug' => $product->sku]) }}"
+                                        class="d-block text-center"><p class="single-image-wrapper"><img
+                                            src="{{ $product->images->small == null ? URL::asset('/images/no-image.png') : $product->images->small }}"
+                                            alt="product-image" class="w-100 mt-4 d-inline-block"></p></a>
+                                    <a href="{{ route('get-product-sku', ['slug' => $product->sku]) }}">
+                                        <div class="container" style="background-color:white">
+                                            <p class="text-center font-xsss fw-600 text-orange">
+                                                {{ ucwords($product->name) }}
+                                            </p>
+                                            {{-- <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span> --}}
+                                        </div>
+                                        {{-- <div class="container">
+                                                <span class="font-xssss mb-3 text-current fw-700">Use Promo Code: <h4 class="fw-600 ls-2 font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">BOH232</h4></span>
+                                                <p class="font-xssss mt-2 text-red fw-600">Expires: Jan 03, 2021</p>
+                                            </div> --}}
+                                    </a>
                             </div>
                         @endforeach
                     </div>

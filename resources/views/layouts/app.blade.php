@@ -624,7 +624,6 @@
             // toggle the icon
             // this.classList.toggle("fa fa-eye-slash");
         });
-        // End Register Confirm password
 
         // prevent form submit
         const form = document.querySelector("form");

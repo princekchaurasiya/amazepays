@@ -57,17 +57,17 @@
             <div class="carousel-inner">
                 <!-- Slide 1 -->
                 <div class="carousel-item active">
-                    <img src="{{ asset('images/merry-christmas.png') }}" alt="Amazepay Banner 1" class="d-block w-100">
+                    <img src="{{ asset('images/merry-christmas-mobile.png') }}" alt="Amazepay Banner 1" class="d-block w-100">
                 </div>
 
                 <!-- Slide 2 -->
                 <div class="carousel-item">
-                    <img src="{{ asset('images/happy-new-year.png') }}" alt="Amazepay Banner 2" class="d-block w-100">
+                    <img src="{{ asset('images/happy-new-year-mobile.png') }}" alt="Amazepay Banner 2" class="d-block w-100">
                 </div>
 
                 <!-- Slide 3 -->
                 <div class="carousel-item">
-                    <img src="{{ asset('images/meery-christmas-offer.png') }}" alt="Amazepay Banner 3" class="d-block w-100">
+                    <img src="{{ asset('images/meery-christmas-offer-mobile.png') }}" alt="Amazepay Banner 3" class="d-block w-100">
                 </div>
             </div>
 

@@ -29,8 +29,10 @@
                         <div class="mt-3 col-12 col-sm-12 col-md-12 col-lg-10 col-xl-10">
                             <div class="row">
                                 <div class="order-0 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3">
-                                    <img class="img-fluid singlr-gift-image" src="{{ $getprdtDetails['images']->small == null ? URL::asset('/images/hamburger.jpg') : $getprdtDetails['images']->small }}"
-                                    alt="product-detail-image">
+                                    <div class="cardImage">
+                                        <img class="img-fluid singlr-gift-image" src="{{ $getprdtDetails['images']->small == null ? URL::asset('/images/hamburger.jpg') : $getprdtDetails['images']->small }}"
+                                        alt="product-detail-image">
+                                    </div>
                                 </div>
                                 <div class="order-1 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3">
                                     <h6 class=" fw-600 font-md mt-2" name="product_name"
@@ -70,7 +72,7 @@
 
                                     @endif
                                 </div>
-                                <div class="order-3 mb-3 mb-lg-0 col-12 col-md-4 col-lg-3 col-xl-3 copuan-quantity">
+                                <div class="order-3 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3 copuan-quantity">
                                     <label class="small-size fw-600 text-grey-900 font-xsss">Quantity</label>
                                     <input type="text" class="form-control mb-3 credentails-field" placeholder="Quantity"
                                         name="quantity" id="quantity" value="">

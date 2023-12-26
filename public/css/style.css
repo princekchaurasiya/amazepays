@@ -3601,6 +3601,9 @@ pre code {
   .table-responsive-md > .table-bordered {
     border: 0;
   }
+  .cardImage .singlr-gift-image{
+    width: 100%!important;
+  }
 }
 @media (max-width: 991.98px) {
   .table-responsive-lg {

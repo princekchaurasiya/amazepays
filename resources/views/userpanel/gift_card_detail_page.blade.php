@@ -4,7 +4,7 @@
 @endsection
 @section('content')
     <div class="gift-card-detail-page pt-lg--7 pb-lg--7 pb-5">
-        <div class="container-fluid p-5">
+        <div class="container-fluid">
             <div class="row">
                 <form action="{{ route('storePayNowData-and-go-to-CheckoutPage', ['sku' => $getprdtDetails['sku']]) }}" method="POST" id="giftCardPageForm">
                     {{ csrf_field() }}
@@ -19,200 +19,147 @@
                             </div>
                         @endif
                     </div>
-                    <div class="col-lg-12">
-                        <h6 class="text-ornage fw-600 font-xs">E-Gift Card</h6>
-                        <hr>
+                    <div class="justify-content-center row">
+                        <div class="col-12 col-xl-10">
+                            <h6 class="text-ornage fw-600 font-xs mt-4">E-Gift Card</h6>
+                        </div>
                     </div>
-                    <div class="row card-form">
-                        <div class="col-lg-5">
-                            <div class="card-container">
-                                <div class="row">
-                                    <div class="col-lg-6">
-                                        
-                                        <img class="img-fluid singlr-gift-image" src="{{ $getprdtDetails['images']->small == null ? URL::asset('/images/hamburger.jpg') : $getprdtDetails['images']->small }}"
+                    
+                    <div class="justify-content-center row card-form">
+                        <div class="mt-3 col-12 col-sm-12 col-md-12 col-lg-10 col-xl-10">
+                            <div class="row">
+                                <div class="order-0 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3">
+                                    <img class="img-fluid singlr-gift-image" src="{{ $getprdtDetails['images']->small == null ? URL::asset('/images/hamburger.jpg') : $getprdtDetails['images']->small }}"
                                     alt="product-detail-image">
+                                </div>
+                                <div class="order-1 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3">
+                                    <h6 class=" fw-600 font-md mt-2" name="product_name"
+                                    value="{{ $getprdtDetails['name'] }}">{{ $getprdtDetails['name'] }}</h6>
+                                    <p class="mb-3 font-xssss fw-600 mt-2">Validity :
+                                        {{ $getprdtDetails['expiry'] }}</p>
+                                    <div>
+                                        <span class="mb-3 fw-600 font-xs mt-2 text-orange">Category </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2"> CN & PIN</span>
                                     </div>
-                                    <div class="col-lg-6">
-                                        <h6 class=" fw-600 font-md mt-2" name="product_name"
-                                                value="{{ $getprdtDetails['name'] }}">{{ $getprdtDetails['name'] }}</h6>
-                                        <p class="mb-3 font-xssss fw-600 mt-2">Validity :
-                                            {{ $getprdtDetails['expiry'] }}</p>
-                                        <div>
-                                            <span class="mb-3 fw-600 font-xs mt-2 text-orange">Category </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2"> CN & PIN</span>
-                                        </div>
-                                        <div>
-                                            <span class="mb-3 fw-600 font-xs mt-2 text-orange">Brand </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2">AmazePays</span>        
-                                        </div>
-                                        
+                                    <div>
+                                        <span class="mb-3 fw-600 font-xs mt-2 text-orange">Brand </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2">AmazePays</span>        
                                     </div>
                                 </div>
-                                
-                            </div>
-                            
-                            <div class="container">
-                                <div class="row">
-                                    {{-- <div class="row">
-                                        <div class="col-sm-6">
-                                            <h6 class="mb-3 fw-600 font-md mt-2" name="product_name"
-                                                value="{{ $getprdtDetails['name'] }}">{{ $getprdtDetails['name'] }}</h6>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <span class="mb-3 font-xssss fw-600 mt-2">Validity :
-                                                {{ $getprdtDetails['expiry'] }}</span>
-                                        </div>
-                                    </div> --}}
-                                </div>
-                                {{-- <div class="row copuan-quantity">
-                                    <div class="col-sm-6">
-                                        @if ($getprdtDetails['price']->type === 'SLAB' || $getprdtDetails['price']->type == 'RANGE')
-                                            <div class="radio-btn-row">
-                                                @foreach ($getprdtDetails['price']->denominations as $denomination)
-                                                    <div class="custom-control mr-4 custom-radio custom-control-inline">
-                                                        <input type="radio" class="custom-control-input range"
-                                                            id="customRadio-{{ $denomination }}" name="denomination"
-                                                            value="{{ $denomination }}">
-                                                        <label
-                                                            class="custom-control-label small-size fw-500 text-grey-900 font-xsss"
-                                                            for="customRadio-{{ $denomination }}">{{ $denomination }}</label>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        @else
-                                            <input type="text" class="form-control mb-3"
-                                                placeholder="Select Denomination" name="denomination" id="denomination"
-                                                value="">
-                                        @endif
-                                        <div>
-                                            <p class="font-xssss fw-400 error-rec-deno text-danger"></p>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <input type="text" class="form-control mb-3" placeholder="Quantity"
-                                            name="quantity" id="quantity" value="">
-                                        <span class="font-xssss fw-400 error-rec-qnty text-danger"></span>
-                                    </div>
-                                </div> --}}
-
-
-                                {{-- <h6 class="text-grey-900 fw-400 font-xs mt-2">Offers</h6>
-                                <ul class="square-type-unordered">
-                                    <li>Only UPI payment is accepted for this gift card. --- On Amazon Pay Special E-Gift
-                                        Card (woohoo.in/amazon-pay-special-e-gift-card) Credit/Debit card and Net Banking
-                                        options are available.</li>
-                                </ul> --}}
-                            </div>
-                        </div>
-
-                        <div class="col-lg-6 offset-lg-1">
-                                <div class="row copuan-quantity">
-                                        <div class="col-sm-6 pl-0">
-                                            
-                                            @if ($getprdtDetails['price']->type == 'RANGE')
-                                                <label class="small-size fw-600 text-grey-900 font-xsss">Select Denomination</label>
-                                                <div class="radio-btn-row boxed">
-                                                    @foreach ($getprdtDetails['price']->denominations as $denomination)
-                                                        <div class="boxed">
-                                                            {{-- <input type="radio" id="customRadio-{{ $denomination }}" name="denomination"
-                                                            value="{{ $denomination }}"> --}}
-                                                            <input type="radio" class="custom-control-input range"
-                                                                id="customRadio-{{ $denomination }}" name="denomination"
-                                                                value="{{ $denomination }}">
-                                                            <label class="small-size fw-500 font-xsss" for="customRadio-{{ $denomination }}">{{ $denomination }}</label>
-                                                        </div>
-                                                    @endforeach
+                                <div class="order-2 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3">
+                                    @if ($getprdtDetails['price']->type == 'RANGE')
+                                        <label class="small-size fw-600 text-grey-900 font-xsss">Select Denomination</label>
+                                        <div class="radio-btn-row boxed">
+                                            @foreach ($getprdtDetails['price']->denominations as $denomination)
+                                                <div class="boxed">
+                                                    {{-- <input type="radio" id="customRadio-{{ $denomination }}" name="denomination"
+                                                    value="{{ $denomination }}"> --}}
+                                                    <input type="radio" class="custom-control-input range"
+                                                        id="customRadio-{{ $denomination }}" name="denomination"
+                                                        value="{{ $denomination }}">
+                                                    <label class="small-size fw-500 font-xsss" for="customRadio-{{ $denomination }}">{{ $denomination }}</label>
                                                 </div>
-                                            @elseif ($getprdtDetails['price']->type === 'SLAB')
-                                                <label class="small-size fw-600 text-grey-900 font-xsss">Enter Denomination</label>
-                                                <input type="text" class="form-control mb-3 credentails-field"
-                                                    placeholder="Select Denomination" name="denomination" id="denomination"
-                                                    value="">
-                                            @else
+                                            @endforeach
+                                        </div>
+                                    @elseif ($getprdtDetails['price']->type === 'SLAB')
+                                        <label class="small-size fw-600 text-grey-900 font-xsss">Enter Denomination</label>
+                                        <input type="text" class="form-control mb-3 credentails-field"
+                                            placeholder="Select Denomination" name="denomination" id="denomination"
+                                            value="">
+                                    @else
 
-                                            @endif
-                                            <div>
-                                                <p class="font-xssss fw-400 error-rec-deno text-danger"></p>
+                                    @endif
+                                </div>
+                                <div class="order-3 mb-3 mb-lg-0 col-12 col-md-4 col-lg-3 col-xl-3">
+                                    <label class="small-size fw-600 text-grey-900 font-xsss">Quantity</label>
+                                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Quantity"
+                                        name="quantity" id="quantity" value="">
+                                    <span class="font-xssss fw-400 error-rec-qnty text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                       
+                    </div>
+                    <div class="justify-content-center row">
+                        <div class="col-lg-10 col-xl-10">
+                            <div class="row">
+                                <div class="col-sm-12 mb-4">
+                                    <h6 class="mb-3 fw-600 font-xss mt-2">Gift Send Option</h6>
+                                    <div class="custom-control mr-4 custom-radio custom-control-inline">
+                                        <input type="radio" class="custom-control-input" id="customRadio"
+                                            name="gift_send_option" value="send_as_gift" checked>
+                                        <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
+                                            for="customRadio">Send as Gift</label>
+                                    </div>
+                                    <div class="custom-control mr-0 custom-radio custom-control-inline">
+                                        <input type="radio" class="custom-control-input" id="customRadio1"
+                                            name="gift_send_option" value="buy_for_self">
+                                        <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
+                                            for="customRadio1">Buy for Self (This E-gift card will be added to your
+                                            account)</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="gifting-details">
+                                        <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
+                                        <div class="row">
+                                            <div class="col-12 col-md-4 receiver-name">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Name"
+                                                    name="receiver_name" id="receiver-name">
+                                                <span class="font-xssss fw-400 error-rec-name text-danger"></span>
+                                            </div>
+                                            <div class="col-md-4 receiver-email">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Email"
+                                                    name="receiver_email" id="receiver-email">
+                                                <span class="font-xssss fw-400 error-rec-email text-danger"></span>
+                                            </div>
+                                            <div class="col-12 col-md-4 receiver-mobile d-none">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number"
+                                                    name="receiver_mobile" id="receiver-mobile">
+                                                <span class="font-xssss fw-400 error-rec-mobile text-danger"></span>
+                                            </div>
+                                            <div class="col-12 col-md-4 receiver-message">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver"
+                                                    name="receiver_msg" id="receiver-msg">
                                             </div>
                                         </div>
-                                        <div class="col-sm-6 pl-0">
-                                            <label class="small-size fw-600 text-grey-900 font-xsss">Quantity</label>
-                                            <input type="text" class="form-control mb-3 credentails-field" placeholder="Quantity"
-                                                name="quantity" id="quantity" value="">
-                                            <span class="font-xssss fw-400 error-rec-qnty text-danger"></span>
+                                        <div class="row">
+                                            <div class="col-12 mb-4">
+                                                <h6 class="mb-3 fw-600 font-xss mt-2">Delivery Mode</h6>
+                                                <div class="custom-control mr-4 custom-radio custom-control-inline">
+                                                    <input type="radio" class="custom-control-input" id="customRadio3"
+                                                        name="delivery_mode" value="email" checked>
+                                                    <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss"
+                                                        for="customRadio3">Email</label>
+                                                </div>
+                                                <div class="custom-control mr-4 custom-radio custom-control-inline">
+                                                    <input type="radio" class="custom-control-input" id="customRadio4"
+                                                        name="delivery_mode" value="mobile">
+                                                    <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss"
+                                                        for="customRadio4">Mobile</label>
+                                                </div>
+                                                <div class="custom-control mr-4 custom-radio custom-control-inline">
+                                                    <input type="radio" class="custom-control-input" id="customRadio5"
+                                                        name="delivery_mode" value="both">
+                                                    <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss"
+                                                        for="customRadio5">Both</label>
+                                                </div>
+                                            </div>
                                         </div>
-                                </div>
-                            
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-12 mb-4">
-                            <h6 class="mb-3 fw-600 font-xss mt-2">Gift Send Option</h6>
-                            <div class="custom-control mr-4 custom-radio custom-control-inline">
-                                <input type="radio" class="custom-control-input" id="customRadio"
-                                    name="gift_send_option" value="send_as_gift" checked>
-                                <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
-                                    for="customRadio">Send as Gift</label>
-                            </div>
-                            <div class="custom-control mr-0 custom-radio custom-control-inline">
-                                <input type="radio" class="custom-control-input" id="customRadio1"
-                                    name="gift_send_option" value="buy_for_self">
-                                <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
-                                    for="customRadio1">Buy for Self (This E-gift card will be added to your
-                                    account)</label>
-                            </div>
-                        </div>
-                        <div class="row gifting-details">
-                            <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
-                            <div class="col-sm-3 receiver-name">
-                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Name"
-                                    name="receiver_name" id="receiver-name">
-                                <span class="font-xssss fw-400 error-rec-name text-danger"></span>
-                            </div>
-                            <div class="col-sm-3 receiver-email">
-                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Email"
-                                    name="receiver_email" id="receiver-email">
-                                <span class="font-xssss fw-400 error-rec-email text-danger"></span>
-                            </div>
-                            <div class="col-sm-3 receiver-mobile d-none">
-                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number"
-                                    name="receiver_mobile" id="receiver-mobile">
-                                <span class="font-xssss fw-400 error-rec-mobile text-danger"></span>
-                            </div>
-                            <div class="col-sm-3 receiver-message">
-                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver"
-                                    name="receiver_msg" id="receiver-msg">
-                            </div>
-                            <div class="col-lg-6 mb-4">
-                                <h6 class="mb-3 fw-600 font-xss mt-2">Delivery Mode</h6>
-                                <div class="custom-control mr-4 custom-radio custom-control-inline">
-                                    <input type="radio" class="custom-control-input" id="customRadio3"
-                                        name="delivery_mode" value="email" checked>
-                                    <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss"
-                                        for="customRadio3">Email</label>
-                                </div>
-                                <div class="custom-control mr-4 custom-radio custom-control-inline">
-                                    <input type="radio" class="custom-control-input" id="customRadio4"
-                                        name="delivery_mode" value="mobile">
-                                    <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss"
-                                        for="customRadio4">Mobile</label>
-                                </div>
-                                <div class="custom-control mr-4 custom-radio custom-control-inline">
-                                    <input type="radio" class="custom-control-input" id="customRadio5"
-                                        name="delivery_mode" value="both">
-                                    <label class="custom-control-label small-size fw-500 text-grey-900 font-xsss"
-                                        for="customRadio5">Both</label>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-lg-12">
-                            @if (\Auth::user())
-                                <input type="submit"
-                                    class="form-control h60 float-right bg-current text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w100 login-button-color"
-                                    value="Pay Now" id="pay-now">
-                            @else
-                                <a href="#"
-                                    class="form-control h60 float-right bg-current text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w100 login-button-color"
-                                    data-toggle="modal" data-target="#Modallogin">Pay Now</a>
-                            @endif
+                            <div class="col-lg-12">
+                                @if (\Auth::user())
+                                    <input type="submit"
+                                        class="form-control h60 float-right bg-current text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w100 login-button-color"
+                                        value="Pay Now" id="pay-now">
+                                @else
+                                    <a href="#"
+                                        class="form-control h60 float-right bg-current text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w100 login-button-color"
+                                        data-toggle="modal" data-target="#Modallogin">Pay Now</a>
+                                @endif
+                            </div>
                         </div>
                         <div class="row card-form add-gift-cards d-none">
                             <h6 class="mb-3 fw-600 font-xss mt-2 text-center display3-size">Add Gift Cards to your Account</h6>

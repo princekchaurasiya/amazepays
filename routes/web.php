@@ -94,6 +94,9 @@ Route::get('/change-password', function () {
     return view('userpanel/change-password');
 })->name('change-password');
 
+
+Route::post('/change-password-update', [ChangePasswordUpdateController::class, 'updatePassword'])->name('password-change');
+
 Route::get('/about', function () {
     return view('userpanel/about');
 })->name('about');

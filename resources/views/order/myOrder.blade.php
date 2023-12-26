@@ -15,8 +15,8 @@
                                         class="ti-user font-sm"></i><span> Profile</span></a></li>
                             <li class="d-block rounded-lg active"><a href="{{ route('my-order') }}"><i
                                         class="ti-package font-sm"></i><span> My Order</span></a></li>
-                            {{-- <li class="d-block rounded-lg"><a href="{{ route('change-password') }}"><i
-                                        class="ti-lock font-sm"></i><span> Change Password</span></a></li> --}}
+                            <li class="d-block rounded-lg"><a href="{{ route('change-password') }}"><i
+                                        class="ti-lock font-sm"></i><span> Change Password</span></a></li>
                             <!-- <li class="d-block rounded-lg "><a href="payment.html"><i class="ti-credit-card font-sm"></i><span> Payment</span></a></li> -->
                             <li class="d-block rounded-lg"><a href="{{ route('userLogOut') }}"><i class="ti-power-off font-sm"></i><span>
                                 Logout</span></a></li>

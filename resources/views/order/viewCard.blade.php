@@ -15,8 +15,8 @@
                                         class="ti-user font-sm"></i><span> Profile</span></a></li>
                             <li class="d-block rounded-lg active"><a href="{{ route('my-order') }}"><i
                                         class="ti-package font-sm"></i><span> My Order</span></a></li>
-                            {{-- <li class="d-block rounded-lg"><a href="{{ route('change-password') }}"><i
-                                        class="ti-lock font-sm"></i><span> Change Password</span></a></li> --}}
+                            <li class="d-block rounded-lg"><a href="{{ route('change-password') }}"><i
+                                        class="ti-lock font-sm"></i><span> Change Password</span></a></li>
                             <!-- <li class="d-block rounded-lg "><a href="payment.html"><i class="ti-credit-card font-sm"></i><span> Payment</span></a></li> -->
                             <li class="d-block rounded-lg"><a href="#"><i class="ti-power-off font-sm"></i><span>
                                         Logout</span></a></li>
@@ -25,13 +25,13 @@
                 </div>
 
                 <div class="col-lg-9">
-                    <div class="row outer-order-wrapper-div justify-content-center pb-5">
+                    <div class="row outer-order-wrapper-div  pb-5">
                         <div>
                             <h1 class="font-weight-bold pt-4 pb-2">Card Details</h1>
                         </div>
 
                         @foreach ($cardArray as $card)
-                            <div class="col-lg-6">
+                            <div class="col-lg-6 mb-2">
                                 <div class="card product-card">
                                     <div class="card-body my-order-card-body">
                                         <p>
@@ -43,8 +43,7 @@
                                             <b>{{ \Carbon\Carbon::parse($card->validity)->format('d/m/y') }}</b>
                                         </p>
                                         <p class="mb-0">Activation Code: <b>{{ $card->activationCode }}</b></p>
-                                        <p class="mb-0">Activation Code: <b>{{ $card->activationUrl }}</b></p>
-                                    </div>
+                                       </div>
                                 </div>
 
                             </div>

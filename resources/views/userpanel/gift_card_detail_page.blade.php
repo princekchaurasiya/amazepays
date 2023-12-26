@@ -27,12 +27,12 @@
                         <div class="col-lg-5">
                             <div class="card-container">
                                 <div class="row">
-                                    <div class="col-lg-5">
+                                    <div class="col-lg-6">
                                         
-                                        <img class="img-fluid" src="{{ $getprdtDetails['images']->small == null ? URL::asset('/images/hamburger.jpg') : $getprdtDetails['images']->small }}"
+                                        <img class="img-fluid singlr-gift-image" src="{{ $getprdtDetails['images']->small == null ? URL::asset('/images/hamburger.jpg') : $getprdtDetails['images']->small }}"
                                     alt="product-detail-image">
                                     </div>
-                                    <div class="col-lg-7">
+                                    <div class="col-lg-6">
                                         <h6 class=" fw-600 font-md mt-2" name="product_name"
                                                 value="{{ $getprdtDetails['name'] }}">{{ $getprdtDetails['name'] }}</h6>
                                         <p class="mb-3 font-xssss fw-600 mt-2">Validity :

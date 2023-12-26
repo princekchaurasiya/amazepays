@@ -30,7 +30,7 @@
                             <div class="row">
                                 <div class="order-0 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3">
                                     <div class="cardImage">
-                                        <img class="img-fluid singlr-gift-image" src="{{ $getprdtDetails['images']->small == null ? URL::asset('/images/hamburger.jpg') : $getprdtDetails['images']->small }}"
+                                        <img class="img-fluid single-gift-image" src="{{ $getprdtDetails['images']->small == null ? URL::asset('/images/hamburger.jpg') : $getprdtDetails['images']->small }}"
                                         alt="product-detail-image">
                                     </div>
                                 </div>

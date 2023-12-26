@@ -44,7 +44,7 @@
                                         <span class="mb-3 fw-600 font-xs mt-2 text-orange">Brand </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2">AmazePays</span>        
                                     </div>
                                 </div>
-                                <div class="order-2 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3">
+                                <div class="order-2 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3 copuan-quantity">
                                     @if ($getprdtDetails['price']->type == 'RANGE')
                                         <label class="small-size fw-600 text-grey-900 font-xsss">Select Denomination</label>
                                         <div class="radio-btn-row boxed">
@@ -365,13 +365,10 @@
                     $('.error-rec-qnty').empty();
                 }
 
+                var delivery_mode = $("input[name='delivery_mode']:checked").val();
                 if (giftSendOption === 'send_as_gift') {
                     status = validateRecipient(delivery_mode);
                 }
-
-
-                var delivery_mode = $("input[name='delivery_mode']:checked").val();
-
 
                 function validateRecipient(mode) {
                     var recName = $('#receiver-name').val();

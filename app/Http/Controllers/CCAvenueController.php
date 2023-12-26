@@ -313,6 +313,8 @@ class CCAvenueController extends Controller
                 Log::info('Order creation was successful within 10 seconds');
 
                 $createOrderResponseData = $createOrderResponse->json();
+
+                Log::info($createOrderResponseData);
                 $orderId = $this->updateQsOrder($createOrderResponseData);
 
                 $order = QsOrder::join('cc_avenue_payment', 'cc_avenue_payment.order_id', '=', 'qs_ordered.id')

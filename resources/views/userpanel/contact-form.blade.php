@@ -1,13 +1,11 @@
 @extends('layouts.app')
 @section('title')
-Amazepay | Contact
+    Amazepay | Contact
 @endsection
 @section('content')
-
-
-<div class="section">
-            <div id="map" class="rounded-lg overflow-hidden" style="height: 150px;"></div>
-                {{-- <script src="//maps.googleapis.com/maps/api/js?key=AIzaSyCOdKtT5fapH3_OfhV3HFeZjqFs4OfNIew&callback=mapinitialize" type="text/javascript"></script>
+    <div class="section">
+        <div id="map" class="rounded-lg overflow-hidden" style="height: 150px;"></div>
+        {{-- <script src="//maps.googleapis.com/maps/api/js?key=AIzaSyCOdKtT5fapH3_OfhV3HFeZjqFs4OfNIew&callback=mapinitialize" type="text/javascript"></script>
                 <script type="text/javascript">
                     function mapinitialize() {
                         var latlng = new google.maps.LatLng(-33.86938,151.104000);
@@ -44,72 +42,91 @@ Amazepay | Contact
                     }
                     mapinitialize();
                 </script> --}}
-            </div>
-        </div>
+    </div>
+    </div>
 
-        <div class="map-wrapper pb-7">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-10 offset-lg-1">
-                        <div class="contact-wrap bg-white shadow-lg rounded-lg position-relative">
-                            <h1 class="text-grey-900 fw-700 display3-size mb-5 lh-1">Contact us</h1>
-                            <form action="#">
-                                <div class="row">
-                                    <div class="col-lg-6 col-md-12">
-                                        <div class="form-group mb-3">
-                                            <input type="text" class="form-control h60 bg-color-none text-grey-700" value="Name">
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6 col-md-12">
-                                        <div class="form-group mb-3">
-                                            <input type="text" class="form-control h60 bg-color-none text-grey-700" value="Email">
-                                        </div>
-                                    </div>
+    <div class="map-wrapper pb-7">
 
-                                    <div class="col-12">
-                                        <div class="form-group mb-3 md-mb25">
-                                            <textarea class="w-100 h125 p-3 form-control">Message</textarea>
-                                        </div>
-                                        <div class="form-check text-left mt-3 float-left md-mb25">
-                                            <input type="checkbox" class="form-check-input mt-2" id="exampleCheck1">
-                                            <label class="form-check-label font-xsss text-grey-500 fw-500" for="exampleCheck1">I agree to the term of this <a href="#" class="text-grey-600 fw-600">Privacy Policy</a></label>
-                                        </div>
-                                        <a href="#" class="form-control rounded-lg h60 float-right bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 w175">Submit</a>
+        <div class="container">
+            <div class="row">
+
+
+                <div class="col-lg-10 offset-lg-1">
+                    <div class="contact-wrap bg-white shadow-lg rounded-lg position-relative">
+                        @if (session('success'))
+                            <div class="alert alert-success">
+                                {{ session('success') }}
+                            </div>
+                        @endif
+                        <h1 class="text-grey-900 fw-700 display3-size mb-5 lh-1">Contact us</h1>
+                        <form action="{{ route('save-contact') }}" method="POST">
+                            @csrf
+                            <div class="row">
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="form-group mb-3">
+                                        <input type="text" name="name"
+                                            class="form-control h60 bg-color-none text-grey-700" placeholder="Name">
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="form-group mb-3">
+                                        <input type="text" name="email"
+                                            class="form-control h60 bg-color-none text-grey-700" placeholder="Email">
                                     </div>
                                 </div>
 
-                            </form>
-                        </div>
+
+                                <div class="col-12">
+                                    <div class="form-group mb-3 md-mb25">
+                                        <textarea class="w-100 h125 p-3 form-control" name="message"></textarea>
+                                    </div>
+                                    <div class="form-check text-left mt-3 float-left md-mb25">
+                                        <input type="checkbox" class="form-check-input mt-2" id="exampleCheck1">
+                                        <label class="form-check-label font-xsss text-grey-500 fw-500" for="exampleCheck1">I
+                                            agree to the term of this <a href="#" class="text-grey-600 fw-600">Privacy
+                                                Policy</a></label>
+                                    </div>
+                                    <button type="submit"
+                                        class="form-control rounded-lg h60 float-right bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 w175">Submit</button>
+
+                                </div>
+
+                            </div>
+
+
+                        </form>
+
                     </div>
-                    <div class="col-lg-12 offset-lg-1 col-xl-12 offset-xl-1">
-                        <div class="row">
-                            <div class="col-lg-4 col-md-4 md-mb25">
 
-                                <!-- <i class="fa-solid fa-map-location-dot font-md float-left mr-3 contact-us"></i> -->
-                                <h4 class="text-grey-900 fw-600 font-xl ls-2">Address</h4>
-                                <h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">98-103, 4 Floor, Aditya Industrial Estate Co-op Premises Ltd Mindspace Behind Evershine
-                                    Mall Off Link Road Malad (West)  <br/>Mumbai, Maharashtra 400064</h4>
-                            </div>
+                </div>
+                <div class="col-lg-12 offset-lg-1 col-xl-12 offset-xl-1">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-4 md-mb25">
 
-                            <div class="col-lg-4 col-md-4 md-mb25">
-                                <!-- <i class="fa-solid fa-map-location-dot font-md float-left mr-3 contact-us"></i> -->
-                                <h4 class="text-grey-900 fw-600 font-xl ls-2">Email Us</h4>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4 mb-0">support@amazepay.in</h5>
-                            </div>
+                            <!-- <i class="fa-solid fa-map-location-dot font-md float-left mr-3 contact-us"></i> -->
+                            <h4 class="text-grey-900 fw-600 font-xl ls-2">Address</h4>
+                            <h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">98-103, 4 Floor, Aditya Industrial Estate
+                                Co-op Premises Ltd Mindspace Behind Evershine
+                                Mall Off Link Road Malad (West) <br />Mumbai, Maharashtra 400064</h4>
+                        </div>
 
-                            <div class="col-lg-4 col-md-4 md-mb25">
-                                <!-- <i class="fa-solid fa-map-location-dot font-md float-left mr-3 contact-us"></i> -->
-                                <h4 class="text-grey-900 fw-600 font-xl ls-2">Conatct Us</h4>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-0">+91-98211 99497</h5>
-                            </div>
+                        <div class="col-lg-4 col-md-4 md-mb25">
+                            <!-- <i class="fa-solid fa-map-location-dot font-md float-left mr-3 contact-us"></i> -->
+                            <h4 class="text-grey-900 fw-600 font-xl ls-2">Email Us</h4>
+                            <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4 mb-0">support@amazepay.in</h5>
+                        </div>
+
+                        <div class="col-lg-4 col-md-4 md-mb25">
+                            <!-- <i class="fa-solid fa-map-location-dot font-md float-left mr-3 contact-us"></i> -->
+                            <h4 class="text-grey-900 fw-600 font-xl ls-2">Conatct Us</h4>
+                            <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-0">+91-98211 99497</h5>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
+    </div>
 @endsection
 
 @push('scripts')
-
 @endpush

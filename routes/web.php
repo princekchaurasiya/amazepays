@@ -20,6 +20,9 @@ use App\Http\Controllers\ProductSkuController;
 use App\Http\Controllers\ErrorController;
 use App\Http\Controllers\CreateOrderController;
 use App\Http\Controllers\ViewCardDetailsController;
+use App\Http\Controllers\ContactUsController;
+use App\Http\Controllers\ChangePasswordUpdateController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -190,3 +193,5 @@ Route::get('/order-failed', function () {
 
 
 Route::post('/card-details', [ViewCardDetailsController::class, 'index'])->name('view-card-details');
+
+Route::post('/save-contact', [ContactUsController::class, 'saveContact'])->name('save-contact');

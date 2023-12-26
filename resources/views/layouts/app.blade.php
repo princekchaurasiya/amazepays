@@ -228,9 +228,9 @@
                                 <ul class="mt-3">
 
                                     <li><a class="text-black" href="mail:support@amazepays.in"><i class="fas fa-envelope"></i> support@amazepays.in</a></li>
-        
+
                                     <li><a class="text-black" href="phone:+91-98211 99497"><i class="fas fa-phone-alt"></i> +91 9821199497</a></li>
-        
+
                                 </ul>
                             </div>
                         </div>
@@ -355,7 +355,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div> 
+                        </div>
                     </div>
                 </div>
             </div>
@@ -430,14 +430,14 @@
                                                                 class="form-control h20 float-right bg-current text-white text-center font-xss fw-500 border-0 p-0 w100 login-button-color"
                                                                 id="loginUser">Login</button>
                                                             </div>
-                                                        </div>          
+                                                        </div>
                                                     </div>
                                                     <!-- Hidden input to store the mobile number for OTP -->
                                                     <input type="hidden" class="destination-input" name="destination" id="destination"
                                                         required>
                                                 </form>
                                                 <!-- Get OTP button to trigger OTP modal -->
-                                               
+
                                                 <!-- Success message div -->
                                                 <div class="col-sm-12 p-0 text-center">
                                                     <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Don't have an account? <a
@@ -458,9 +458,9 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                     </div>
-                    
+
                 </div>
             </div>
         </div>
@@ -592,13 +592,13 @@
             // toggle the type attribute
             const type = loginPass.getAttribute("type") === "password" ? "text" : "password";
             loginPass.setAttribute("type", type);
-            
+
             // toggle the icon
             // this.classList.toggle("fa fa-eye-slash");
         });
 
         // for hide and show Register password
-        
+
         const toggleRegstPassword = document.querySelector("#toggleRegstPassword");
         const password = document.querySelector("#password");
 
@@ -606,7 +606,7 @@
             // toggle the type attribute
             const type = password.getAttribute("type") === "password" ? "text" : "password";
             password.setAttribute("type", type);
-            
+
             // toggle the icon
             // this.classList.toggle("fa fa-eye-slash");
         });
@@ -620,16 +620,16 @@
             // toggle the type attribute
             const type = confmPassword.getAttribute("type") === "password" ? "text" : "password";
             confmPassword.setAttribute("type", type);
-            
+
             // toggle the icon
             // this.classList.toggle("fa fa-eye-slash");
         });
 
         // prevent form submit
-        const form = document.querySelector("form");
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-        });
+        // const form = document.querySelector("form");
+        // form.addEventListener('submit', function (e) {
+        //     e.preventDefault();
+        // });
 
         $('#createUser').click(function(e) {
             e.preventDefault();

@@ -9,12 +9,12 @@ class ProfileController extends Controller
 {
     public function update(Request $request)
     {
+        // dd($request);
         // Validate the form data
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . Auth::user()->id,
             'phone' => 'required|string|max:255',
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         // Update the user's profile
@@ -22,11 +22,6 @@ class ProfileController extends Controller
         $user->name = $request->input('name');
         $user->email = $request->input('email');
         $user->mobile = $request->input('phone');
-
-        if ($request->hasFile('avatar')) {
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = $avatarPath;
-        }
 
         $user->save();
 

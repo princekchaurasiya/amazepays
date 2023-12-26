@@ -3662,7 +3662,7 @@ pre code {
 }
 .credentails-field{
   outline: 0 !important;
-  border-width: 0 0 2px !important; 
+  border-width: 0 0 2px !important;
 }
 .credentails-field:focus{
   border-color: #ff8b00 !important;
@@ -6843,7 +6843,7 @@ a.badge-dark:focus, a.badge-dark.focus {
     margin-left: -1px;
     border-left-width: 1px;
   }
-  
+
 }
 @media (min-width: 1400) {
   .list-group-horizontal-xxl {
@@ -7193,7 +7193,7 @@ a.close.disabled {
   position: relative;
   flex: 1 1 auto;
   /* padding: 1rem; */
-  
+
 }
 /* .modal-body .right-half{
   border-top-right-radius: 20px;

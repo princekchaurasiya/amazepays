@@ -105,7 +105,7 @@
                         <!-- loop product here -->
 
                         @foreach ($allProducts as $product)
-                            <div class="col-lg-3 col-6">
+                            <div class="col-lg-3 col-6 home-page-image-padding">
                                 
                                     {{-- <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4> --}}
                                     <a href="{{ route('get-product-sku', ['slug' => $product->sku]) }}"

@@ -16033,11 +16033,11 @@ color: black !important;
 }
 
 .boxed label {
-  padding: 1rem;
+  padding: 0.5rem;
   display: inline-block;
   border: 1px solid #bdbdbd;
   cursor: pointer;
-  border-radius: 20px;
+  border-radius: 16px;
   margin-left: 0.3rem;
   background-color: white;
   font-size: 1.1rem;

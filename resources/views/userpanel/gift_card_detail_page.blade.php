@@ -56,7 +56,7 @@
                                                     value="{{ $denomination }}"> --}}
                                                     <input type="radio" class="custom-control-input range"
                                                         id="customRadio-{{ $denomination }}" name="denomination"
-                                                        value="{{ $denomination }}">
+                                                        value="{{ $denomination }}" @if($loop->first) checked @endif>
                                                     <label class="small-size fw-500 font-xsss" for="customRadio-{{ $denomination }}">{{ $denomination }}</label>
                                                 </div>
                                             @endforeach
@@ -64,19 +64,22 @@
                                         </div>
                                     @elseif ($getprdtDetails['price']->type === 'SLAB')
                                         <label class="small-size fw-600 text-grey-900 font-xsss">Enter Denomination</label>
-                                        <input type="text" class="form-control mb-3 credentails-field"
-                                            placeholder="Select Denomination" name="denomination" id="denomination-slab"
-                                            value="">
-                                            <span class="font-xssss fw-400 error-rec-deno text-danger"></span>
+                                        <input type="text" class="form-control credentails-field"
+                                            placeholder="Enter Denomination" name="denomination" id="denomination-slab"
+                                            value="{{$getprdtDetails['minPrice']}}">
+                                            <small class="float-right form-text text-current font-xsssss">Min: ₹{{$getprdtDetails['minPrice']}}  Max: ₹{{$getprdtDetails['maxPrice']}}</small>
+                                            <div class="font-xssss fw-400 error-rec-deno-slab text-danger mt-3"></div>
                                     @else
 
                                     @endif
+                                    
                                 </div>
                                 <div class="order-3 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3 copuan-quantity">
                                     <label class="small-size fw-600 text-grey-900 font-xsss">Quantity</label>
-                                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Quantity"
+                                    <input type="text" class="form-control credentails-field" placeholder="Quantity"
                                         name="quantity" id="quantity" value="">
-                                    <span class="font-xssss fw-400 error-rec-qnty text-danger"></span>
+                                        <small class="float-right form-text text-current font-xsssss">Min:1  Max: 10</small>
+                                    <div class="font-xssss fw-400 error-rec-qnty text-danger mt-3"></div>
                                 </div>
                             </div>
                         </div>
@@ -325,6 +328,8 @@
                 var denominationBooleanValue = false;
                 var denomination = '';
                 var denominationmsg = '';
+                var minDenominationSlab = {{$getprdtDetails['minPrice']}};
+                var maxDenominationSlab = {{$getprdtDetails['maxPrice']}};
                 if ($('.copuan-quantity').find('.range').attr('type') === 'radio') {
                     
                     var checkedRadio = $("input[name='denomination']:checked");
@@ -337,14 +342,28 @@
                         denominationmsg = 'Please Select Denomination';
                     }
                 } else if($('.copuan-quantity').find('#denomination-slab').attr('type') === 'text') {
-                    var checkedRadio = $("#denomination-slab").val();
-                    if (checkedRadio.length > 0) {
-                        denomination = 1;
-                        denominationBooleanValue = true;
-                    } else {
+                    var enteredDenominationSlab = $('#denomination-slab').val();
+                  
+                    if (!enteredDenominationSlab || enteredDenominationSlab.length === 0) {
+                        $('.error-rec-deno-slab').text('Enter Demonination');
                         denomination = 0;
                         denominationBooleanValue = false;
-                        denominationmsg = 'Please Enter Denomination';
+                    } else if (!/^\d+$/.test(enteredDenominationSlab)) {
+                        $('.error-rec-deno-slab').text('Spaces and characters are not allowed');
+                        denomination = 0;
+                        denominationBooleanValue = false;
+                    } else if (parseInt(enteredDenominationSlab) < minDenominationSlab) {
+                        $('.error-rec-deno-slab').text('Demonination must be greater than or equal to '+minDenominationSlab);
+                        denomination = 0;
+                        denominationBooleanValue = false;
+                    } else if (parseInt(enteredDenominationSlab) > maxDenominationSlab) {
+                        $('.error-rec-deno-slab').text('Demonination must be smaller than or equal to '+maxDenominationSlab);
+                        denomination = 0;
+                        denominationBooleanValue = false;
+                    } else {
+                        $('.error-rec-deno-slab').empty();
+                        denomination = 1;
+                        denominationBooleanValue = true;
                     }
                 } else {
                         denomination = 0;
@@ -379,6 +398,8 @@
                 } else {
                     $('.error-rec-qnty').empty();
                 }
+
+                
 
                 var delivery_mode = $("input[name='delivery_mode']:checked").val();
                 if (giftSendOption === 'send_as_gift') {

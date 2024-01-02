@@ -28,7 +28,9 @@
                         <div>
                             <h1 class="font-weight-bold pt-2 pb-1">My Orders</h1>
                         </div>
+
                         @foreach ($order as $orderItem)
+                        @if($orderItem->woohoo_order_id)
                             <?php
                             $images = json_decode($orderItem->images, true);
                             ?>
@@ -72,6 +74,7 @@
                                     <input type="hidden" name="imageDetail" id="imageDetail">
                                 </form>
                             </a>
+                            @endif
                         @endforeach
                     </div>
                 </div>

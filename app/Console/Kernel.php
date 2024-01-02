@@ -6,7 +6,6 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use App\Console\Commands\GenerateBearerToken;
 
-
 class Kernel extends ConsoleKernel
 {
     /**
@@ -16,21 +15,21 @@ class Kernel extends ConsoleKernel
      * @return void
      */
 
-     protected $commands = [
-    \App\Console\Commands\GenerateBearerToken::class,
-];
+    protected $commands = [\App\Console\Commands\GenerateBearerToken::class];
 
     protected function schedule(Schedule $schedule)
     {
         // Add the schedule to run the GenerateBearerToken command every day at 1:00 AM
         // $schedule->command(GenerateBearerToken::class)->weekly()->mondays()->at('12:00');
 
-
         // Add the schedule to run the GenerateBearerToken command every minute for testing purpose
         $schedule->command('generate:bearerToken')->weekly()->mondays()->at('01:00');
 
-        $schedule->command('fetch:productData')->monthlyOn(4, '03:00');
+        $schedule->command('fetch:categoryData')->monthlyOn(4, '02:30');
 
+        $schedule->command('fetch:productList')->monthlyOn(4, '02:35');
+
+        $schedule->command('fetch:productData')->monthlyOn(4, '02:40');
     }
 
     /**
@@ -39,10 +38,9 @@ class Kernel extends ConsoleKernel
      * @return void
      */
 
-
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
     }
 
     /**
@@ -52,13 +50,9 @@ class Kernel extends ConsoleKernel
      */
     protected function getCommands()
     {
-        return array_merge(
-            parent::getCommands(),
-            [
-                // Add the GenerateBearerToken command to the commands array
-                GenerateBearerToken::class,
-            ]
-        );
+        return array_merge(parent::getCommands(), [
+            // Add the GenerateBearerToken command to the commands array
+            GenerateBearerToken::class,
+        ]);
     }
 }
-

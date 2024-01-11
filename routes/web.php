@@ -22,7 +22,10 @@ use App\Http\Controllers\CreateOrderController;
 use App\Http\Controllers\ViewCardDetailsController;
 use App\Http\Controllers\ContactUsController;
 use App\Http\Controllers\ChangePasswordUpdateController;
-
+use App\Http\Controllers\Voyager\VoyagerGenerateBearerTokenController;
+use App\Http\Controllers\Voyager\VoyagerGetCategoryController;
+use App\Http\Controllers\Voyager\VoyagerFetchProductListController;
+use App\Http\Controllers\Voyager\VoyagerFetchProductDataController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,39 +43,30 @@ Route::group(['prefix' => 'admin'], function () {
     Route::resource('cc-avenue', 'VoyagerCcAvenueController');
 });
 
+Route::match(['get', 'post'], '/voyager/bearer-token', [VoyagerGenerateBearerTokenController::class, 'generateBearerToken'])->name('voyager.bearerToken');
+Route::match(['get', 'post'], '/voyager/get-category', [VoyagerGetCategoryController::class, 'getCategory'])->name('voyager.getCategory');
+Route::match(['get', 'post'], '/voyager/fetch-product-list', [VoyagerFetchProductListController::class, 'fetchProductList'])->name('voyager.productList');
+Route::match(['get', 'post'], '/voyager/fetch-product-data', [VoyagerFetchProductDataController::class, 'fetchProductData'])->name('voyager.fetchProductData');
+
 Route::get('logout', [UserPanelController::class, 'userLogOut'])->name('userLogOut');
 
 Route::get('/', [UserPanelController::class, 'homePage'])->name('home');
-
-//category api for woohoo should be called once only
-Route::get('/get-category', [CommonController::class, 'getCategory'])->name('get-category');
-
-//prodcut list api for woohoo should be called once only
 Route::get('/get-product-list', [CommonController::class, 'getProductList'])->name('get-product-list');
-
-//prodcut api for woohoo should be called once only
-// Route::get('/get-product-sku/{slug}', [CommonController::class, 'getProductbySKU'])->name('get-product-sku');
-
 Route::get('/get-product-sku/{slug}', [ProductSkuController::class, 'getProductbySKU'])->name('get-product-sku');
-
 Route::get('/gift_card_detail_page/{id}', function () {
     return view('userpanel/gift_card_detail_page_old');
 })->name('gift_card_detail_page');
-
-Route::post('/generate-authcode', [CommonController::class, 'generateAuthcode'])->name('generate-authcode'); //admin
 
 Route::group(['middleware' => 'guest'], function () {
     Route::post('/user-registration', [UserPanelController::class, 'userRegistration'])->name('user-registration');
     Route::post('/user-login', [UserPanelController::class, 'userLogin'])->name('user-login');
 });
 Route::group(['middleware' => 'auth'], function () {
-    // Route::post('/order-card', [CommonController::class, 'orderCard'])->name('order-card'); // auth user only
-
     Route::get('/user-logout', [UserPanelController::class, 'userLogOut'])->name('user-logout');
 
     Route::post('/apply-coupan', [UserPanelController::class, 'applyCoupan'])->name('apply-coupan'); //auth user only
 
-    Route::post('/remove-apply-coupan', [UserPanelController::class, 'removeApplyCoupan'])->name('remove-apply-coupan'); //auth user only
+    // Route::post('/remove-apply-coupan', [UserPanelController::class, 'removeApplyCoupan'])->name('remove-apply-coupan'); //auth user only
 
     Route::get('/profile', function () {
         return view('userpanel/profile');
@@ -81,11 +75,12 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/my-order', [MyOrderController::class, 'displayOrder'])->name('my-order');
 });
 
-
 Route::get('/unauthenticated', function () {
     $message = session('message', 'You are not authenticated.');
     return redirect()->route('error', ['message' => $message]);
-})->name('unauthenticated')->middleware('web');
+})
+    ->name('unauthenticated')
+    ->middleware('web');
 
 Route::post('/check-data', [CommonController::class, 'checkData'])->name('check-data');
 Route::get('/view-all-product', [UserPanelController::class, 'viewAllProduct'])->name('view-all-product');
@@ -94,20 +89,15 @@ Route::get('/change-password', function () {
     return view('userpanel/change-password');
 })->name('change-password');
 
-
 Route::post('/change-password-update', [ChangePasswordUpdateController::class, 'updatePassword'])->name('password-change');
 
 Route::get('/about', function () {
     return view('userpanel/about');
 })->name('about');
 
-
 Route::get('/profile', function () {
-        return view('userpanel/profile');
-    })->name('profile');
-
-
-
+    return view('userpanel/profile');
+})->name('profile');
 
 Route::get('/contact_us', function () {
     return view('userpanel/contact-form');
@@ -142,9 +132,9 @@ Route::post('/response_ccavenue', [CCAvenueController::class, 'responseCcavenue'
 
 // Route::post('payment-success', [PaymentController::class, 'processData'])->name('success');
 
-Route::get('payment-cancel', function () {
+Route::get('order-failed', function () {
     return view('paymentFolder.payment-failed');
-})->name('cancel');
+})->name('order-failed');
 
 Route::get('payment-success', function () {
     return view('paymentFolder.payment-success');
@@ -152,13 +142,11 @@ Route::get('payment-success', function () {
 
 // Route::view('/success', 'paymentFolder.payment-success')->name('payment-success');
 
-// Route::view('/payment-failed', 'paymentFolder.payment-failed')->name('payment-failed');
+Route::view('/payment-failed', 'paymentFolder.payment-failed')->name('payment-failed');
 
 // Route::get('/my-order', function () {
 //     return view('userpanel/my-order');
 // })->name('my-order');
-
-Route::get('/create-order', [CreateOrderController::class, 'createOrder'])->name('create-order');
 
 Route::post('/send-sms', [SmsController::class, 'sendSms'])->name('send-sms');
 
@@ -191,9 +179,6 @@ Route::get('/order-list', [UserPanelController::class, 'orderList'])->name('orde
 Route::get('/order-failed', function () {
     return view('order.order-failed');
 })->name('order-failed');
-
-
-
 
 Route::post('/card-details', [ViewCardDetailsController::class, 'index'])->name('view-card-details');
 

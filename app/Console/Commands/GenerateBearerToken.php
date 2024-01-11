@@ -5,6 +5,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Carbon;
 
 class GenerateBearerToken extends Command
 {
@@ -75,8 +76,9 @@ class GenerateBearerToken extends Command
                             ],
                         );
                     });
+                    $updateTime = Carbon\Carbon::now('Asia/Kolkata')->format('d/m/y H:i:s');
+                    Log::info('GenerateBearerToken command ran successfully at:', ['update_time' => $updateTime]);
 
-                    Log::info('GenerateBearerToken command ran successfully.');
 
                     $this->info('Bearer Token generated and stored successfully.');
                     $this->info('Bearer Token: ' . $token);

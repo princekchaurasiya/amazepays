@@ -107,7 +107,7 @@
                             <div class="row">
                             @foreach ($allProducts as $product)
                                 <div class="col-lg-3 col-6 home-page-image-padding">
-                                    
+
                                         {{-- <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4> --}}
                                         <a href="{{ route('get-product-sku', ['slug' => $product->sku]) }}"
                                             class="d-block text-center"><p class="single-image-wrapper"><img
@@ -679,17 +679,8 @@
         </div>
     </div> --}}
 
-    <!-- <form method="POST" action=" {{ route('generate-authcode') }}">
-                            {!! csrf_field() !!}
-                            <button class="bg-current w-25 form-bttn fw-500 rounded-lg text-white">Click<i class="ti-arrow-right"></i></button>
-                    </form> -->
 
 
-
-
-    <!-- <a href="{{ route('generate-authcode') }}"><button class="bg-current w-25 form-bttn fw-500 rounded-lg text-white">Click<i class="ti-arrow-right"></i></button></a> -->
-
-    <!-- <a href="{{ route('get-product-list') }}"><button class="bg-current w-25 form-bttn fw-500 rounded-lg text-white">Category<i class="ti-arrow-right"></i></button></a> -->
 @endsection
 
 @push('scripts')

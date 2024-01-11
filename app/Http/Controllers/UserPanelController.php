@@ -270,223 +270,223 @@ class UserPanelController extends Controller
 
     // public function orderPaymentResponse($orderPaymentResponse);
 
-    public function createOrderRequest($modify_user_data)
-    {
-        $requestBody = json_encode($modify_user_data);
-        $requestHttpMethod = 'post';
-        $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/orders';
-        $clientSecret = setting('api.qs_clientSecret');
-        $bearerToken = setting('api.bearer_token');
-        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
-        $dateAtClient = Carbon\Carbon::now()->toIso8601String();
-        $refno = $modify_user_data['refno'];
+    // public function createOrderRequest($modify_user_data)
+    // {
+    //     $requestBody = json_encode($modify_user_data);
+    //     $requestHttpMethod = 'post';
+    //     $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/orders';
+    //     $clientSecret = setting('api.qs_clientSecret');
+    //     $bearerToken = setting('api.bearer_token');
+    //     $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+    //     $dateAtClient = Carbon\Carbon::now()->toIso8601String();
+    //     $refno = $modify_user_data['refno'];
 
-        Log::info('**************** Order Creation Api *************************' . "\n");
-        Log::info('Before hitting API time is ' . now() . "\n");
-        try {
-            // Make the HTTP request
-            $createOrderResponse = Http::acceptJson()
-                ->timeout(10)
-                ->withHeaders([
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer ' . $bearerToken,
-                    'Accept' => '*/*',
-                    'dateAtClient' => $dateAtClient,
-                    'signature' => $signature,
-                ])
-                ->send('POST', $absApiUrl, [
-                    'body' => $requestBody,
-                ]);
+    //     Log::info('**************** Order Creation Api *************************' . "\n");
+    //     Log::info('Before hitting API time is ' . now() . "\n");
+    //     try {
+    //         // Make the HTTP request
+    //         $createOrderResponse = Http::acceptJson()
+    //             ->timeout(10)
+    //             ->withHeaders([
+    //                 'Content-Type' => 'application/json',
+    //                 'Authorization' => 'Bearer ' . $bearerToken,
+    //                 'Accept' => '*/*',
+    //                 'dateAtClient' => $dateAtClient,
+    //                 'signature' => $signature,
+    //             ])
+    //             ->send('POST', $absApiUrl, [
+    //                 'body' => $requestBody,
+    //             ]);
 
-            Log::info('API Request:', [
-                'url' => $absApiUrl,
-                'method' => $requestHttpMethod,
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer ' . $bearerToken,
-                    'Accept' => '*/*',
-                    'dateAtClient' => $dateAtClient,
-                    'signature' => $signature,
-                ],
-                'data' => $requestBody,
-            ]);
+    //         Log::info('API Request:', [
+    //             'url' => $absApiUrl,
+    //             'method' => $requestHttpMethod,
+    //             'headers' => [
+    //                 'Content-Type' => 'application/json',
+    //                 'Authorization' => 'Bearer ' . $bearerToken,
+    //                 'Accept' => '*/*',
+    //                 'dateAtClient' => $dateAtClient,
+    //                 'signature' => $signature,
+    //             ],
+    //             'data' => $requestBody,
+    //         ]);
 
-            Log::info("\n");
-            Log::info('********************** check order api hit response whether received or not ***************************' . "\n");
+    //         Log::info("\n");
+    //         Log::info('********************** check order api hit response whether received or not ***************************' . "\n");
 
-            Log::info('Get Response from woohoo server ' . $createOrderResponse . "\n");
-            if ($createOrderResponse->successful()) {
-                Log::info('Order creation was successful within 10 seconds');
-                $responseData = $createOrderResponse->json();
-                return $responseData;
-            } elseif ($createOrderResponse->clientError()) {
-                Log::error('Client error: ' . $createOrderResponse);
-                return response()->json(['error' => 'Client error'], 500);
-                // $this->getStatusByReferenceNumber($refno);
-            } elseif ($createOrderResponse->serverError()) {
-                Log::error('Server error: ' . $createOrderResponse);
-                return response()->json(['error' => 'Server error'], 500);
-            } elseif ($createOrderResponse->failed()) {
-                Log::error('Order failed check status' . $createOrderResponse);
-                return response()->json(['error' => 'Order Creation Failed'], 500);
-                // $this->getStatusByReferenceNumber($refno);
-            } else {
-                Log::error('Unexpected status code: ' . $createOrderResponse);
-                return response()->json(['error' => 'Unexpected Error '], 500);
-            }
-        } catch (ConnectionException $e) {
-            // Handle the cURL error here
-            Log::error('cURL Error happened request broken in between ' . $e->getMessage());
-            Log::alert('Curl errors happened Logging before 30 second delay ' . now());
-            sleep(30);
-            Log::alert('Curl Errors happened Hitting  order status API after a 30 - second delay that is total 40 second delay after order creation API Hit ' . now());
-            $statusFunctionResponse = $this->getStatusByReferenceNumber($refno);
-            return $statusFunctionResponse;
-            // $this->getStatusByReferenceNumber($refno);
-        }
-    }
+    //         Log::info('Get Response from woohoo server ' . $createOrderResponse . "\n");
+    //         if ($createOrderResponse->successful()) {
+    //             Log::info('Order creation was successful within 10 seconds');
+    //             $responseData = $createOrderResponse->json();
+    //             return $responseData;
+    //         } elseif ($createOrderResponse->clientError()) {
+    //             Log::error('Client error: ' . $createOrderResponse);
+    //             return response()->json(['error' => 'Client error'], 500);
+    //             // $this->getStatusByReferenceNumber($refno);
+    //         } elseif ($createOrderResponse->serverError()) {
+    //             Log::error('Server error: ' . $createOrderResponse);
+    //             return response()->json(['error' => 'Server error'], 500);
+    //         } elseif ($createOrderResponse->failed()) {
+    //             Log::error('Order failed check status' . $createOrderResponse);
+    //             return response()->json(['error' => 'Order Creation Failed'], 500);
+    //             // $this->getStatusByReferenceNumber($refno);
+    //         } else {
+    //             Log::error('Unexpected status code: ' . $createOrderResponse);
+    //             return response()->json(['error' => 'Unexpected Error '], 500);
+    //         }
+    //     } catch (ConnectionException $e) {
+    //         // Handle the cURL error here
+    //         Log::error('cURL Error happened request broken in between ' . $e->getMessage());
+    //         Log::alert('Curl errors happened Logging before 30 second delay ' . now());
+    //         sleep(30);
+    //         Log::alert('Curl Errors happened Hitting  order status API after a 30 - second delay that is total 40 second delay after order creation API Hit ' . now());
+    //         $statusFunctionResponse = $this->getStatusByReferenceNumber($refno);
+    //         return $statusFunctionResponse;
+    //         // $this->getStatusByReferenceNumber($refno);
+    //     }
+    // }
 
-    private function createQsOrder($createOrderResponse, $modify_user_data, $refno)
-    {
-        $qsOrder = new QsOrder();
+    // private function createQsOrder($createOrderResponse, $modify_user_data, $refno)
+    // {
+    //     $qsOrder = new QsOrder();
 
-        $qsOrder->order_created_status = $createOrderResponse['status'] ?? null;
-        $qsOrder->cards = encrypt(json_encode($createOrderResponse['cards']), env('ENCRYPTION_KEY'));
+    //     $qsOrder->order_created_status = $createOrderResponse['status'] ?? null;
+    //     $qsOrder->cards = encrypt(json_encode($createOrderResponse['cards']), env('ENCRYPTION_KEY'));
 
-        $cancelData = isset($createOrderResponse['cancel']) ? $createOrderResponse['cancel'] : null;
-        $qsOrder->order_cancel = json_encode($cancelData);
+    //     $cancelData = isset($createOrderResponse['cancel']) ? $createOrderResponse['cancel'] : null;
+    //     $qsOrder->order_cancel = json_encode($cancelData);
 
-        // Handle 'payments'
-        $paymentsData = isset($createOrderResponse['payments']) ? $createOrderResponse['payments'] : null;
-        $qsOrder->order_payment = json_encode($paymentsData);
+    //     // Handle 'payments'
+    //     $paymentsData = isset($createOrderResponse['payments']) ? $createOrderResponse['payments'] : null;
+    //     $qsOrder->order_payment = json_encode($paymentsData);
 
-        // Handle 'currency'
-        $currencyData = isset($createOrderResponse['currency']) ? $createOrderResponse['currency'] : null;
-        $qsOrder->currency = json_encode($currencyData);
+    //     // Handle 'currency'
+    //     $currencyData = isset($createOrderResponse['currency']) ? $createOrderResponse['currency'] : null;
+    //     $qsOrder->currency = json_encode($currencyData);
 
-        // Handle 'additionalTxnFields'
-        $additionalTxnFieldsData = isset($createOrderResponse['additionalTxnFields']) ? $createOrderResponse['additionalTxnFields'] : null;
-        $qsOrder->additionalTxnFields = json_encode($additionalTxnFieldsData);
+    //     // Handle 'additionalTxnFields'
+    //     $additionalTxnFieldsData = isset($createOrderResponse['additionalTxnFields']) ? $createOrderResponse['additionalTxnFields'] : null;
+    //     $qsOrder->additionalTxnFields = json_encode($additionalTxnFieldsData);
 
-        $qsOrder->is_gifted = session::get('gift_send_option') == 'send_as_gift' ? 1 : 0;
+    //     $qsOrder->is_gifted = session::get('gift_send_option') == 'send_as_gift' ? 1 : 0;
 
-        if (session::get('gift_send_option') == 'send_as_gift') {
-            $gift_card = new GiftCard();
-            $gift_card->sender_id = Auth::user()->id;
-            $gift_card->order_id = isset($createOrderResponse['orderId']) ? $createOrderResponse['orderId'] : null;
-            $gift_card->receiver_name = session::get('receiver_name');
-            $gift_card->receiver_email = session::get('receiver_email');
-            $gift_card->receiver_mobile = session::get('receiver_mobile');
-            $gift_card->receiver_msg = session::get('receiver_msg');
+    //     if (session::get('gift_send_option') == 'send_as_gift') {
+    //         $gift_card = new GiftCard();
+    //         $gift_card->sender_id = Auth::user()->id;
+    //         $gift_card->order_id = isset($createOrderResponse['orderId']) ? $createOrderResponse['orderId'] : null;
+    //         $gift_card->receiver_name = session::get('receiver_name');
+    //         $gift_card->receiver_email = session::get('receiver_email');
+    //         $gift_card->receiver_mobile = session::get('receiver_mobile');
+    //         $gift_card->receiver_msg = session::get('receiver_msg');
 
-            $gift_card->card = encrypt(json_encode($createOrderResponse['cards']), env('ENCRYPTION_KEY'));
-            $gift_card->gift_send_option = session::get('gift_send_option');
-            $gift_card->amount = session::get('denomination') * session::get('quantity');
-            $gift_card->delivery_mode = session::get('delivery_mode');
-            $gift_card->save();
-        }
+    //         $gift_card->card = encrypt(json_encode($createOrderResponse['cards']), env('ENCRYPTION_KEY'));
+    //         $gift_card->gift_send_option = session::get('gift_send_option');
+    //         $gift_card->amount = session::get('denomination') * session::get('quantity');
+    //         $gift_card->delivery_mode = session::get('delivery_mode');
+    //         $gift_card->save();
+    //     }
 
-        if (session::get('gift_send_option') == 'buy_for_self') {
-            $gift_card = new GiftCard();
-            $gift_card->sender_id = Auth::user()->id;
-            $gift_card->order_id = $createOrderResponse['orderId'];
-            $gift_card->receiver_name = $modify_user_data['billing']['firstname'];
-            $gift_card->receiver_email = $modify_user_data['billing']['email'];
-            $gift_card->receiver_mobile = $modify_user_data['billing']['telephone'];
-            $gift_card->receiver_msg = null;
-            $gift_card->card = encrypt(json_encode($createOrderResponse['cards']), env('ENCRYPTION_KEY'));
-            $gift_card->amount = session::get('denomination') * session::get('quantity');
-            $gift_card->gift_send_option = session::get('gift_send_option');
-            $gift_card->delivery_mode = session::get('delivery_mode');
-            $gift_card->save();
-        }
-        $qsOrder->save();
-    }
+    //     if (session::get('gift_send_option') == 'buy_for_self') {
+    //         $gift_card = new GiftCard();
+    //         $gift_card->sender_id = Auth::user()->id;
+    //         $gift_card->order_id = $createOrderResponse['orderId'];
+    //         $gift_card->receiver_name = $modify_user_data['billing']['firstname'];
+    //         $gift_card->receiver_email = $modify_user_data['billing']['email'];
+    //         $gift_card->receiver_mobile = $modify_user_data['billing']['telephone'];
+    //         $gift_card->receiver_msg = null;
+    //         $gift_card->card = encrypt(json_encode($createOrderResponse['cards']), env('ENCRYPTION_KEY'));
+    //         $gift_card->amount = session::get('denomination') * session::get('quantity');
+    //         $gift_card->gift_send_option = session::get('gift_send_option');
+    //         $gift_card->delivery_mode = session::get('delivery_mode');
+    //         $gift_card->save();
+    //     }
+    //     $qsOrder->save();
+    // }
 
-    private function getStatusByReferenceNumber($refno)
-    {
-        Log::info('You are in get Status Function');
-        Log::info('attempt 1 has happened, go for step 2');
-        $attempt = 1;
-        $max_retries = 2; // Change this to the desired number of retries
-        $retry_interval = 40; // Retry interval in seconds
-        $requestHttpMethod = 'GET';
-        $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/order/' . $refno . '/status';
-        $clientSecret = setting('api.qs_clientSecret');
-        $bearerToken = setting('api.bearer_token');
-        $requestBody = '';
-        $dateAtClient = Carbon\Carbon::now()->toIso8601String();
-        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+    // private function getStatusByReferenceNumber($refno)
+    // {
+    //     Log::info('You are in get Status Function');
+    //     Log::info('attempt 1 has happened, go for step 2');
+    //     $attempt = 1;
+    //     $max_retries = 2; // Change this to the desired number of retries
+    //     $retry_interval = 40; // Retry interval in seconds
+    //     $requestHttpMethod = 'GET';
+    //     $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/order/' . $refno . '/status';
+    //     $clientSecret = setting('api.qs_clientSecret');
+    //     $bearerToken = setting('api.bearer_token');
+    //     $requestBody = '';
+    //     $dateAtClient = Carbon\Carbon::now()->toIso8601String();
+    //     $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
 
-        while ($attempt <= $max_retries) {
-            $cardStatusApiResponse = Http::acceptJson()
-                ->withToken($bearerToken)
-                ->withHeaders([
-                    'signature' => $signature,
-                    'dateAtClient' => $dateAtClient,
-                ])
-                ->get($absApiUrl);
+    //     while ($attempt <= $max_retries) {
+    //         $cardStatusApiResponse = Http::acceptJson()
+    //             ->withToken($bearerToken)
+    //             ->withHeaders([
+    //                 'signature' => $signature,
+    //                 'dateAtClient' => $dateAtClient,
+    //             ])
+    //             ->get($absApiUrl);
 
-            if ($cardStatusApiResponse->status() == 200) {
-                $cardStatusApiResponseData = json_decode($cardStatusApiResponse->getBody(), true);
+    //         if ($cardStatusApiResponse->status() == 200) {
+    //             $cardStatusApiResponseData = json_decode($cardStatusApiResponse->getBody(), true);
 
-                if ($cardStatusApiResponseData['status'] === 'COMPLETE') {
-                    $orderId = $cardStatusApiResponseData['orderId'];
-                    $activatedCardReponseFromFunction = $this->callCardActivation($cardStatusApiResponseData);
-                    return $activatedCardReponseFromFunction;
-                } elseif ($cardStatusApiResponseData['status'] === 'PROCESSING') {
-                    // If the order is still processing, wait for the retry interval
-                    sleep($retry_interval);
-                } else {
-                    Log::info('Anything other than processing or complete status');
-                    return false;
-                }
-            } else {
-                Log::info('Order failed, response 200 not received');
-                return false;
-            }
+    //             if ($cardStatusApiResponseData['status'] === 'COMPLETE') {
+    //                 $orderId = $cardStatusApiResponseData['orderId'];
+    //                 $activatedCardReponseFromFunction = $this->callCardActivation($cardStatusApiResponseData);
+    //                 return $activatedCardReponseFromFunction;
+    //             } elseif ($cardStatusApiResponseData['status'] === 'PROCESSING') {
+    //                 // If the order is still processing, wait for the retry interval
+    //                 sleep($retry_interval);
+    //             } else {
+    //                 Log::info('Anything other than processing or complete status');
+    //                 return false;
+    //             }
+    //         } else {
+    //             Log::info('Order failed, response 200 not received');
+    //             return false;
+    //         }
 
-            $attempt++;
-        }
+    //         $attempt++;
+    //     }
 
-        Log::info('Max retries reached without reaching a complete status.');
-        return false;
+    //     Log::info('Max retries reached without reaching a complete status.');
+    //     return false;
 
-        // You can handle the case where the maximum number of retries is reached without a complete status here.
-    }
+    //     // You can handle the case where the maximum number of retries is reached without a complete status here.
+    // }
 
-    public function callCardActivation($cardStatusApiResponseData)
-    {
-        Log::info('You are in Card Activation Function');
-        $orderId = $cardStatusApiResponseData['orderId'];
-        $clientSecret = setting('api.qs_clientSecret'); // Your client secret
-        $bearerToken = setting('api.bearer_token'); // Your bearer token
-        $apiUrl = 'https://' . setting('api.woohoo_url');
-        $absApiUrl = "$apiUrl/rest/v3/order/{$orderId}/cards";
-        $requestBody = '';
-        $requestHttpMethod = 'GET';
-        $dateAtClient = Carbon\Carbon::now()->toIso8601String();
-        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
-        $activatedCardApiResponse = Http::acceptJson()
-            ->withToken($bearerToken)
-            ->withHeaders([
-                'signature' => $signature,
-                'dateAtClient' => $dateAtClient,
-            ])
-            ->get($absApiUrl);
+    // public function callCardActivation($cardStatusApiResponseData)
+    // {
+    //     Log::info('You are in Card Activation Function');
+    //     $orderId = $cardStatusApiResponseData['orderId'];
+    //     $clientSecret = setting('api.qs_clientSecret'); // Your client secret
+    //     $bearerToken = setting('api.bearer_token'); // Your bearer token
+    //     $apiUrl = 'https://' . setting('api.woohoo_url');
+    //     $absApiUrl = "$apiUrl/rest/v3/order/{$orderId}/cards";
+    //     $requestBody = '';
+    //     $requestHttpMethod = 'GET';
+    //     $dateAtClient = Carbon\Carbon::now()->toIso8601String();
+    //     $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+    //     $activatedCardApiResponse = Http::acceptJson()
+    //         ->withToken($bearerToken)
+    //         ->withHeaders([
+    //             'signature' => $signature,
+    //             'dateAtClient' => $dateAtClient,
+    //         ])
+    //         ->get($absApiUrl);
 
-        if ($activatedCardApiResponse->status() == 200) {
-            Log::alert('card activation successfull');
-            $activatedCardApiResponseData = $activatedCardApiResponse->json();
+    //     if ($activatedCardApiResponse->status() == 200) {
+    //         Log::alert('card activation successfull');
+    //         $activatedCardApiResponseData = $activatedCardApiResponse->json();
 
-            // Create a new array by merging the two response data arrays
-            $combinedData = array_merge($cardStatusApiResponseData, $activatedCardApiResponseData);
-            return $combinedData;
-        } else {
-            Log::info('Order failed, response 200 not received');
-            return false;
-        }
-    }
+    //         // Create a new array by merging the two response data arrays
+    //         $combinedData = array_merge($cardStatusApiResponseData, $activatedCardApiResponseData);
+    //         return $combinedData;
+    //     } else {
+    //         Log::info('Order failed, response 200 not received');
+    //         return false;
+    //     }
+    // }
 
     // public function applyCoupan(Request $request)
     // {

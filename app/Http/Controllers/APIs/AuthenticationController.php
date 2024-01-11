@@ -62,7 +62,7 @@ class AuthenticationController extends Controller
 
             // Build the API URL with the encoded credentials and Template ID
             $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
-            
+
 
             // Store the OTP in the database along with the user ID and expiration time
             $otpExpiration = config('companyDefaultValues.otpExpiration');
@@ -128,33 +128,33 @@ class AuthenticationController extends Controller
          // Get the OTP entered by the user
          $mobileNumber = $request->mobileNumber;
          $otp = $request->otp;
- 
+
          // Retrieve the latest OTP entry from the database based on the mobile number
          $latestOtpEntry = Otp::where('mobile_number', $mobileNumber)
              ->latest()
              ->first();
- 
-         
- 
+
+
+
          if (!$latestOtpEntry) {
              // No OTP entry found for the mobile number
              return response()->json(['status' => 'error', 'message' => 'Invalid OTP.']);
          }
- 
+
          // Check if the OTP has expired
          $expirationTime = Carbon::parse($latestOtpEntry->created_at)->addMinutes(5);
- 
-         
+
+
          if (Carbon::now()->greaterThan($expirationTime)) {
              // OTP has expired
              return response()->json(['status' => 'error', 'message' => 'OTP has expired.']);
          }
- 
+
          // Check if the entered OTP matches the one stored in the database
          if ($otp == $latestOtpEntry->otp) {
              // Get the user based on the mobile number
              $user = User::where('mobile', $mobileNumber)->first();
- 
+
              if ($user) {
                  // Return a JSON response indicating success
                  return response()->json([

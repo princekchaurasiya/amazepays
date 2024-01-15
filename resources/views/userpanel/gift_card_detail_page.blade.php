@@ -40,10 +40,10 @@
                                     <p class="mb-3 font-xssss fw-600 mt-2">Validity :
                                         {{ $getprdtDetails['expiry'] }}</p>
                                     <div>
-                                        <span class="mb-3 fw-600 font-xs mt-2 text-orange">Category </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2"> CN & PIN</span>
+                                        {{-- <span class="mb-3 fw-600 font-xs mt-2 text-orange">Category </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2"> </span> --}}
                                     </div>
                                     <div>
-                                        <span class="mb-3 fw-600 font-xs mt-2 text-orange">Brand </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2">AmazePays</span>        
+                                        <span class="mb-3 fw-600 font-xs mt-2 text-orange">Brand </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2">{{ $getprdtDetails['brandName'] }}</span>        
                                     </div>
                                 </div>
                                 <div class="order-2 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3 copuan-quantity">

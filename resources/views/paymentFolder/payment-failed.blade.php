@@ -6,12 +6,12 @@
     <div class="container-fluid">
         <div class="row tyfsrow">
             <div class="col-12 text-center p-0">
-                
+
                 <p>
                     <i class="fa-regular fa-circle-xmark cross-icon"></i>
                 </p>
                 <h2 class="section-subtext black-header pb-3">
-                    Oh no Payment is failed
+                    Payment is failed
                 </h2>
                 <p class="pb-3">
                     Please try the payment again

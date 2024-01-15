@@ -114,8 +114,10 @@ class FetchProductData extends Command
             // Update product details in the 'qs_products' table based on SKU
             $updatedprdtDetails = QsProduct::where('sku', '=', $sku)->update($data);
 
+            $updateTime = Carbon\Carbon::now('Asia/Kolkata')->format('d/m/y H:i:s');
+
             $this->info('Product data fetch and update completed.');
-            Log::info('Product data fetch and update completed.');
+            Log::info('Product data fetch and update completed in the database at:', ['update_time' => $updateTime]);
         } catch (Exception $e) {
             $this->error($e->getMessage());
             Log::error('Product data fetch and update failed: ' . $e->getMessage());

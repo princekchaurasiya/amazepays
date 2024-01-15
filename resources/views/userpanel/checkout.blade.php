@@ -4,8 +4,21 @@
 @endsection
 @section('content')
     <div class="container">
+
         <div class="faq-wrapper pt-4 pb-0">
             <h2 class="text-grey-900 fw-400 display1-size mb-4 pb-3 text-center">Checkout</h2>
+
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+
             <form method="POST" name="customerData" action="{{ url('payment-process') }}" id="checkoutForm">
                 @csrf
                 <input type="hidden" name="redirect_url" value="{{ route('response_ccavenue') }}" />

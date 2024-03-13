@@ -215,8 +215,10 @@ class PaymentController extends Controller
         $shipToContactNo = $giftCardData->receiver_mobile;
         $giftSendOption = $giftCardData->gift_send_option;
         $deliveryMode = $giftCardData->delivery_mode;
-        // dd($deliveryMode);
+
         // Decode the JSON fields
+
+
         $cardsData = json_decode(decrypt($order->cards, env('ENCRYPTION_KEY')));
 
         // dd($order->cards, $cardsData);
@@ -253,7 +255,7 @@ class PaymentController extends Controller
             // Generate Invoice Number and Invoice Date
             $invoiceNumber = 'AMZ-' . date('Ymd') . '-' . mt_rand(1000, 9999);
             $invoiceDate = date('d-m-Y');
-       
+
 
             // Send mail to the buyer
             $prepareMailDetails = [

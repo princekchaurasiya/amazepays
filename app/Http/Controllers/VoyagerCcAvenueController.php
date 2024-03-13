@@ -40,9 +40,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
         $slug = $this->getSlug($request);
 
         // GET THE DataType based on the slug
-        $dataType = Voyager::model('DataType')
-            ->where('slug', '=', $slug)
-            ->first();
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         // Check permission
         $this->authorize('browse', app($dataType->model_name));
@@ -167,33 +165,35 @@ class VoyagerCcAvenueController extends VoyagerBaseController
         // Define orderColumn
         $orderColumn = [];
         if ($orderBy) {
-            $index =
-                $dataType->browseRows
-                    ->where('field', $orderBy)
-                    ->keys()
-                    ->first() + ($showCheckboxColumn ? 1 : 0);
+            $index = $dataType->browseRows->where('field', $orderBy)->keys()->first() + ($showCheckboxColumn ? 1 : 0);
             $orderColumn = [[$index, $sortOrder ?? 'desc']];
         }
 
         // Define list of columns that can be sorted server side
         $sortableColumns = $this->getSortableColumns($dataType->browseRows);
 
-        
-
-        
-
         $view = 'voyager::bread.browse';
 
         if (view()->exists("voyager::$slug.browse")) {
             $view = "voyager::$slug.browse";
         }
-       
+
         $modifiedData = [];
 
-        foreach ($dataTypeContent as $payment) {
+
+
+
+        foreach ($dataTypeContent->items() as $payment) {
             $billingDetails = json_decode($payment->billing_details, true);
 
-            $modifiedData[] = [
+            $firstname = $billingDetails['firstname'] ?? null;
+            $email = $billingDetails['email'] ?? null;
+            $contact_no = $billingDetails['telephone'] ?? null;
+            $address = isset($billingDetails['line1']) ? $billingDetails['line1'] . ', ' : '';
+            $address .= isset($billingDetails['postcode']) ? $billingDetails['postcode'] . ', ' : '';
+            $address .= isset($billingDetails['region']) ? $billingDetails['region'] : '';
+
+            $changedData[] = [
                 'id' => $payment->id,
                 'user_id' => $payment->user_id,
                 'order_id' => $payment->order_id,
@@ -207,16 +207,20 @@ class VoyagerCcAvenueController extends VoyagerBaseController
                 'status_message' => $payment->status_message,
                 'currency' => $payment->currency,
                 'amount' => $payment->amount,
-                'firstname' => $billingDetails['firstname'],
-                'email' => $billingDetails['email'],
-                'contact_no' => $billingDetails['telephone'],
-                'Address' => $billingDetails['line1'] . ', ' . $billingDetails['postcode'] . ', ' . $billingDetails['region'],
-                // Add other properties as needed
+                'firstname' => $firstname,
+                'email' => $email,
+                'contact_no' => $contact_no,
+                'Address' => $address,
+
             ];
-           
         }
 
+
+        $modifiedData = collect($changedData)->groupBy('user_id')->map->first();
+
         return Voyager::view($view, compact('actions', 'dataType', 'dataTypeContent', 'isModelTranslatable', 'search', 'orderBy', 'orderColumn', 'sortableColumns', 'sortOrder', 'searchNames', 'isServerSide', 'defaultSearchKey', 'usesSoftDeletes', 'showSoftDeleted', 'showCheckboxColumn', 'modifiedData'));
+
+
     }
 
     //***************************************
@@ -235,9 +239,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
     {
         $slug = $this->getSlug($request);
 
-        $dataType = Voyager::model('DataType')
-            ->where('slug', '=', $slug)
-            ->first();
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         $isSoftDeleted = false;
 
@@ -303,9 +305,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
     {
         $slug = $this->getSlug($request);
 
-        $dataType = Voyager::model('DataType')
-            ->where('slug', '=', $slug)
-            ->first();
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         if (strlen($dataType->model_name) != 0) {
             $model = app($dataType->model_name);
@@ -356,9 +356,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
     {
         $slug = $this->getSlug($request);
 
-        $dataType = Voyager::model('DataType')
-            ->where('slug', '=', $slug)
-            ->first();
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         // Compatibility with Model binding.
         $id = $id instanceof \Illuminate\Database\Eloquent\Model ? $id->{$id->getKeyName()} : $id;
@@ -426,9 +424,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
     {
         $slug = $this->getSlug($request);
 
-        $dataType = Voyager::model('DataType')
-            ->where('slug', '=', $slug)
-            ->first();
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         // Check permission
         $this->authorize('add', app($dataType->model_name));
@@ -468,9 +464,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
     {
         $slug = $this->getSlug($request);
 
-        $dataType = Voyager::model('DataType')
-            ->where('slug', '=', $slug)
-            ->first();
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         // Check permission
         $this->authorize('add', app($dataType->model_name));
@@ -482,11 +476,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
         event(new BreadDataAdded($dataType, $data));
 
         if (!$request->has('_tagging')) {
-            if (
-                auth()
-                    ->user()
-                    ->can('browse', $data)
-            ) {
+            if (auth()->user()->can('browse', $data)) {
                 $redirect = redirect()->route("voyager.{$dataType->slug}.index");
             } else {
                 $redirect = redirect()->back();
@@ -517,9 +507,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
     {
         $slug = $this->getSlug($request);
 
-        $dataType = Voyager::model('DataType')
-            ->where('slug', '=', $slug)
-            ->first();
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         // Init array of IDs
         $ids = [];
@@ -574,9 +562,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
     {
         $slug = $this->getSlug($request);
 
-        $dataType = Voyager::model('DataType')
-            ->where('slug', '=', $slug)
-            ->first();
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         // Check permission
         $model = app($dataType->model_name);
@@ -635,9 +621,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
             // GET multi value
             $multi = $request->get('multi');
 
-            $dataType = Voyager::model('DataType')
-                ->where('slug', '=', $slug)
-                ->first();
+            $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
             // Load model and find record
             $model = app($dataType->model_name);
@@ -850,9 +834,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
     {
         $slug = $this->getSlug($request);
 
-        $dataType = Voyager::model('DataType')
-            ->where('slug', '=', $slug)
-            ->first();
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         // Check permission
         $this->authorize('edit', app($dataType->model_name));
@@ -893,9 +875,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
     {
         $slug = $this->getSlug($request);
 
-        $dataType = Voyager::model('DataType')
-            ->where('slug', '=', $slug)
-            ->first();
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         // Check permission
         $this->authorize('edit', app($dataType->model_name));
@@ -922,9 +902,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
         }
 
         $slug = $this->getSlug($request);
-        $dataType = Voyager::model('DataType')
-            ->where('slug', '=', $slug)
-            ->first();
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         $action = new $request->action($dataType, null);
 
@@ -944,9 +922,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
         $page = $request->input('page');
         $on_page = 50;
         $search = $request->input('search', false);
-        $dataType = Voyager::model('DataType')
-            ->where('slug', '=', $slug)
-            ->first();
+        $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         $method = $request->input('method', 'add');
 
@@ -991,10 +967,7 @@ class VoyagerCcAvenueController extends VoyagerBaseController
                     }
                 } else {
                     $total_count = $model->count();
-                    $relationshipOptions = $model
-                        ->take($on_page)
-                        ->skip($skip)
-                        ->get();
+                    $relationshipOptions = $model->take($on_page)->skip($skip)->get();
                 }
 
                 $results = [];
@@ -1050,7 +1023,6 @@ class VoyagerCcAvenueController extends VoyagerBaseController
             })
             ->first();
     }
-
 
     protected function getSortableColumns($rows)
     {

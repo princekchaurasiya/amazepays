@@ -40,14 +40,15 @@
                                     <p class="mb-3 font-xssss fw-600 mt-2">Validity :
                                         {{ $getprdtDetails['expiry'] }}</p>
                                     <div>
-                                        <span class="mb-3 fw-600 font-xs mt-2 text-orange">Category </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2"> CN & PIN</span>
+                                        {{-- <span class="mb-3 fw-600 font-xs mt-2 text-orange">Category </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2"> </span> --}}
                                     </div>
                                     <div>
                                         <span class="mb-3 fw-600 font-xs mt-2 text-orange">Brand </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2">AmazePays</span>
+                                        <span class="mb-3 fw-600 font-xs mt-2 text-orange">Brand </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2">{{ $getprdtDetails['brandName'] }}</span>
                                     </div>
                                 </div>
                                 <div class="order-2 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3 copuan-quantity">
-                                    @if ($getprdtDetails['price']->type == 'RANGE')
+                                    @if ($getprdtDetails['price']->type == 'SLAB')
                                         <label class="small-size fw-600 text-grey-900 font-xsss">Select Denomination</label>
                                         <div class="radio-btn-row boxed">
                                             @foreach ($getprdtDetails['price']->denominations as $denomination)
@@ -62,7 +63,7 @@
                                             @endforeach
                                             <span class="font-xssss fw-400 error-rec-deno text-danger"></span>
                                         </div>
-                                    @elseif ($getprdtDetails['price']->type === 'SLAB')
+                                    @elseif ($getprdtDetails['price']->type === 'RANGE')
                                         <label class="small-size fw-600 text-grey-900 font-xsss">Enter Denomination</label>
                                         <input type="text" class="form-control credentails-field"
                                             placeholder="Enter Denomination" name="denomination" id="denomination-slab"

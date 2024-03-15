@@ -141,17 +141,28 @@
                     </button>
                     <a href="/" class="logo custMobLogo"><img src="{{ asset('images/logo.png') }}" alt="logo"
                             class="custLogo"></a>
-                    <div class="user-profile account-section">
-                        <a href="#" class="profile-link">
-                            <i class="fas fa-user-circle"></i>
-                        </a>
-                        <div class="account-dropdown without-log">
-                            <ul>
-                                <li><a href="#" data-toggle="modal" data-target="#ModalregisterD">New Customer?</a></li>
-                                <li><a href="#" data-toggle="modal" data-target="#Modallogin">Sign In</a></li>
-                            </ul>
-                        </div>
-                    </div>
+                            <div class="user-profile account-section">
+                                <a href="#" class="profile-link">
+                                    <i class="fas fa-user-circle"></i>
+                                </a>
+                                @guest
+                                    <!-- Display login and registration links for guests -->
+                                    <div class="account-dropdown without-log">
+                                        <ul>
+                                            <li><a href="#" data-toggle="modal" data-target="#ModalregisterD">New Customer?</a></li>
+                                            <li><a href="#" data-toggle="modal" data-target="#Modallogin">Sign In</a></li>
+                                        </ul>
+                                    </div>
+                                @else
+                                    <!-- Redirect logged-in users to their profile page when clicking on the profile link -->
+                                    <script>
+                                        document.querySelector('.profile-link').addEventListener('click', function(e) {
+                                            e.preventDefault(); // Prevent the default behavior of the link
+                                            window.location.href = "{{ route('profile') }}"; // Redirect to the profile page
+                                        });
+                                    </script>
+                                @endguest
+                            </div>
 
                 </nav>
                 <!-- Side Navigation -->

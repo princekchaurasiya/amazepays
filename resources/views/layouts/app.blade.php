@@ -95,7 +95,8 @@
                               </li>
                               --}}
                                     <li class="nav-item"><a class="nav-link" href="{{ route('about') }}">About</a></li>
-                                    <li class="nav-item"><a class="nav-link" href="{{ route('contact-us') }}">Contact</a></li>
+                                    <li class="nav-item"><a class="nav-link"
+                                            href="{{ route('contact-us') }}">Contact</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -107,7 +108,8 @@
                                         {{ Auth::user()->name }}
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <li><a class="dropdown-item" href="{{ route('profile') }}"><i class="ti-user font-sm"></i>
+                                        <li><a class="dropdown-item" href="{{ route('profile') }}"><i
+                                                    class="ti-user font-sm"></i>
                                                 Profile</a></li>
                                         <li><a class="dropdown-item" href="{{ route('my-order') }}"><i
                                                     class="fa-sharp fa-solid fa-cart-shopping"></i> My Order</a>
@@ -139,11 +141,28 @@
                     </button>
                     <a href="/" class="logo custMobLogo"><img src="{{ asset('images/logo.png') }}" alt="logo"
                             class="custLogo"></a>
-                    <div class="user-profile">
-                        <a href="{{ route('profile') }}" class="profile-link">
-                            <i class="fas fa-user-circle"></i>
-                        </a>
-                    </div>
+                            <div class="user-profile account-section">
+                                <a href="#" class="profile-link">
+                                    <i class="fas fa-user-circle"></i>
+                                </a>
+                                @guest
+                                    <!-- Display login and registration links for guests -->
+                                    <div class="account-dropdown without-log">
+                                        <ul>
+                                            <li><a href="#" data-toggle="modal" data-target="#ModalregisterD">New Customer?</a></li>
+                                            <li><a href="#" data-toggle="modal" data-target="#Modallogin">Sign In</a></li>
+                                        </ul>
+                                    </div>
+                                @else
+                                    <!-- Redirect logged-in users to their profile page when clicking on the profile link -->
+                                    <script>
+                                        document.querySelector('.profile-link').addEventListener('click', function(e) {
+                                            e.preventDefault(); // Prevent the default behavior of the link
+                                            window.location.href = "{{ route('profile') }}"; // Redirect to the profile page
+                                        });
+                                    </script>
+                                @endguest
+                            </div>
 
                 </nav>
                 <!-- Side Navigation -->
@@ -198,8 +217,10 @@
                             <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6">
                                 <h5 class="text-orange">Quick Read</h5>
                                 <ul>
-                                    <li><a class="font-xsss text-black" href="{{ url('terms_of_use') }}">Term of use</a></li>
-                                    <li><a class="font-xsss text-black" href="{{ url('private_policy') }}">Privacy Policy</a></li>
+                                    <li><a class="font-xsss text-black" href="{{ url('terms_of_use') }}">Term of
+                                            use</a></li>
+                                    <li><a class="font-xsss text-black" href="{{ url('private_policy') }}">Privacy
+                                            Policy</a></li>
                                 </ul>
                             </div>
                             <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6">
@@ -227,9 +248,11 @@
                                 </ul>
                                 <ul class="mt-3">
 
-                                    <li><a class="text-black" href="mail:support@amazepays.in"><i class="fas fa-envelope"></i> support@amazepays.in</a></li>
+                                    <li><a class="text-black" href="mail:support@amazepays.in"><i
+                                                class="fas fa-envelope"></i> support@amazepays.in</a></li>
 
-                                    <li><a class="text-black" href="phone:+91-98211 99497"><i class="fas fa-phone-alt"></i> +91 9821199497</a></li>
+                                    <li><a class="text-black" href="phone:+91-98211 99497"><i
+                                                class="fas fa-phone-alt"></i> +91 9821199497</a></li>
 
                                 </ul>
                             </div>
@@ -264,18 +287,25 @@
                                 <div class="row">
                                     <div class="col-lg-5 left-side d-lg-block d-none">
                                         <div class="rounded-0 w-100 border-0">
-                                            <p class="text-center pt-7 mb-4"><img src="{{ asset('images/logo_white.png') }}" alt="AmazePays" class="img-fluid" width="150"></p>
+                                            <p class="text-center pt-7 mb-4"><img
+                                                    src="{{ asset('images/logo_white.png') }}" alt="AmazePays"
+                                                    class="img-fluid" width="150"></p>
                                             <h4 class="fw-600 font-xxl mb-3 text-center">All Gifts are Here</h4>
                                             <div class="rounded-0 text-left pt-5 pb-2">
                                                 <div class="single-line mb-2">
-                                                    <span class="mr-3"><img src="https://www.gyftoo.com/public/assets/images/group1.png" alt="Group"></span>
+                                                    <span class="mr-3"><img
+                                                            src="https://www.gyftoo.com/public/assets/images/group1.png"
+                                                            alt="Group"></span>
                                                     <span class="text-white">Buy or Send Gift Cards Instantly</span>
                                                 </div>
                                             </div>
                                             <div class="rounded-0 text-left pt-3 pb-2">
                                                 <div class="single-line mb-2">
-                                                    <span class="mr-3"><img src="https://www.gyftoo.com/public/assets/images/group1.png" alt="Group"></span>
-                                                    <span class="text-white">Send Gift Cards to Friends and Family Choose from Hundreds of Popular Brands.</span>
+                                                    <span class="mr-3"><img
+                                                            src="https://www.gyftoo.com/public/assets/images/group1.png"
+                                                            alt="Group"></span>
+                                                    <span class="text-white">Send Gift Cards to Friends and Family
+                                                        Choose from Hundreds of Popular Brands.</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -285,39 +315,46 @@
                                             <div class="card-body rounded-0 text-left pt-0">
                                                 <h2 class="fw-600 display2-size mb-4">Create your account</h2>
                                                 <form id="registration-form">
-                                                    <span class="font-xssss fw-400 main-register-error text-center"></span>
+                                                    <span
+                                                        class="font-xssss fw-400 main-register-error text-center"></span>
                                                     <div class="form-group mb-3">
                                                         <input type="text"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Name" id="name" autocomplete="off">
-                                                        <span class="font-xssss fw-400 error-message error-name"></span>
+                                                        <span
+                                                            class="font-xssss fw-400 error-message error-name"></span>
                                                     </div>
                                                     <div class="form-group mb-3">
                                                         <input type="text"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Mobile Number" id="mobile">
-                                                        <span class="font-xssss fw-400  error-message error-mobile"></span>
+                                                        <span
+                                                            class="font-xssss fw-400  error-message error-mobile"></span>
                                                     </div>
                                                     <div class="form-group mb-3">
                                                         <input type="text"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
-                                                            placeholder="Email" id="email" autocomplete="off" id="registerEmail"
-                                                            name="registerEmail">
-                                                        <span class="font-xssss fw-400 error-message error-email"></span>
+                                                            placeholder="Email" id="email" autocomplete="off"
+                                                            id="registerEmail" name="registerEmail">
+                                                        <span
+                                                            class="font-xssss fw-400 error-message error-email"></span>
                                                     </div>
                                                     <div class="form-group icon-tab mb-3">
                                                         <input type="password"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Password" id="password">
                                                         <i class="ti-lock text-grey-700 pr-0"></i>
-                                                        <i class="ti-eye toggle-register-Password-icon" id="toggleRegstPassword"></i>
-                                                        <span class="font-xssss fw-400 error-password error-message"></span>
+                                                        <i class="ti-eye toggle-register-Password-icon"
+                                                            id="toggleRegstPassword"></i>
+                                                        <span
+                                                            class="font-xssss fw-400 error-password error-message"></span>
                                                     </div>
                                                     <div class="form-group icon-tab mb-3">
                                                         <input type="password"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Confirm Password" id="confmPassword">
-                                                            <i class="ti-eye toggle-register-Password-icon" id="toggleRegstConfirmPassword"></i>
+                                                        <i class="ti-eye toggle-register-Password-icon"
+                                                            id="toggleRegstConfirmPassword"></i>
                                                         <i class="ti-lock text-grey-700 pr-0"></i>
                                                         <span
                                                             class="font-xssss fw-400 error-confmPass error-message error-confmPassword"></span>
@@ -330,9 +367,11 @@
                                                 </form>
                                                 <div class="col-sm-12 p-0 text-center">
                                                     <!-- <a href="#" class="form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0">Create an account</a> -->
-                                                    <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-4 lh-32">Are you already member?
-                                                        <a href="#" class="fw-700 ml-1 text-orange " data-toggle="modal"
-                                                            data-target="#Modallogin" data-dismiss="modal">Login</a>
+                                                    <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-4 lh-32">Are you
+                                                        already member?
+                                                        <a href="#" class="fw-700 ml-1 text-orange "
+                                                            data-toggle="modal" data-target="#Modallogin"
+                                                            data-dismiss="modal">Login</a>
                                                     </h6>
                                                     {{-- <div class="row">
                                                         <div class="col-6 pr-1"><a href="#"
@@ -344,9 +383,11 @@
                                                                 Password?</a>
                                                         </div>
                                                     </div> --}}
-                                                    <p class="fw-500 font-xssss text-grey-600 mt-2 pt-3 d-inline-block">
-                                                        By continuing, you agree to Amazepay's <a href="blog-single.html"
-                                                            class="text-current">Term ans Condition</a> and <a href="blog-single.html"
+                                                    <p
+                                                        class="fw-500 font-xssss text-grey-600 mt-2 pt-3 d-inline-block">
+                                                        By continuing, you agree to Amazepay's <a
+                                                            href="blog-single.html" class="text-current">Term ans
+                                                            Condition</a> and <a href="blog-single.html"
                                                             class="text-current">Privacy Policy </a>.
                                                     </p>
                                                 </div>
@@ -362,6 +403,11 @@
         </div>
     </div>
     <!-- end of Modal Register -->
+
+
+
+
+
     <!-- Modal Login -->
     <div class="modal bottom fade" id="Modallogin" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
         data-backdrop="true" aria-hidden="true">
@@ -378,18 +424,25 @@
                                         <div class="rounded-0 w-100 p-2 pt-5 border-0">
                                             <div class="rounded-0 text-left pt-5 pb-2">
                                                 <div class="single-line mb-2">
-                                                    <span class="mr-3"><img src="https://www.gyftoo.com/public/assets/images/group2.png" alt="Group"></span>
+                                                    <span class="mr-3"><img
+                                                            src="https://www.gyftoo.com/public/assets/images/group2.png"
+                                                            alt="Group"></span>
                                                     <span class="text-white">Buy or Send Gift Cards Instantly</span>
                                                 </div>
                                             </div>
                                             <div class="rounded-0 text-left pt-3 pb-2">
                                                 <div class="single-line mb-2">
-                                                    <span class="mr-3"><img src="https://www.gyftoo.com/public/assets/images/group1.png" alt="Group"></span>
-                                                    <span class="text-white">Send Gift Cards to Friends and Family Choose from Hundreds of Popular Brands.</span>
+                                                    <span class="mr-3"><img
+                                                            src="https://www.gyftoo.com/public/assets/images/group1.png"
+                                                            alt="Group"></span>
+                                                    <span class="text-white">Send Gift Cards to Friends and Family
+                                                        Choose from Hundreds of Popular Brands.</span>
                                                 </div>
                                             </div>
-                                            <h4 class="fw-600 display2-size-sm mb-4 text-center">Cashback and Gift Cards</h4>
-                                            <p class="text-center"><img src="{{ asset('images/logo_white.png') }}" alt="AmazePays" class="img-fluid" width="150"></p>
+                                            <h4 class="fw-600 display2-size-sm mb-4 text-center">Cashback and Gift
+                                                Cards</h4>
+                                            <p class="text-center"><img src="{{ asset('images/logo_white.png') }}"
+                                                    alt="AmazePays" class="img-fluid" width="150"></p>
                                         </div>
                                     </div>
                                     <div class="col-lg-7">
@@ -402,17 +455,21 @@
                                                         <input type="text"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Enter Your Mobile Number" id="loginMobNumb">
-                                                        <span class="font-xssss fw-400 error-loginMobNumb text-danger"></span>
+                                                        <span
+                                                            class="font-xssss fw-400 error-loginMobNumb text-danger"></span>
                                                     </div>
                                                     <div class="form-group mb-3">
                                                         <input type="password"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Enter Password" id="loginPass">
-                                                            <i class="ti-eye toggle-login-Password-icon" id="togglePassword"></i>
-                                                        <span class="font-xssss fw-400 error-loginPass text-danger"></span>
+                                                        <i class="ti-eye toggle-login-Password-icon"
+                                                            id="togglePassword"></i>
+                                                        <span
+                                                            class="font-xssss fw-400 error-loginPass text-danger"></span>
                                                     </div>
                                                     <div class="form-check text-left mb-3">
-                                                        <input type="checkbox" class="form-check-input mt-2" id="exampleCheck1">
+                                                        <input type="checkbox" class="form-check-input mt-2"
+                                                            id="exampleCheck1">
                                                         <label class="form-check-label font-xsss text-grey-500"
                                                             for="exampleCheck1">Remember me</label>
                                                         {{-- <a href="#" class="fw-600 font-xsss text-grey-700 mt-1 float-right"
@@ -422,33 +479,37 @@
                                                     <div class="form-group icon-tab mb-3">
                                                         <div class="row">
                                                             <div class="col-6 align-self-center">
-                                                                <button type="button" class="btn btn-primary login-otp-link p-0"
-                                                                id="loginWithOtpButton">Login With OTP</button>
+                                                                <button type="button"
+                                                                    class="btn btn-primary login-otp-link p-0"
+                                                                    id="loginWithOtpButton">Login With OTP</button>
                                                             </div>
                                                             <div class="col-6 align-self-center">
                                                                 <button type="submit"
-                                                                class="form-control h20 float-right bg-current text-white text-center font-xss fw-500 border-0 p-0 w100 login-button-color"
-                                                                id="loginUser">Login</button>
+                                                                    class="form-control h20 float-right bg-current text-white text-center font-xss fw-500 border-0 p-0 w100 login-button-color"
+                                                                    id="loginUser">Login</button>
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <!-- Hidden input to store the mobile number for OTP -->
-                                                    <input type="hidden" class="destination-input" name="destination" id="destination"
-                                                        required>
+                                                    <input type="hidden" class="destination-input"
+                                                        name="destination" id="destination" required>
                                                 </form>
                                                 <!-- Get OTP button to trigger OTP modal -->
 
                                                 <!-- Success message div -->
                                                 <div class="col-sm-12 p-0 text-center">
-                                                    <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Don't have an account? <a
-                                                            href="#" class="fw-700 ml-1 text-current register-form"
+                                                    <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Don't
+                                                        have an account? <a href="#"
+                                                            class="fw-700 ml-1 text-current register-form"
                                                             data-toggle="modal" data-target="#ModalregisterD"
                                                             data-dismiss="modal">Register</a></h6>
                                                 </div>
                                                 <div class="col-sm-12 p-0 text-center">
-                                                    <p class="fw-500 font-xssss text-grey-600 mt-2 pt-3 d-inline-block text-center">
-                                                        By continuing, you agree to Amazepay's <a href="{{ route('tnc') }}"
-                                                            class="text-current">Terms and Conditions</a> and <a href="{{ route('private-policy') }}"
+                                                    <p
+                                                        class="fw-500 font-xssss text-grey-600 mt-2 pt-3 d-inline-block text-center">
+                                                        By continuing, you agree to Amazepay's <a
+                                                            href="{{ route('tnc') }}" class="text-current">Terms and
+                                                            Conditions</a> and <a href="{{ route('private-policy') }}"
                                                             class="text-current">Privacy Policy</a>.
                                                     </p>
                                                 </div>
@@ -538,8 +599,9 @@
                             <div class="col-sm-12 p-0 text-center">
                                 <p class="fw-900 font-xssss text-grey-600 mt-2 pt-3 d-inline-block text-center">
                                     By continuing, you agree to Amazepay's <a href="{{ route('tnc') }} "
-                                        class="text-current">Term ans Condition</a> and <a href="{{ route('private-policy') }}"
-                                        class="text-current">Privacy Policy </a>.
+                                        class="text-current">Term ans Condition</a> and <a
+                                        href="{{ route('private-policy') }}" class="text-current">Privacy Policy
+                                    </a>.
                                 </p>
                             </div>
                         </div>
@@ -588,7 +650,7 @@
         const togglePassword = document.querySelector("#togglePassword");
         const loginPass = document.querySelector("#loginPass");
 
-        togglePassword.addEventListener("click", function () {
+        togglePassword.addEventListener("click", function() {
             // toggle the type attribute
             const type = loginPass.getAttribute("type") === "password" ? "text" : "password";
             loginPass.setAttribute("type", type);
@@ -602,7 +664,7 @@
         const toggleRegstPassword = document.querySelector("#toggleRegstPassword");
         const password = document.querySelector("#password");
 
-        toggleRegstPassword.addEventListener("click", function () {
+        toggleRegstPassword.addEventListener("click", function() {
             // toggle the type attribute
             const type = password.getAttribute("type") === "password" ? "text" : "password";
             password.setAttribute("type", type);
@@ -616,7 +678,7 @@
         const toggleRegstConfirmPassword = document.querySelector("#toggleRegstConfirmPassword");
         const confmPassword = document.querySelector("#confmPassword");
 
-        toggleRegstConfirmPassword.addEventListener("click", function () {
+        toggleRegstConfirmPassword.addEventListener("click", function() {
             // toggle the type attribute
             const type = confmPassword.getAttribute("type") === "password" ? "text" : "password";
             confmPassword.setAttribute("type", type);

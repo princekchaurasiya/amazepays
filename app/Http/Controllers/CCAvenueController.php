@@ -465,8 +465,9 @@ class CCAvenueController extends Controller
         }
     }
 
-    private function getStatusByReferenceNumber($refno)
+    public function getStatusByReferenceNumber($refno)
     {
+
         Log::info($refno);
         Log::info('You are in get Status Function');
         Log::info('attempt 1 has happened, go for step 2');
@@ -552,6 +553,44 @@ class CCAvenueController extends Controller
             return false;
         }
     }
+
+
+    public function cardDetails($orderID)
+    {
+
+        $clientSecret = setting('api.qs_clientSecret'); // Your client secret
+        $bearerToken = setting('api.bearer_token'); // Your bearer token
+        $apiUrl = 'https://' . setting('api.woohoo_url');
+        $absApiUrl = "$apiUrl/rest/v3/order/{$orderID}/cards";
+        $requestBody = '';
+        $requestHttpMethod = 'GET';
+        $dateAtClient = Carbon\Carbon::now()->toIso8601String();
+        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+
+        $activatedCardApiResponse = Http::acceptJson()
+            ->withToken($bearerToken)
+            ->withHeaders([
+                'signature' => $signature,
+                'dateAtClient' => $dateAtClient,
+            ])
+            ->get($absApiUrl);
+
+            Log::alert('card activation successfull');
+
+            $activatedCardApiResponseData = $activatedCardApiResponse->json();
+
+
+
+            dd($activatedCardApiResponseData);
+
+
+    }
+
+
+
+
+
+
 
     public function updateQsOrder($createOrderResponseData)
     {

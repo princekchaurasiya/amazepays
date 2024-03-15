@@ -15,13 +15,12 @@ class MyOrderController extends Controller
     {
         $user = Auth::user();
 
-        $recentOrders = User::join('qs_ordered', 'users.id', '=', 'qs_ordered.user_id')
-            ->join('qs_products', 'qs_ordered.sku', '=', 'qs_products.sku')
+        $recentOrders = QsOrder::join('users', 'users.id', '=', 'qs_ordered.user_id')
+            ->join('qs_products as qsp', 'qs_ordered.sku', '=', 'qsp.sku')
             ->where('users.id', $user->id)
             ->orderBy('qs_ordered.created_at', 'desc')
-            ->get(['qs_ordered.*', 'qs_products.*']);
-
-
+            ->select('qs_ordered.id as qs_id', 'qs_ordered.*', 'qsp.*', 'users.*')
+            ->get();
 
         return view('order.myOrder')->with('order', $recentOrders);
     }

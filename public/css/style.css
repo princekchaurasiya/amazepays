@@ -16068,3 +16068,112 @@ color: black !important;
 .single-gift-image{
   width: 312px;
 }
+
+.modalWelcome{
+  background-color: red;
+}
+
+.account-section {
+
+	display: inline-block;
+	vertical-align: middle;
+}
+.account-section .account-dropdown {
+	position: absolute;
+	right: 50%;
+	transform: translateX(50%);
+	display: none;
+	z-index: 4;
+}
+.account-section .without-log ul {
+	border-radius: 10px;
+	display: flex;
+	min-width: 260px;
+	align-items: center;
+}
+.account-section .without-log ul li:nth-child(1) {
+	flex: 2;
+}
+.account-section .without-log ul li:nth-child(1) a {
+	color: #ff6601;
+}
+.account-section .without-log ul li:nth-child(2) a {
+	color:#4A4A4A;
+}
+.account-section .without-log ul li {
+	padding-top: 15px !important;
+	padding-bottom: 15px !important;
+}
+.account-section ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	min-width: 150px;
+	text-align: left;
+	background: #FFFFFF;
+	box-shadow: 0 4px 16px 0 rgba(0,0,0,.2);
+	border-radius: 2px;
+	margin-top: 14px;
+}
+.account-section ul li {
+	padding: 5px 0;
+}
+.account-section ul li:first-child {
+	padding-top: 15px;
+}
+.account-section ul li:last-child {
+	padding-bottom: 15px;
+}
+.account-section ul li a {
+	padding: 0 20px;
+	font-size: 14px;
+	color: #0F233C;
+	-moz-transition: all .2s ease-in;
+    -o-transition: all .2s ease-in;
+    -webkit-transition: all .2s ease-in;
+	transition: all .2s ease-in;
+	display: block;
+}
+.account-section ul li a:hover {
+	color:#4A4A4A;
+}
+.account-section ul:after {
+	bottom: 100%;
+	left: 50%;
+	border: solid transparent;
+	content: " ";
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
+	border-color: rgba(136, 183, 213, 0);
+	border-bottom-color: #FFFFFF;
+	border-width: 10px;
+	margin-left: -10px;
+	top: -6px;
+}
+.account-section:hover .account-dropdown {
+	display: block;
+}
+@media (max-width: 767px) {
+	.account-section .account-dropdown {
+		right: 75px;
+	}
+	.account-section ul {
+		min-width: 150px;
+	}
+	.account-section ul:after {
+		left: 88%;
+	}
+	.account-section .without-log {
+		right: 123px;
+	}
+	.without-log ul:after {
+		left: 92%;
+	}
+}
+
+@media (max-width: 768px) {
+  .hot-deal-text {
+    font-size: 1.2rem;
+  }}

@@ -24,7 +24,7 @@
                             <h6 class="text-ornage fw-600 font-xs mt-4">E-Gift Card</h6>
                         </div>
                     </div>
-                    
+
                     <div class="justify-content-center row card-form">
                         <div class="mt-3 col-12 col-sm-12 col-md-12 col-lg-10 col-xl-10">
                             <div class="row">
@@ -43,7 +43,8 @@
                                         {{-- <span class="mb-3 fw-600 font-xs mt-2 text-orange">Category </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2"> </span> --}}
                                     </div>
                                     <div>
-                                        <span class="mb-3 fw-600 font-xs mt-2 text-orange">Brand </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2">{{ $getprdtDetails['brandName'] }}</span>        
+                                        <span class="mb-3 fw-600 font-xs mt-2 text-orange">Brand </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2">AmazePays</span>
+                                        <span class="mb-3 fw-600 font-xs mt-2 text-orange">Brand </span> : <span class="mb-3 text-black font-xsss fw-400 mt-2">{{ $getprdtDetails['brandName'] }}</span>
                                     </div>
                                 </div>
                                 <div class="order-2 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3 copuan-quantity">
@@ -72,7 +73,7 @@
                                     @else
 
                                     @endif
-                                    
+
                                 </div>
                                 <div class="order-3 mb-3 mb-lg-0 col-12 col-md-6 col-lg-3 col-xl-3 copuan-quantity">
                                     <label class="small-size fw-600 text-grey-900 font-xsss">Quantity</label>
@@ -83,7 +84,7 @@
                                 </div>
                             </div>
                         </div>
-                       
+
                     </div>
                     <div class="justify-content-center row">
                         <div class="col-lg-10 col-xl-10">
@@ -193,7 +194,7 @@
                             </div>
                         </div>
                     </div>
-                   
+
                     <div class="row personalise-gift-card">
                         <div class="tabs">
                             <input type="radio" name="tabs" id="tabone" checked="checked">
@@ -331,7 +332,7 @@
                 var minDenominationSlab = {{$getprdtDetails['minPrice']}};
                 var maxDenominationSlab = {{$getprdtDetails['maxPrice']}};
                 if ($('.copuan-quantity').find('.range').attr('type') === 'radio') {
-                    
+
                     var checkedRadio = $("input[name='denomination']:checked");
                     if (checkedRadio.length > 0) {
                         denomination = checkedRadio.val();
@@ -343,7 +344,7 @@
                     }
                 } else if($('.copuan-quantity').find('#denomination-slab').attr('type') === 'text') {
                     var enteredDenominationSlab = $('#denomination-slab').val();
-                  
+
                     if (!enteredDenominationSlab || enteredDenominationSlab.length === 0) {
                         $('.error-rec-deno-slab').text('Enter Demonination');
                         denomination = 0;
@@ -399,7 +400,7 @@
                     $('.error-rec-qnty').empty();
                 }
 
-                
+
 
                 var delivery_mode = $("input[name='delivery_mode']:checked").val();
                 if (giftSendOption === 'send_as_gift') {

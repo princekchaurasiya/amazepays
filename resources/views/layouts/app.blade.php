@@ -171,17 +171,17 @@
                         <li class="sidenav-item">
                             <a class="sidenav-link" href="#">Home</a>
                         </li>
-                        <li class="sidenav-item">
+                        {{-- <li class="sidenav-item">
                             <a class="sidenav-link" href="#">Services</a>
-                        </li>
-                        <li class="sidenav-item">
+                        </li> --}}
+                        {{-- <li class="sidenav-item">
                             <a class="sidenav-link" href="#">Products</a>
+                        </li> --}}
+                        <li class="sidenav-item">
+                            <a class="sidenav-link" href="{{ url('about') }}">About</a>
                         </li>
                         <li class="sidenav-item">
-                            <a class="sidenav-link" href="#">About</a>
-                        </li>
-                        <li class="sidenav-item">
-                            <a class="sidenav-link" href="#">Contact</a>
+                            <a class="sidenav-link" href="{{ url('contact_us') }}">Contact Us</a>
                         </li>
                     </ul>
                     <button class="btn close-sideNav-btn" onclick="closeNav()">&times;</button>
@@ -228,7 +228,7 @@
                                 <ul>
                                     <li><a class="font-xsss text-black" href="{{ url('/') }}">Home</a></li>
                                     <li><a class="font-xsss text-black" href="{{ url('about') }}">About</a></li>
-                                    <li><a class="font-xsss text-black" href="{{ url('contact') }}">Contact</a></li>
+                                    <li><a class="font-xsss text-black" href="{{ url('contact_us') }}">Contact Us</a></li>
                                 </ul>
                             </div>
                             <div class="col-md-3 col-lg-3 col-sm-3 col-xs-6 md-mb25">

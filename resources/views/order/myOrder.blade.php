@@ -65,10 +65,10 @@
                                                         <p class="mb-0">Discount: <b>0</b></p>
                                                         <p class="mb-0">Total Amount: <b>{{ $orderItem->amount }}</b></p>
 
-                                                        <p class="mb-0"><a href="{{ route('get-order-status', ['refno' => $orderItem->qs_id]) }}"><b>get card data</b></a></p>
+                                                        {{-- <p class="mb-0"><a href="{{ route('get-order-status', ['refno' => $orderItem->qs_id]) }}"><b>get card data</b></a></p> --}}
 
 
-                                                        <p class="mb-0"><a href="{{ route('cardDetails', ['orderId' => $orderItem->woohoo_order_id]) }}"><b>Resend Card Detail</b></a></p>
+                                                        {{-- <p class="mb-0"><a href="{{ route('cardDetails', ['orderId' => $orderItem->woohoo_order_id]) }}"><b>Resend Card Detail</b></a></p> --}}
 
                                                     </div>
 

@@ -165,10 +165,10 @@ Route::get('/error', [ErrorController::class, 'handleError'])->name('error');
 Route::post('/update-profile', [ProfileController::class, 'update'])->name('update-profile');
 
 // order status api
-Route::get('/cardData/{refno}', [CCAvenueController::class, 'getStatusByReferenceNumber'])->name('get-order-status');
+//Route::get('/cardData//{refno}', [CCAvenueController::class, 'getStatusByReferenceNumber'])->name('get-order-status');
 
 // ccard activation api
-Route::get('/card-detail/{orderId}', [CCAvenueController::class, 'cardDetails'])->name('cardDetails');
+//Route::get('/card-detail/{orderId}', [CCAvenueController::class, 'cardDetails'])->name('cardDetails');
 
 // order list api
 Route::get('/order-details', [UserPanelController::class, 'orderDetails'])->name('order-details');

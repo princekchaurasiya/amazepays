@@ -48,7 +48,7 @@
                      <div class="col-12 d-none d-lg-block">
                         <ul class="list-inline list-item-style mt-0 float-left pl-1">
                            <li class="list-inline-item pl-0"><a href="#">BECOME AN AGENT</a></li>
-                           <li class="list-inline-item pl-0"><a href="tel:98211 99497">(+91) 98211 99497</a></li>
+                           <li class="list-inline-item pl-0"><a href="tel:82088 93951">(+91) 82088 93951</a></li>
                         </ul>
                         <ul class="list-inline list-item-style mt-0 float-right">
                            <li class="list-inline-item"><a href="#">PRIVACY</a></li>
@@ -260,8 +260,8 @@
                                     <li><a class="text-black" href="mail:support@amazepays.in"><i
                                                 class="fas fa-envelope"></i> support@amazepays.in</a></li>
 
-                                    <li><a class="text-black" href="phone:+91-98211 99497"><i
-                                                class="fas fa-phone-alt"></i> +91 9821199497</a></li>
+                                    <li><a class="text-black" href="phone:+91-82088 93951"><i
+                                                class="fas fa-phone-alt"></i> +91 8208893951</a></li>
 
                                 </ul>
                             </div>

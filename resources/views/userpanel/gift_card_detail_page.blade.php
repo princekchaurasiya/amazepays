@@ -109,28 +109,7 @@
                             <div class="row">
                                 <div class="col-12">
                                     <div class="gifting-details">
-                                        <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
-                                        <div class="row">
-                                            <div class="col-12 col-md-4 receiver-name">
-                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Name"
-                                                    name="receiver_name" id="receiver-name">
-                                                <span class="font-xssss fw-400 error-rec-name text-danger"></span>
-                                            </div>
-                                            <div class="col-md-4 receiver-email">
-                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Email"
-                                                    name="receiver_email" id="receiver-email">
-                                                <span class="font-xssss fw-400 error-rec-email text-danger"></span>
-                                            </div>
-                                            <div class="col-12 col-md-4 receiver-mobile d-none">
-                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number"
-                                                    name="receiver_mobile" id="receiver-mobile">
-                                                <span class="font-xssss fw-400 error-rec-mobile text-danger"></span>
-                                            </div>
-                                            <div class="col-12 col-md-4 receiver-message">
-                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver"
-                                                    name="receiver_msg" id="receiver-msg">
-                                            </div>
-                                        </div>
+
                                         <div class="row">
                                             <div class="col-12 mb-4">
                                                 <h6 class="mb-3 fw-600 font-xss mt-2">Delivery Mode</h6>
@@ -154,6 +133,30 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="row">
+                                            <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
+
+                                            <div class="col-12 col-md-3 receiver-name">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Name"
+                                                    name="receiver_name" id="receiver-name">
+                                                <span class="font-xssss fw-400 error-rec-name text-danger"></span>
+                                            </div>
+                                            <div class="col-md-3 receiver-email">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Email"
+                                                    name="receiver_email" id="receiver-email">
+                                                <span class="font-xssss fw-400 error-rec-email text-danger"></span>
+                                            </div>
+                                            <div class="col-12 col-md-3 receiver-mobile d-none">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number"
+                                                    name="receiver_mobile" id="receiver-mobile">
+                                                <span class="font-xssss fw-400 error-rec-mobile text-danger"></span>
+                                            </div>
+                                            <div class="col-12 col-md-3 receiver-message">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver"
+                                                    name="receiver_msg" id="receiver-msg">
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>

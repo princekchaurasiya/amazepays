@@ -15583,7 +15583,7 @@ body {
   /* margin-top: 3%; */
   padding-top: 2%;
   padding-bottom: 2%;
-  background-color: #f9f9f9;
+
 }
 
 .personalise-gift-card{
@@ -16175,5 +16175,63 @@ color: black !important;
 
 @media (max-width: 768px) {
   .hot-deal-text {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }}
+
+
+
+.ribbon {
+  /* width: 25%; */
+  padding: 0px 10px;
+  background-color: #01007f;
+  position: absolute;
+  top: 25px;
+  left: 13px;
+  color: #FFFFFF;
+  font-weight: bold;
+  text-align: center;
+  font-size: 13px;
+}
+
+
+
+
+.product-wrapper-image{
+  box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+  padding: 15px;
+  margin-top: 16px;
+  height: 280px;
+}
+
+.product-wrapper-image:hover{
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+
+.text-product-name-color{
+  color: #4A4A4A;
+}
+.text-product-name-font-size{
+  font-size: 12px;
+}
+
+.cust-col-padding{
+padding-left: 19px;
+padding-right: 19px;
+background-color: red;
+}
+
+@media (max-width: 768px) {
+  .ribbon {
+    top: 30px;
+    left: 14px;
+    font-size: 11px;
+  }
+
+  .product-wrapper-image{
+    height: 240px;
+  }
+  .text-product-name-font-size{
+    font-size: 11px;
+  }
+}

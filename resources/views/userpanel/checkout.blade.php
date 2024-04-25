@@ -129,8 +129,8 @@
                                                         </div>
                                                         <input type="hidden" name="quantity"
                                                             value="{{ $qsProd->prodData['quantity'] }}" />
-                                                        <div class="col-md-8 col-sm-4 col-xs-6"><span>Subtotal
-                                                                :₹{{ $qsProd->prodData['denomination'] }}</span>
+                                                        <div class="col-md-8 col-sm-4 col-xs-6"><span>Denomination
+                                                                 : ₹{{ $qsProd->prodData['denomination'] }}</span>
                                                         </div>
                                                         <input type="hidden" name="denomination"
                                                             value="{{ $qsProd->prodData['denomination'] }}" />
@@ -139,6 +139,7 @@
                                                     </div>
                                                 </div>
                                             </div>
+
                                             {{-- <div class="row coupan-code">
                                                 <div class="col-md-12 col-sm-4 col-xs-12">
                                                     <input type="text" class="coupan-code-input mont-font"
@@ -155,35 +156,43 @@
                                                 </div>
                                             </div> --}}
                                             <hr>
-                                            <div class="row total-amount">
-                                                <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font">
-                                                    <span>Grand Total : </span>
+                                            <div class="row total-amount justify-content-center">
+                                                <div class="row">
+                                                    <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font">
+                                                        <span>Grand Total : </span>
+                                                    </div>
+                                                    <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font">
+                                                        <input type="hidden"
+                                                            value="{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] }}"
+                                                            id="grand-amount"><span>₹{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] }}</span>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font">
-                                                    <input type="hidden"
-                                                        value="{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] }}"
-                                                        id="grand-amount"><span>₹{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] }}</span>
-                                                </div>
-                                                <div class="coupan-code-amount" id="discountDiv">
+
+                                                <div class="row coupan-code-amount" id="discountDiv">
                                                     <div
                                                         class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font apply-coupan">
                                                         <span>Discount : </span>
                                                     </div>
                                                     <div
                                                         class="col-md-6 col-sm-4 col-xs-3 amount mont-font apply-coupan-amount">
+                                                        ₹ {{ $qsProd->discount_percentage/10 }}
                                                     </div>
                                                 </div>
-                                                <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font"><span>Payable
+                                                <div class="row ">
+                                                    <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font"><span>Payable
                                                         Amount : </span>
                                                 </div>
+
                                                 <input type="hidden" name="currency" value="INR" />
                                                 <input type="hidden" name="amount" class="hidden-total-payable-amount"
-                                                    value="{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] }}">
+                                                    value="{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] - $qsProd->discount_percentage/10 }}">
                                                 <div
                                                     class="col-md-6 col-sm-4 col-xs-3 amount mont-font total-payable-amount">
-                                                    <span>
-                                                        ₹{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] }}</span>
+                                                    <span>₹{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] - $qsProd->discount_percentage/10 }}</span>
                                                 </div>
+                                                </div>
+
+
                                             </div>
                                         </div>
                                     </div>
@@ -281,10 +290,10 @@
                     }
                 });
             }
-            // $('#apply-coupan').click( function(e) {
+            $('#apply-coupan').click(function(e) {
 
-            //     return false;
-            // });
+                return false;
+            });
 
             // on click apply coupon code starts here
 
@@ -298,69 +307,65 @@
             // couponCode = false;
             couponCode = true;
 
-            // function showLoader() {
-            //     if (isHideLoaderPresent) {
-            //         loaderImage.removeClass("hideLoader");
-            //         setTimeout(function() {
-            //             loaderImage.addClass('hideLoader');
-            //         }, 1000);
-            //     }
-            // };
+            function showLoader() {
+                if (isHideLoaderPresent) {
+                    loaderImage.removeClass("hideLoader");
+                    setTimeout(function() {
+                        loaderImage.addClass('hideLoader');
+                    }, 1000);
+                }
+            };
 
 
 
 
-            // // function placeOrder() {
-            // //     if (applyButton.html() === "Apply") {
-            // //         couponCodeasd();
-            // //         applyButton.html("Remove");
-            // //         applyButton.addClass("red");
-            // //         inputFeild.addClass("custDisabled");
-            // //         $(".error-coupon-code").text('Coupon apllied successfully');
-            // //         $(".error-coupon-code").addClass('greenColor');
-            // //         console.log(applyButton.html());
-            // //     } else {
-            // //         removeDiscount();
-            // //         applyButton.html("Apply");
-            // //         applyButton.removeClass("red");
-            // //         inputFeild.removeClass("custDisabled");
-            // //         discoutDiv.css("display", "none");
-            // //         $(".error-coupon-code").css('display', 'none');
-            // //     };
-            // // };
+            function placeOrder() {
+                if (applyButton.html() === "Apply") {
+                    couponCodeasd();
+                    applyButton.html("Remove");
+                    applyButton.addClass("red");
+                    inputFeild.addClass("custDisabled");
+                    $(".error-coupon-code").text('Coupon apllied successfully');
+                    $(".error-coupon-code").addClass('greenColor');
+                    console.log(applyButton.html());
+                } else {
+                    removeDiscount();
+                    applyButton.html("Apply");
+                    applyButton.removeClass("red");
+                    inputFeild.removeClass("custDisabled");
+                    discoutDiv.css("display", "none");
+                    $(".error-coupon-code").css('display', 'none');
+                };
+            };
 
 
-            // applyButton.click(function(e) {
-            //     e.preventDefault();
-            //     if (!($("#coupan-code").val() == "")) { // value not empty
-            //         if (couponCode) {
-            //             showLoader();
-            //             applyDiscount();
-            //         } else {
-            //             $(".error-coupon-code").text('This is not a valid code');
-            //             $(".error-coupon-code").addClass('redColor');
+            applyButton.click(function(e) {
+                e.preventDefault();
+                if (!($("#coupan-code").val() == "")) { // value not empty
+                    if (couponCode) {
+                        showLoader();
+                        applyDiscount();
+                    } else {
+                        $(".error-coupon-code").text('This is not a valid code');
+                        $(".error-coupon-code").addClass('redColor');
 
-            //         }
-            //     } else {
-            //         $(".error-coupon-code").text('Coupon code can not be BLANK');
-            //         $(".error-coupon-code").addClass('redColor');
-            //     };
-            // });
+                    }
+                } else {
+                    $(".error-coupon-code").text('Coupon code can not be BLANK');
+                    $(".error-coupon-code").addClass('redColor');
+                };
+            });
 
             // on click apply button code ends here
 
             //  coupon code blank validation code starts here
 
-
-
-
-
-            // function orderProcessingTimeOut() {
-            //     placeOrder.click(function(e) {
-            //         e.preventDefault();
-            //         showLoader();
-            //     });
-            // }
+            function orderProcessingTimeOut() {
+                placeOrder.click(function(e) {
+                    e.preventDefault();
+                    showLoader();
+                });
+            }
 
 
             //  coupon code blank validation code ends here

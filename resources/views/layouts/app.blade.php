@@ -201,15 +201,11 @@
                                 <!-- <a href="index.html" class="logo"><img src="images/logo.png" alt="logo"></a> -->
                                 <a href="/" class="logo"><img src="{{ asset('images/logo.png') }}"
                                         alt="logo" class="custLogo"></a>
-                                        <p class="w-100 mt-4 text-black">
-                                            <br />
-                                            <strong>Company Name :</strong> Frenetic India Services Private Limited<br />
-                                            <strong>GST Number :</strong> 27AAFCF2328E1ZX<br />
-                                            <strong>CIN :</strong> U72900MH2022PTC391272<br />
-                                            <strong>PAN :</strong> AAFCF2328E
-                                        </p>
 
-                                <p class="w-100 mt-4 text-black">98-103, 4 Floor, Aditya Industrial Estate Co-op
+                                <p class="w-100 mt-4 text-black">
+                                    <strong>Company Name :</strong> Frenetic India Services Private Limited<br />
+                                            <strong>CIN :</strong> U72900MH2022PTC391272<br />
+                                    98-103, 4 Floor, Aditya Industrial Estate Co-op
                                     Premises Ltd<br /> Mindspace Behind Evershine
                                     Mall Off Link Road Malad West <br /> Mumbai -400064.
                                 </p>

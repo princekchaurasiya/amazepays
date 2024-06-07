@@ -8,7 +8,7 @@
             <p>
                 <span class="fa-regular fa-face-frown sad-icon"></span>
             </p>
-            <i class="fas fa-exclamation-circle"></i> <strong>Something Went Wrong</strong><br>
+            <strong>{{ $errorMessage ?? 'Something Went Wrong' }}</strong><br>
             @if (session('error-message'))
                 <div class="alert alert-danger" role="alert">
 

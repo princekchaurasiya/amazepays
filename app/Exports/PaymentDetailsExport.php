@@ -15,7 +15,7 @@ class PaymentDetailsExport implements FromCollection, WithHeadings
     {
         $payments = CcAvenuePayment::select("order_id", "tracking_id", "bank_ref_no", "billing_details", "price", "qty", "delivery_details")->get();
 
-        
+
          // Transform the billing_details and delivery_details JSON data and create a new collection
          $transformedPayments = $payments->map(function ($payment) {
             $billingDetails = json_decode($payment->billing_details);
@@ -41,11 +41,11 @@ class PaymentDetailsExport implements FromCollection, WithHeadings
                 'delivery_postcode' => $deliveryDetails->postcode,
                 'price' => (float)$payment->price,
                 'qty' => (int)$payment->qty,
-                
+
             ];
         });
 
-        
+
 // dd($transformedPayments);
         return $transformedPayments;
     }

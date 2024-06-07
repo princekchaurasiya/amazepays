@@ -96,6 +96,22 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">Country</label>
+                                            <input type="text" name="billing_country" class="form-control billingFormInput"
+                                                value="">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">GST Number (Optional)</label>
+                                            <input type="text" name="billing_gst_number" class="form-control billingFormInput"
+                                                value="">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -109,8 +125,8 @@
                                                 <div class="mont-font col-md-6 col-sm-4 col-xs-6 order-summary"><span>Order
                                                         Summary</span>
                                                 </div>
-                                                <div class="col-md-6 col-sm-4 col-xs-6"><a
-                                                        href="{{ route('get-product-sku', ['slug' => $qsProd->sku]) }}"
+                                                <div class="col-md-6 col-sm-4 col-xp-6"><a
+                                                        href="{{ route('get-product-by-slug', ['slug' => $qsProd->slug]) }}"
                                                         class="float-right mont-font">Edit</a></div>
                                             </div>
                                             <div class="row cart-item-record">
@@ -140,21 +156,6 @@
                                                 </div>
                                             </div>
 
-                                            {{-- <div class="row coupan-code">
-                                                <div class="col-md-12 col-sm-4 col-xs-12">
-                                                    <input type="text" class="coupan-code-input mont-font"
-                                                        placeholder="Enter Coupan Code" id="coupan-code"><a
-                                                        href="#"
-                                                        id="apply-coupan"class="bg-current border-0 text-white apply-coupan-button mont-font ">Apply</a>
-                                                    <span class="custLoaderDiv">
-                                                        <img src="{{ URL::asset('images/preloader.svg') }}"
-                                                            alt="" id="custLoaderImage"
-                                                            class="custLoaderImage img-responsive hideLoader">
-                                                    </span>
-                                                    <div class="coupon-code-error-div"><span
-                                                            class="error-coupon-code"></span></div>
-                                                </div>
-                                            </div> --}}
                                             <hr>
                                             <div class="row total-amount justify-content-center">
                                                 <div class="row">
@@ -175,7 +176,7 @@
                                                     </div>
                                                     <div
                                                         class="col-md-6 col-sm-4 col-xs-3 amount mont-font apply-coupan-amount">
-                                                        ₹ {{ $qsProd->discount_percentage/10 }}
+                                                        ₹ {{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] *($qsProd->discount_percentage/100) }}
                                                     </div>
                                                 </div>
                                                 <div class="row ">
@@ -185,10 +186,10 @@
 
                                                 <input type="hidden" name="currency" value="INR" />
                                                 <input type="hidden" name="amount" class="hidden-total-payable-amount"
-                                                    value="{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] - $qsProd->discount_percentage/10 }}">
+                                                    value="{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] - $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] *($qsProd->discount_percentage/100) }}">
                                                 <div
                                                     class="col-md-6 col-sm-4 col-xs-3 amount mont-font total-payable-amount">
-                                                    <span>₹{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] - $qsProd->discount_percentage/10 }}</span>
+                                                    <span>₹{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] - $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] *($qsProd->discount_percentage/100) }}</span>
                                                 </div>
                                                 </div>
 

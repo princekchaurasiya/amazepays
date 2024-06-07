@@ -1,31 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserPanelController;
-use App\Http\Controllers\CommonController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\MyOrderController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\CcAvenuePayment;
-use App\Models\QsOrder;
-use App\Http\Controllers\SmsController;
-use App\Http\Controllers\OtpLoginController;
-use App\Http\Controllers\OtpVerificationController;
-use App\Http\Controllers\GiftPageController;
-use App\Http\Controllers\CCAvenueController;
-use App\Http\Controllers\PaymentDetailsExportController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ProductSkuController;
-use App\Http\Controllers\ErrorController;
-use App\Http\Controllers\CreateOrderController;
-use App\Http\Controllers\ViewCardDetailsController;
-use App\Http\Controllers\ContactUsController;
-use App\Http\Controllers\ChangePasswordUpdateController;
-use App\Http\Controllers\Voyager\VoyagerGenerateBearerTokenController;
-use App\Http\Controllers\Voyager\VoyagerGetCategoryController;
-use App\Http\Controllers\Voyager\VoyagerFetchProductListController;
-use App\Http\Controllers\Voyager\VoyagerFetchProductDataController;
+use App\Http\Controllers\{
+    UserPanelController, CommonController, PaymentController, MyOrderController, SmsController, WoohooorderController, OtpLoginController, SearchController, OtpVerificationController, ProductPageController, CCAvenueController, PaymentDetailsExportController, ProfileController, ProductSlugController, ErrorController,ProductCategoryController, CreateOrderController, DocumentController, ViewCardDetailsController, ContactUsController, ChangePasswordUpdateController, Voyager\VoyagerGenerateBearerTokenController, Voyager\VoyagerGetCategoryController, Voyager\VoyagerFetchProductListController, Voyager\VoyagerFetchProductDataController, Voyager\VoyagerProductDiscountImportController
+};
 
 /*
 |--------------------------------------------------------------------------
@@ -37,149 +15,104 @@ use App\Http\Controllers\Voyager\VoyagerFetchProductDataController;
 | contains the "web" middleware group. Now create something great!
 |
 */
-// Route::logout();
+
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
     Route::resource('cc-avenue', 'VoyagerCcAvenueController');
+    Route::get('/import-data', [DocumentController::class, 'importDocument']);
+    Route::view('/upload-document', 'documentUpload');
+    Route::post('/upload-data', [DocumentController::class, 'uploadData'])->name('uploadData');
 });
 
 Route::match(['get', 'post'], '/voyager/bearer-token', [VoyagerGenerateBearerTokenController::class, 'generateBearerToken'])->name('voyager.bearerToken');
 Route::match(['get', 'post'], '/voyager/get-category', [VoyagerGetCategoryController::class, 'getCategory'])->name('voyager.getCategory');
 Route::match(['get', 'post'], '/voyager/fetch-product-list', [VoyagerFetchProductListController::class, 'fetchProductList'])->name('voyager.productList');
 Route::match(['get', 'post'], '/voyager/fetch-product-data', [VoyagerFetchProductDataController::class, 'fetchProductData'])->name('voyager.fetchProductData');
+Route::get('admin/import-product-discount',  [VoyagerProductDiscountImportController::class, 'import'])->name('import-product-discount');
 
 Route::get('logout', [UserPanelController::class, 'userLogOut'])->name('userLogOut');
-
 Route::get('/', [UserPanelController::class, 'homePage'])->name('home');
-Route::get('/get-product-list', [CommonController::class, 'getProductList'])->name('get-product-list');
-Route::get('/get-product-sku/{slug}', [ProductSkuController::class, 'getProductbySKU'])->name('get-product-sku');
-Route::get('/gift_card_detail_page/{id}', function () {
-    return view('userpanel/gift_card_detail_page_old');
-})->name('gift_card_detail_page');
+
+// Route to handle redirection based on authentication status
+Route::get('/redirect-based-on-auth', [ProductSlugController::class, 'redirectBasedOnAuth'])->name('redirect-based-on-auth');
+
+
+// Route to handle redirection based on authentication
+Route::get('/gift-product/{slug}', [ProductPageController::class, 'handleGiftRedirect'])->name('giftProductBySlug');
+
+Route::get('/product/{slug}', [ProductSlugController::class, 'getProductBySlug'])->name('get-product-by-slug');
+
+Route::get('/product-category', [ProductCategoryController::class, 'getProductCategory'])->name('get-product-category');
+
+
+Route::get('/productPage/{id}', function () {
+    return view('userpanel/productPage_old');
+})->name('productPage');
 
 Route::group(['middleware' => 'guest'], function () {
     Route::post('/user-registration', [UserPanelController::class, 'userRegistration'])->name('user-registration');
     Route::post('/user-login', [UserPanelController::class, 'userLogin'])->name('user-login');
 });
+
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/user-logout', [UserPanelController::class, 'userLogOut'])->name('user-logout');
-
-    Route::post('/apply-coupan', [UserPanelController::class, 'applyCoupan'])->name('apply-coupan'); //auth user only
-
-    // Route::post('/remove-apply-coupan', [UserPanelController::class, 'removeApplyCoupan'])->name('remove-apply-coupan'); //auth user only
-
+    Route::post('/apply-coupan', [UserPanelController::class, 'applyCoupan'])->name('apply-coupan');
     Route::get('/profile', function () {
         return view('userpanel/profile');
     })->name('profile');
-
     Route::get('/my-order', [MyOrderController::class, 'displayOrder'])->name('my-order');
 });
 
 Route::get('/unauthenticated', function () {
     $message = session('message', 'You are not authenticated.');
     return redirect()->route('error', ['message' => $message]);
-})
-    ->name('unauthenticated')
-    ->middleware('web');
+})->name('unauthenticated')->middleware('web');
 
 Route::post('/check-data', [CommonController::class, 'checkData'])->name('check-data');
 Route::get('/view-all-product', [UserPanelController::class, 'viewAllProduct'])->name('view-all-product');
-
 Route::get('/change-password', function () {
     return view('userpanel/change-password');
 })->name('change-password');
-
 Route::post('/change-password-update', [ChangePasswordUpdateController::class, 'updatePassword'])->name('password-change');
-
 Route::get('/about', function () {
     return view('userpanel/about');
 })->name('about');
-
-Route::get('/profile', function () {
-    return view('userpanel/profile');
-})->name('profile');
-
 Route::get('/contact_us', function () {
     return view('userpanel/contact-form');
 })->name('contact-us');
-// Route::get('/f&q', function () {
-//     return view('userpanel/f&q');
-// });
 Route::get('/terms_of_use', function () {
     return view('userpanel/terms_of_use');
 })->name('tnc');
 Route::get('/private_policy', function () {
     return view('userpanel/private_policy');
 })->name('private-policy');
-
 Route::get('/all_transaction', function () {
     return view('userpanel/all_transaction');
 });
+Route::match(['get', 'post'], '/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
 
-Route::post('/checkout/{sku}', [GiftPageController::class, 'storePayNowData'])->name('storePayNowData-and-go-to-CheckoutPage');
 
-// Routes for payment
 
-Route::post('/payment-process', [CCAvenueController::class, 'processPayment']);
 
-// Route::post('/payment-process', [UserPanelController::class, 'orderProceed']);
+Route::post('/payment-process', [CCAvenueController::class, 'processPayment'])->name('payment-process');
 
-Route::post('/response_ccavenue', [CCAvenueController::class, 'responseCcavenue'])->name('response_ccavenue');
 
-// Route::get('/payment-complete', function () {
-//     return view('paymentFolder.ccavResponseHandler');
-// })->name('payment-complete');
+Route::post('/payment-cancel', [CCAvenueController::class, 'handlePaymentCancellation'])->name('payment-cancel');
 
-// Route::post('payment-success', [PaymentController::class, 'processData'])->name('success');
+Route::post('/response_ccavenue',
+[CCAvenueController::class, 'responseCcavenue'])->name('response_ccavenue');
 
-Route::get('order-failed', function () {
-    return view('paymentFolder.payment-failed');
-})->name('order-failed');
-
-Route::get('payment-success', function () {
-    return view('paymentFolder.payment-success');
-})->name('success');
-
-// Route::view('/success', 'paymentFolder.payment-success')->name('payment-success');
-
-Route::view('/payment-failed', 'paymentFolder.payment-failed')->name('payment-failed');
-
-// Route::get('/my-order', function () {
-//     return view('userpanel/my-order');
-// })->name('my-order');
 
 Route::post('/send-sms', [SmsController::class, 'sendSms'])->name('send-sms');
-
 Route::post('/verify-otp', [OtpVerificationController::class, 'verifyOtp'])->name('verify-otp');
-
 Route::get('/invoice', function () {
     return view('layouts.invoice');
 })->name('invoice');
-
 Route::get('/export', [PaymentDetailsExportController::class, 'export']);
-
-// Route::get('/send-test-sms', [SmsController::class, 'sendTestSms'])->name('send-test-sms');
-
 Route::get('/error', [ErrorController::class, 'handleError'])->name('error');
-
 Route::post('/update-profile', [ProfileController::class, 'update'])->name('update-profile');
-
-// order status api
-//Route::get('/cardData//{refno}', [CCAvenueController::class, 'getStatusByReferenceNumber'])->name('get-order-status');
-
-// ccard activation api
-//Route::get('/card-detail/{orderId}', [CCAvenueController::class, 'cardDetails'])->name('cardDetails');
-
-// order list api
-Route::get('/order-details', [UserPanelController::class, 'orderDetails'])->name('order-details');
-
-// order list api
-Route::get('/order-list', [UserPanelController::class, 'orderList'])->name('order-list');
-
-Route::get('/order-failed', function () {
-    return view('order.order-failed');
-})->name('order-failed');
-
 Route::post('/card-details', [ViewCardDetailsController::class, 'index'])->name('view-card-details');
-
 Route::post('/save-contact', [ContactUsController::class, 'saveContact'])->name('save-contact');
+Route::get('/search', [SearchController::class, 'search'])->name('search');
+Route::post('/woohoo/create-order', [WoohooorderController::class, 'createOrder'])->name('woohoo.createOrder');
+Route::view('/gift', 'layouts.giftmail');

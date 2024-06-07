@@ -22,7 +22,7 @@
             </td>
             </td>
             <td style="text-align: center; width:30%">
-                <img src="https://i.ibb.co/VgzFhw9/logo-1.png" alt="Logo" style="max-width: 100px;"
+                <img src="https://amazepays.in/images/logo.png" alt="Logo" style="max-width: 100px;"
                     type="image/png">
             </td>
         </tr>
@@ -31,21 +31,20 @@
         style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif;">
         @foreach ($cardsArray as $card)
             <tr>
-                <td
-                    style="width: 50%; font-size: 16px; vertical-align: middle; padding: 10px; max-width: 40%;padding-left: 10%">
-                    <img src="{{ $prepareMailDetails['smallImageUrl'] }}" alt="Logo" style="max-width: 200px;" type="image/png">
-                    <p style="font-size: 12px; ">
-                        <span style="font-weight: 600; font-size: 14px">Gift Card Id</span>
+                <td style="width: 50%; font-size: 16px; vertical-align: middle; padding: 10px; padding-left: 10%; ">
+                    <img src="{{ $prepareMailDetails['smallImageUrl'] }}" alt="Logo" style="max-width: 500px; width: 100%; height: auto;" type="image/png">
+                    <p style="font-size: 12px;">
+                        <span style="font-weight: 600; font-size: 14px;">Gift Card Id</span>
                         <br>
                         {{ $card['cardNumber'] }}
                     </p>
                     <p style="font-size: 12px;">
-                        <span style="font-weight: 600; font-size: 14px">Card Pin</span>
+                        <span style="font-weight: 600; font-size: 14px;">Card Pin</span>
                         <br>
                         {{ $card['cardPin'] }}
                     </p>
                 </td>
-                <td style="width: 50%; vertical-align: top; padding-left: 20%;">
+                <td style="width: 50%; vertical-align: top;  padding-left: 10%;">
                     <p style="font-size: 20px; font-weight: 600;">
                         ₹ {{ $card['amount'] }}
                         <br>

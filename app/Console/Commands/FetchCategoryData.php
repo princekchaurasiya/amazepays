@@ -4,12 +4,12 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Helpers\CommonHelper;
-use App\QsProduct;
+use App\Models\QsProduct;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use Carbon;
-use App\QsCategory;
+use App\Models\QsCategory;
 use DB;
 
 class FetchCategoryData extends Command

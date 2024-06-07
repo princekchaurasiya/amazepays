@@ -60,7 +60,7 @@
 
         <tr>
             <th class="logo" colspan="3">
-                <img src="{{ asset('images/logo.png') }}" alt="Company Logo" width="100px">
+                <img src="https://amazepays.in/images/logo.png" alt="Company Logo" width="100px">
             </th>
             <th class="bill-of-supply" colspan="3">
                 <h2>Bill of Supply</h2>
@@ -70,7 +70,7 @@
             <td class="company-details-column" colspan="3">
                 <p class="company-details">{{ config('companyDefaultValues.company_name') }}</p>
                 <p class="company-details">{{ config('companyDefaultValues.company_address') }}</p>
-                <p class="company-details">Email: {{ config('companyDefaultValues.comapny_email') }}</p>
+                <p class="company-details">Email: {{ config('companyDefaultValues.company_email') }}</p>
                 <p class="company-details">CIN: {{ config('companyDefaultValues.company_cin') }}</p>
                 <p class="company-details">PAN: {{ config('companyDefaultValues.company_pan') }}</p>
                 <p class="company-details">GSTIN: {{ config('companyDefaultValues.gst_number') }}</p>
@@ -87,7 +87,7 @@
                     </tr>
                     <tr>
                         <td style="height: 35px; padding-left: 16px; text-align: left;">3. Bank Ref. No.</td>
-                        <td style="height: 35px; padding-left: 16px; text-align: left;">{{ $reference_id }}</td>
+                        <td style="height: 35px; padding-left: 16px; text-align: left;">{{ $bank_ref_no }}</td>
                     </tr>
                     <tr>
                         <td style="height: 35px; padding-left: 16px; text-align: left;">4. Requester Name</td>
@@ -105,25 +105,26 @@
             </td>
         </tr>
         <tr>
-            <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="3"> BILL TO
+            <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="6"> BILL TO
             </td>
-            <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="3">SHIP TO
-            </td>
+            {{-- <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="3">SHIP TO
+            </td> --}}
         </tr>
         <tr>
             {{-- biil to details --}}
-            <td class="company-details-column" colspan="3">
+            <td class="company-details-column" colspan="6">
                 <p class="company-details">{{ $billing_name }}</p>
                 <p class="company-details">{{ $billing_address }}</p>
                 <p class="company-details">Email: {{ $billing_email }}</p>
                 <p class="company-details">Contact: {{ $billing_tel }}</p>
+                <p class="company-details">GST No: {{ $gst_number }}</p>
             </td>
-            <td class="company-details-column" colspan="3">
+            {{-- <td class="company-details-column" colspan="3">
                 <p class="company-details">{{ $shipToName }}</p>
                 <p class="company-details">{{ $billing_address }}</p>
                 <p class="company-details">Email: {{ $shipToEmail }}</p>
                 <p class="company-details">Contact: {{ $shipToContactNo }}</p>
-            </td>
+            </td> --}}
         </tr>
         <tr>
             <td style="font-weight: 600; font-size: 16px;" colspan="6">Order Details</td>
@@ -134,23 +135,24 @@
             <td style="text-align: left; padding-left: 16px;">Quantity</td>
             <td style="text-align: left; padding-left: 16px;">Price</td>
             <td style="text-align: left; padding-left: 16px;">Discount</td>
-            <td style="text-align: left; padding-left: 16px;">Amount</td>
+            <td style="text-align: left; padding-left: 16px;"><b>Payable Amount</b></td>
         </tr>
 
         <tr>
             <td style="text-align: left; padding-left: 16px;">{{ $order_id }}</td>
             <td style="text-align: left; padding-left: 16px;">{{ $cardProductName }}</td>
-            <td style="text-align: left; padding-left: 16px;">{{ $perOrderQuantity }}</td>
-            <td style="text-align: left; padding-left: 16px;">{{ $perOrderPrice }}</td>
-            <td style="text-align: left; padding-left: 16px;">-</td>
-            <td style="text-align: left; padding-left: 16px;">{{ $order_amount }}</td>
+            <td style="text-align: left; padding-left: 16px;">{{ $quantity }}</td>
+            <td style="text-align: left; padding-left: 16px;">{{ $grand_payable_amount }}</td>
+            <td style="text-align: left; padding-left: 16px;">{{ $discount }}</td>
+            <td style="text-align: left; padding-left: 16px;"><b>{{ $amount_payable_after_discount }}</b></td>
         </tr>
 
         <tr>
-            <td colspan="2" style="text-align: left; padding-left: 16px;">Total Amount: {{ $order_amount }}</td>
-            <td colspan="2" style="text-align: left; padding-left: 16px;">Total Discount: - </td>
+            <td colspan="2" style="text-align: left; padding-left: 16px;">Total Amount: {{ $grand_payable_amount }}
+            </td>
+            <td colspan="2" style="text-align: left; padding-left: 16px;">Total Discount: {{ $discount }} </td>
             <td colspan="2" style="font-weight: 600; text-align: left; padding-left: 16px;">Gross Amount after
-                Discount: {{ $order_amount }}</td>
+                Discount: {{ $amount_payable_after_discount }}</td>
         </tr>
 
         <tr>
@@ -160,7 +162,7 @@
                     {{ config('companyDefaultValues.company_name') }}</p>
 
                 <p style="margin: 2px 0;"><span style="font-weight: 600">Bank Name:</span>
-                    {{ config('companyDefaultValues.comapny_bank_name') }}</p>
+                    {{ config('companyDefaultValues.company_bank_name') }}</p>
                 <p style="margin: 2px 0;"><span style="font-weight: 600">Branch:</span>
                     {{ config('companyDefaultValues.company_bank_branch') }}</p>
                 <p style="margin: 2px 0;"><span style="font-weight: 600">Account No:</span>

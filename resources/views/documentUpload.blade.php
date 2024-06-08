@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title')
-    <i class="fas fa-file-upload"></i> Document Upload
+    Document Upload | Import Your Excel Data
 @endsection
 
 @section('content')

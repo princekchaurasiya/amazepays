@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title')
-    Amazepay | Gift Card
+    Amazepay | {{ $productDetails['name'] }}
 @endsection
 @section('content')
     <div class="gift-card-detail-page pt-lg--7 pb-lg--7 pb-5">

@@ -22,13 +22,19 @@ Route::group(['prefix' => 'admin'], function () {
     Route::get('/import-data', [DocumentController::class, 'importDocument']);
     Route::view('/upload-document', 'documentUpload');
     Route::post('/upload-data', [DocumentController::class, 'uploadData'])->name('uploadData');
-});
 
-Route::match(['get', 'post'], '/voyager/bearer-token', [VoyagerGenerateBearerTokenController::class, 'generateBearerToken'])->name('voyager.bearerToken');
+    Route::match(['get', 'post'], '/voyager/bearer-token', [VoyagerGenerateBearerTokenController::class, 'generateBearerToken'])->name('voyager.bearerToken');
 Route::match(['get', 'post'], '/voyager/get-category', [VoyagerGetCategoryController::class, 'getCategory'])->name('voyager.getCategory');
 Route::match(['get', 'post'], '/voyager/fetch-product-list', [VoyagerFetchProductListController::class, 'fetchProductList'])->name('voyager.productList');
 Route::match(['get', 'post'], '/voyager/fetch-product-data', [VoyagerFetchProductDataController::class, 'fetchProductData'])->name('voyager.fetchProductData');
 Route::get('admin/import-product-discount',  [VoyagerProductDiscountImportController::class, 'import'])->name('import-product-discount');
+});
+
+// Route::match(['get', 'post'], '/voyager/bearer-token', [VoyagerGenerateBearerTokenController::class, 'generateBearerToken'])->name('voyager.bearerToken');
+// Route::match(['get', 'post'], '/voyager/get-category', [VoyagerGetCategoryController::class, 'getCategory'])->name('voyager.getCategory');
+// Route::match(['get', 'post'], '/voyager/fetch-product-list', [VoyagerFetchProductListController::class, 'fetchProductList'])->name('voyager.productList');
+// Route::match(['get', 'post'], '/voyager/fetch-product-data', [VoyagerFetchProductDataController::class, 'fetchProductData'])->name('voyager.fetchProductData');
+// Route::get('admin/import-product-discount',  [VoyagerProductDiscountImportController::class, 'import'])->name('import-product-discount');
 
 Route::get('logout', [UserPanelController::class, 'userLogOut'])->name('userLogOut');
 Route::get('/', [UserPanelController::class, 'homePage'])->name('home');

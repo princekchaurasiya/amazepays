@@ -12,14 +12,24 @@ class DocumentController extends Controller
 {
     public function uploadData(Request $request)
     {
-        // Validate that the uploaded file is an xlsx file and its size is less than or equal to 2MB
-        $request->validate([
-            'document' => 'required|file|mimes:xlsx|max:2048',
-        ]);
-
         try {
+            // Validate the request
+            $request->validate([
+                'document' => 'required|file|mimes:xlsx|max:2048',
+            ], [
+                'document.required' => 'Please select an Excel file to upload.',
+                'document.file' => 'The uploaded file must be a valid file.',
+                'document.mimes' => 'The uploaded file must be an Excel file with .xlsx extension.',
+                'document.max' => 'The uploaded file size should not exceed 2MB.',
+            ]);
+
             // Get the uploaded file
             $file = $request->file('document');
+
+            // Check if file is provided
+            if (!$file) {
+                throw new Exception('File cannot be empty. Please select an Excel file to upload.');
+            }
 
             // Perform the import
             Excel::import(new ProductsImport(), $file);
@@ -36,7 +46,7 @@ class DocumentController extends Controller
             // Flash error message
             return redirect()
                 ->back()
-                ->with('error', 'There was an error during upload: ' . $e->getMessage());
+                ->with('error', 'There was an error during the upload: ' . $e->getMessage());
         }
     }
 }

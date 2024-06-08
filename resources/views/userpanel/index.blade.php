@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title')
-    Amazepay | Home
+    Amazepay | Exclusive Gift Cards & Vouchers for Every Occasion
 @endsection
 @section('content')
     <!-- banner wrapper -->
@@ -29,8 +29,7 @@
 
                 <!-- Slide 3 -->
                 <div class="carousel-item">
-                    <img src="{{ asset('images/amazepay-desk-3.png') }}" alt="Amazepay Banner 3"
-                        class="d-block w-100">
+                    <img src="{{ asset('images/amazepay-desk-3.png') }}" alt="Amazepay Banner 3" class="d-block w-100">
                 </div>
             </div>
 
@@ -58,20 +57,17 @@
             <div class="carousel-inner">
                 <!-- Slide 1 -->
                 <div class="carousel-item active">
-                    <img src="{{ asset('images/amazepay-mob-1.png') }}" alt="Amazepay Banner 1"
-                        class="d-block w-100">
+                    <img src="{{ asset('images/amazepay-mob-1.png') }}" alt="Amazepay Banner 1" class="d-block w-100">
                 </div>
 
                 <!-- Slide 2 -->
                 <div class="carousel-item">
-                    <img src="{{ asset('images/amazepay-mob-2.png') }}" alt="Amazepay Banner 2"
-                        class="d-block w-100">
+                    <img src="{{ asset('images/amazepay-mob-2.png') }}" alt="Amazepay Banner 2" class="d-block w-100">
                 </div>
 
                 <!-- Slide 3 -->
                 <div class="carousel-item">
-                    <img src="{{ asset('images/amazepay-mob-3.png') }}" alt="Amazepay Banner 3"
-                        class="d-block w-100">
+                    <img src="{{ asset('images/amazepay-mob-3.png') }}" alt="Amazepay Banner 3" class="d-block w-100">
                 </div>
             </div>
 
@@ -111,23 +107,23 @@
                         <div class="col-12 col-sm-12 col-md-12 col-lg-10 col-xl-10">
                             <div class="row">
                                 @foreach ($allProducts as $product)
-
-
                                     <div class="col-lg-3 col-6">
 
                                         <div class="product-wrapper-image">
                                             {{-- <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4> --}}
-                                            <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}" class="d-block text-center">
+                                            <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}"
+                                                class="d-block text-center">
                                                 <p class="single-image-wrapper">
                                                     <img src="{{ $product->images->small == null ? URL::asset('/images/no-image.png') : $product->images->small }}"
-                                                         alt="product-image" class="w-100 mt-4 d-inline-block">
+                                                        alt="product-image" class="w-100 mt-4 d-inline-block">
                                                 </p>
                                             </a>
 
                                             <hr>
                                             <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}">
                                                 <div class="product-image-text-wrapper m-lg-1">
-                                                    <p class="text-center fw-600 text-product-name-color text-product-name-font-size mt-lg-2 mt-3">
+                                                    <p
+                                                        class="text-center fw-600 text-product-name-color text-product-name-font-size mt-lg-2 mt-3">
                                                         {{ ucwords($product->name) }}
                                                     </p>
                                                 </div>
@@ -149,8 +145,6 @@
             </div>
         </div>
     </div>
-
-
 @endsection
 
 @push('scripts')
@@ -425,7 +419,7 @@
                                     <h4 class="font-xsss fw-700 mt-3 text-grey-900">All</h4>
                                 </a>
                                 <!-- <i class="fa-regular fa-credit-card mt-4 font-xl text-current"></i>
-                                                        <h4 class="font-xsss fw-700 mt-3 text-grey-900">Credit Card</h4> -->
+                                                            <h4 class="font-xsss fw-700 mt-3 text-grey-900">Credit Card</h4> -->
                             </div>
                         </div>
                     </div>

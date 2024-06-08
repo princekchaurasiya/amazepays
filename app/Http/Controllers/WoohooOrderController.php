@@ -381,7 +381,7 @@ class WoohooOrderController extends Controller
             'payment_mode' => $order['payment_mode'],
             'bank_ref_no' => $order['bank_ref_no'],
             'grand_payable_amount' => $order['grand_payable_amount'],
-            'gst_number' => $order['gst_number'],
+            'gst_number' => $order['gst_number'] ?: 'Unregistered',
             'discount' => $order['discounted_amount_value'],
             'amount_payable_after_discount' => $order['amount_payable_after_discount'],
             'contact_person' => $order['sender_first_name'],

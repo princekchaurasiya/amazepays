@@ -396,6 +396,7 @@ class WoohooOrderController extends Controller
             'quantity' => $order['quantity'],
             'smallImageUrl' => $smallImageUrl,
             'giftSendOption' => $order['gift_send_option'],
+            'denomination' => $order['denomination'],
         ];
 
         $prepareSmsDetails = [

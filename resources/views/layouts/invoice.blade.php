@@ -59,15 +59,15 @@
     <table>
 
         <tr>
-            <th class="logo" colspan="3">
+            <th class="logo" colspan="4">
                 <img src="https://amazepays.in/images/logo.png" alt="Company Logo" width="100px">
             </th>
-            <th class="bill-of-supply" colspan="3">
+            <th class="bill-of-supply" colspan="4">
                 <h2>Bill of Supply</h2>
             </th>
         </tr>
         <tr class="company-details-row">
-            <td class="company-details-column" colspan="3">
+            <td class="company-details-column" colspan="4">
                 <p class="company-details">{{ config('companyDefaultValues.company_name') }}</p>
                 <p class="company-details">{{ config('companyDefaultValues.company_address') }}</p>
                 <p class="company-details">Email: {{ config('companyDefaultValues.company_email') }}</p>
@@ -75,7 +75,7 @@
                 <p class="company-details">PAN: {{ config('companyDefaultValues.company_pan') }}</p>
                 <p class="company-details">GSTIN: {{ config('companyDefaultValues.gst_number') }}</p>
             </td>
-            <td style="" colspan="3">
+            <td style="" colspan="4">
                 <table>
                     <tr>
                         <td style="height: 35px; padding-left: 16px; text-align: left;">1. Invoice Number</td>
@@ -105,14 +105,14 @@
             </td>
         </tr>
         <tr>
-            <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="6"> BILL TO
+            <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="8"> BILL TO
             </td>
             {{-- <td style="font-weight: 600; font-size: 16px; text-align: left; padding-left: 1%" colspan="3">SHIP TO
             </td> --}}
         </tr>
         <tr>
             {{-- biil to details --}}
-            <td class="company-details-column" colspan="6">
+            <td class="company-details-column" colspan="8">
                 <p class="company-details">{{ $billing_name }}</p>
                 <p class="company-details">{{ $billing_address }}</p>
                 <p class="company-details">Email: {{ $billing_email }}</p>
@@ -127,13 +127,15 @@
             </td> --}}
         </tr>
         <tr>
-            <td style="font-weight: 600; font-size: 16px;" colspan="6">Order Details</td>
+            <td style="font-weight: 600; font-size: 16px;" colspan="8">Order Details</td>
         </tr>
         <tr>
             <td style="text-align: left; padding-left: 16px;">Order No.</td>
             <td style="text-align: left; padding-left: 16px;">Product Name</td>
+            <td style="text-align: left; padding-left: 16px;">Denomination</td>
             <td style="text-align: left; padding-left: 16px;">Quantity</td>
-            <td style="text-align: left; padding-left: 16px;">Price</td>
+
+            <td style="text-align: left; padding-left: 16px;">total Amount</td>
             <td style="text-align: left; padding-left: 16px;">Discount</td>
             <td style="text-align: left; padding-left: 16px;"><b>Payable Amount</b></td>
         </tr>
@@ -141,7 +143,9 @@
         <tr>
             <td style="text-align: left; padding-left: 16px;">{{ $order_id }}</td>
             <td style="text-align: left; padding-left: 16px;">{{ $cardProductName }}</td>
-            <td style="text-align: left; padding-left: 16px;">{{ $quantity }}</td>
+
+            <td style="text-align: left; padding-left: 16px;">{{ $denomination }}</td>
+
             <td style="text-align: left; padding-left: 16px;">{{ $grand_payable_amount }}</td>
             <td style="text-align: left; padding-left: 16px;">{{ $discount }}</td>
             <td style="text-align: left; padding-left: 16px;"><b>{{ $amount_payable_after_discount }}</b></td>
@@ -151,12 +155,12 @@
             <td colspan="2" style="text-align: left; padding-left: 16px;">Total Amount: {{ $grand_payable_amount }}
             </td>
             <td colspan="2" style="text-align: left; padding-left: 16px;">Total Discount: {{ $discount }} </td>
-            <td colspan="2" style="font-weight: 600; text-align: left; padding-left: 16px;">Gross Amount after
+            <td colspan="4" style="font-weight: 600; text-align: left; padding-left: 16px;">Gross Amount after
                 Discount: {{ $amount_payable_after_discount }}</td>
         </tr>
 
         <tr>
-            <td colspan="3" style="text-align: left; padding-left: 16px;">
+            <td colspan="4" style="text-align: left; padding-left: 16px;">
                 <p style="font-weight: 600; margin: 8px 0; font-size: 16px">Remittance Detail</p>
                 <p style="margin: 2px 0;"><span style="font-weight: 600">Beneficiary Name:</span>
                     {{ config('companyDefaultValues.company_name') }}</p>
@@ -170,7 +174,7 @@
                 <p style="margin: 2px 0;"><span style="font-weight: 600">IFSC Code:</span>
                     {{ config('companyDefaultValues.company_bank_ifsc_code') }}</p>
             </td>
-            <td colspan="3" style="text-align: left; padding-left: 16px;">
+            <td colspan="" style="text-align: left; padding-left: 16px;">
                 <p style="font-weight: 600; margin: 8px 0; font-size: 16px">Terms and Conditions</p>
                 <p>We declare that this invoice shows the actual price of the goods described and that all particulars
                     are true and correct</p>

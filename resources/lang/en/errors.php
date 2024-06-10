@@ -3,7 +3,7 @@
 return [
     'default' => 'Order failed. Please try again later.',
     '200' => 'OK',
-    '201' => 'Woohoo! Order is successfully created!',
+    '201' => 'Order is successfully created!',
     '202' => 'Woohoo! Order is being processed!',
     '400' => 'Order failed: There was an issue with the information provided. Please check your details.',
     '401' => 'Authorization failed. Please check your credentials and try again.',

@@ -10,16 +10,16 @@ Amazepay | Products
                         <h2 class="text-grey-900 fw-700 font-xxl pb-0 mb-1 d-block text-left">All</h2>
                     </div>
                 </div>
-                <div class="row">                
+                <div class="row">
                     <div class="col-lg-12">
                         <div class="row">
                             <div class="col-lg-3 bg-white p-3 border">
-                                
+
                                 <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                <a href="{{ route('productPage', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('productPage', ['id' => 1]) }}">
                                     <div class="container" style="background-color:white">
-                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p>
                                         <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
                                     </div>
                                     <div class="container">
@@ -29,12 +29,12 @@ Amazepay | Products
                                 </a>
                             </div>
                             <div class="col-lg-3 bg-white p-3 border">
-                                
+
                                 <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                <a href="{{ route('productPage', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('productPage', ['id' => 1]) }}">
                                     <div class="container" style="background-color:white">
-                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p>
                                         <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
                                     </div>
                                     <div class="container">
@@ -44,12 +44,12 @@ Amazepay | Products
                                 </a>
                             </div>
                             <div class="col-lg-3 bg-white p-3 border">
-                                
+
                                 <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                <a href="{{ route('productPage', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('productPage', ['id' => 1]) }}">
                                     <div class="container" style="background-color:white">
-                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p>
                                         <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
                                     </div>
                                     <div class="container">
@@ -59,12 +59,12 @@ Amazepay | Products
                                 </a>
                             </div>
                             <div class="col-lg-3 bg-white p-3 border">
-                                
+
                                 <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                <a href="{{ route('productPage', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('productPage', ['id' => 1]) }}">
                                     <div class="container" style="background-color:white">
-                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p>
                                         <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
                                     </div>
                                     <div class="container">
@@ -74,12 +74,12 @@ Amazepay | Products
                                 </a>
                             </div>
                             <div class="col-lg-3 bg-white p-3 border">
-                                
+
                                 <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                <a href="{{ route('productPage', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('productPage', ['id' => 1]) }}">
                                     <div class="container" style="background-color:white">
-                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p>
                                         <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
                                     </div>
                                     <div class="container">
@@ -89,12 +89,12 @@ Amazepay | Products
                                 </a>
                             </div>
                             <div class="col-lg-3 bg-white p-3 border">
-                                
+
                                 <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                <a href="{{ route('productPage', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('productPage', ['id' => 1]) }}">
                                     <div class="container" style="background-color:white">
-                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p>
                                         <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
                                     </div>
                                     <div class="container">
@@ -104,12 +104,12 @@ Amazepay | Products
                                 </a>
                             </div>
                             <div class="col-lg-3 bg-white p-3 border">
-                                
+
                                 <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                <a href="{{ route('productPage', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('productPage', ['id' => 1]) }}">
                                     <div class="container" style="background-color:white">
-                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p>
                                         <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
                                     </div>
                                     <div class="container">
@@ -119,12 +119,12 @@ Amazepay | Products
                                 </a>
                             </div>
                             <div class="col-lg-3 bg-white p-3 border">
-                                
+
                                 <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
-                                <a href="{{ route('gift_card_detail_page', ['id' => 1]) }}">
+                                <a href="{{ route('productPage', ['id' => 1]) }}" class="d-block text-center"><img src="{{URL::asset('/images/hamburger.jpg')}}" alt="product-image" class="w-100 mt-1 d-inline-block"></a>
+                                <a href="{{ route('productPage', ['id' => 1]) }}">
                                     <div class="container" style="background-color:white">
-                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p> 
+                                        <p class="text-center font-xsss mt-3 text-current"><b>20% OFF YOUR PURCHASE</b></p>
                                         <span class="font-xsss text-black fw-600">Flat 3% off. Applicable on payment via UPI.</span>
                                     </div>
                                     <div class="container">
@@ -140,7 +140,7 @@ Amazepay | Products
         </div>
 @push('scripts')
     <script>
-        
+
     </script>
 @endpush
 @endsection

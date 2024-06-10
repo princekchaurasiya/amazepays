@@ -9,6 +9,9 @@
 </head>
 
 <body>
+
+
+
     <table
         style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif;">
 
@@ -36,8 +39,10 @@
                         <td style="width: 50%;">{{ $prepareMailDetails['invoice_date'] }}</td>
                     </tr>
                     <tr>
-                        <td style="padding-top:20px"><img src="{{ $prepareMailDetails['invoice_date'] }}" alt="Logo"
-                                style="max-width: 200px;" type="image/png"></td>
+                        <td style="padding-top:20px">
+                            <img src="https://amazepays.in/images/logo.png" alt="Logo" style="max-width: 200px;"
+                                type="image/png">
+                        </td>
                     </tr>
                 </table>
             </td>
@@ -49,7 +54,7 @@
                     {{ $prepareMailDetails['billing_tel'] }}</p>
                 <p>Address: {{ $prepareMailDetails['billing_address'] }}</p>
                 <p>Pay Mode: {{ $prepareMailDetails['payment_mode'] }}</p>
-                <p>Order Amount: {{ $prepareMailDetails['order_amount'] }}</p>
+                <p>Order Amount: {{ $prepareMailDetails['amount_payable_after_discount'] }}</p>
             </td>
         </tr>
         <tr>
@@ -63,11 +68,16 @@
         <tr>
             <td style="text-align: left; padding-top: 20px;">
                 <p>CUSTOMER CARE</p>
-                <p><a href="{{ config('companyDefaultValue.company_website') }}">{{ config('companyDefaultValue.company_website') }}</a></p>
-                <p>Email: {{ config('companyDefaultValue.comapny_email') }}</p>
-                <p>Contact Info: {{ config('companyDefaultValue.shipToContactNo') }}</p>
+                <p><a
+                        href="{{ config('companyDefaultValues.company_website') }}">{{ config('companyDefaultValues.company_website') }}</a>
+                </p>
+                <p>Email: {{ config('companyDefaultValues.company_email') }}</p>
+                <p>Contact Info: {{ config('companyDefaultValues.company_contact_no') }}</p>
+
+
             </td>
         </tr>
     </table>
 </body>
+
 </html>

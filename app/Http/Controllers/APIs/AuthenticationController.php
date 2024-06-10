@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\Otp;
-use App\QsProduct;
+use App\Models\QsProduct;
 use App\Http\Controllers\SmsController;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Response;

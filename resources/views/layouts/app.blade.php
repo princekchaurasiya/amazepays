@@ -23,7 +23,7 @@
 </head>
 
 <body class="color-theme-blue open-font">
-    <div class="cotainer">
+    <div class="cotainer-fluid">
         <div class="preloader"></div>
         <div class="main-wrapper">
             <!-- header wrapper -->
@@ -69,37 +69,45 @@
                 <div class="container">
                     <div class="row sticky-top">
                         <div class="col-7 navbar">
-                            <a href="/" class="logo"><img src="{{ asset('images/logo.png') }}" alt="logo"
-                                    class="custLogo"></a>
+                            <a href="/" class="logo"><img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo"></a>
                             <div class="collapse navbar-collapse" id="navbarNavDropdown">
                                 <ul class="navbar-nav nav-menu float-none text-center">
                                     <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
                                     {{--
-                              <li class="nav-item dropdown">
-                                 <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Services <i
-                                    class="ti-angle-down"></i></a>
-                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="#">Money Transfer</a>
-                                    <a class="dropdown-item" href="#">Bill payment</a>
-                                 </div>
-                              </li>
-                              --}}
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Services <i class="ti-angle-down"></i></a>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item" href="#">Money Transfer</a>
+                                            <a class="dropdown-item" href="#">Bill payment</a>
+                                        </div>
+                                    </li>
+                                    --}}
                                     {{--
-                              <li class="nav-item dropdown">
-                                 <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Products <i
-                                    class="ti-angle-down"></i></a>
-                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="#">Gift Cards</a>
-                                    <a class="dropdown-item" href="#">Bank Gift Cards</a>
-                                 </div>
-                              </li>
-                              --}}
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Products <i class="ti-angle-down"></i></a>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item" href="#">Gift Cards</a>
+                                            <a class="dropdown-item" href="#">Bank Gift Cards</a>
+                                        </div>
+                                    </li>
+                                    --}}
                                     <li class="nav-item"><a class="nav-link" href="{{ route('about') }}">About</a></li>
-                                    <li class="nav-item"><a class="nav-link"
-                                            href="{{ route('contact-us') }}">Contact</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{{ route('contact-us') }}">Contact</a></li>
                                 </ul>
+                                <form class="form-inline" action="{{ route('search') }}" method="GET">
+                                    <div class=" mb-0">
+                                        <input type="text" class="form-control form-control-search-input" placeholder="Search any product..." name="query" required>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-link p-0 ml-n3" type="submit">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
                         </div>
+
+
                         <div class="col-5  text-right align-self-center">
                             @if (Auth::check())
                                 <li class="dropdown">

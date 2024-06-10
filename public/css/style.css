@@ -15989,6 +15989,10 @@ color: black !important;
     color: #ff6601 !important;
 }
 
+.hot-deal-text-danger{
+color: red !important;
+}
+
 .normalhr {
     background-color: #01007f;
     width: 5.5rem;
@@ -16193,6 +16197,12 @@ color: black !important;
   font-size: 13px;
 }
 
+.ribbon-product-page{
+  top: 15px;
+  left: 16px;
+  padding: 5px 20px;
+}
+
 
 
 
@@ -16235,3 +16245,16 @@ background-color: red;
     font-size: 11px;
   }
 }
+
+.credentails-field::placeholder{
+  font-size: 11px;
+}
+
+.form-control-search-input{
+  width: 100% !important;
+
+}
+
+/* .searchForm{
+width: 700px !important;
+} */

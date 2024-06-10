@@ -7,11 +7,11 @@ use App\Models\QsOrder;
 use Auth;
 use Validator;
 use Illuminate\Support\Facades\Log;
-use App\QsProduct;
+use App\Models\QsProduct;
 
-class GiftPageController extends Controller
+class ProductPageController extends Controller
 {
-    public function storePayNowData(Request $request, $sku)
+    public function storePayNowData(Request $request, $slug)
     {
         $rules = [
             'quantity' => 'required|integer|min:1|max:10',
@@ -25,7 +25,11 @@ class GiftPageController extends Controller
             'quantity.max' => 'The quantity cannot exceed :max.',
         ];
 
+
+        Log::info('you are on Product page');
+
         Log::info($request);
+
 
         // Validate the request
         $validator = Validator::make($request->all(), $rules, $messages);
@@ -37,10 +41,13 @@ class GiftPageController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
+
+
         $qsOrder = new QsOrder();
         $qsOrder->user_id = Auth::user()->id;
         $qsOrder->denomination = $request->denomination;
         $qsOrder->quantity = $request->quantity;
+        $qsOrder->grand_payable_amount = $request->quantity*$request->denomination;
         $qsOrder->gift_send_option = $request->gift_send_option;
         $qsOrder->delivery_mode = $request->delivery_mode;
         $qsOrder->receiver_name = $request->receiver_name;
@@ -52,7 +59,7 @@ class GiftPageController extends Controller
         // Store the qs_order ID in the session
         session()->put('session_qs_order_id', $qsOrder->id);
 
-        $qsProd = QsProduct::where('sku', $sku)->first();
+        $qsProd = QsProduct::where('slug', $slug)->first();
         $qsProd['prodData'] = $request->all();
         $currency = json_decode($qsProd['currency']);
         $qsProd['currency'] = $currency;

@@ -4,7 +4,6 @@
 
 @section('page_header')
     <div class="container-fluid">
-
         <h1 class="page-title">
             <i class="{{ $dataType->icon }}"></i> {{ $dataType->getTranslatedAttribute('display_name_plural') }}
         </h1>
@@ -16,6 +15,11 @@
         @can('delete', app($dataType->model_name))
             @include('voyager::partials.bulk-delete')
         @endcan
+
+        <a href="{{ url('/admin/upload-document') }}" class="btn btn-primary btn-add-new" onclick="showUploadForm()">
+            <i class="voyager-upload"></i> <span>Upload Discount Sheet Here</span>
+        </a>
+
         @can('edit', app($dataType->model_name))
             @if (!empty($dataType->order_column) && !empty($dataType->order_display_column))
                 <a href="{{ route('voyager.' . $dataType->slug . '.order') }}" class="btn btn-primary btn-add-new">
@@ -36,9 +40,6 @@
             @endif
         @endforeach
         @include('voyager::multilingual.language-selector')
-        <a href="{{ url('/export') }}" class="btn btn-warning btn-add-new">
-            <i class="voyager-download"></i> <span>Export Order Data</span>
-        </a>
     </div>
 @stop
 
@@ -96,7 +97,6 @@
                                             </th>
                                         @endif
                                         @foreach ($dataType->browseRows as $row)
-
                                             <th>
                                                 @if ($isServerSide && in_array($row->field, $sortableColumns))
                                                     <a href="{{ $row->sortByUrl($orderBy, $sortOrder) }}">
@@ -114,21 +114,12 @@
                                                 @endif
                                             </th>
                                         @endforeach
-                                        <th>Billing Name</th>
-                                        <th>Billing Email</th>
-                                        <th>Billing Contact</th>
-                                        <th>Billing Address</th>
                                         <th class="actions text-right dt-not-orderable">
                                             {{ __('voyager::generic.actions') }}</th>
-                                    </tr>
-                                    <tr>
-
-
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($dataTypeContent as $data)
-                                    @foreach ($modifiedData as $data2)
                                         <tr>
                                             @if ($showCheckboxColumn)
                                                 <td>
@@ -157,7 +148,7 @@
                                                             'row' => $row,
                                                             'dataType' => $dataType,
                                                             'dataTypeContent' => $dataTypeContent,
-
+                                                            'content' => $data->{$row->field},
                                                             'action' => 'browse',
                                                             'view' => 'browse',
                                                             'options' => $row->details,
@@ -301,13 +292,8 @@
                                                         @include('voyager::multilingual.input-hidden-bread-browse')
                                                         <span>{{ $data->{$row->field} }}</span>
                                                     @endif
-
                                                 </td>
                                             @endforeach
-                                            <td>{{ $data2['firstname'] }}</td>
-                                            <td>{{ $data2['email'] }}</td>
-                                            <td>{{ $data2['contact_no'] }}</td>
-                                            <td>{{ $data2['Address'] }}</td>
                                             <td class="no-sort no-click bread-actions">
                                                 @foreach ($actions as $action)
                                                     @if (!method_exists($action, 'massAction'))
@@ -319,14 +305,12 @@
                                             </td>
                                         </tr>
                                     @endforeach
-                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
                         @if ($isServerSide)
-                        {{-- Showing entries --}}
                             <div class="pull-left">
-                                <div role="status" class="show-res" aria-live="polite" >
+                                <div role="status" class="show-res" aria-live="polite">
                                     {{ trans_choice('voyager::generic.showing_entries', $dataTypeContent->total(), [
                                         'from' => $dataTypeContent->firstItem(),
                                         'to' => $dataTypeContent->lastItem(),
@@ -334,7 +318,6 @@
                                     ]) }}
                                 </div>
                             </div>
-                             {{-- Previous and next  --}}
                             <div class="pull-right">
                                 {{ $dataTypeContent->appends([
                                         's' => $search->value,
@@ -351,6 +334,7 @@
             </div>
         </div>
     </div>
+
     {{-- Single delete modal --}}
     <div class="modal modal-danger fade" tabindex="-1" id="delete_modal" role="dialog">
         <div class="modal-dialog">
@@ -374,18 +358,76 @@
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
+
+    {{-- document upload modal start here --}}
+    <!-- Modal HTML -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadModalLabel">Upload Document</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="document">Choose file</label>
+                            <input type="file" class="form-control-file" id="document" name="document"
+                                accept=".xlsx,.xls,.csv" required>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div id="uploadProgress" class="progress-bar progress-bar-striped progress-bar-animated"
+                                role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0"
+                                aria-valuemax="100">0%</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Upload</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{-- document modal ends here --}}
 @stop
 
 @section('css')
+
+    <style>
+        /* Custom styles for the modal and upload progress */
+        .modal-body .progress {
+            margin-top: 15px;
+        }
+
+        .upload-success {
+            animation: fadeIn 0.5s, fadeOut 0.5s 2.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+    </style>
+
     @if (!$dataType->server_side && config('dashboard.data_tables.responsive'))
         <link rel="stylesheet" href="{{ voyager_asset('lib/css/responsive.dataTables.min.css') }}">
     @endif
-
-<style>
-
-</style>
-
-
 @stop
 
 @section('javascript')

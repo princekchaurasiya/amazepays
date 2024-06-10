@@ -4,9 +4,11 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Helpers\CommonHelper;
-use App\QsProduct;
+use App\Models\QsProduct;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+
 use Exception;
 use Carbon;
 
@@ -105,6 +107,9 @@ class FetchProductData extends Command
                     'cpg' => serialize($prdtDetails['cpg']),
                     'payout' => serialize($prdtDetails['payout']),
                     'allowedfulfillments' => json_encode($prdtDetails['allowedfulfillments']),
+                    'slug' => Str::slug($prdtDetails['name'])
+
+
                 ];
                 QsProduct::updateOrInsert(['sku' => $sku], $data);
                 $this->info("Updated product data for SKU: $sku (ID: {$prdtDetails['id']})");

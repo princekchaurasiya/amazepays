@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Helpers\CommonHelper;
-use App\QsProduct;
-use App\QsCategory;
+use App\Models\QsProduct;
+use App\Models\QsCategory;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Exception;

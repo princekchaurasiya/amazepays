@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use DB;
 use App\Models\User;
-use App\QsProduct;
+use App\Models\QsProduct;
 use Session;
 use Carbon;
 use Illuminate\Support\Facades\Http;
@@ -35,10 +35,7 @@ class UserPanelController extends Controller
         try {
             $getCategory = DB::table('qs_categories')->first();
 
-            $allProducts = DB::table('qs_products')
-                ->select('qs_products.*', 'qs_categories.name as category_name')
-                ->leftjoin('qs_categories', 'qs_products.qs_category_id', '=', 'qs_categories.id')
-                ->get();
+            $allProducts = DB::table('qs_products')->select('qs_products.*', 'qs_categories.name as category_name')->leftjoin('qs_categories', 'qs_products.qs_category_id', '=', 'qs_categories.id') ->orderBy('qs_products.name')->get();
 
             $allProducts->map(function ($item, $key) {
                 $item->currency = json_decode($item->currency);
@@ -53,7 +50,7 @@ class UserPanelController extends Controller
         //return View::make("userpanel/index", compact('allProducts'));
     }
 
-// user registration function
+    // user registration function
 
     public function userRegistration(Request $request)
     {
@@ -87,12 +84,12 @@ class UserPanelController extends Controller
                 if (\Auth::attempt($request->only('email', 'password'))) {
                     $data = [
                         'status' => 200,
-                        'msg' => 'User registered successfully',
+                        'msg' => 'Login successful. Welcome back!',
                     ];
                 } else {
                     $data = [
                         'status' => 400,
-                        'msg' => 'Something went wrong',
+                        'msg' => 'Login failed. Please check your email and password and try again.',
                     ];
                 }
             }
@@ -141,7 +138,6 @@ class UserPanelController extends Controller
     }
     public function checkOut(Request $request, $sku)
     {
-
         try {
             session()->put('denomination', $request->denomination);
             session()->put('quantity', $request->quantity);
@@ -212,7 +208,7 @@ class UserPanelController extends Controller
                     'amount' => $request->amount, //take from selected front end
                 ],
             ],
-            'refno' => 'order id' ,
+            'refno' => 'order id',
 
             'products' => [
                 [

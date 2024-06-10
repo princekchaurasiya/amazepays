@@ -26,7 +26,7 @@ class ProductPageController extends Controller
         ];
 
 
-        Log::info('you are on gift page');
+        Log::info('you are on Product page');
 
         Log::info($request);
 

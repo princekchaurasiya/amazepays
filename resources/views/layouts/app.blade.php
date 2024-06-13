@@ -65,136 +65,162 @@
             </div>
             --}}
             <!-- header wrapper desktop view -->
-            <div class="header-wrapper d-none d-md-block">
-                <div class="container">
-                    <div class="row sticky-top">
-                        <div class="col-7 navbar">
-                            <a href="/" class="logo"><img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo"></a>
-                            <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                                <ul class="navbar-nav nav-menu float-none text-center">
-                                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                                    {{--
-                                    <li class="nav-item dropdown">
-                                        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Services <i class="ti-angle-down"></i></a>
-                                        <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="#">Money Transfer</a>
-                                            <a class="dropdown-item" href="#">Bill payment</a>
-                                        </div>
-                                    </li>
-                                    --}}
-                                    {{--
-                                    <li class="nav-item dropdown">
-                                        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Products <i class="ti-angle-down"></i></a>
-                                        <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="#">Gift Cards</a>
-                                            <a class="dropdown-item" href="#">Bank Gift Cards</a>
-                                        </div>
-                                    </li>
-                                    --}}
-                                    <li class="nav-item"><a class="nav-link" href="{{ route('about') }}">About</a></li>
-                                    <li class="nav-item"><a class="nav-link" href="{{ route('contact-us') }}">Contact</a></li>
-                                </ul>
-                                <form class="form-inline" action="{{ route('search') }}" method="GET">
-                                    <div class=" mb-0">
-                                        <input type="text" class="form-control form-control-search-input" placeholder="Search any product..." name="query" required>
+            <nav class="navbar navbar-expand-md navbar-light bg-light d-none d-md-block navz fixed-top">
+                <div class="container d-flex justify-content-between align-items-center">
+                    <a href="/" class="navbar-brand"><img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo"></a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                        aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item active">
+                                <a class="nav-link" href="/">Home</a>
+                            </li>
+                            <!-- <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Services <i
+                                        class="ti-angle-down"></i></a>
+                                <div class="dropdown-menu" aria-labelledby="servicesDropdown">
+                                    <a class="dropdown-item" href="#">Money Transfer</a>
+                                    <a class="dropdown-item" href="#">Bill payment</a>
+                                </div>
+                            </li> -->
+                            <!-- <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="productsDropdown" role="button"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Products <i
+                                        class="ti-angle-down"></i></a>
+                                <div class="dropdown-menu" aria-labelledby="productsDropdown">
+                                    <a class="dropdown-item" href="#">Gift Cards</a>
+                                    <a class="dropdown-item" href="#">Bank Gift Cards</a>
+                                </div>
+                            </li> -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('about') }}">About</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('contact-us') }}">Contact</a>
+                            </li>
+                        </ul>
+
+
+
+
+
+
+                        <form class="form-inline my-2 my-lg-0" action="{{ route('search') }}" method="GET">
+                            <div class="input-group search-box">
+                                <input type="text" id="search" class="form-control" placeholder="Search here..."  name="query" required>
+                                <div class="input-group-append">
+                                    <span class="input-group-text">
+                                        <button class="btn btn-link p-0 ml-n3" type="submit">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="ml-2">
+                            @if (Auth::check())
+                            <div class="dropdown">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    {{ Auth::user()->name }}
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <a class="dropdown-item" href="{{ route('profile') }}"><i class="ti-user font-sm"></i>
+                                        Profile</a>
+                                    <a class="dropdown-item" href="{{ route('my-order') }}"><i
+                                            class="fa-sharp fa-solid fa-cart-shopping"></i> My Order</a>
+                                    <a class="dropdown-item" href="{{ route('userLogOut') }}"><i
+                                            class="fa-sharp fa-solid fa-power-off"></i> Logout</a>
+                                </div>
+                            </div>
+                            @else
+                            <a href="#" class="btn navbar-btn bg-dark fw-500 text-white font-xsss login-button"
+                                data-toggle="modal" data-target="#Modallogin">Login</a>
+                            <a href="#" class="btn navbar-btn bg-current fw-500 text-white font-xsss register-form register-button"
+                                data-toggle="modal" data-target="#ModalregisterD">Register</a>
+                            {{-- <a href="{{ route('send-test-sms') }}" class="header-btn bg-current fw-500 text-white font-xssss">Send SMS</a> --}}
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+
+
+            <!-- header wrapper mobile view -->
+            {{-- <div class="container-fluid"> <!-- Use a container to control the width of the content --> --}}
+
+                <nav class="navbar navbar-expand-lg navbar-light bg-light navz">
+                    <a class="navbar-brand" href="/">
+                        <img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo">
+                    </a>
+
+                    <!-- Toggle button for collapsed navbar -->
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <!-- Navbar items -->
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" href="/">Home</a>
+                            </li>
+                            <!-- Add other navbar items here -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url('about') }}">About</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url('contact_us') }}">Contact Us</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" data-toggle="modal" data-target="#ModalregisterD">New Customer?</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" data-toggle="modal" data-target="#Modallogin">Sign In</a>
+                            </li>
+                            <li class="nav-item">
+                                <form class="form-inline my-2 my-lg-0" action="{{ route('search') }}" method="GET">
+                                    <div class="input-group">
+                                        <input type="text" id="search" class="form-control" placeholder="Search here..." name="query" required>
                                         <div class="input-group-append">
-                                            <button class="btn btn-link p-0 ml-n3" type="submit">
+                                            <button class="btn btn-outline-secondary" type="submit">
                                                 <i class="fas fa-search"></i>
                                             </button>
                                         </div>
                                     </div>
                                 </form>
-                            </div>
-                        </div>
-
-
-                        <div class="col-5  text-right align-self-center">
-                            @if (Auth::check())
-                                <li class="dropdown">
-                                    <button class="btn dropdown-toggle pr-0 pl-0" type="button"
-                                        id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                        {{ Auth::user()->name }}
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <li><a class="dropdown-item" href="{{ route('profile') }}"><i
-                                                    class="ti-user font-sm"></i>
-                                                Profile</a></li>
-                                        <li><a class="dropdown-item" href="{{ route('my-order') }}"><i
-                                                    class="fa-sharp fa-solid fa-cart-shopping"></i> My Order</a>
-                                        </li>
-                                        <li><a class="dropdown-item" href="{{ route('userLogOut') }}"><i
-                                                    class="fa-sharp fa-solid fa-power-off"></i> Logout</a></li>
-                                    </ul>
-                                </li>
-                            @else
-                                <a href="#"
-                                    class="header-btn bg-dark fw-500 text-white font-xssss login-button-color"
-                                    data-toggle="modal" data-target="#Modallogin">Login</a>
-                                <a href="#"
-                                    class="header-btn bg-current fw-500 text-white font-xssss register-form register-button-color"
-                                    data-toggle="modal" data-target="#ModalregisterD">Register</a>
-                                {{-- <a href="{{ route('send-test-sms') }}" class="header-btn bg-current fw-500 text-white font-xssss">Send
-                        SMS</a> --}}
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- header wrapper mobile view -->
-            <div class="header-wrapper d-block d-md-none">
-                <nav class="navbar navbar-expand-lg navbar-light navbar-mobile ">
-                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <a href="/" class="logo custMobLogo"><img src="{{ asset('images/logo.png') }}" alt="logo"
-                            class="custLogo"></a>
-                            <div class="user-profile account-section">
-                                <a href="#" class="profile-link">
+                            </li>
+                            {{-- <li class="nav-item">
+                                <a href="#" class="nav-link profile-link">
                                     <i class="fas fa-user-circle"></i>
                                 </a>
-                                @guest
-                                    <!-- Display login and registration links for guests -->
-                                    <div class="account-dropdown without-log">
-                                        <ul>
-                                            <li><a href="#" data-toggle="modal" data-target="#ModalregisterD">New Customer?</a></li>
-                                            <li><a href="#" data-toggle="modal" data-target="#Modallogin">Sign In</a></li>
-                                        </ul>
-                                    </div>
-                                @else
-                                    <!-- Redirect logged-in users to their profile page when clicking on the profile link -->
-                                    <script>
-                                        document.querySelector('.profile-link').addEventListener('click', function(e) {
-                                            e.preventDefault(); // Prevent the default behavior of the link
-                                            window.location.href = "{{ route('profile') }}"; // Redirect to the profile page
-                                        });
-                                    </script>
-                                @endguest
-                            </div>
-
+                            </li> --}}
+                        </ul>
+                    </div>
                 </nav>
-                <!-- Side Navigation -->
-                <div class="sidenav ">
-                    <ul class="sidenav-list">
-                        <li class="sidenav-item">
-                            <a class="sidenav-link" href="#">Home</a>
-                        </li>
-                        {{-- <li class="sidenav-item">
-                            <a class="sidenav-link" href="#">Services</a>
-                        </li> --}}
-                        {{-- <li class="sidenav-item">
-                            <a class="sidenav-link" href="#">Products</a>
-                        </li> --}}
-                        <li class="sidenav-item">
-                            <a class="sidenav-link" href="{{ url('about') }}">About</a>
-                        </li>
-                        <li class="sidenav-item">
-                            <a class="sidenav-link" href="{{ url('contact_us') }}">Contact Us</a>
-                        </li>
-                    </ul>
-                    <button class="btn close-sideNav-btn" onclick="closeNav()">&times;</button>
-                </div>
-            </div>
+
+            {{-- </div> --}}
+
+            <!-- Side Navigation -->
+            {{-- <div class="sidenav">
+                <ul class="sidenav-list">
+                    <li class="sidenav-item">
+                        <a class="sidenav-link" href="#">Home</a>
+                    </li>
+                    <li class="sidenav-item">
+                        <a class="sidenav-link" href="{{ url('about') }}">About</a>
+                    </li>
+                    <li class="sidenav-item">
+                        <a class="sidenav-link" href="{{ url('contact_us') }}">Contact Us</a>
+                    </li>
+                </ul>
+                <button class="btn close-sideNav-btn" onclick="closeNav()">&times;</button>
+            </div> --}}
             <!-- header wrapper mobile view -->
         </div>
         <!-- header wrapper -->

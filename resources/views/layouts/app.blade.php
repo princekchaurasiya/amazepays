@@ -67,9 +67,11 @@
             <!-- header wrapper desktop view -->
             <nav class="navbar navbar-expand-md navbar-light bg-light d-none d-md-block navz fixed-top">
                 <div class="container d-flex justify-content-between align-items-center">
-                    <a href="/" class="navbar-brand"><img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo"></a>
-                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
-                        aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                    <a href="/" class="navbar-brand"><img src="{{ asset('images/logo.png') }}" alt="logo"
+                            class="custLogo"></a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse"
+                        data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
+                        aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                     </button>
                     <div class="collapse navbar-collapse" id="navbarNavDropdown">
@@ -110,7 +112,8 @@
 
                         <form class="form-inline my-2 my-lg-0" action="{{ route('search') }}" method="GET">
                             <div class="input-group search-box">
-                                <input type="text" id="search" class="form-control" placeholder="Search here..."  name="query" required>
+                                <input type="text" id="search" class="form-control" placeholder="Search here..."
+                                    name="query" required>
                                 <div class="input-group-append">
                                     <span class="input-group-text">
                                         <button class="btn btn-link p-0 ml-n3" type="submit">
@@ -122,26 +125,30 @@
                         </form>
                         <div class="ml-2">
                             @if (Auth::check())
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1"
-                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    {{ Auth::user()->name }}
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <a class="dropdown-item" href="{{ route('profile') }}"><i class="ti-user font-sm"></i>
-                                        Profile</a>
-                                    <a class="dropdown-item" href="{{ route('my-order') }}"><i
-                                            class="fa-sharp fa-solid fa-cart-shopping"></i> My Order</a>
-                                    <a class="dropdown-item" href="{{ route('userLogOut') }}"><i
-                                            class="fa-sharp fa-solid fa-power-off"></i> Logout</a>
+                                <div class="dropdown">
+                                    <button class="btn dropdown-toggle" type="button"
+                                        id="dropdownMenuButton1" data-toggle="dropdown" aria-haspopup="true"
+                                        aria-expanded="false">
+                                        {{ Auth::user()->name }}
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                        <a class="dropdown-item" href="{{ route('profile') }}"><i
+                                                class="ti-user font-sm"></i>
+                                            Profile</a>
+                                        <a class="dropdown-item" href="{{ route('my-order') }}"><i
+                                                class="fa-sharp fa-solid fa-cart-shopping"></i> My Order</a>
+                                        <a class="dropdown-item" href="{{ route('userLogOut') }}"><i
+                                                class="fa-sharp fa-solid fa-power-off"></i> Logout</a>
+                                    </div>
                                 </div>
-                            </div>
                             @else
-                            <a href="#" class="btn navbar-btn bg-dark fw-500 text-white font-xsss login-button"
-                                data-toggle="modal" data-target="#Modallogin">Login</a>
-                            <a href="#" class="btn navbar-btn bg-current fw-500 text-white font-xsss register-form register-button"
-                                data-toggle="modal" data-target="#ModalregisterD">Register</a>
-                            {{-- <a href="{{ route('send-test-sms') }}" class="header-btn bg-current fw-500 text-white font-xssss">Send SMS</a> --}}
+                                <a href="#"
+                                    class="btn navbar-btn bg-dark fw-500 text-white font-xsss login-button"
+                                    data-toggle="modal" data-target="#Modallogin">Login</a>
+                                <a href="#"
+                                    class="btn navbar-btn bg-current fw-500 text-white font-xsss register-form register-button"
+                                    data-toggle="modal" data-target="#ModalregisterD">Register</a>
+                                {{-- <a href="{{ route('send-test-sms') }}" class="header-btn bg-current fw-500 text-white font-xssss">Send SMS</a> --}}
                             @endif
                         </div>
                     </div>
@@ -159,8 +166,9 @@
                     </a>
 
                     <!-- Toggle button for collapsed navbar -->
-                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-                            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <button class="navbar-toggler" type="button" data-toggle="collapse"
+                        data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                     </button>
 
@@ -170,23 +178,40 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="/">Home</a>
                             </li>
-                            <!-- Add other navbar items here -->
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url('about') }}">About</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url('contact_us') }}">Contact Us</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-toggle="modal" data-target="#ModalregisterD">New Customer?</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-toggle="modal" data-target="#Modallogin">Sign In</a>
-                            </li>
+
+                            @guest
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#" data-toggle="modal" data-target="#ModalregisterD">New Customer?</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#" data-toggle="modal" data-target="#Modallogin">Sign In</a>
+                                </li>
+                            @endguest
+
+                            @auth
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('profile') }}">{{ Auth::user()->name }}</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('userLogOut') }}"
+                                       >
+                                       Logout
+                                    </a>
+
+                                </li>
+                            @endauth
+
                             <li class="nav-item">
                                 <form class="form-inline my-2 my-lg-0" action="{{ route('search') }}" method="GET">
                                     <div class="input-group">
-                                        <input type="text" id="search" class="form-control" placeholder="Search here..." name="query" required>
+                                        <input type="text" id="search" class="form-control"
+                                            placeholder="Search here..." name="query" required>
                                         <div class="input-group-append">
                                             <button class="btn btn-outline-secondary" type="submit">
                                                 <i class="fas fa-search"></i>
@@ -195,14 +220,10 @@
                                     </div>
                                 </form>
                             </li>
-                            {{-- <li class="nav-item">
-                                <a href="#" class="nav-link profile-link">
-                                    <i class="fas fa-user-circle"></i>
-                                </a>
-                            </li> --}}
                         </ul>
                     </div>
                 </nav>
+
 
             {{-- </div> --}}
 
@@ -238,7 +259,7 @@
 
                                 <p class="w-100 mt-4 text-black">
                                     <strong>Company Name :</strong> Frenetic India Services Private Limited<br />
-                                            <strong>CIN :</strong> U72900MH2022PTC391272<br />
+                                    <strong>CIN :</strong> U72900MH2022PTC391272<br />
                                     98-103, 4 Floor, Aditya Industrial Estate Co-op
                                     Premises Ltd<br /> Mindspace Behind Evershine
                                     Mall Off Link Road Malad West <br /> Mumbai -400064.
@@ -267,7 +288,8 @@
                                 <ul>
                                     <li><a class="font-xsss text-black" href="{{ url('/') }}">Home</a></li>
                                     <li><a class="font-xsss text-black" href="{{ url('about') }}">About</a></li>
-                                    <li><a class="font-xsss text-black" href="{{ url('contact_us') }}">Contact Us</a></li>
+                                    <li><a class="font-xsss text-black" href="{{ url('contact_us') }}">Contact Us</a>
+                                    </li>
                                 </ul>
                             </div>
                             <div class="col-md-3 col-lg-3 col-sm-3 col-xs-6 md-mb25">
@@ -1132,5 +1154,4 @@
     @stack('scripts')
     </div>
 </body>
-
 </html>

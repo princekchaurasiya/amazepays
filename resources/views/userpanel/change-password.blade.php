@@ -19,7 +19,7 @@
                             <li class="d-block rounded-lg active"><a href="{{ route('change-password') }}"><i
                                         class="ti-lock font-sm"></i><span> Chnage Password</span></a></li>
                             <!-- <li class="d-block rounded-lg "><a href="payment.html"><i class="ti-credit-card font-sm"></i><span> Payment</span></a></li> -->
-                            <li class="d-block rounded-lg"><a href="#"><i class="ti-power-off font-sm"></i><span>
+                            <li class="d-block rounded-lg"><a href="{{ route('userLogOut') }}"><i class="ti-power-off font-sm"></i><span>
                                         Logout</span></a></li>
 
                         </ul>

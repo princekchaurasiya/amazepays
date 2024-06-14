@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
-    UserPanelController, CommonController, PaymentController, MyOrderController, SmsController, WoohooorderController, OtpLoginController, SearchController, OtpVerificationController, ProductPageController, CCAvenueController, PaymentDetailsExportController, ProfileController, ProductSlugController, ErrorController,ProductCategoryController, CreateOrderController, DocumentController, ViewCardDetailsController, ContactUsController, ChangePasswordUpdateController, Voyager\VoyagerGenerateBearerTokenController, Voyager\VoyagerGetCategoryController, Voyager\VoyagerFetchProductListController, Voyager\VoyagerFetchProductDataController, Voyager\VoyagerProductDiscountImportController
+    UserPanelController, CommonController, PaymentController, MyOrderController, SmsController, WoohooOrderController, OtpLoginController, SearchController, OtpVerificationController, ProductPageController, CCAvenueController, PaymentDetailsExportController, ProfileController, ProductSlugController, ErrorController,ProductCategoryController, CreateOrderController, DocumentController, ViewCardDetailsController, ContactUsController, ChangePasswordUpdateController, Voyager\VoyagerGenerateBearerTokenController, Voyager\VoyagerGetCategoryController, Voyager\VoyagerFetchProductListController, Voyager\VoyagerFetchProductDataController, Voyager\VoyagerProductDiscountImportController
 };
 
 /*
@@ -115,5 +115,5 @@ Route::post('/update-profile', [ProfileController::class, 'update'])->name('upda
 Route::post('/card-details', [ViewCardDetailsController::class, 'index'])->name('view-card-details');
 Route::post('/save-contact', [ContactUsController::class, 'saveContact'])->name('save-contact');
 Route::get('/search', [SearchController::class, 'search'])->name('search');
-Route::post('/woohoo/create-order', [WoohooorderController::class, 'createOrder'])->name('woohoo.createOrder');
+Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'])->name('woohoo.createOrder');
 Route::view('/gift', 'layouts.giftmail');

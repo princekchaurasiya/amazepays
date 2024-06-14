@@ -18,7 +18,7 @@ class WoohooOrderController extends Controller
 {
     public function createOrder(Request $request)
     {
-        // dd(__('errors.403'));
+
         // Retrieve payment data from session
         $qsOrderDetails = Session::get('payment_data');
         $isSuccessful = false;
@@ -33,11 +33,15 @@ class WoohooOrderController extends Controller
                 $this->handleSuccessFullOrder($orderCreatedResponse);
             } else {
                 // Handle other status codes
+
                 $statusCode = isset($orderCreatedResponse['status']) ? $orderCreatedResponse['status'] : null;
+
                 $transactionStatusMessage = __('errors.' . ($statusCode ?? 'default'));
+                Log::info('Order status is not complete yet: ');
+
             }
 
-            Log::info('Order failed in this: ' . $isSuccessful);
+
         } else {
             // Handle case where $orderCreatedResponse is null
             $transactionStatusMessage = __('errors.500');

@@ -59,7 +59,7 @@
                                     <div class="row">
                                         <div class="col-lg-4">
                                             <div class="order-2 mb-3 mb-lg-0 coupon-quantity">
-                                                @dd($productDetails);
+
                                                 <!-- slab means checkbox -->
                                                 @if ($productDetails['price']->type == 'SLAB')
                                                     <label class="small-size fw-600 text-grey-900 font-xsss">Select

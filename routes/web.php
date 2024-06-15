@@ -22,6 +22,7 @@ Route::group(['prefix' => 'admin'], function () {
     Route::get('/import-data', [DocumentController::class, 'importDocument']);
     Route::view('/upload-document', 'documentUpload');
     Route::post('/upload-data', [DocumentController::class, 'uploadData'])->name('uploadData');
+    // Route::post('login', '\App\Http\Controllers\VoyagerAuthController@postLogin')->name('voyager.login');
 
     Route::match(['get', 'post'], '/voyager/bearer-token', [VoyagerGenerateBearerTokenController::class, 'generateBearerToken'])->name('voyager.bearerToken');
 Route::match(['get', 'post'], '/voyager/get-category', [VoyagerGetCategoryController::class, 'getCategory'])->name('voyager.getCategory');

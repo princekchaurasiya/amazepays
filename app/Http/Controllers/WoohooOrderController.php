@@ -155,7 +155,7 @@ class WoohooOrderController extends Controller
             ]);
 
             if ($createOrderResponse->successful()) {
-                Log::info('Order creation was successful within 10 seconds');
+                Log::info('Order creation was successful within first 40 seconds');
 
                 $orderCreatedResponse = $createOrderResponse->json();
 

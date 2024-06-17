@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title')
-    Amazepay | About
+    Amazepay | Something Went Wrong
 @endsection
 @section('content')
     <div class="row paymentSuccess" id="paymentSuccess">

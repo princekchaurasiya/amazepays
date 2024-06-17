@@ -4,6 +4,9 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Validation\ValidationException;
 
 class Handler extends ExceptionHandler
 {
@@ -39,9 +42,27 @@ class Handler extends ExceptionHandler
         });
     }
 
+    /**
+     * Report or log an exception.
+     *
+     * @param  \Throwable  $exception
+     * @return void
+     */
+    public function report(Throwable $exception)
+    {
+        // Log the exception
+        Log::info($exception->getMessage(), ['exception' => $exception]);
+
+        parent::report($exception);
+    }
+
     public function render($request, Throwable $exception)
     {
-        // Check if it's a general exception (not specifically handled)
+        // Check if it's an authentication or validation exception
+        if ($exception instanceof AuthenticationException || $exception instanceof ValidationException) {
+            return parent::render($request, $exception);
+        }
+
         // Check if it's a general exception (not specifically handled)
         if (!($exception instanceof \Symfony\Component\HttpKernel\Exception\HttpException)) {
             $errorMessage = $exception->getMessage();
@@ -50,5 +71,4 @@ class Handler extends ExceptionHandler
 
         return parent::render($request, $exception);
     }
-
 }

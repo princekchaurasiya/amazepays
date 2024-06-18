@@ -1,29 +1,28 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\ApiController;
+use App\Http\Controllers\APIs\AuthenticationController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
-Route::get('signature-validation',[App\Http\Controllers\ApiController::class, 'signature_validation']);
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+// Route::get('signature-validation', [ApiController::class, 'signatureValidation']);
+
+// Route::middleware('auth:sanctum')->group(function () {
+//     Route::get('/user', function (Request $request) {
+//         return $request->user();
+//     });
+// });
+
+Route::middleware('api')->group(function () {
+    Route::prefix('auth')->group(function () {
+        Route::post('sendUserLoginOtp', [AuthenticationController::class, 'sendUserLoginOtp']);
+        Route::post('verifyUserLoginOtp', [AuthenticationController::class, 'verifyUserLoginOtp']);
+        // Route::post('userRegistration', [AuthenticationController::class, 'userRegistration']);
+    });
+
+    Route::prefix('products')->group(function () {
+        Route::get('all', [AuthenticationController::class, 'allProduct']);
+        Route::get('single', [AuthenticationController::class, 'singleProductDetails']);
+    });
+
+    // Add more API routes as needed within the 'api' middleware group
 });
-
-Route::group(['middleware' => 'api'], function(){
-    Route::post('sendUserLoginOtp', [App\Http\Controllers\APIs\AuthenticationController::class, 'sendUserLoginOtp']);
-    Route::post('verifyUserLoginOtp', [App\Http\Controllers\APIs\AuthenticationController::class, 'verifyUserLoginOtp']);
-    Route::post('userRegistration', [App\Http\Controllers\APIs\AuthenticationController::class, 'userRegistration']);
-    Route::get('allProduct', [App\Http\Controllers\APIs\AuthenticationController::class, 'allProduct']);
-    Route::get('singleProductDetails', [App\Http\Controllers\APIs\AuthenticationController::class, 'singleProductDetails']);
-});
-
-

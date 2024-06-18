@@ -13,27 +13,40 @@ use Exception;
 
 class ProductSlugController extends Controller
 {
-    // Product SKU API for Woohoo should be called once only
     public function getProductBySlug(Request $request)
     {
         try {
-            $productDetails = QsProduct::where('slug', $request->slug)
-                ->first()
-                ->toArray();
+            $product = QsProduct::where('slug', $request->slug)->first();
 
-            // Convert certain JSON fields back to objects
+            if (!$product) {
+                // If product is not found, show a friendly error message
+                return view('userpanel.wentWrong')->with('errorMessage', 'Requested product does not exist. Please try with a different product.');
+            }
+
+            $productDetails = $product->toArray();
             $productDetails['price'] = json_decode($productDetails['price']);
             $productDetails['images'] = json_decode($productDetails['images']);
             $productDetails['tnc'] = json_decode($productDetails['tnc']);
 
-            // Pass the product details to the view and render it
-            return view('userpanel.productPage', compact('productDetails'));
+            // Use dd to inspect the productDetails
+
+
+            // Check if price contains a valid type attribute
+            if (!isset($productDetails['price']->type) || !in_array($productDetails['price']->type, ['RANGE', 'SLAB'])) {
+                log::error('Product details are not available. Please try with a different product.');
+                return view('userpanel.wentWrong')->with('errorMessage', 'Product details are not available.  go to homepage and try with a different product.');
+            }
+            else{
+                log::info('Product avaialble');
+                return view('userpanel.productPage', compact('productDetails'));
+            }
+
+
+
         } catch (Exception $e) {
-            // Log the error message
             Log::error('Error fetching product by slug: ' . $e->getMessage());
 
-            // Return an error message if an exception occurs during the process
-            return view('order.order-status', ['transactionStatusMessage' => $e->getMessage()]);
+            return view('userpanel.wentWrong')->with('errorMessage', 'Something Went Wrong. Please try again later.');
         }
     }
 }

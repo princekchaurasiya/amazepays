@@ -18,7 +18,6 @@ class WoohooOrderController extends Controller
 {
     public function createOrder(Request $request)
     {
-
         // Retrieve payment data from session
         $qsOrderDetails = Session::get('payment_data');
         $isSuccessful = false;
@@ -38,10 +37,7 @@ class WoohooOrderController extends Controller
 
                 $transactionStatusMessage = __('errors.' . ($statusCode ?? 'default'));
                 Log::info('Order status is not complete yet: ');
-
             }
-
-
         } else {
             // Handle case where $orderCreatedResponse is null
             $transactionStatusMessage = __('errors.500');
@@ -244,64 +240,64 @@ class WoohooOrderController extends Controller
     }
 
     public function getStatusByReferenceNumber($refno)
-{
-    Log::info('Starting getStatusByReferenceNumber for reference number: ' . $refno);
-    $attempt = 1;
-    $max_retries = 2; // Change this to the desired number of retries
-    $retry_interval = 40; // Retry interval in seconds
-    $requestHttpMethod = 'GET';
-    $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/order/' . $refno . '/status';
-    $clientSecret = setting('api.qs_clientSecret');
-    $bearerToken = setting('api.bearer_token');
-    $requestBody = '';
-    $dateAtClient = Carbon::now()->toIso8601String();
-    $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+    {
+        Log::info('Starting getStatusByReferenceNumber for reference number: ' . $refno);
+        $attempt = 1;
+        $max_retries = 2; // Change this to the desired number of retries
+        $retry_interval = 40; // Retry interval in seconds
+        $requestHttpMethod = 'GET';
+        $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/order/' . $refno . '/status';
+        $clientSecret = setting('api.qs_clientSecret');
+        $bearerToken = setting('api.bearer_token');
+        $requestBody = '';
+        $dateAtClient = Carbon::now()->toIso8601String();
+        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
 
-    while ($attempt <= $max_retries) {
-        Log::info('Attempt ' . $attempt . ' to fetch status from API.');
-        try {
-            $cardStatusApiResponse = Http::acceptJson()
-                ->withToken($bearerToken)
-                ->withHeaders([
-                    'signature' => $signature,
-                    'dateAtClient' => $dateAtClient,
-                ])
-                ->get($absApiUrl);
+        while ($attempt <= $max_retries) {
+            Log::info('Attempt ' . $attempt . ' to fetch status from API.');
+            try {
+                $cardStatusApiResponse = Http::acceptJson()
+                    ->withToken($bearerToken)
+                    ->withHeaders([
+                        'signature' => $signature,
+                        'dateAtClient' => $dateAtClient,
+                    ])
+                    ->get($absApiUrl);
 
-            Log::info('API request sent for attempt ' . $attempt . '. URL: ' . $absApiUrl);
-            Log::info('API response status code: ' . $cardStatusApiResponse->status());
+                Log::info('API request sent for attempt ' . $attempt . '. URL: ' . $absApiUrl);
+                Log::info('API response status code: ' . $cardStatusApiResponse->status());
 
-            if ($cardStatusApiResponse->status() == 200) {
-                $cardStatusApiResponseData = json_decode($cardStatusApiResponse->getBody(), true);
+                if ($cardStatusApiResponse->status() == 200) {
+                    $cardStatusApiResponseData = json_decode($cardStatusApiResponse->getBody(), true);
 
-                Log::info('API response body: ' . json_encode($cardStatusApiResponseData));
+                    Log::info('API response body: ' . json_encode($cardStatusApiResponseData));
 
-                if ($cardStatusApiResponseData['status'] === 'COMPLETE') {
-                    Log::info('Card activation status is COMPLETE. Processing further.');
-                    $activatedCardReponseFromFunction = $this->callCardActivation($cardStatusApiResponseData);
-                    return $activatedCardReponseFromFunction;
-                } elseif ($cardStatusApiResponseData['status'] === 'PROCESSING') {
-                    Log::info('Card activation status is PROCESSING. Waiting for ' . $retry_interval . ' seconds before retrying.');
-                    sleep($retry_interval);
+                    if ($cardStatusApiResponseData['status'] === 'COMPLETE') {
+                        Log::info('Card activation status is COMPLETE. Processing further.');
+                        $activatedCardReponseFromFunction = $this->callCardActivation($cardStatusApiResponseData);
+                        return $activatedCardReponseFromFunction;
+                    } elseif ($cardStatusApiResponseData['status'] === 'PROCESSING') {
+                        Log::info('Card activation status is PROCESSING. Waiting for ' . $retry_interval . ' seconds before retrying.');
+                        sleep($retry_interval);
+                    } else {
+                        Log::info('Card activation status is neither PROCESSING nor COMPLETE. Status: ' . $cardStatusApiResponseData['status']);
+                        return false;
+                    }
                 } else {
-                    Log::info('Card activation status is neither PROCESSING nor COMPLETE. Status: ' . $cardStatusApiResponseData['status']);
+                    Log::info('Order failed, response 200 not received. Response status: ' . $cardStatusApiResponse->status());
                     return false;
                 }
-            } else {
-                Log::info('Order failed, response 200 not received. Response status: ' . $cardStatusApiResponse->status());
+            } catch (\Exception $e) {
+                Log::error('Exception occurred during attempt ' . $attempt . ': ' . $e->getMessage());
                 return false;
             }
-        } catch (\Exception $e) {
-            Log::error('Exception occurred during attempt ' . $attempt . ': ' . $e->getMessage());
-            return false;
+
+            $attempt++;
         }
 
-        $attempt++;
+        Log::info('Max retries reached (' . $max_retries . ') without reaching a complete status.');
+        return false;
     }
-
-    Log::info('Max retries reached (' . $max_retries . ') without reaching a complete status.');
-    return false;
-}
 
     public function callCardActivation($cardStatusApiResponseData)
     {
@@ -360,7 +356,11 @@ class WoohooOrderController extends Controller
 
         $orderId = $this->updateQsOrder($orderCreatedResponse);
 
-        $order = QsOrder::join('cc_avenue_payment', 'cc_avenue_payment.order_id', '=', 'qs_ordered.id')->join('qs_products', 'qs_products.sku', '=', 'qs_ordered.sku')->where('qs_ordered.id', $orderId)->select('qs_ordered.*', 'cc_avenue_payment.*', 'qs_products.*')->first();
+
+
+        $order = QsOrder::join('cc_avenue_payment', 'cc_avenue_payment.order_id', '=', 'qs_orders.id')->join('qs_products', 'qs_products.sku', '=', 'qs_orders.sku')->where('qs_orders.id', $orderId)->select('qs_orders.*', 'cc_avenue_payment.*', 'qs_products.*')->first();
+
+
 
         $financialYear = $this->getFinancialYear();
 
@@ -372,6 +372,9 @@ class WoohooOrderController extends Controller
         if ($images && isset($images['small'])) {
             $smallImageUrl = $images['small'];
         }
+
+        // Update the qs_orders table with the invoice number
+        QsOrder::where('id', $orderId)->update(['invoice_number' => $invoiceNumber]);
 
         $prepareMailDetails = [
             'name' => $order['sender_first_name'],
@@ -401,6 +404,8 @@ class WoohooOrderController extends Controller
             'smallImageUrl' => $smallImageUrl,
             'giftSendOption' => $order['gift_send_option'],
             'denomination' => $order['denomination'],
+            'discount_percentage' => $order['discount_percentage'],
+
         ];
 
         $prepareSmsDetails = [

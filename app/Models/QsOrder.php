@@ -9,7 +9,7 @@ class QsOrder extends Model
 {
     use HasFactory;
 
-    protected $table = 'qs_ordered';
+    protected $table = 'qs_orders';
 
     protected $fillable = [
         'woohoo_order_id', 'order_status', 'denomination', 'sender_first_name',

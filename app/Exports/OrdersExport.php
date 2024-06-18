@@ -24,7 +24,8 @@ class OrdersExport implements FromQuery, WithHeadings
                 'qs_orders.quantity as Quantity',
                 'qs_orders.denomination as Denomination',
                 'qs_orders.grand_payable_amount as Total Amount',
-                'qs_orders.discounted_amount_value as Discount',
+                \DB::raw('CONCAT(qs_products.discount_percentage, "%") as `Discount Percentage`'), // Adding percentage symbol
+                'qs_orders.discounted_amount_value as Discount Amount',
                 'qs_orders.amount_payable_after_discount as `Payable Amount`',
                 'qs_orders.id as `Payment Id`',
             ])
@@ -57,6 +58,6 @@ class OrdersExport implements FromQuery, WithHeadings
 
     public function headings(): array
     {
-        return ['Date', 'Order Number', 'Voucher Type', 'Invoice Number', 'Customer Name', 'Customer GSTIN', 'State', 'Product Name', 'Quantity', 'Denomination', 'Total Amount', 'Discount', 'Payable Amount', 'Payment Id'];
+        return ['Date', 'Order Number', 'Voucher Type', 'Invoice Number', 'Customer Name', 'Customer GSTIN', 'State', 'Product Name', 'Quantity', 'Denomination', 'Total Amount', 'Discount Percentage', 'Discount Amount', 'Payable Amount', 'Payment Id'];
     }
 }

@@ -25,14 +25,13 @@
                     </div>
                 </div>
                 <div class="col-lg-9">
-
                     @if(session('success'))
                     <div class="alert alert-success">
                         {{ session('success') }}
                     </div>
-                @endif
+                    @endif
                     <div class="dashboard-tab cart-wrapper p-5 bg-white rounded-lg shadow-xs">
-                        <form action="{{ route('update-profile') }}" method="POST">
+                        <form action="{{ route('update-profile') }}" method="POST" id="profileForm">
                             @csrf
                             <div class="row">
                                 <div class="col-lg-12 mb-3">
@@ -57,7 +56,6 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-12 mb-5">
-
                                     <button type="submit"
                                         class="form-control rounded-lg h20 float-left bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 w100">Update</button>
                                 </div>
@@ -68,4 +66,60 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $.validator.addMethod("regex", function(value, element, regexp) {
+                var re = new RegExp(regexp);
+                return this.optional(element) || re.test(value);
+            }, "Please check your input.");
+
+            $('#profileForm button[type="submit"]').on('click', function (e) {
+                e.preventDefault(); // Prevent default form submission
+
+                $("#profileForm").validate({
+                    rules: {
+                        name: {
+                            required: true,
+                            maxlength: 50,
+                            regex: /^[a-zA-Z\s]*$/
+                        },
+                        email: {
+                            required: true,
+                            email: true
+                        },
+                        phone: {
+                            required: true,
+                            digits: true,
+                            maxlength: 10,
+                        }
+                    },
+                    messages: {
+                        name: {
+                            required: "Please enter your name",
+                            maxlength: "Your name must not exceed 50 characters",
+                            regex: "Special characters are not allowed in the name"
+                        },
+                        email: {
+                            required: "Please enter your email",
+                            email: "Please enter a valid email address"
+                        },
+                        phone: {
+                            required: "Please enter your phone number",
+                            digits: "Please enter a valid phone number",
+                            // minlength: "Your phone number must be at least 10 digits",
+                            maxlength: "Your phone number must not exceed 10 digits"
+                        }
+                    },
+                    submitHandler: function (form) {
+                        form.submit(); // Submit the form if validation is successful
+                    }
+                });
+
+                $("#profileForm").submit(); // Trigger form validation and submission
+            });
+        });
+    </script>
+    @endpush
 @endsection

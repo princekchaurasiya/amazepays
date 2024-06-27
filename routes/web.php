@@ -96,8 +96,15 @@ Route::get('/all_transaction', function () {
 });
 Route::match(['get', 'post'], '/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
 
+Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('placeOrder');
 
 
+Route::post('/update-session-data', [ProductPageController::class, 'updateSessionData'])->name('updateSessionData');
+
+
+
+Route::post('/save-gift-card-form-values', [ProductPageController::class, 'saveGiftCardFormValues'])
+    ->name('saveGiftCardFormValues');
 
 Route::post('/payment-process', [CCAvenueController::class, 'processPayment'])->name('payment-process');
 

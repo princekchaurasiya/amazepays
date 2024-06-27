@@ -21,27 +21,28 @@ class WoohooOrderController extends Controller
         // Retrieve payment data from session
         $qsOrderDetails = Session::get('payment_data');
         $isSuccessful = false;
-        $orderCreatedResponse = $this->createWoohooOrderRequest($qsOrderDetails);
 
-        if ($orderCreatedResponse) {
-            $statusCode = isset($orderCreatedResponse['status_code']) ? $orderCreatedResponse['status_code'] : null;
+        if ($qsOrderDetails) {
+            $orderCreatedResponse = $this->createWoohooOrderRequest($qsOrderDetails);
 
-            if (isset($orderCreatedResponse['status']) && $orderCreatedResponse['status'] == 'COMPLETE') {
-                $transactionStatusMessage = __('errors.201');
-                $isSuccessful = true;
-                $this->handleSuccessFullOrder($orderCreatedResponse);
+            if ($orderCreatedResponse) {
+                $statusCode = isset($orderCreatedResponse['status_code']) ? $orderCreatedResponse['status_code'] : null;
+
+                if (isset($orderCreatedResponse['status']) && $orderCreatedResponse['status'] == 'COMPLETE') {
+                    $transactionStatusMessage = __('errors.201');
+                    $isSuccessful = true;
+                    $this->handleSuccessFullOrder($orderCreatedResponse);
+                } else {
+                    $transactionStatusMessage = __('errors.' . ($statusCode ?? 'default'));
+                    Log::info('Order status is not complete yet: ' . $transactionStatusMessage);
+                }
             } else {
-                // Handle other status codes
-
-                $statusCode = isset($orderCreatedResponse['status']) ? $orderCreatedResponse['status'] : null;
-
-                $transactionStatusMessage = __('errors.' . ($statusCode ?? 'default'));
-                Log::info('Order status is not complete yet: ');
+                $transactionStatusMessage = __('errors.500');
+                Log::info('Order failed');
             }
         } else {
-            // Handle case where $orderCreatedResponse is null
             $transactionStatusMessage = __('errors.500');
-            Log::info('Order failed');
+            Log::info('No payment data found in session');
         }
 
         return view('order.order-status', compact('transactionStatusMessage', 'isSuccessful'));
@@ -49,6 +50,11 @@ class WoohooOrderController extends Controller
 
     public function createWoohooOrderRequest($qsOrderDetails)
     {
+        Log::info("******* you are in createWoohooOrderRequest function ***********");
+
+        // Generate a unique reference number
+        $refno = uniqid($qsOrderDetails->id . '_');
+
         $create_order_request_body_data = [
             'address' => [
                 'firstname' => $qsOrderDetails->sender_first_name,
@@ -84,7 +90,7 @@ class WoohooOrderController extends Controller
                     'amount' => $qsOrderDetails->grand_payable_amount,
                 ],
             ],
-            'refno' => $qsOrderDetails->id,
+            'refno' => $refno,
             'products' => [
                 [
                     'sku' => $qsOrderDetails->sku,
@@ -97,9 +103,7 @@ class WoohooOrderController extends Controller
             'delivery_mode' => 'API',
         ];
 
-        $sku = $qsOrderDetails->sku;
-
-        Log::info("######################\nWoohoo create order request body data is:\n" . print_r($create_order_request_body_data, true) . "\n######################");
+        Log::info("########\nWoohoo create order request body data is:\n" . print_r($create_order_request_body_data, true) . "\n#######");
 
         $requestBody = json_encode($create_order_request_body_data);
         $requestHttpMethod = 'post';
@@ -108,12 +112,13 @@ class WoohooOrderController extends Controller
         $bearerToken = setting('api.bearer_token');
         $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         $dateAtClient = Carbon::now()->toIso8601String();
-        $refno = $create_order_request_body_data['refno'];
 
         Log::info('**************** Order Creation Api *************************' . "\n");
         Log::info('Before hitting API, time is ' . now() . "\n");
 
         try {
+            Log::info("******* making HTTP request ***********");
+
             // Make the HTTP request
             $createOrderResponse = Http::acceptJson()
                 ->timeout(10)
@@ -151,7 +156,7 @@ class WoohooOrderController extends Controller
             ]);
 
             if ($createOrderResponse->successful()) {
-                Log::info('Order creation was successful within first 40 seconds');
+                Log::info('Order creation was successful');
 
                 $orderCreatedResponse = $createOrderResponse->json();
 
@@ -161,7 +166,6 @@ class WoohooOrderController extends Controller
                 // Check for the "PROCESSING" status
                 if (isset($orderCreatedResponse['status']) && $orderCreatedResponse['status'] === 'PROCESSING') {
                     Log::info('Order is in PROCESSING status');
-                    // You can add more processing logic here if needed
                     return view('order.order-status', ['transactionStatusMessage' => 'Your order is currently being processed.']);
                 }
                 return $orderCreatedResponse;
@@ -169,7 +173,7 @@ class WoohooOrderController extends Controller
                 return $this->handleErrorResponse($createOrderResponse, $sku);
             }
         } catch (ConnectionException $e) {
-            Log::error('cURL Error: lets go to getStatusByReferenceNumber' . $e->getMessage());
+            Log::error('cURL Error: ' . $e->getMessage());
             sleep(30);
 
             $statusFunctionResponse = $this->getStatusByReferenceNumber($refno);
@@ -182,7 +186,7 @@ class WoohooOrderController extends Controller
                 return false;
             }
         } catch (\Exception $e) {
-            Log::error('Unexpected exception: unexpected exception while hitting the create order api by woohoo' . $e->getMessage());
+            Log::error('Unexpected exception: ' . $e->getMessage());
             return $this->handleUnexpectedErrorResponse($e);
         }
     }
@@ -243,7 +247,7 @@ class WoohooOrderController extends Controller
     {
         Log::info('Starting getStatusByReferenceNumber for reference number: ' . $refno);
         $attempt = 1;
-        $max_retries = 2; // Change this to the desired number of retries
+        $max_retries = 3; // Change this to the desired number of retries
         $retry_interval = 40; // Retry interval in seconds
         $requestHttpMethod = 'GET';
         $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/order/' . $refno . '/status';

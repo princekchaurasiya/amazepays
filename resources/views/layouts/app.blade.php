@@ -126,9 +126,8 @@
                         <div class="ml-2">
                             @if (Auth::check())
                                 <div class="dropdown">
-                                    <button class="btn dropdown-toggle" type="button"
-                                        id="dropdownMenuButton1" data-toggle="dropdown" aria-haspopup="true"
-                                        aria-expanded="false">
+                                    <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1"
+                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         {{ Auth::user()->name }}
                                     </button>
                                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
@@ -160,68 +159,70 @@
             <!-- header wrapper mobile view -->
             {{-- <div class="container-fluid"> <!-- Use a container to control the width of the content --> --}}
 
-                <nav class="navbar navbar-expand-lg navbar-light bg-light navz">
-                    <a class="navbar-brand" href="/">
-                        <img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo">
-                    </a>
+            <nav class="navbar navbar-expand-lg navbar-light bg-light navz">
+                <a class="navbar-brand" href="/">
+                    <img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo">
+                </a>
 
-                    <!-- Toggle button for collapsed navbar -->
-                    <button class="navbar-toggler" type="button" data-toggle="collapse"
-                        data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
+                <!-- Toggle button for collapsed navbar -->
+                <button class="navbar-toggler" type="button" data-toggle="collapse"
+                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-                    <!-- Navbar items -->
-                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                        <ul class="navbar-nav ml-auto">
+                <!-- Navbar items -->
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url('about') }}">About</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url('contact_us') }}">Contact Us</a>
+                        </li>
+
+                        @guest
                             <li class="nav-item">
-                                <a class="nav-link" href="/">Home</a>
+                                <a class="nav-link" href="#" data-toggle="modal" data-target="#ModalregisterD">New
+                                    Customer?</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url('about') }}">About</a>
+                                <a class="nav-link" href="#" data-toggle="modal" data-target="#Modallogin">Sign
+                                    In</a>
+                            </li>
+                        @endguest
+
+                        @auth
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('profile') }}">{{ Auth::user()->name }}</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url('contact_us') }}">Contact Us</a>
+                                <a class="nav-link" href="{{ route('userLogOut') }}">
+                                    Logout
+                                </a>
+
                             </li>
+                        @endauth
 
-                            @guest
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#" data-toggle="modal" data-target="#ModalregisterD">New Customer?</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#" data-toggle="modal" data-target="#Modallogin">Sign In</a>
-                                </li>
-                            @endguest
-
-                            @auth
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('profile') }}">{{ Auth::user()->name }}</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('userLogOut') }}">
-                                       Logout
-                                    </a>
-
-                                </li>
-                            @endauth
-
-                            <li class="nav-item">
-                                <form class="form-inline my-2 my-lg-0" action="{{ route('search') }}" method="GET">
-                                    <div class="input-group">
-                                        <input type="text" id="search" class="form-control"
-                                            placeholder="Search here..." name="query" required>
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-secondary" type="submit">
-                                                <i class="fas fa-search"></i>
-                                            </button>
-                                        </div>
+                        <li class="nav-item">
+                            <form class="form-inline my-2 my-lg-0" action="{{ route('search') }}" method="GET">
+                                <div class="input-group">
+                                    <input type="text" id="search" class="form-control"
+                                        placeholder="Search here..." name="query" required>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="submit">
+                                            <i class="fas fa-search"></i>
+                                        </button>
                                     </div>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-                </nav>
+                                </div>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
 
 
             {{-- </div> --}}
@@ -321,10 +322,10 @@
                     </div>
                     <div class="col-sm-12 lower-footer pt-0"></div>
                     <div class="col-sm-6 col-xs-12">
-                        <p class="copyright-text">© 2023 copyright. All rights reserved.</p>
+                        <p class="copyright-text">© {{ date('Y') }} copyright. All rights reserved.</p>
                     </div>
                     <div class="col-sm-6 col-xs-12 text-right">
-                        <p class="copyright-text float-right">Design & Develop by <a href="#"
+                        <p class="copyright-text float-right">Design & Develop by <a href="https://toutle.in/"
                                 class="">Toutle</a>
                         </p>
                     </div>
@@ -1153,4 +1154,5 @@
     @stack('scripts')
     </div>
 </body>
+
 </html>

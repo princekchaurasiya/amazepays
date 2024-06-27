@@ -18,6 +18,15 @@
                 </div>
             @endif
 
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <form method="POST" name="customerData" action="{{ url('payment-process') }}" id="checkoutForm">
                 @csrf
@@ -31,90 +40,137 @@
                                 <h4 class="mont-font fw-500 font-xxl mb-5">Sender Details</h4>
                                 <div class="row">
                                     <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
-                                            <label class="mont-font fw-500 font-xsss" for="comment-name">First Name</label>
+                                        <div class="form-group">
+
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">Full Name</label>
                                             <input type="text" name="billing_name" class="form-control billingFormInput"
-                                                value="{{ old('billing_name', \Auth::user()->name) }}">
+                                                value="{{ old('billing_name', $checkoutData['billing_name'] ?? (Auth::user()->name ?? '')) }}"
+                                                maxlength="255">
+                                            @error('billing_name')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                     <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
+                                        <div class="form-group">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">Email</label>
                                             <input type="text" name="billing_email" class="form-control billingFormInput"
-                                                value="{{ \Auth::user()->email }}">
+                                                value="{{ old('billing_email', $checkoutData['billing_email'] ?? (Auth::user()->email ?? '')) }}"
+                                                maxlength="255">
+                                            @error('billing_email')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
+                                        <div class="form-group">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">Phone</label>
                                             <input type="text" name="billing_tel"
                                                 class="form-control billingFormInput inputDiv"
-                                                value="{{ \Auth::user()->mobile }}">
-                                            {{-- <i class="fa-solid fa-triangle-exclamation inputDivIcon failureIcon"></i>
-                                            <i class="fa-sharp fa-solid fa-circle-check inputDivIcon successIcon"></i> --}}
+                                                value="{{ old('billing_tel', $checkoutData['billing_tel'] ?? (Auth::user()->mobile ?? '')) }}"
+                                                maxlength="10">
+                                            @error('billing_tel')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                     <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
+                                        <div class="form-group">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">Postcode</label>
                                             <input type="text" name="billing_zip" class="form-control billingFormInput"
-                                                value="">
+                                                value="{{ old('billing_zip', $checkoutData['billing_zip'] ?? '') }}"
+                                                maxlength="6">
+                                            @error('billing_zip')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
+                                        <div class="form-group">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">Address 1</label>
                                             <input type="text" name="billing_address"
-                                                class="form-control billingFormInput" value="">
+                                                class="form-control billingFormInput"
+                                                value="{{ old('billing_address', $checkoutData['billing_address'] ?? '') }}"
+                                                maxlength="255">
+                                            @error('billing_address')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                     <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
+                                        <div class="form-group">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">Address 2</label>
                                             <input type="text" name="billing_address_two"
-                                                class="form-control billingFormInput" value="">
+                                                class="form-control billingFormInput"
+                                                value="{{ old('billing_address_two', $checkoutData['billing_address_two'] ?? '') }}"
+                                                maxlength="255">
+                                            @error('billing_address_two')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
+                                        <div class="form-group">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">Town / City</label>
                                             <input type="text" name="billing_city" class="form-control billingFormInput"
-                                                value="">
+                                                value="{{ old('billing_city', $checkoutData['billing_city'] ?? '') }}"
+                                                maxlength="255">
+                                            @error('billing_city')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                     <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
+                                        <div class="form-group">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">State</label>
-                                            <input type="text" name="billing_state" class="form-control billingFormInput"
-                                                value="">
+                                            <input type="text" name="billing_state"
+                                                class="form-control billingFormInput"
+                                                value="{{ old('billing_state', $checkoutData['billing_state'] ?? '') }}"
+                                                maxlength="255">
+                                            @error('billing_state')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
+                                        <div class="form-group">
                                             <label class="mont-font fw-500 font-xsss" for="comment-name">Country</label>
-                                            <input type="text" name="billing_country" class="form-control billingFormInput"
-                                                value="">
+                                            <input type="text" name="billing_country"
+                                                class="form-control billingFormInput"
+                                                value="{{ old('billing_country', $checkoutData['billing_country'] ?? '') }}"
+                                                maxlength="255">
+                                            @error('billing_country')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                     <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
-                                            <label class="mont-font fw-500 font-xsss" for="comment-name">GST Number (Optional)</label>
-                                            <input type="text" name="billing_gst_number" class="form-control billingFormInput"
-                                                value="">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">GST Number
+                                                (Optional)</label>
+                                            <input type="text" name="billing_gst_number"
+                                                class="form-control billingFormInput"
+                                                value="{{ old('billing_gst_number', $checkoutData['billing_gst_number'] ?? '') }}"
+                                                maxlength="15">
+                                            @error('billing_gst_number')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+
                     <div class="col-lg-5 cart-item">
                         <div class="row justify-content-center">
                             <div class="card border-0 mb-4">
@@ -146,7 +202,7 @@
                                                         <input type="hidden" name="quantity"
                                                             value="{{ $qsProd->prodData['quantity'] }}" />
                                                         <div class="col-md-8 col-sm-4 col-xs-6"><span>Denomination
-                                                                 : ₹{{ $qsProd->prodData['denomination'] }}</span>
+                                                                : ₹{{ $qsProd->prodData['denomination'] }}</span>
                                                         </div>
                                                         <input type="hidden" name="denomination"
                                                             value="{{ $qsProd->prodData['denomination'] }}" />
@@ -176,21 +232,24 @@
                                                     </div>
                                                     <div
                                                         class="col-md-6 col-sm-4 col-xs-3 amount mont-font apply-coupan-amount">
-                                                        ₹ {{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] *($qsProd->discount_percentage/100) }}
+                                                        ₹
+                                                        {{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] * ($qsProd->discount_percentage / 100) }}
                                                     </div>
                                                 </div>
                                                 <div class="row ">
-                                                    <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font"><span>Payable
-                                                        Amount : </span>
-                                                </div>
+                                                    <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font">
+                                                        <span>Payable
+                                                            Amount : </span>
+                                                    </div>
 
-                                                <input type="hidden" name="currency" value="INR" />
-                                                <input type="hidden" name="amount" class="hidden-total-payable-amount"
-                                                    value="{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] - $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] *($qsProd->discount_percentage/100) }}">
-                                                <div
-                                                    class="col-md-6 col-sm-4 col-xs-3 amount mont-font total-payable-amount">
-                                                    <span>₹{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] - $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] *($qsProd->discount_percentage/100) }}</span>
-                                                </div>
+                                                    <input type="hidden" name="currency" value="INR" />
+                                                    <input type="hidden" name="amount"
+                                                        class="hidden-total-payable-amount"
+                                                        value="{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] - $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] * ($qsProd->discount_percentage / 100) }}">
+                                                    <div
+                                                        class="col-md-6 col-sm-4 col-xs-3 amount mont-font total-payable-amount">
+                                                        <span>₹{{ $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] - $qsProd->prodData['denomination'] * $qsProd->prodData['quantity'] * ($qsProd->discount_percentage / 100) }}</span>
+                                                    </div>
                                                 </div>
 
 
@@ -217,251 +276,169 @@
     @push('scripts')
         <script type="text/javascript">
             $(document).ready(function() {
+
+
+
+
+
+                function updateSessionData() {
+
+                    console.log(123);
+                    var formData = {
+                        billing_name: $('input[name="billing_name"]').val(),
+                        billing_email: $('input[name="billing_email"]').val(),
+                        billing_tel: $('input[name="billing_tel"]').val(),
+                        billing_zip: $('input[name="billing_zip"]').val(),
+                        billing_address: $('input[name="billing_address"]').val(),
+                        billing_address_two: $('input[name="billing_address_two"]').val(),
+                        billing_city: $('input[name="billing_city"]').val(),
+                        billing_state: $('input[name="billing_state"]').val(),
+                        billing_country: $('input[name="billing_country"]').val(),
+                        billing_gst_number: $('input[name="billing_gst_number"]').val(),
+                        // Add other form fields as needed
+                    };
+
+                    // AJAX POST request to Laravel backend to update session data
+                    $.ajax({
+                        url: '{{ route('updateSessionData') }}', // Replace with your Laravel route
+                        method: 'POST',
+                        data: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            console.log('Session data updated successfully');
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error updating session data:', error);
+                        }
+                    });
+                }
+
+                // Bind updateSessionData function to the input event of input fields
+                $('input[name="billing_name"], input[name="billing_email"], input[name="billing_tel"], input[name="billing_zip"], input[name="billing_address"], input[name="billing_address_two"], input[name="billing_city"], input[name="billing_state"], input[name="billing_country"], input[name="billing_gst_number"]')
+                    .on('input', function() {
+                        updateSessionData();
+                    });
+
+
+                // Optionally bind updateSessionData function to form submit event
+                $('form').submit(function(event) {
+                    updateSessionData();
+                });
+
+
+
                 var storageData = JSON.parse(window.localStorage.getItem('data'));
 
+                $("#checkoutForm").validate({
+                    rules: {
+                        billing_name: {
+                            required: true,
+                            lattersonly: true,
+                            maxlength: 30
+                        },
+                        billing_email: {
+                            required: true,
+                            email: true,
+                            maxlength: 30
+                        },
+                        billing_tel: {
+                            required: true,
+                            indianNumber: true,
+                            minlength: 10,
+                            maxlength: 10
+                        },
+                        billing_zip: {
+                            required: true,
+                            number: true,
+                            minlength: 6,
+                            maxlength: 6
+                        },
+                        billing_address: {
+                            required: true,
+                            maxlength: 40
+                        },
+                        billing_address_two: {
+                            required: true,
+                            maxlength: 40
+                        },
+                        billing_city: {
+                            required: true,
+                            maxlength: 40
+                        },
+                        billing_state: {
+                            required: true,
+                            maxlength: 40
+                        },
+                        billing_country: {
+                            required: true,
+                            maxlength: 40
+                        },
+                        billing_gst_number: {
+                            maxlength: 15
+                        }
+                    },
+                    messages: {
+                        billing_name: {
+                            required: "Please enter a name",
+                            lattersonly: "Please enter a valid name",
+                            maxlength: "Name cannot exceed 255 characters"
+                        },
+                        billing_email: {
+                            required: "Please enter an email",
+                            email: "Please enter a valid email",
+                            maxlength: "Email cannot exceed 255 characters"
+                        },
+                        billing_tel: {
+                            required: "Please enter your phone number",
+                            indianNumber: "Please enter a valid Indian number",
+                            minlength: "Phone number must be 10 digits",
+                            maxlength: "Phone number must be 10 digits"
+                        },
+                        billing_zip: {
+                            required: "Please enter your zip code",
+                            number: "Please enter a valid zip code",
+                            minlength: "Zip code must be 6 digits",
+                            maxlength: "Zip code must be 6 digits"
+                        },
+                        billing_address: {
+                            required: "Please enter your address",
+                            maxlength: "Address cannot exceed 40 characters"
+                        },
+                        billing_address_two: {
+                            required: "Please enter your address",
+                            maxlength: "Address cannot exceed 40 characters"
+                        },
+                        billing_city: {
+                            required: "Please enter your city",
+                            maxlength: "City cannot exceed 40 characters"
+                        },
+                        billing_state: {
+                            required: "Please enter your state",
+                            maxlength: "State cannot exceed 40 characters"
+                        },
+                        billing_country: {
+                            required: "Please enter your country",
+                            maxlength: "Country cannot exceed 40 characters"
+                        },
+                        billing_gst_number: {
+                            maxlength: "GST number cannot exceed 15 characters"
+                        }
+                    },
+                    submitHandler: function(form) {
+                        form.submit();
+                    }
+                });
+
+                jQuery.validator.addMethod('lattersonly', function(value, element) {
+                    return /^[a-zA-Z\s-]+$/.test(value);
+                }, "Please enter a valid name");
+
+                jQuery.validator.addMethod('indianNumber', function(value, element) {
+                    return /^[6-9]\d{9}$/.test(value);
+                }, "Please enter a valid Indian number");
             });
-            $('.coupan-code-amount').css('display', 'none');
-            $('#remove-coupan-code').css('display', 'none');
-
-            // final step of order place api
-            $('#place-order').click(function(e) {
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-                e.preventDefault();
-                var formData = new FormData();
-                formData.append('coupan', $('#coupan-code').val());
-
-
-                var type = "POST";
-                var ajaxurl = "{{ url('/') }}";
-                $.ajax({
-                    type: type,
-                    url: ajaxurl,
-                    contentType: 'application/json',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: 'json',
-                    success: function(data) {
-                        // debugger;
-                        console.log(data);
-                    },
-                    error: function(data) {
-                        console.log(data);
-                    }
-                });
-                return false;
-            });
-
-            // Apply Coupan
-            function couponCodeasd() {
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-
-                var formData = new FormData();
-                formData.append('coupan', $('#coupan-code').val());
-                formData.append('grand_total', $('#grand-amount').val());
-
-                var type = "POST";
-                var ajaxurl = "{{ url('/apply-coupan') }}";
-                $.ajax({
-                    type: type,
-                    url: ajaxurl,
-                    contentType: 'application/json',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: 'json',
-                    success: function(data) {
-                        $('.apply-coupan-amount').text(data.coupan + '%');
-                        $('.hidden-total-payable-amount').val(data.aftApplyCoupan);
-                        $('.coupan-code-amount').css('display', 'contents');
-                        $('#remove-coupan-code').css('display', 'contents');
-                        $('.total-payable-amount').text('₹' + data.aftApplyCoupan);
-
-                    },
-                    error: function(data) {
-                        console.log(data);
-                    }
-                });
-            }
-            $('#apply-coupan').click(function(e) {
-
-                return false;
-            });
-
-            // on click apply coupon code starts here
-
-            const applyButton = $('#apply-coupan');
-            const loaderImage = $('#custLoaderImage');
-            const placeOrder = $('#placeOrder');
-            isHideLoaderPresent = loaderImage.hasClass('hideLoader');
-            const inputFeild = $('#coupan-code');
-            const discoutDiv = $('#discoutDiv');
-            const coupanCodeInput = $('#coupan-code').val();
-            // couponCode = false;
-            couponCode = true;
-
-            function showLoader() {
-                if (isHideLoaderPresent) {
-                    loaderImage.removeClass("hideLoader");
-                    setTimeout(function() {
-                        loaderImage.addClass('hideLoader');
-                    }, 1000);
-                }
-            };
-
-
-
-
-            function placeOrder() {
-                if (applyButton.html() === "Apply") {
-                    couponCodeasd();
-                    applyButton.html("Remove");
-                    applyButton.addClass("red");
-                    inputFeild.addClass("custDisabled");
-                    $(".error-coupon-code").text('Coupon apllied successfully');
-                    $(".error-coupon-code").addClass('greenColor');
-                    console.log(applyButton.html());
-                } else {
-                    removeDiscount();
-                    applyButton.html("Apply");
-                    applyButton.removeClass("red");
-                    inputFeild.removeClass("custDisabled");
-                    discoutDiv.css("display", "none");
-                    $(".error-coupon-code").css('display', 'none');
-                };
-            };
-
-
-            applyButton.click(function(e) {
-                e.preventDefault();
-                if (!($("#coupan-code").val() == "")) { // value not empty
-                    if (couponCode) {
-                        showLoader();
-                        applyDiscount();
-                    } else {
-                        $(".error-coupon-code").text('This is not a valid code');
-                        $(".error-coupon-code").addClass('redColor');
-
-                    }
-                } else {
-                    $(".error-coupon-code").text('Coupon code can not be BLANK');
-                    $(".error-coupon-code").addClass('redColor');
-                };
-            });
-
-            // on click apply button code ends here
-
-            //  coupon code blank validation code starts here
-
-            function orderProcessingTimeOut() {
-                placeOrder.click(function(e) {
-                    e.preventDefault();
-                    showLoader();
-                });
-            }
-
-
-            //  coupon code blank validation code ends here
-            // remove copuan code
-
-            function removeDiscount() {
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-                var formData = new FormData();
-                formData.append('grand_total', $('#grand-amount').val());
-
-
-                var type = "POST";
-                var ajaxurl = "{{ url('/remove-apply-coupan') }}";
-                $.ajax({
-                    type: type,
-                    url: ajaxurl,
-                    contentType: 'application/json',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: 'json',
-                    success: function(data) {
-                        // debugger;
-                        $('.apply-coupan-amount').text(data.coupan);
-                        $('.coupan-code-amount').css('display', 'none');
-                        $('#remove-coupan-code').css('display', 'none');
-                        $('#coupan-code').val('');
-                        $('.total-payable-amount').text('₹' + data.grandTotal);
-                        $('.hidden-total-payable-amount').val(data.grandTotal);
-                    },
-                    error: function(data) {
-                        console.log(data);
-                    }
-                });
-            };
-
-            //form validtation starts here
-
-            $("#checkoutForm").validate({
-                rules: {
-                    billing_name: {
-                        required: true,
-                        lattersonly: true
-                    },
-                    billing_email: {
-                        required: true,
-                        email: true
-                    },
-                    billing_tel: {
-                        required: true,
-                        indianNumber: true,
-                        minlength: 10,
-                        maxlength: 10
-                    },
-                    billing_zip: {
-                        required: true,
-                        number: true,
-                        minlength: 6,
-                        maxlength: 6
-                    },
-                    billing_address: "required",
-                    billing_address_two: "required",
-                    billing_city: "required",
-                    billing_state: "required"
-                },
-                messages: {
-                    billing_name: {
-                        required: "Please enter a name",
-                        lattersonly: "Please enter a valid name"
-                    },
-                    billing_email: {
-                        required: "Please enter an email",
-                        email: "Please enter a valid email"
-                    },
-                    billing_tel: {
-                        required: "Please enter your phone number",
-                        indianNumber: "Please enter a valid Indian number"
-                    },
-                    billing_zip: {
-                        required: "Please enter your zip code"
-                    }
-                }
-            });
-
-            jQuery.validator.addMethod('lattersonly', function(value, element) {
-                return /^[a-zA-Z\s-]+$/.test(value);
-            }, "Please enter a valid name");
-
-            jQuery.validator.addMethod('indianNumber', function(value, element) {
-                return /^[6-9]\d{9}$/.test(value);
-            }, "Please enter a valid Indian number");
         </script>
     @endpush
 @endsection

@@ -277,9 +277,9 @@
                             <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6">
                                 <h5 class="text-orange">Quick Read</h5>
                                 <ul>
-                                    <li><a class="font-xsss text-black" href="{{ url('terms_of_use') }}">Term of
+                                    <li><a class="font-xsss text-black" href="{{ url('terms-of-use') }}">Term of
                                             use</a></li>
-                                    <li><a class="font-xsss text-black" href="{{ url('private_policy') }}">Privacy
+                                    <li><a class="font-xsss text-black" href="{{ url('privacy-policy') }}">Privacy
                                             Policy</a></li>
                                 </ul>
                             </div>
@@ -288,7 +288,7 @@
                                 <ul>
                                     <li><a class="font-xsss text-black" href="{{ url('/') }}">Home</a></li>
                                     <li><a class="font-xsss text-black" href="{{ url('about') }}">About</a></li>
-                                    <li><a class="font-xsss text-black" href="{{ url('contact_us') }}">Contact Us</a>
+                                    <li><a class="font-xsss text-black" href="{{ url('contact-us') }}">Contact Us</a>
                                     </li>
                                 </ul>
                             </div>
@@ -569,8 +569,8 @@
                                                     <p
                                                         class="fw-500 font-xssss text-grey-600 mt-2 pt-3 d-inline-block text-center">
                                                         By continuing, you agree to Amazepay's <a
-                                                            href="{{ route('tnc') }}" class="text-current">Terms and
-                                                            Conditions</a> and <a href="{{ route('private-policy') }}"
+                                                            href="{{ route('terms-of-use') }}" class="text-current">Terms and
+                                                            Conditions</a> and <a href="{{ route('privacy-policy') }}"
                                                             class="text-current">Privacy Policy</a>.
                                                     </p>
                                                 </div>
@@ -659,9 +659,9 @@
                             </div>
                             <div class="col-sm-12 p-0 text-center">
                                 <p class="fw-900 font-xssss text-grey-600 mt-2 pt-3 d-inline-block text-center">
-                                    By continuing, you agree to Amazepay's <a href="{{ route('tnc') }} "
+                                    By continuing, you agree to Amazepay's <a href="{{ route('terms-of-use') }} "
                                         class="text-current">Term ans Condition</a> and <a
-                                        href="{{ route('private-policy') }}" class="text-current">Privacy Policy
+                                        href="{{ route('privacy-policy') }}" class="text-current">Privacy Policy
                                     </a>.
                                 </p>
                             </div>

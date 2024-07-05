@@ -66,9 +66,8 @@
             --}}
             <!-- header wrapper desktop view -->
             <nav class="navbar navbar-expand-md navbar-light bg-light d-none d-md-block navz fixed-top">
-                <div class="container d-flex justify-content-between align-items-center">
-                    <a href="/" class="navbar-brand"><img src="{{ asset('images/logo.png') }}" alt="logo"
-                            class="custLogo"></a>
+                <div class="container">
+                    <a href="/" class="navbar-brand"><img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo"></a>
                     <button class="navbar-toggler" type="button" data-toggle="collapse"
                         data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
                         aria-label="Toggle navigation">
@@ -79,24 +78,6 @@
                             <li class="nav-item active">
                                 <a class="nav-link" href="/">Home</a>
                             </li>
-                            <!-- <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button"
-                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Services <i
-                                        class="ti-angle-down"></i></a>
-                                <div class="dropdown-menu" aria-labelledby="servicesDropdown">
-                                    <a class="dropdown-item" href="#">Money Transfer</a>
-                                    <a class="dropdown-item" href="#">Bill payment</a>
-                                </div>
-                            </li> -->
-                            <!-- <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="productsDropdown" role="button"
-                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Products <i
-                                        class="ti-angle-down"></i></a>
-                                <div class="dropdown-menu" aria-labelledby="productsDropdown">
-                                    <a class="dropdown-item" href="#">Gift Cards</a>
-                                    <a class="dropdown-item" href="#">Bank Gift Cards</a>
-                                </div>
-                            </li> -->
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('about') }}">About</a>
                             </li>
@@ -105,24 +86,17 @@
                             </li>
                         </ul>
 
-
-
-
-
-
-                        <form class="form-inline my-2 my-lg-0" action="{{ route('search') }}" method="GET">
-                            <div class="input-group search-box">
-                                <input type="text" id="search" class="form-control" placeholder="Search here..."
-                                    name="query" required>
+                        <form class="form-inline my-2 my-lg-0 flex-grow-1 mr-3" action="{{ route('search') }}" method="GET">
+                            <div class="input-group w-100">
+                                <input type="text" id="search" class="form-control ml-5" placeholder="Search here..." name="query" required>
                                 <div class="input-group-append">
-                                    <span class="input-group-text">
-                                        <button class="btn btn-link p-0 ml-n3" type="submit">
-                                            <i class="fas fa-search"></i>
-                                        </button>
-                                    </span>
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
                                 </div>
                             </div>
                         </form>
+
                         <div class="ml-2">
                             @if (Auth::check())
                                 <div class="dropdown">
@@ -132,8 +106,7 @@
                                     </button>
                                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                         <a class="dropdown-item" href="{{ route('profile') }}"><i
-                                                class="ti-user font-sm"></i>
-                                            Profile</a>
+                                                class="ti-user font-sm"></i> Profile</a>
                                         <a class="dropdown-item" href="{{ route('my-order') }}"><i
                                                 class="fa-sharp fa-solid fa-cart-shopping"></i> My Order</a>
                                         <a class="dropdown-item" href="{{ route('userLogOut') }}"><i
@@ -141,18 +114,16 @@
                                     </div>
                                 </div>
                             @else
-                                <a href="#"
-                                    class="btn navbar-btn bg-dark fw-500 text-white font-xsss login-button"
+                                <a href="#" class="btn navbar-btn bg-dark fw-500 text-white font-xsss login-button"
                                     data-toggle="modal" data-target="#Modallogin">Login</a>
-                                <a href="#"
-                                    class="btn navbar-btn bg-current fw-500 text-white font-xsss register-form register-button"
+                                <a href="#" class="btn navbar-btn bg-current fw-500 text-white font-xsss register-form register-button"
                                     data-toggle="modal" data-target="#ModalregisterD">Register</a>
-                                {{-- <a href="{{ route('send-test-sms') }}" class="header-btn bg-current fw-500 text-white font-xssss">Send SMS</a> --}}
                             @endif
                         </div>
                     </div>
                 </div>
             </nav>
+
 
 
 
@@ -181,7 +152,7 @@
                             <a class="nav-link" href="{{ url('about') }}">About</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url('contact_us') }}">Contact Us</a>
+                            <a class="nav-link" href="{{ url('contact-us') }}">Contact Us</a>
                         </li>
 
                         @guest
@@ -258,11 +229,11 @@
                                         alt="logo" class="custLogo"></a>
 
                                 <p class="w-100 mt-4 text-black">
-                                    <strong>Company Name :</strong> Frenetic India Services Private Limited<br />
-                                    <strong>CIN :</strong> U72900MH2022PTC391272<br />
-                                    98-103, 4 Floor, Aditya Industrial Estate Co-op
-                                    Premises Ltd<br /> Mindspace Behind Evershine
-                                    Mall Off Link Road Malad West <br /> Mumbai -400064.
+                                    <strong>Company Name :</strong> <a href="{{ env('COMPANY_NEW_WEBSITE_LINK_ABOUT_US') }}" target="_blank">{{ env('COMPANY_NAME') }}</a><br />
+
+
+                                    <strong>CIN :</strong>  {{ config('companyDefaultValues.company_cin') }}<br />
+                                    {{ config('companyDefaultValues.company_address') }}
                                 </p>
 
                             </div>
@@ -281,6 +252,8 @@
                                             use</a></li>
                                     <li><a class="font-xsss text-black" href="{{ url('privacy-policy') }}">Privacy
                                             Policy</a></li>
+
+                                             <li><a class="font-xsss text-black" href="{{ config('companyDefaultValues.company_new_website_link') }}">Who we are?</a></li>
                                 </ul>
                             </div>
                             <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6">
@@ -309,11 +282,18 @@
                                 </ul>
                                 <ul class="mt-3">
 
-                                    <li><a class="text-black" href="mail:support@amazepays.in"><i
-                                                class="fas fa-envelope"></i> support@amazepays.in</a></li>
+                                    <li>
+                                        <a class="text-black" href="mailto:{{ config('companyDefaultValues.company_email') }}">
+                                            <i class="fas fa-envelope"></i> {{ config('companyDefaultValues.company_email') }}
+                                        </a>
+                                    </li>
 
-                                    <li><a class="text-black" href="phone:+91-82088 93951"><i
-                                                class="fas fa-phone-alt"></i> +91 8208893951</a></li>
+
+                                                <li>
+                                                    <a class="text-black" href="tel:{{ str_replace(' ', '', config('companyDefaultValues.company_contact_no')) }}">
+                                                        <i class="fas fa-phone-alt"></i> +91 {{ config('companyDefaultValues.company_contact_no') }}
+                                                    </a>
+                                                </li>
 
                                 </ul>
                             </div>

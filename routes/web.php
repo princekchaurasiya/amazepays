@@ -82,7 +82,7 @@ Route::post('/change-password-update', [ChangePasswordUpdateController::class, '
 Route::get('/about', function () {
     return view('userpanel/about');
 })->name('about');
-Route::get('/contact_us', function () {
+Route::get('/contact-us', function () {
     return view('userpanel/contact-form');
 })->name('contact-us');
 Route::get('/terms-of-use', function () {

@@ -1468,7 +1468,7 @@ h3 {
     --gray: #6c757d;
     --gray-dark: #343a40;
     --primary: #1e74fd;
-    --secondary: #673bb7;
+    --secondary: #01007f;
     --success: #10d876;
     --info: #2754e6;
     --warning: #fe9431;
@@ -4342,8 +4342,8 @@ fieldset:disabled a.btn {
 
 .btn-secondary {
     color: #fff;
-    background-color: #673bb7;
-    border-color: #673bb7;
+    background-color: #01007f;
+    border-color: #01007f;
 }
 .btn-secondary:hover {
     color: #fff;
@@ -4360,8 +4360,8 @@ fieldset:disabled a.btn {
 .btn-secondary.disabled,
 .btn-secondary:disabled {
     color: #fff;
-    background-color: #673bb7;
-    border-color: #673bb7;
+    background-color: #01007f;
+    border-color: #01007f;
 }
 .btn-secondary:not(:disabled):not(.disabled):active,
 .btn-secondary:not(:disabled):not(.disabled).active,
@@ -4624,13 +4624,13 @@ fieldset:disabled a.btn {
 }
 
 .btn-outline-secondary {
-    color: #673bb7;
-    border-color: #673bb7;
+    color: #01007f;
+    border-color: #01007f;
 }
 .btn-outline-secondary:hover {
     color: #fff;
-    background-color: #673bb7;
-    border-color: #673bb7;
+    background-color: #01007f;
+    border-color: #01007f;
 }
 .btn-outline-secondary:focus,
 .btn-outline-secondary.focus {
@@ -4638,15 +4638,15 @@ fieldset:disabled a.btn {
 }
 .btn-outline-secondary.disabled,
 .btn-outline-secondary:disabled {
-    color: #673bb7;
+    color: #01007f;
     background-color: transparent;
 }
 .btn-outline-secondary:not(:disabled):not(.disabled):active,
 .btn-outline-secondary:not(:disabled):not(.disabled).active,
 .show > .btn-outline-secondary.dropdown-toggle {
     color: #fff;
-    background-color: #673bb7;
-    border-color: #673bb7;
+    background-color: #01007f;
+    border-color: #01007f;
 }
 .btn-outline-secondary:not(:disabled):not(.disabled):active:focus,
 .btn-outline-secondary:not(:disabled):not(.disabled).active:focus,
@@ -6740,7 +6740,7 @@ a.badge-primary.focus {
 
 .badge-secondary {
     color: #fff;
-    background-color: #673bb7;
+    background-color: #01007f;
 }
 a.badge-secondary:hover,
 a.badge-secondary:focus {
@@ -8189,7 +8189,7 @@ button.bg-primary:focus {
 }
 
 .bg-secondary {
-    background-color: #673bb7 !important;
+    background-color: #01007f !important;
 }
 
 a.bg-secondary:hover,
@@ -8318,7 +8318,7 @@ button.bg-dark:focus {
 }
 
 .border-secondary {
-    border-color: #673bb7 !important;
+    border-color: #01007f !important;
 }
 
 .border-success {
@@ -12508,7 +12508,7 @@ a.text-primary:focus {
 }
 
 .text-secondary {
-    color: #673bb7 !important;
+    color: #01007f !important;
 }
 
 a.text-secondary:hover,
@@ -16445,23 +16445,27 @@ body {
     /* Remove default button styles */
     background: none;
     border: none;
+    font-family: "Montserrat", sans-serif !important;
     outline: none;
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none !important;
     cursor: pointer;
     text-decoration: underline; /* Add underline */
-    color: #007bff; /* Set link color */
+    color: #2754e6; /* Set link color */
     transition: color 0.3s; /* Add smooth transition for color change on hover */
 }
 
 .login-otp-link:hover {
     background: none;
-    color: #000 !important; /* Set a different color on hover */
+    color: #2754e6 !important; /* Set a different color on hover */
     cursor: pointer;
     text-decoration: underline;
 }
 
 .login-otp-link:active {
     background: none;
-    color: #000 !important; /* Set a different color on hover */
+    color: #2754e6 !important; /* Set a different color on hover */
     cursor: pointer;
     text-decoration: underline;
     background-color: transparent !important;
@@ -16469,7 +16473,7 @@ body {
 
 .login-otp-link:focus {
     background: none;
-    color: #000 !important; /* Set a different color on hover */
+    color: #2754e6 !important; /* Set a different color on hover */
     cursor: pointer;
     text-decoration: underline;
     background-color: transparent !important;

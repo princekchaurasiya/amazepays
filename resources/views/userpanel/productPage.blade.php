@@ -179,6 +179,69 @@
                         </div>
                     </div>
 
+
+
+                    <div class="row card-form add-gift-cards mb-4 p-4 shadow">
+                        <h6 class="mb-3 fw-600 font-xss mt-2 text-center font-lg">Add Gift Cards to your Account</h6>
+                        <div class="row mt-3">
+                            <div class="col-lg-4 col-md-4 mb-4">
+                                <div class="card p-3 border-0 shadow-sm">
+                                    <div class="text-center">
+                                        <h2 class="fw-500 text-orange display2-size"><img src="{{ asset('images/addTemplate.png') }}" alt="amazepay_addTemp"></h2>
+                                        <p class="font-xss fw-500 text-black lh-26 mt-2">Easily send a Gift Card from AmazePays to your friends or family using the 'Send as a Gift' option.</p>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-4 mb-4">
+                                <div class="card p-3 border-0 shadow-sm">
+                                    <div class="text-center">
+                                        <img src="{{ asset('images/addWallet.png') }}" alt="amazepay_addTemp">
+                                        <p class="font-xss fw-500 text-black lh-26 mt-2">The e-gift card that you order from this page, will be added to your AmazePays account automatically.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-md-4 mb-4">
+                                <div class="card p-3 border-0 shadow-sm">
+                                    <div class="text-center">
+                                        <img src="{{ asset('images/secure.png') }}" alt="amazepay_addTemp">
+                                        <p class="font-xss fw-500 text-black lh-26 mt-2">For better security, the details of your e-gift card will be sent to you via email and SMS only.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row personalise-gift-card p-0">
+                        <div class="col-lg-12 p-0">
+                            <div class="card p-4 shadow">
+                                <div class="tabs">
+                                    <input type="radio" name="tabs" id="tabone" checked="checked">
+                                    <label for="tabone">How to Redeem</label>
+                                    <div class="tab p-3">
+                                        <ul class="list-unstyled">
+                                            <li>To redeem your Gift Card from AmazePays, follow these simple steps:</li>
+                                            <li>1. Visit <a href="https://www.amazepays.in" target="_blank" rel="noopener noreferrer">www.amazepays.in</a> </li>
+                                            <li>2. Log in to your AmazePays account</li>
+                                            <li>3. Navigate to the "My Orders" section.</li>
+                                            <li>4. Enter the Gift Card ID number and PIN provided, alternatively, check your SMS or email for the Gift Card ID number and PIN.</li>
+                                        </ul>
+
+                                    </div>
+                                    <input type="radio" name="tabs" id="tabtwo">
+                                    <label for="tabtwo">Description</label>
+                                    <div class="tab p-3">
+                                        <p>{{ $productDetails['description'] }}</p>
+                                    </div>
+                                    <input type="radio" name="tabs" id="tabthree">
+                                    <label for="tabthree">Terms & Condition</label>
+                                    <div class="tab term-condition p-3">
+                                        {!! $productDetails['tnc']->content !!}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </form>
             </div>
         </div>
@@ -319,9 +382,11 @@
                 // Show/hide recipient details based on gift send option
                 $('input[name="gift_send_option"]').change(function() {
                     if ($(this).val() === 'send_as_gift') {
-                        $('.gifting-details').removeClass('d-none');
+                        $('.gifting-details').removeClass('d-none').addClass('visible');
+                        $('.add-gift-cards').removeClass('d-none').addClass('visible');
                     } else {
-                        $('.gifting-details').addClass('d-none');
+                        $('.gifting-details').addClass('d-none').removeClass('visible');
+                        $('.add-gift-cards').addClass('d-none').removeClass('visible');
                     }
                 });
             });

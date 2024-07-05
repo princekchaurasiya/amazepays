@@ -20,7 +20,10 @@ return [
     'otpExpiration' => $otpExpiration,
     'company_name' => $company_name,
 
+
     'gst_number' => env('GST_NUMBER', '27AAFCF2328E1ZX'),
+
+    'company_official_name' => env('COMPANY_NAME', 'Frenetic India Services Private Limited'),
     'company_address' => env('COMPANY_ADDRESS', '98-103, 4 Floor, Aditya Industrial Estate Co-op Premises Ltd Mindspace Behind Evershine Mall Off Link Road Malad West Mumbai 400064.'),
     'company_cin' => env('COMPANY_CIN', 'U72900MH2022PTC391272'),
     'company_pan' => env('COMPANY_PAN', 'AAFCF2328E'),
@@ -40,6 +43,9 @@ return [
     'sendMailFrom' => env('SEND_MAIL_FROM', 'it@amazepays'),
     'company_website' => env('COMPANY_WEBSITE', 'https://amazepays.in/'),
     'company_contact_no' => env('COMPANY_CONTACT_NO', '8208893951'),
+    'company_new_website_link' => env('COMPANY_NEW_WEBSITE_LINK', 'https://theamazeindia.com'),
+    'company_new_website_link_about_us' => env('COMPANY_NEW_WEBSITE_LINK', 'https://theamazeindia.com/about.html'),
+
 ];
 
 ?>

@@ -82,15 +82,15 @@ Route::post('/change-password-update', [ChangePasswordUpdateController::class, '
 Route::get('/about', function () {
     return view('userpanel/about');
 })->name('about');
-Route::get('/contact_us', function () {
+Route::get('/contact-us', function () {
     return view('userpanel/contact-form');
 })->name('contact-us');
-Route::get('/terms_of_use', function () {
-    return view('userpanel/terms_of_use');
-})->name('tnc');
-Route::get('/private_policy', function () {
-    return view('userpanel/private_policy');
-})->name('private-policy');
+Route::get('/terms-of-use', function () {
+    return view('userpanel/terms-of-use');
+})->name('terms-of-use');
+Route::get('/privacy-policy', function () {
+    return view('userpanel/privacy-policy');
+})->name('privacy-policy');
 Route::get('/all_transaction', function () {
     return view('userpanel/all_transaction');
 });

@@ -37,12 +37,12 @@
                                     <div class="form-group mb-3 md-mb25">
                                         <textarea class="w-100 h125 p-3 form-control" name="message" placeholder="Message"></textarea>
                                     </div>
-                                    <div class="form-check text-left mt-3 float-left md-mb25">
+                                    {{-- <div class="form-check text-left mt-3 float-left md-mb25">
                                         <input type="checkbox" class="form-check-input mt-2" id="exampleCheck1">
                                         <label class="form-check-label font-xsss text-grey-500 fw-500"
                                             for="exampleCheck1">I agree to the term of this <a href="#"
                                                 class="text-grey-600 fw-600">Privacy Policy</a></label>
-                                    </div>
+                                    </div> --}}
                                     <button type="submit"
                                         class="form-control rounded-lg h60 float-right bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 w175">Submit</button>
                                 </div>
@@ -54,17 +54,15 @@
                     <div class="row">
                         <div class="col-lg-4 col-md-4 md-mb25">
                             <h4 class="text-grey-900 fw-600 font-xl ls-2">Address</h4>
-                            <h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">98-103, 4 Floor, Aditya Industrial Estate
-                                Co-op Premises Ltd Mindspace Behind Evershine
-                                Mall Off Link Road Malad (West) <br />Mumbai, Maharashtra 400064</h4>
+                            <h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">{{ config('companyDefaultValues.company_address') }}</h4>
                         </div>
                         <div class="col-lg-4 col-md-4 md-mb25">
                             <h4 class="text-grey-900 fw-600 font-xl ls-2">Email Us</h4>
-                            <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4 mb-0">support@amazepay.in</h5>
+                            <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4 mb-0">{{ config('companyDefaultValues.company_email') }}</h5>
                         </div>
                         <div class="col-lg-4 col-md-4 md-mb25">
                             <h4 class="text-grey-900 fw-600 font-xl ls-2">Contact Us</h4>
-                            <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-0">+91-98211 99497</h5>
+                            <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-0">+91 {{ config('companyDefaultValues.company_contact_no') }}</h5>
                         </div>
                     </div>
                 </div>

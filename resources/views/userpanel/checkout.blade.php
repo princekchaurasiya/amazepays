@@ -186,28 +186,29 @@
                                                         class="float-right mont-font">Edit</a></div>
                                             </div>
                                             <div class="row cart-item-record">
-                                                <div class="col-md-6 col-sm-4 col-xs-12">
+                                                <div class="col-md-5 col-sm-4 col-xs-12">
                                                     <img class="cart-coupan-img"
                                                         src="{{ $qsProd['images']->small == null ? URL::asset('/images/hamburger.jpg') : $qsProd['images']->small }}"
                                                         alt="Avatar" style="width:100%;">
                                                 </div>
-                                                <div class="col-md-6 col-sm-4 col-xs-9">
+                                                <div class="col-md-7 col-sm-4 col-xs-9 ">
                                                     <span class="product-name mont-font">{{ $qsProd->name }}</span>
                                                     <div class="row item-qty-subtotal">
+                                                        <div class="col-md-8 col-sm-4 col-xs-6"><span>Denomination
+                                                            : ₹{{ $qsProd->prodData['denomination'] }}</span>
+                                                    </div>
+                                                    <input type="hidden" name="denomination"
+                                                        value="{{ $qsProd->prodData['denomination'] }}" />
+                                                    <input type="hidden" name="numericCode"
+                                                        value="{{ $qsProd['currency']->numericCode }}" />
                                                         <input type="hidden" name="sku"
                                                             value="{{ $qsProd->sku }}" />
-                                                        <div class="col-md-4 col-sm-4 col-xs-6"><span>Qty :
+                                                        <div class="col-md-12 col-sm-4 col-xs-6"><span>Qty :
                                                                 {{ $qsProd->prodData['quantity'] }}</span>
                                                         </div>
                                                         <input type="hidden" name="quantity"
                                                             value="{{ $qsProd->prodData['quantity'] }}" />
-                                                        <div class="col-md-8 col-sm-4 col-xs-6"><span>Denomination
-                                                                : ₹{{ $qsProd->prodData['denomination'] }}</span>
-                                                        </div>
-                                                        <input type="hidden" name="denomination"
-                                                            value="{{ $qsProd->prodData['denomination'] }}" />
-                                                        <input type="hidden" name="numericCode"
-                                                            value="{{ $qsProd['currency']->numericCode }}" />
+
                                                     </div>
                                                 </div>
                                             </div>
@@ -341,7 +342,7 @@
                         billing_email: {
                             required: true,
                             email: true,
-                            maxlength: 30
+                            maxlength: 50
                         },
                         billing_tel: {
                             required: true,
@@ -357,11 +358,11 @@
                         },
                         billing_address: {
                             required: true,
-                            maxlength: 40
+                            maxlength: 50
                         },
                         billing_address_two: {
                             required: true,
-                            maxlength: 40
+                            maxlength: 50
                         },
                         billing_city: {
                             required: true,
@@ -388,7 +389,7 @@
                         billing_email: {
                             required: "Please enter an email",
                             email: "Please enter a valid email",
-                            maxlength: "Email cannot exceed 255 characters"
+                            maxlength: "Email cannot exceed 50 characters"
                         },
                         billing_tel: {
                             required: "Please enter your phone number",
@@ -404,11 +405,11 @@
                         },
                         billing_address: {
                             required: "Please enter your address",
-                            maxlength: "Address cannot exceed 40 characters"
+                            maxlength: "Address cannot exceed 50 characters"
                         },
                         billing_address_two: {
                             required: "Please enter your address",
-                            maxlength: "Address cannot exceed 40 characters"
+                            maxlength: "Address cannot exceed 50 characters"
                         },
                         billing_city: {
                             required: "Please enter your city",

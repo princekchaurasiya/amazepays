@@ -130,70 +130,76 @@
             <!-- header wrapper mobile view -->
             {{-- <div class="container-fluid"> <!-- Use a container to control the width of the content --> --}}
 
-            <nav class="navbar navbar-expand-lg navbar-light bg-light navz">
-                <a class="navbar-brand" href="/">
-                    <img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo">
-                </a>
+                <nav class="navbar navbar-expand-lg navbar-light bg-light navz">
+                    <div class="container-fluid">
 
-                <!-- Toggle button for collapsed navbar -->
-                <button class="navbar-toggler" type="button" data-toggle="collapse"
-                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                        <!-- Logo -->
+                        <a class="navbar-brand mr-auto" href="/">
+                            <img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo">
+                        </a>
 
-                <!-- Navbar items -->
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav ml-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url('about') }}">About</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url('contact-us') }}">Contact Us</a>
-                        </li>
-
-                        @guest
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-toggle="modal" data-target="#ModalregisterD">New
-                                    Customer?</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-toggle="modal" data-target="#Modallogin">Sign
-                                    In</a>
-                            </li>
-                        @endguest
-
-                        @auth
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('profile') }}">{{ Auth::user()->name }}</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('userLogOut') }}">
-                                    Logout
-                                </a>
-
-                            </li>
-                        @endauth
-
-                        <li class="nav-item">
-                            <form class="form-inline my-2 my-lg-0" action="{{ route('search') }}" method="GET">
-                                <div class="input-group">
-                                    <input type="text" id="search" class="form-control"
-                                        placeholder="Search here..." name="query" required>
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary" type="submit">
-                                            <i class="fas fa-search"></i>
-                                        </button>
-                                    </div>
+                        <!-- Centered Search Bar -->
+                        <form class="form-inline my-lg-0 mx-auto custom-search-form" action="{{ route('search') }}" method="GET">
+                            <div class="input-group">
+                                <input type="text" id="search" class="form-control form-control-sm"
+                                    placeholder="Search here..." name="query" required>
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary btn-sm" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
                                 </div>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
+                            </div>
+                        </form>
+
+                        <!-- Toggle button for collapsed navbar -->
+                        <button class="navbar-toggler ml-2 ml-lg-0" type="button" data-toggle="collapse"
+                            data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+
+                        <!-- Navbar items (hidden by default) -->
+                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                            <ul class="navbar-nav ml-auto">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/">Home</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url('about') }}">About</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url('contact-us') }}">Contact Us</a>
+                                </li>
+
+                                @guest
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#" data-toggle="modal" data-target="#ModalregisterD">New
+                                        Customer?</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#" data-toggle="modal" data-target="#Modallogin">Sign
+                                        In</a>
+                                </li>
+                                @endguest
+
+                                @auth
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('profile') }}">{{ Auth::user()->name }}</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('userLogOut') }}">
+                                        Logout
+                                    </a>
+                                </li>
+                                @endauth
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+
+
+
+
 
 
             {{-- </div> --}}
@@ -569,48 +575,50 @@
     </div>
     <!-- end of Modal Login -->
     <!-- modal otp verificationstarts here  -->
-    <div class="modal fade" id="otpVerificationModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-        data-backdrop="true" aria-hidden="true">
-        <div class="modal-dialog" role="document">
+    <div class="modal fade" id="otpVerificationModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-backdrop="true" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="otpModalLabel">OTP Verification</h5>
-                    <button type="button" class="close otp-modal-close-style modal-otp-close" data-dismiss="modal"
-                        aria-label="Close">
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <h6>Please enter the one-time password<br>to verify your account</h6>
-                    <div>
+                    <h6 class="text-center">Please enter the one-time password<br>to verify your account</h6>
+                    <div class="text-center mt-3">
                         <span>A code has been sent to</span>
-                        <small>*******</small>
+                        <small class="font-weight-bold">*******</small>
                     </div>
-                    <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2">
+                    <div id="otp" class="inputs d-flex justify-content-center mt-3">
                         <!-- Create input fields for the OTP digits (1 to 6) -->
-                        <input class="m-2 text-center form-control rounded" type="text" id="first"
-                            maxlength="1" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="second"
-                            maxlength="1" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="third"
-                            maxlength="1" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="fourth"
-                            maxlength="1" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="fifth"
-                            maxlength="1" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="sixth"
-                            maxlength="1" />
+                        <input class="m-2 text-center form-control rounded" type="text" id="first" maxlength="1" oninput="moveToNext(this, 'second')" />
+                        <input class="m-2 text-center form-control rounded" type="text" id="second" maxlength="1" oninput="moveToNext(this, 'third')" />
+                        <input class="m-2 text-center form-control rounded" type="text" id="third" maxlength="1" oninput="moveToNext(this, 'fourth')" />
+                        <input class="m-2 text-center form-control rounded" type="text" id="fourth" maxlength="1" oninput="moveToNext(this, 'fifth')" />
+                        <input class="m-2 text-center form-control rounded" type="text" id="fifth" maxlength="1" oninput="moveToNext(this, 'sixth')" />
+                        <input class="m-2 text-center form-control rounded" type="text" id="sixth" maxlength="1" />
                     </div>
                     <!-- Placeholder element for displaying error message -->
-                    <div class="error-otpVerifyInput text-danger font-xssss mt-2"></div>
+                    <div class="error-otpVerifyInput text-center text-danger mt-3 font-weight-bold"></div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer justify-content-center">
                     <!-- Submit button to validate and verify the OTP -->
                     <button class="btn btn-danger px-4" id="otpVerificationButton">Submit</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        // Function to move focus to the next input field
+        function moveToNext(currentInput, nextInputId) {
+            if (currentInput.value.length >= currentInput.maxLength) {
+                document.getElementById(nextInputId).focus();
+            }
+        }
+    </script>
+
     <!-- modal otp validation ends here -->
     <!-- Forgot Password Modal -->
     <div class="modal bottom fade" id="Modalforgotpassword" tabindex="-1" role="dialog"
@@ -666,6 +674,13 @@
     <script src="https://cdn.jsdelivr.net/jquery.slick/1.6.0/slick.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.min.js"></script>
     <script>
+
+
+function moveToNext(currentInput, nextInputId) {
+        if (currentInput.value.length >= currentInput.maxLength) {
+            document.getElementById(nextInputId).focus();
+        }
+    }
         // close button
         $('.close').click(function() {
             $(".error-name").text('');
@@ -733,6 +748,8 @@
         // form.addEventListener('submit', function (e) {
         //     e.preventDefault();
         // });
+
+
 
         $('#createUser').click(function(e) {
             e.preventDefault();

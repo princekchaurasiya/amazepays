@@ -82,7 +82,7 @@
                     rules: {
                         name: {
                             required: true,
-                            maxlength: 50,
+                            maxlength: 30,
                             regex: /^[a-zA-Z\s]*$/
                         },
                         email: {
@@ -98,7 +98,7 @@
                     messages: {
                         name: {
                             required: "Please enter your name",
-                            maxlength: "Your name must not exceed 50 characters",
+                            maxlength: "Your name must not exceed 30 characters",
                             regex: "Special characters are not allowed in the name"
                         },
                         email: {

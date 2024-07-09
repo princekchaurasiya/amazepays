@@ -63,17 +63,18 @@
                                                     <label class="small-size fw-600 text-grey-900 font-xsss">Select
                                                         Denomination</label>
                                                     <div class="radio-btn-row boxed">
-                                                        @foreach ($productDetails['price']->denominations as $denomination)
+                                                        @foreach ($productDetails['price']->denominations as $key => $denomination)
                                                             <div class="boxed">
                                                                 <input type="radio"
                                                                     class="custom-control-input denomination-slab"
-                                                                    id="customRadio-{{ $denomination }}" name="denomination"
+                                                                    id="customRadio-{{ $key }}" name="denomination"
                                                                     value="{{ $denomination }}"
-                                                                    {{ old('denomination', session('giftCardFormValues.denomination')) == $denomination ? 'checked' : '' }}>
+                                                                    {{ $key === 0 || old('denomination', session('giftCardFormValues.denomination')) == $denomination ? 'checked' : '' }}>
                                                                 <label class="small-size fw-500 font-xsss"
-                                                                    for="customRadio-{{ $denomination }}">{{ $denomination }}</label>
+                                                                    for="customRadio-{{ $key }}">{{ $denomination }}</label>
                                                             </div>
                                                         @endforeach
+
                                                         <span class="font-xssss fw-400 error-rec-deno text-danger"></span>
                                                     </div>
                                                 @elseif ($productDetails['price']->type === 'RANGE')
@@ -113,7 +114,7 @@
                                             <div class="custom-control mr-4 custom-radio">
                                                 <input type="radio" class="custom-control-input" id="customRadio"
                                                     name="gift_send_option" value="send_as_gift"
-                                                    {{ old('gift_send_option', session('giftCardFormValues.gift_send_option')) == 'send_as_gift' ? 'checked' : '' }}>
+                                                    {{ old('gift_send_option', session('giftCardFormValues.gift_send_option', 'send_as_gift')) == 'send_as_gift' ? 'checked' : '' }}>
                                                 <label
                                                     class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
                                                     for="customRadio">Send as Gift</label>
@@ -132,6 +133,8 @@
                                                 </div>
                                             </div>
                                         </div>
+
+
                                     </div>
                                     <div class="row justify-content-center mt-4 gifting-details">
                                         <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
@@ -187,8 +190,10 @@
                             <div class="col-lg-4 col-md-4 mb-4">
                                 <div class="card p-3 border-0 shadow-sm">
                                     <div class="text-center">
-                                        <h2 class="fw-500 text-orange display2-size"><img src="{{ asset('images/addTemplate.png') }}" alt="amazepay_addTemp"></h2>
-                                        <p class="font-xss fw-500 text-black lh-26 mt-2">Easily send a Gift Card from AmazePays to your friends or family using the 'Send as a Gift' option.</p>
+                                        <h2 class="fw-500 text-orange display2-size"><img
+                                                src="{{ asset('images/addTemplate.png') }}" alt="amazepay_addTemp"></h2>
+                                        <p class="font-xss fw-500 text-black lh-26 mt-2">Easily send a Gift Card from
+                                            AmazePays to your friends or family using the 'Send as a Gift' option.</p>
                                     </div>
 
                                 </div>
@@ -197,7 +202,8 @@
                                 <div class="card p-3 border-0 shadow-sm">
                                     <div class="text-center">
                                         <img src="{{ asset('images/addWallet.png') }}" alt="amazepay_addTemp">
-                                        <p class="font-xss fw-500 text-black lh-26 mt-2">The e-gift card that you order from this page, will be added to your AmazePays account automatically.</p>
+                                        <p class="font-xss fw-500 text-black lh-26 mt-2">The e-gift card that you order
+                                            from this page, will be added to your AmazePays account automatically.</p>
                                     </div>
                                 </div>
                             </div>
@@ -205,7 +211,8 @@
                                 <div class="card p-3 border-0 shadow-sm">
                                     <div class="text-center">
                                         <img src="{{ asset('images/secure.png') }}" alt="amazepay_addTemp">
-                                        <p class="font-xss fw-500 text-black lh-26 mt-2">For better security, the details of your e-gift card will be sent to you via email and SMS only.</p>
+                                        <p class="font-xss fw-500 text-black lh-26 mt-2">For better security, the details
+                                            of your e-gift card will be sent to you via email and SMS only.</p>
                                     </div>
                                 </div>
                             </div>
@@ -217,24 +224,26 @@
                                 <div class="tabs">
                                     <input type="radio" name="tabs" id="tabone" checked="checked">
                                     <label for="tabone">How to Redeem</label>
-                                    <div class="tab p-3">
+                                    <div class="tab p-3 font-xsss">
                                         <ul class="list-unstyled">
                                             <li>To redeem your Gift Card from AmazePays, follow these simple steps:</li>
-                                            <li>1. Visit <a href="https://www.amazepays.in" target="_blank" rel="noopener noreferrer">www.amazepays.in</a> </li>
+                                            <li>1. Visit <a href="https://www.amazepays.in" target="_blank"
+                                                    rel="noopener noreferrer">www.amazepays.in</a> </li>
                                             <li>2. Log in to your AmazePays account</li>
                                             <li>3. Navigate to the "My Orders" section.</li>
-                                            <li>4. Enter the Gift Card ID number and PIN provided, alternatively, check your SMS or email for the Gift Card ID number and PIN.</li>
+                                            <li>4. Enter the Gift Card ID number and PIN provided, alternatively, check your
+                                                SMS or email for the Gift Card ID number and PIN.</li>
                                         </ul>
 
                                     </div>
                                     <input type="radio" name="tabs" id="tabtwo">
                                     <label for="tabtwo">Description</label>
-                                    <div class="tab p-3">
+                                    <div class="tab p-3 font-xsss">
                                         <p>{{ $productDetails['description'] }}</p>
                                     </div>
                                     <input type="radio" name="tabs" id="tabthree">
                                     <label for="tabthree">Terms & Condition</label>
-                                    <div class="tab term-condition p-3">
+                                    <div class="tab term-condition p-3 font-xsss">
                                         {!! $productDetails['tnc']->content !!}
                                     </div>
                                 </div>
@@ -389,6 +398,11 @@
                         $('.add-gift-cards').addClass('d-none').removeClass('visible');
                     }
                 });
+
+                // Ensure the selected gift_send_option is retained on form reload or submission
+                var selectedGiftSendOption =
+                    '{{ old('gift_send_option', session('giftCardFormValues.gift_send_option', 'send_as_gift')) }}';
+                $('input[name="gift_send_option"][value="' + selectedGiftSendOption + '"]').prop('checked', true);
             });
         </script>
     @endpush

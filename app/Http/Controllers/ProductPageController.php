@@ -40,12 +40,15 @@ class ProductPageController extends Controller
 
         Session::put('selected_product_slug', $slug);
 
+
+
         $validator = Validator::make(
             $request->all(),
             [
                 'quantity' => 'required|integer|min:1|max:10',
                 'gift_send_option' => 'required|string',
                 'delivery_mode' => 'required|string',
+                'denomination' => 'required',
             ],
             [
                 'quantity.min' => 'The quantity must be at least :min.',

@@ -14576,7 +14576,7 @@ strong,
 
 .modal .modal-content .close {
     position: absolute;
-    right: 10px;
+    right: 16px;
     top: 10px;
     opacity: 1;
     z-index: 2;
@@ -16885,4 +16885,20 @@ body {
     background-color: #ffffff !important;
     padding: 0.25rem 1rem 0.25rem 1rem;
     box-shadow: 1px 1px 1px 1px rgba(237, 237, 237, 1);
+}
+
+
+.custom-search-form {
+    max-width: 200px; /* Adjust max-width as needed */
+}
+
+.custom-search-form .form-control {
+    border-radius: 20px; /* Rounded corners for input */
+    border-color: #ccc; /* Border color */
+}
+
+.custom-search-form .btn {
+    border-radius: 20px; /* Rounded corners for button */
+    border-color: #ccc; /* Border color */
+    margin-left: -1px; /* Remove button margin gap */
 }

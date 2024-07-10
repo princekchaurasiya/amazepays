@@ -132,29 +132,15 @@
 
                 <nav class="navbar navbar-expand-lg navbar-light bg-light navz">
                     <div class="container-fluid">
-
                         <!-- Logo -->
                         <a class="navbar-brand mr-auto" href="/">
                             <img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo">
                         </a>
 
-                        <!-- Centered Search Bar -->
-                        <form class="form-inline my-lg-0 mx-auto custom-search-form" action="{{ route('search') }}" method="GET">
-                            <div class="input-group">
-                                <input type="text" id="search" class="form-control form-control-sm"
-                                    placeholder="Search here..." name="query" required>
-                                <div class="input-group-append">
-                                    <button class="btn btn-outline-secondary btn-sm" type="submit">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-
                         <!-- Toggle button for collapsed navbar -->
                         <button class="navbar-toggler ml-2 ml-lg-0" type="button" data-toggle="collapse"
-                            data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                            aria-expanded="false" aria-label="Toggle navigation">
+                            data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                            aria-label="Toggle navigation">
                             <span class="navbar-toggler-icon"></span>
                         </button>
 
@@ -173,12 +159,10 @@
 
                                 @guest
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#" data-toggle="modal" data-target="#ModalregisterD">New
-                                        Customer?</a>
+                                    <a class="nav-link" href="#" data-toggle="modal" data-target="#ModalregisterD">New Customer?</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#" data-toggle="modal" data-target="#Modallogin">Sign
-                                        In</a>
+                                    <a class="nav-link" href="#" data-toggle="modal" data-target="#Modallogin">Sign In</a>
                                 </li>
                                 @endguest
 
@@ -187,19 +171,26 @@
                                     <a class="nav-link" href="{{ route('profile') }}">{{ Auth::user()->name }}</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('userLogOut') }}">
-                                        Logout
-                                    </a>
+                                    <a class="nav-link" href="{{ route('userLogOut') }}">Logout</a>
                                 </li>
                                 @endauth
+
+                                <!-- Search Bar -->
+                                <form class="form-inline my-2 my-lg-0 ml-lg-3" action="{{ route('search') }}" method="GET">
+                                    <div class="input-group">
+                                        <input type="text" id="search" class="form-control form-control-sm" placeholder="Search here..."
+                                            name="query" required>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary btn-sm" type="submit">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
                             </ul>
                         </div>
                     </div>
                 </nav>
-
-
-
-
 
 
             {{-- </div> --}}
@@ -580,7 +571,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="otpModalLabel">OTP Verification</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" id="closeModalButton">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -610,14 +601,7 @@
         </div>
     </div>
 
-    <script>
-        // Function to move focus to the next input field
-        function moveToNext(currentInput, nextInputId) {
-            if (currentInput.value.length >= currentInput.maxLength) {
-                document.getElementById(nextInputId).focus();
-            }
-        }
-    </script>
+
 
     <!-- modal otp validation ends here -->
     <!-- Forgot Password Modal -->
@@ -692,6 +676,14 @@ function moveToNext(currentInput, nextInputId) {
             $(".error-loginPass").text('');
 
             $(".main-error").text('');
+        });
+
+
+
+        document.getElementById('closeModalButton').addEventListener('click', function() {
+            $('#otpVerificationModal').modal('hide');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
         });
         // for registration
         // $('.register-form').click(function(){

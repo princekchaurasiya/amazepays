@@ -34,7 +34,7 @@ class CCAvenueController extends Controller
     {
 
 
-        Log::info('Process payment request', $request->all());
+    Log::info('Process payment request', $request->all());
 
         $sessionId = Session::get('session_qs_order_id');
 

@@ -19,17 +19,27 @@
             <div class="carousel-inner">
                 <!-- Slide 1 -->
                 <div class="carousel-item active">
-                    <img src="{{ asset('images/amazepay-desk-1.png') }}" alt="Amazepay Banner 1" class="d-block w-100">
+                    <img src="{{ asset('images/amazepay-desk-7.png') }}" alt="Amazepay Banner 1" class="d-block w-100">
+                </div>
+                <!-- Slide 1 -->
+                <div class="carousel-item ">
+                    <img src="{{ asset('images/amazepay-desk-8.png') }}" alt="Amazepay Banner 2" class="d-block w-100">
                 </div>
 
                 <!-- Slide 2 -->
                 <div class="carousel-item">
-                    <img src="{{ asset('images/amazepay-desk-2.png') }}" alt="Amazepay Banner 2" class="d-block w-100">
+                    <img src="{{ asset('images/amazepay-desk-2.png') }}" alt="Amazepay Banner 3" class="d-block w-100">
                 </div>
 
                 <!-- Slide 3 -->
                 <div class="carousel-item">
-                    <img src="{{ asset('images/amazepay-desk-3.png') }}" alt="Amazepay Banner 3" class="d-block w-100">
+                    <img src="{{ asset('images/amazepay-desk-3.png') }}" alt="Amazepay Banner 4" class="d-block w-100">
+                </div>
+
+
+                <!-- Slide 4 -->
+                <div class="carousel-item">
+                    <img src="{{ asset('images/amazepay-desk-1.png') }}" alt="Amazepay Banner 5" class="d-block w-100">
                 </div>
             </div>
 
@@ -68,6 +78,14 @@
                 <!-- Slide 3 -->
                 <div class="carousel-item">
                     <img src="{{ asset('images/amazepay-mob-3.png') }}" alt="Amazepay Banner 3" class="d-block w-100">
+                </div>
+
+                <div class="carousel-item ">
+                    <img src="{{ asset('images/amazepay-desk-7.png') }}" alt="Amazepay Banner 1" class="d-block w-100">
+                </div>
+                <!-- Slide 1 -->
+                <div class="carousel-item ">
+                    <img src="{{ asset('images/amazepay-desk-8.png') }}" alt="Amazepay Banner 2" class="d-block w-100">
                 </div>
             </div>
 

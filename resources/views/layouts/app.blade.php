@@ -67,7 +67,8 @@
             <!-- header wrapper desktop view -->
             <nav class="navbar navbar-expand-md navbar-light bg-light d-none d-md-block navz fixed-top">
                 <div class="container">
-                    <a href="/" class="navbar-brand"><img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo"></a>
+                    <a href="/" class="navbar-brand"><img src="{{ asset('images/logo.png') }}" alt="logo"
+                            class="custLogo"></a>
                     <button class="navbar-toggler" type="button" data-toggle="collapse"
                         data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
                         aria-label="Toggle navigation">
@@ -86,9 +87,11 @@
                             </li>
                         </ul>
 
-                        <form class="form-inline my-2 my-lg-0 flex-grow-1 mr-3" action="{{ route('search') }}" method="GET">
+                        <form class="form-inline my-2 my-lg-0 flex-grow-1 mr-3" action="{{ route('search') }}"
+                            method="GET">
                             <div class="input-group w-100">
-                                <input type="text" id="search" class="form-control ml-5" placeholder="Search here..." name="query" required>
+                                <input type="text" id="search" class="form-control ml-5"
+                                    placeholder="Search here..." name="query" required>
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="submit">
                                         <i class="fas fa-search"></i>
@@ -114,9 +117,11 @@
                                     </div>
                                 </div>
                             @else
-                                <a href="#" class="btn navbar-btn bg-dark fw-500 text-white font-xsss login-button"
+                                <a href="#"
+                                    class="btn navbar-btn bg-dark fw-500 text-white font-xsss login-button"
                                     data-toggle="modal" data-target="#Modallogin">Login</a>
-                                <a href="#" class="btn navbar-btn bg-current fw-500 text-white font-xsss register-form register-button"
+                                <a href="#"
+                                    class="btn navbar-btn bg-current fw-500 text-white font-xsss register-form register-button"
                                     data-toggle="modal" data-target="#ModalregisterD">Register</a>
                             @endif
                         </div>
@@ -130,67 +135,70 @@
             <!-- header wrapper mobile view -->
             {{-- <div class="container-fluid"> <!-- Use a container to control the width of the content --> --}}
 
-                <nav class="navbar navbar-expand-lg navbar-light bg-light navz">
-                    <div class="container-fluid">
-                        <!-- Logo -->
-                        <a class="navbar-brand mr-auto" href="/">
-                            <img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo">
-                        </a>
+            <nav class="navbar navbar-expand-lg navbar-light bg-light navz">
+                <div class="container-fluid">
+                    <!-- Logo -->
+                    <a class="navbar-brand mr-auto" href="/">
+                        <img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo">
+                    </a>
 
-                        <!-- Toggle button for collapsed navbar -->
-                        <button class="navbar-toggler ml-2 ml-lg-0" type="button" data-toggle="collapse"
-                            data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-                            aria-label="Toggle navigation">
-                            <span class="navbar-toggler-icon"></span>
-                        </button>
+                    <!-- Toggle button for collapsed navbar -->
+                    <button class="navbar-toggler ml-2 ml-lg-0" type="button" data-toggle="collapse"
+                        data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
 
-                        <!-- Navbar items (hidden by default) -->
-                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                            <ul class="navbar-nav ml-auto">
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/">Home</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ url('about') }}">About</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ url('contact-us') }}">Contact Us</a>
-                                </li>
+                    <!-- Navbar items (hidden by default) -->
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" href="/">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url('about') }}">About</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url('contact-us') }}">Contact Us</a>
+                            </li>
 
-                                @guest
+                            @guest
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#" data-toggle="modal" data-target="#ModalregisterD">New Customer?</a>
+                                    <a class="nav-link" href="#" data-toggle="modal"
+                                        data-target="#ModalregisterD">New Customer?</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#" data-toggle="modal" data-target="#Modallogin">Sign In</a>
+                                    <a class="nav-link" href="#" data-toggle="modal"
+                                        data-target="#Modallogin">Sign In</a>
                                 </li>
-                                @endguest
+                            @endguest
 
-                                @auth
+                            @auth
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('profile') }}">{{ Auth::user()->name }}</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('userLogOut') }}">Logout</a>
                                 </li>
-                                @endauth
+                            @endauth
 
-                                <!-- Search Bar -->
-                                <form class="form-inline my-2 my-lg-0 ml-lg-3" action="{{ route('search') }}" method="GET">
-                                    <div class="input-group">
-                                        <input type="text" id="search" class="form-control form-control-sm" placeholder="Search here..."
-                                            name="query" required>
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-secondary btn-sm" type="submit">
-                                                <i class="fas fa-search"></i>
-                                            </button>
-                                        </div>
+                            <!-- Search Bar -->
+                            <form class="form-inline my-2 my-lg-0 ml-lg-3" action="{{ route('search') }}"
+                                method="GET">
+                                <div class="input-group">
+                                    <input type="text" id="search" class="form-control form-control-sm"
+                                        placeholder="Search here..." name="query" required>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary btn-sm" type="submit">
+                                            <i class="fas fa-search"></i>
+                                        </button>
                                     </div>
-                                </form>
-                            </ul>
-                        </div>
+                                </div>
+                            </form>
+                        </ul>
                     </div>
-                </nav>
+                </div>
+            </nav>
 
 
             {{-- </div> --}}
@@ -226,10 +234,12 @@
                                         alt="logo" class="custLogo"></a>
 
                                 <p class="w-100 mt-4 text-black">
-                                    <strong>Company Name :</strong> <a href="{{ env('COMPANY_NEW_WEBSITE_LINK_ABOUT_US') }}" target="_blank">{{ env('COMPANY_NAME') }}</a><br />
+                                    <strong>Company Name :</strong> <a
+                                        href="{{ env('COMPANY_NEW_WEBSITE_LINK_ABOUT_US') }}"
+                                        target="_blank">{{ env('COMPANY_NAME') }}</a><br />
 
 
-                                    <strong>CIN :</strong>  {{ config('companyDefaultValues.company_cin') }}<br />
+                                    <strong>CIN :</strong> {{ config('companyDefaultValues.company_cin') }}<br />
                                     {{ config('companyDefaultValues.company_address') }}
                                 </p>
 
@@ -250,7 +260,9 @@
                                     <li><a class="font-xsss text-black" href="{{ url('privacy-policy') }}">Privacy
                                             Policy</a></li>
 
-                                             <li><a class="font-xsss text-black" href="{{ config('companyDefaultValues.company_new_website_link') }}">Who we are?</a></li>
+                                    <li><a class="font-xsss text-black"
+                                            href="{{ config('companyDefaultValues.company_new_website_link') }}">Who
+                                            we are?</a></li>
                                 </ul>
                             </div>
                             <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6">
@@ -280,17 +292,21 @@
                                 <ul class="mt-3">
 
                                     <li>
-                                        <a class="text-black" href="mailto:{{ config('companyDefaultValues.company_email') }}">
-                                            <i class="fas fa-envelope"></i> {{ config('companyDefaultValues.company_email') }}
+                                        <a class="text-black"
+                                            href="mailto:{{ config('companyDefaultValues.company_email') }}">
+                                            <i class="fas fa-envelope"></i>
+                                            {{ config('companyDefaultValues.company_email') }}
                                         </a>
                                     </li>
 
 
-                                                <li>
-                                                    <a class="text-black" href="tel:{{ str_replace(' ', '', config('companyDefaultValues.company_contact_no')) }}">
-                                                        <i class="fas fa-phone-alt"></i> +91 {{ config('companyDefaultValues.company_contact_no') }}
-                                                    </a>
-                                                </li>
+                                    <li>
+                                        <a class="text-black"
+                                            href="tel:{{ str_replace(' ', '', config('companyDefaultValues.company_contact_no')) }}">
+                                            <i class="fas fa-phone-alt"></i> +91
+                                            {{ config('companyDefaultValues.company_contact_no') }}
+                                        </a>
+                                    </li>
 
                                 </ul>
                             </div>
@@ -442,10 +458,6 @@
     </div>
     <!-- end of Modal Register -->
 
-
-
-
-
     <!-- Modal Login -->
     <div class="modal bottom fade" id="Modallogin" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
         data-backdrop="true" aria-hidden="true">
@@ -546,7 +558,8 @@
                                                     <p
                                                         class="fw-500 font-xssss text-grey-600 mt-2 pt-3 d-inline-block text-center">
                                                         By continuing, you agree to Amazepay's <a
-                                                            href="{{ route('terms-of-use') }}" class="text-current">Terms and
+                                                            href="{{ route('terms-of-use') }}"
+                                                            class="text-current">Terms and
                                                             Conditions</a> and <a href="{{ route('privacy-policy') }}"
                                                             class="text-current">Privacy Policy</a>.
                                                     </p>
@@ -566,12 +579,14 @@
     </div>
     <!-- end of Modal Login -->
     <!-- modal otp verificationstarts here  -->
-    <div class="modal fade" id="otpVerificationModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-backdrop="true" aria-hidden="true">
+    <div class="modal fade" id="otpVerificationModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+        data-backdrop="true" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="otpModalLabel">OTP Verification</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" id="closeModalButton">
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"
+                        id="closeModalButton">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -583,12 +598,18 @@
                     </div>
                     <div id="otp" class="inputs d-flex justify-content-center mt-3">
                         <!-- Create input fields for the OTP digits (1 to 6) -->
-                        <input class="m-2 text-center form-control rounded" type="text" id="first" maxlength="1" oninput="moveToNext(this, 'second')" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="second" maxlength="1" oninput="moveToNext(this, 'third')" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="third" maxlength="1" oninput="moveToNext(this, 'fourth')" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="fourth" maxlength="1" oninput="moveToNext(this, 'fifth')" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="fifth" maxlength="1" oninput="moveToNext(this, 'sixth')" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="sixth" maxlength="1" />
+                        <input class="m-2 text-center form-control rounded" type="text" id="first"
+                            maxlength="1" oninput="moveToNext(this, 'second')" />
+                        <input class="m-2 text-center form-control rounded" type="text" id="second"
+                            maxlength="1" oninput="moveToNext(this, 'third')" />
+                        <input class="m-2 text-center form-control rounded" type="text" id="third"
+                            maxlength="1" oninput="moveToNext(this, 'fourth')" />
+                        <input class="m-2 text-center form-control rounded" type="text" id="fourth"
+                            maxlength="1" oninput="moveToNext(this, 'fifth')" />
+                        <input class="m-2 text-center form-control rounded" type="text" id="fifth"
+                            maxlength="1" oninput="moveToNext(this, 'sixth')" />
+                        <input class="m-2 text-center form-control rounded" type="text" id="sixth"
+                            maxlength="1" />
                     </div>
                     <!-- Placeholder element for displaying error message -->
                     <div class="error-otpVerifyInput text-center text-danger mt-3 font-weight-bold"></div>
@@ -658,13 +679,11 @@
     <script src="https://cdn.jsdelivr.net/jquery.slick/1.6.0/slick.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.min.js"></script>
     <script>
-
-
-function moveToNext(currentInput, nextInputId) {
-        if (currentInput.value.length >= currentInput.maxLength) {
-            document.getElementById(nextInputId).focus();
+        function moveToNext(currentInput, nextInputId) {
+            if (currentInput.value.length >= currentInput.maxLength) {
+                document.getElementById(nextInputId).focus();
+            }
         }
-    }
         // close button
         $('.close').click(function() {
             $(".error-name").text('');
@@ -1143,5 +1162,4 @@ function moveToNext(currentInput, nextInputId) {
     @stack('scripts')
     </div>
 </body>
-
 </html>

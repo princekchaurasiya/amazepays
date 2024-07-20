@@ -99,7 +99,7 @@ class WoohooOrderController extends Controller
                     'currency' => '356',
                 ],
             ],
-            'syncOnly' => $qsOrderDetails->quantity > 10 ? false : true,
+            'syncOnly' => $qsOrderDetails->quantity > 2 ? false : true,
             'delivery_mode' => 'API',
         ];
 

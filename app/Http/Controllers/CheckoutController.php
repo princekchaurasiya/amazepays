@@ -35,8 +35,8 @@ class CheckoutController extends Controller
         // Store validated form data in session
         Session::put('billing_data', $validatedData);
 
-        dd(123344);
-        dd(Session::get('billing_data'));
+
+        // dd(Session::get('billing_data'));
 
         // Redirect to payment processing route
         return redirect()->route('payment.process');

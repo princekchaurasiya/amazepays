@@ -37,10 +37,7 @@ class ProductPageController extends Controller
         // Validate the request
         $checkoutData = session('checkout_data', []);
 
-
         Session::put('selected_product_slug', $slug);
-
-
 
         $validator = Validator::make(
             $request->all(),
@@ -53,7 +50,7 @@ class ProductPageController extends Controller
             [
                 'quantity.min' => 'The quantity must be at least :min.',
                 'quantity.max' => 'The quantity cannot exceed :max.',
-            ],
+            ]
         );
 
         // Redirect to login if user is not authenticated
@@ -83,8 +80,15 @@ class ProductPageController extends Controller
         $qsOrder->receiver_msg = $request->receiver_msg;
         $qsOrder->save();
 
-        // Store the order ID in the session
+        // Assign the custom reference number
+        $qsOrder->refno = 'Amz' . $qsOrder->id;
+        $qsOrder->save();
+
+
+
+        // Store the order ID and reference number in the session
         session()->put('session_qs_order_id', $qsOrder->id);
+        session()->put('session_refno', $qsOrder->refno);
 
         // Retrieve product details based on the slug
         $qsProd = QsProduct::where('slug', $slug)->first();
@@ -105,13 +109,13 @@ class ProductPageController extends Controller
 
     public function updateSessionData(Request $request)
     {
-        \Log::info('updateSessionData called');
-        \Log::info('Request data: ', $request->all());
+        Log::info('updateSessionData called');
+        Log::info('Request data: ', $request->all());
         $requestData = $request->all();
         // Store data in session as needed
         session()->put('checkout_data', $requestData);
 
-        \Log::info('Session data stored');
+        Log::info('Session data stored');
         return response()->json(['message' => 'Session data updated successfully']);
     }
 

@@ -19,8 +19,8 @@ use App\Http\Controllers\{
 
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
-    Route::resource('cc-avenue', 'VoyagerCcAvenueController');
-    Route::get('/import-data', [DocumentController::class, 'importDocument']);
+    // Route::resource('/cc-avenue-payment', 'VoyagerCcAvenueController');
+    // Route::get('/import-data', [DocumentController::class, 'importDocument']);
     Route::view('/upload-document', 'documentUpload');
     Route::post('/upload-data', [DocumentController::class, 'uploadData'])->name('uploadData');
 
@@ -28,7 +28,7 @@ Route::match(['get', 'post'], '/voyager/bearer-token', [VoyagerGenerateBearerTok
 Route::match(['get', 'post'], '/voyager/get-category', [VoyagerGetCategoryController::class, 'getCategory'])->name('voyager.getCategory');
 Route::match(['get', 'post'], '/voyager/fetch-product-list', [VoyagerFetchProductListController::class, 'fetchProductList'])->name('voyager.productList');
 Route::match(['get', 'post'], '/voyager/fetch-product-data', [VoyagerFetchProductDataController::class, 'fetchProductData'])->name('voyager.fetchProductData');
-Route::get('admin/import-product-discount',  [VoyagerProductDiscountImportController::class, 'import'])->name('import-product-discount');
+// Route::get('admin/import-product-discount',  [VoyagerProductDiscountImportController::class, 'import'])->name('import-product-discount');
 
 Route::get('/download-order-sheet', [VoyagerOrderExportController::class, 'export'])->name('downloadOrderSheet');
 
@@ -96,7 +96,7 @@ Route::get('/all_transaction', function () {
 });
 Route::match(['get', 'post'], '/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
 
-Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('placeOrder');
+// Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('placeOrder');
 
 
 Route::post('/update-session-data', [ProductPageController::class, 'updateSessionData'])->name('updateSessionData');
@@ -128,3 +128,7 @@ Route::post('/save-contact', [ContactUsController::class, 'saveContact'])->name(
 Route::get('/search', [SearchController::class, 'search'])->name('search');
 Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'])->name('woohoo.createOrder');
 Route::view('/gift', 'layouts.giftmail');
+
+Route::fallback(function() {
+    return response()->json(['message' => 'Route not found'], 404);
+});

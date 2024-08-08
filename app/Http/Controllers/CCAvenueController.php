@@ -38,6 +38,7 @@ class CCAvenueController extends Controller
 
         $sessionId = Session::get('session_qs_order_id');
 
+
         if (!$this->updateQsOrder($sessionId, $request)) {
             return view('order.order-status', ['errorMessage' => 'Record not found for session ID']);
         }

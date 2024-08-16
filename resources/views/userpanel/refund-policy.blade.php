@@ -1,3 +1,5 @@
+<!-- resources/views/refund-policy.blade.php -->
+
 @extends('layouts.app')
 @section('title')
     Amazepay | Refund Policy
@@ -8,48 +10,40 @@
             <h1 class="text-center"><b>Refund Policy</b></h1>
 
             <div class="mt-4">
-                <h2>A. General Refund Policy</h2>
-                <p>At Amazepay, we are committed to ensuring that your experience with our digital products is smooth and hassle-free. In the event that you have accidentally purchased the wrong e-gift card or encountered an issue with your order, we offer a refund policy under specific conditions. Please review the following guidelines to understand the process.</p>
+                <h2>A. General Policy</h2>
+                <p>All gift vouchers purchased through our platform are delivered digitally and are non-refundable. Once a gift voucher has been issued, we are unable to accept returns or exchanges. This policy is in place to ensure the validity of the gift voucher and protect against fraudulent activity.</p>
             </div>
 
             <div class="mt-4">
-                <h2>B. Eligibility for Refunds</h2>
-                <p>To be eligible for a refund, the following criteria must be met:</p>
+                <h2>B. Non-Refundable Items</h2>
+                <p>Once a gift voucher is sent to your email, it is considered non-refundable. We cannot guarantee the validity of the code once it leaves our secure inventory. Please be cautious when selecting your voucher.</p>
+            </div>
+
+            <div class="mt-4">
+                <h2>C. Delivery and Verification</h2>
+                <p>Most orders are fulfilled within 15-20 minutes of purchase. However, new customers may experience a slight delay due to account verification. If you do not receive your voucher promptly, it may be due to a verification step required to protect against fraud. You may have received instructions for completing verification.</p>
+                <p>If you have already verified your account and still have not received your voucher, please contact us at <a href="mailto:{{ env('COMPANY_EMAIL') }}">{{ env('COMPANY_EMAIL') }}</a> or call us at <a href="tel:{{ env('COMPANY_CONTACT_NO') }}">{{ env('COMPANY_CONTACT_NO') }}</a> for assistance.</p>
+            </div>
+
+            <div class="mt-4">
+                <h2>D. Technical Issues</h2>
+                <p>If you encounter problems with your gift voucher, please:</p>
                 <ul>
-                    <li>The refund request must be made within 7 days of the purchase date.</li>
-                    <li>The e-gift card must not have been redeemed or used.</li>
-                    <li>You must provide a receipt or proof of purchase.</li>
+                    <li>Verify that you are entering the code correctly.</li>
+                    <li>Ensure you are redeeming the voucher in the correct place.</li>
+                    <li>Check your account balance by logging out and back in.</li>
                 </ul>
+                <p>For any issues, please send us a screenshot of the error at <a href="mailto:{{ env('COMPANY_EMAIL') }}">{{ env('COMPANY_EMAIL') }}</a>, and we will assist you as quickly as possible.</p>
             </div>
 
             <div class="mt-4">
-                <h2>C. Refund Process</h2>
-                <p>To initiate a refund, please follow these steps:</p>
-                <ul>
-                    <li>Contact our customer support team via email at <a href="mailto:{{ config('companyDefaultValues.company_email') }}">{{ config('companyDefaultValues.company_email') }}</a> or call us at <a href="tel:{{ config('companyDefaultValues.company_contact_no') }}">{{ config('companyDefaultValues.company_contact_no') }}</a> to request a refund.</li>
-                    <li>Provide your order number and the reason for the refund request.</li>
-                </ul>
-                <p>Once we verify that the e-gift card has not been used or redeemed, we will process your refund. Please note that it may take up to 7 business days for the refund to appear on your original method of payment.</p>
-            </div>
-
-
-            <div class="mt-4">
-                <h2>D. Non-Refundable Items</h2>
-                <p>Some items are non-refundable, including: E-gift cards that have been redeemed or partially used.</p>
+                <h2>E. Country Restrictions</h2>
+                <p>Our gift vouchers are Indian gift vouchers and may be region-locked. If you are unsure, please contact us or the gift voucher’s support team before purchase. We cannot process refunds or exchanges once the voucher code has been delivered.</p>
             </div>
 
             <div class="mt-4">
-                <h2>E. Exchanges</h2>
-                <p>We do not offer exchanges for e-gift cards. If you wish to cancel an unused e-gift card, please request a refund and purchase a new one.</p>
-            </div>
-
-            <div class="mt-4 mb-4">
                 <h2>F. Contact Us</h2>
-                <p>If you have any questions or concerns regarding our refund policy, please contact us at:</p>
-                <ul>
-                    <li>Email: <a href="mailto:{{ config('companyDefaultValues.company_email') }}" class="font-weight-bold text-dark">{{ config('companyDefaultValues.company_email') }}</a></li>
-                    <li>Phone: <a href="tel:{{ config('companyDefaultValues.company_contact_no') }}" class="font-weight-bold text-dark">{{ config('companyDefaultValues.company_contact_no') }}</a></li>
-                </ul>
+                <p>For any assistance, including verification issues or technical support, please reach out to our customer support team at <a href="mailto:{{ env('COMPANY_EMAIL') }}">{{ env('COMPANY_EMAIL') }}</a> or call us at <a href="tel:{{ env('COMPANY_CONTACT_NO') }}">{{ env('COMPANY_CONTACT_NO') }}</a>. Our team is available to help and ensure a smooth experience.</p>
             </div>
         </div>
     </div>

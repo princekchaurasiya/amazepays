@@ -260,6 +260,9 @@
                                     <li><a class="font-xsss text-black" href="{{ url('privacy-policy') }}">Privacy
                                             Policy</a></li>
 
+                                            <li><a class="font-xsss text-black" href="{{ url('refund-policy') }}">Refund
+                                                Policy</a></li>
+
                                     <li><a class="font-xsss text-black"
                                             href="{{ config('companyDefaultValues.company_new_website_link') }}">Who
                                             we are?</a></li>

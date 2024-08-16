@@ -54,6 +54,14 @@ Route::get('/productPage/{id}', function () {
     return view('userpanel/productPage_old');
 })->name('productPage');
 
+
+
+Route::get('/refund-policy', function () {
+    return view('userpanel/refund-policy');
+})->name('refundPolicy');
+
+
+
 Route::group(['middleware' => 'guest'], function () {
     Route::post('/user-registration', [UserPanelController::class, 'userRegistration'])->name('user-registration');
     Route::post('/user-login', [UserPanelController::class, 'userLogin'])->name('user-login');

@@ -219,8 +219,7 @@ class WoohooOrderController extends Controller
                 // If status is PROCESSING, check status thrice within 120 seconds
                 elseif (isset($orderCreatedResponse["status"]) && $orderCreatedResponse["status"] === "PROCESSING") {
                     Log::info("Order is in PROCESSING status");
-                    Log::info("Sleeping for 30 seconds");
-                    sleep(30);
+                    Log::info("going for get status by refernce number function");
                     return $this->getStatusByReferenceNumber($refno);
                 }
             } else {
@@ -232,8 +231,7 @@ class WoohooOrderController extends Controller
             }
         } catch (ConnectionException $e) {
             Log::error("cURL Error: " . $e->getMessage());
-            log::info("sleeping for 30 seconds");
-            sleep(30);
+
 
             $statusFunctionResponse = $this->getStatusByReferenceNumber($refno);
 
@@ -309,9 +307,8 @@ class WoohooOrderController extends Controller
 ];
     }
 
-    private function getStatusByReferenceNumber($refno, $retryCount = 1, $maxRetries = 2)
+    private function getStatusByReferenceNumber($refno)
 {
-
     $requestHttpMethod = "GET";
     $absApiUrl = "https://" . setting("api.woohoo_url") . "/rest/v3/order/" . $refno . "/status";
     $clientSecret = setting("api.qs_clientSecret");
@@ -319,87 +316,118 @@ class WoohooOrderController extends Controller
     $signature = CommonHelper::generateSignature("", $requestHttpMethod, $absApiUrl, $clientSecret);
     $dateAtClient = Carbon::now()->toIso8601String();
 
-    try {
-        $orderStatusResponse = Http::acceptJson()
-            ->withHeaders([
-                "Content-Type" => "application/json",
-                "Authorization" => "Bearer " . $bearerToken,
-                "Accept" => "*/*",
-                "dateAtClient" => $dateAtClient,
-                "signature" => $signature,
-            ])->get($absApiUrl);
+    $retryCount = env('RETRY_COUNT', 0);      // Default value is 0 if not set
+    $maxRetries = env('MAX_RETRIES', 3);      // Default max retries is 3
+    $retryInterval = env('RETRY_INTERVAL', 40);  // Default interval is 40 seconds
 
-        if ($orderStatusResponse->successful()) {
+    // Log the values
+    Log::info("Retry count from .env: " . $retryCount);
+    Log::info("Max retries from .env: " . $maxRetries);
+    Log::info("Retry interval from .env: " . $retryInterval);
 
-            $cardStatusApiResponseData = $orderStatusResponse->json(); // Directly decode JSON response
+    $maxTime = $maxRetries * $retryInterval; // Total max time for retries
 
-            Log::info("Get order status by reference number response from Woohoo server:", [
-                "response" => $cardStatusApiResponseData,
-            ]);
+    Log::info("0 count starts: " .  $retryCount);
 
-            if ($cardStatusApiResponseData['status'] === 'COMPLETE') {
+    while ($retryCount < $maxRetries) {
+        try {
+            $retryCount++;  // Increment before logging
 
-                Log::info("Card activation status is COMPLETE. Processing further.");
-                return $this->callCardActivation($cardStatusApiResponseData);
-            } elseif ($cardStatusApiResponseData['status'] === 'PROCESSING' && $retryCount < $maxRetries) {
-                Log::info("Waiting for 40 seconds before retrying. Retry count: $retryCount");
-                sleep(40); // Wait before retrying
-                return $this->getStatusByReferenceNumber($refno, $retryCount + 1, $maxRetries);
+            // Get current time dynamically for each attempt
+            $currentTime = Carbon::now()->toDateTimeString();
+
+            // Log the attempt number and time for every attempt
+            Log::info("Attempting to get status by ref no. Attempt: " . $retryCount . " at " . $currentTime);
+
+            // Existing logic for fetching the order status
+            $orderStatusResponse = Http::acceptJson()
+                ->withHeaders([
+                    "Content-Type" => "application/json",
+                    "Authorization" => "Bearer " . $bearerToken,
+                    "Accept" => "*/*",
+                    "dateAtClient" => $dateAtClient,
+                    "signature" => $signature,
+                ])->get($absApiUrl);
+
+            if ($orderStatusResponse->successful()) {
+                $cardStatusApiResponseData = $orderStatusResponse->json();
+
+                Log::info("Get order status by reference number response from Woohoo server:", [
+                    "response" => $cardStatusApiResponseData,
+                ]);
+
+                // Check if 'status' key exists in the response
+                if (isset($cardStatusApiResponseData['status'])) {
+                    if ($cardStatusApiResponseData['status'] === 'COMPLETE') {
+                        Log::info("Card activation status is COMPLETE. Processing further.");
+                        return $this->callCardActivation($cardStatusApiResponseData);
+                    } elseif ($cardStatusApiResponseData['status'] === 'PROCESSING') {
+                        Log::info("Order status is PROCESSING. Waiting for $retryInterval seconds before retrying.");
+                        sleep($retryInterval);
+
+                    } else {
+                        Log::info("Order status is neither COMPLETE nor PROCESSING. Exiting retry loop.");
+                        break;
+                    }
+                } else {
+                    // Log and return error if 'status' key is missing
+                    Log::error("Undefined array key 'status' in API response.");
+                    return [
+                        "transactionStatusMessage" => __("errors.7002"),
+                        "status_code" => 500,
+                        "status" => null,
+                        "errorCode" => "7002",
+                        "errorMessage" => __("errors.7002"),
+                        "defaultErrorMessage" => __("errors.default"),
+                        "isSuccessful" => false,
+                    ];
+                }
             } else {
-
-                return [
-    "transactionStatusMessage" => __("errors.5321"), // Custom error message for error code 5321
-    "status_code" => 400, // Set specific status code to 400
-    "errorCode" => "5321", // Set specific error code to 5321
-    "errorMessage" => __("errors.5321"), // Error message based on the error code 5321
-    "defaultErrorMessage" => __("errors.default"), // Default error message
-    "isSuccessful" => false, // Indicate failure
-];
+                Log::error("Order status check failed:", [
+                    "status_code" => $orderStatusResponse->status(),
+                    "response" => $orderStatusResponse->body(),
+                ]);
+                break; // Exit loop on failure
             }
-        } else {
-            Log::error("Order status check failed:", [
-                "status_code" => $orderStatusResponse->status(),
-                "response" => $orderStatusResponse->body(),
-            ]);
+        } catch (ConnectionException $exception) {
+            Log::error("Failed to get order status due to connection issue: " . $exception->getMessage());
             return [
-    "transactionStatusMessage" => __("errors.5321"), // Custom error message for error code 5321
-    "status_code" => 400, // Set specific status code to 400
-    "errorCode" => "5321", // Set specific error code to 5321
-    "errorMessage" => __("errors.5321"), // Error message based on the error code 5321
-    "defaultErrorMessage" => __("errors.default"), // Default error message
-    "isSuccessful" => false, // Indicate failure
-];
+                "transactionStatusMessage" => $exception->getMessage(),
+                "status_code" => 500,
+                "status" => null,
+                "errorCode" => "7001",
+                "errorMessage" => __("errors.7001"),
+                "defaultErrorMessage" => __("errors.default"),
+                "isSuccessful" => false,
+            ];
+        } catch (Exception $e) {
+            Log::error("An unexpected error occurred: " . $e->getMessage());
+            $this->handleUnexpectedErrorResponse($e);
+            return [
+                "transactionStatusMessage" => $e->getMessage(),
+                "status_code" => 500,
+                "status" => null,
+                "errorCode" => "7002",
+                "errorMessage" => __("errors.7002"),
+                "defaultErrorMessage" => __("errors.default"),
+                "isSuccessful" => false,
+            ];
         }
-    } catch (ConnectionException $exception) {
-        Log::error("Failed to get order status due to connection issue: " . $exception->getMessage());
-        return [
-            "status_code" => "500",
-            "error_message" => $exception->getMessage(),
-        ];
-
-        return [
-    "transactionStatusMessage" => $exception->getMessage(), // Custom error message for error code 5321
-    "status_code" => 500, // Set specific status code to 400
-    "errorCode" => "7001", // Set specific error code to 5321
-    "errorMessage" => __("errors.7001"), // Error message based on the error code 5321
-    "defaultErrorMessage" => __("errors.default"), // Default error message
-    "isSuccessful" => false, // Indicate failure
-];
-
-
-    } catch (Exception $e) {
-        Log::error("An unexpected error occurred: " . $e->getMessage());
-        $this->handleUnexpectedErrorResponse($e);
-        return [
-    "transactionStatusMessage" => $e->getMessage(), // Custom error message for error code 5321
-    "status_code" => 500, // Set specific status code to 400
-    "errorCode" => "7002", // Set specific error code to 5321
-    "errorMessage" => __("errors.7002"), // Error message based on the error code 5321
-    "defaultErrorMessage" => __("errors.default"), // Default error message
-    "isSuccessful" => false, // Indicate failure
-];
     }
+
+    Log::warning("Max retries reached. Status check failed.");
+    return [
+        "transactionStatusMessage" => __("errors.5321"),
+        "status_code" => 400,
+    "status" => null,
+        "errorCode" => "5321",
+        "errorMessage" => __("errors.5321"),
+        "defaultErrorMessage" => __("errors.default"),
+        "isSuccessful" => false,
+    ];
 }
+
+
 
 
     public function callCardActivation($cardStatusApiResponseData)

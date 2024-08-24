@@ -94,7 +94,8 @@ class WoohooOrderController extends Controller
     // Preserve specific session data
     $userId = Session::get('user_id'); // Retrieve user ID if needed
     Session::forget('payment_data'); // Forget payment data
-    Session::forget('checkout_data'); // Forget checkout data
+    Session::forget('checkout_data');
+    session()->forget(['session_qs_order_id', 'session_refno']); // Forget checkout data
     // Add any other session data keys to forget if necessary
 
     // Restore necessary session data

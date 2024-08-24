@@ -41,6 +41,18 @@ class WoohooOrderController extends Controller
                 $isSuccessful = true;
                 $this->handleSuccessFullOrder($orderCreatedResponse);
 
+                // Update qs_order table with reference number
+                $orderId = $qsOrderDetails['order_id']; // Assuming order ID is included in the payment data
+                $referenceNumber = $orderCreatedResponse['refno'] ?? null; // Assuming response contains refno
+
+                if ($referenceNumber) {
+                    $qsOrder = QsOrder::find($orderId);
+                    if ($qsOrder) {
+                        $qsOrder->refno = $referenceNumber;
+                        $qsOrder->save();
+                    }
+                }
+
             } elseif (
                 isset($orderCreatedResponse["status_code"]) &&
                 $orderCreatedResponse["status_code"] == "400"
@@ -79,13 +91,16 @@ class WoohooOrderController extends Controller
 
     Log::info("Session before clearing: " . json_encode(Session::all()));
 
-// Preserve only the user login ID and clear all other session data
-$userId = Session::get('user_id'); // Assuming 'user_id' is the key for the login ID
-Session::flush(); // Clear all session data
-Session::put('user_id', $userId); // Restore the user ID to the session
+    // Preserve specific session data
+    $userId = Session::get('user_id'); // Retrieve user ID if needed
+    Session::forget('payment_data'); // Forget payment data
+    Session::forget('checkout_data'); // Forget checkout data
+    // Add any other session data keys to forget if necessary
 
-Log::info("Session after clearing all except user ID: " . json_encode(Session::all()));
+    // Restore necessary session data
+    Session::put('user_id', $userId); // Restore the user ID to the session
 
+    Log::info("Session after clearing specific data: " . json_encode(Session::all()));
 
     // Return the view with the appropriate status message
     return view(
@@ -93,6 +108,7 @@ Log::info("Session after clearing all except user ID: " . json_encode(Session::a
         compact("transactionStatusMessage", "isSuccessful")
     );
 }
+
 
 
 

@@ -92,16 +92,16 @@ class WoohooOrderController extends Controller
     Log::info("Session before clearing: " . json_encode(Session::all()));
 
     // Preserve specific session data
-    $userId = Session::get('user_id'); // Retrieve user ID if needed
+
     Session::forget('payment_data'); // Forget payment data
     Session::forget('checkout_data');
-    session()->forget(['session_qs_order_id', 'session_refno']); // Forget checkout data
-    // Add any other session data keys to forget if necessary
+   // Forget session_qs_order_id and log its value
+session()->forget('session_qs_order_id');
+Log::info('session_qs_order_id after forget:', ['session_qs_order_id' => session('session_qs_order_id')]);
 
-    // Restore necessary session data
-    Session::put('user_id', $userId); // Restore the user ID to the session
-
-    Log::info("Session after clearing specific data: " . json_encode(Session::all()));
+// Forget session_refno and log its value
+session()->forget('session_refno');
+Log::info('session_refno after forget:', ['session_refno' => session('session_refno')]);
 
     // Return the view with the appropriate status message
     return view(

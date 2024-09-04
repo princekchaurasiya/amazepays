@@ -27,6 +27,8 @@ class CCAvenueController extends Controller
     }
     public function processPayment(Request $request)
     {
+        Log::info('Session CSRF Token: ' . session()->token());
+        Log::info('Request CSRF Token: ' . $request->input('_token'));
         Log::info('Process payment request', $request->all());
         $sessionId = Session::get('session_qs_order_id');
         if (!$this->updateQsOrder($sessionId, $request)) {

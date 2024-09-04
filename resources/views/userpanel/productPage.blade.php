@@ -48,10 +48,10 @@
                                             <span
                                                 class="mb-3 text-black font-xsss fw-400 mt-2">{{ $productDetails['brandName'] }}</span>
                                         </p>
-                                        <p>
+                                        {{-- <p>
                                             <span class="mb-3 fw-600 font-xs mt-2 text-orange">Category</span>:
                                             <span class="mb-3 text-black font-xsss fw-400 mt-2">Fashion</span>
-                                        </p>
+                                        </p> --}}
                                     </div>
                                 </div>
                                 <div class="col-lg-9">
@@ -258,28 +258,56 @@
     @push('scripts')
         <script>
             $(document).ready(function() {
-                // Before opening the login modal, save the form data to the session
-                $('[data-target="#Modallogin"]').click(function() {
-                    var formData = $('#giftCardPageForm').serialize();
+
+                let debounceTimeout;
+                let isAuthenticated = false; // Assume the user is not authenticated by default
+
+                // Debounce function to limit the rate of AJAX requests
+                function debounce(func, delay) {
+                    clearTimeout(debounceTimeout);
+                    debounceTimeout = setTimeout(func, delay);
+                }
+
+                // Function to save the gift card form data to the session
+                function saveGiftCardFormData(callback) {
+                    var formData = $('#giftCardPageForm').serialize(); // Serialize the form data
+
+                    // AJAX POST request to save data to the session
                     $.ajax({
                         type: 'POST',
                         url: '{{ route('saveGiftCardFormValues') }}',
                         data: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
                         success: function(response) {
                             console.log('Form data saved successfully:', response);
+                            if (callback) callback(); // Call the callback if provided
                         },
                         error: function(response) {
                             console.error('Error saving form data:', response);
                         }
                     });
+                }
+
+                // Event listener for changes in form fields to auto-save data
+                $('input[name="denomination"], input[name="quantity"], input[name="gift_send_option"], input[name="receiver_name"], input[name="receiver_email"], input[name="receiver_mobile"], input[name="receiver_msg"]')
+                    .on('input change', function() {
+                        debounce(saveGiftCardFormData, 500); // Save data with a 500ms debounce
+                    });
+
+                // Event listener for the "Pay Now" button click
+                $('[data-target="#Modallogin"]').click(function() {
+                    saveGiftCardFormData(function() {
+                        // After saving the data, check if the user is authenticated
+                        if (isAuthenticated) {
+                            $('#giftCardPageForm').submit(); // Submit the form if authenticated
+                        } else {
+                            $('#Modallogin').modal('show'); // Show the login modal if not authenticated
+                        }
+                    });
                 });
 
-                $('#Modallogin').on('hidden.bs.modal', function() {
-                    // Check if the user is now authenticated
-                    if (window.isAuthenticated) {
-                        $('#giftCardPageForm').submit();
-                    }
-                });
 
                 // Assuming you have a login function that handles the login process
                 function handleLoginSuccess() {

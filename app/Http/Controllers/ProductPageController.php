@@ -11,12 +11,22 @@ class ProductPageController extends Controller
 {
     public function saveGiftCardFormValues(Request $request)
     {
+        // Get all form data
         $formData = $request->all();
+
+        // Save form data to the session
         session(['giftCardFormValues' => $formData]);
+
+        // Log the form data with beautification
+        Log::info('****** Form Data ******');
+        Log::info(json_encode($formData, JSON_PRETTY_PRINT));
+        Log::info('*************************');
+
         return response()->json(['status' => 'success']);
     }
     public function storePayNowData(Request $request, $slug)
     {
+
         $checkoutData = session('checkout_data', []);
         Session::put('selected_product_slug', $slug);
         $validator = Validator::make($request->all(), ['quantity' => 'required|integer|min:1|max:10', 'gift_send_option' => 'required|string', 'delivery_mode' => 'required|string', 'denomination' => 'required',], ['quantity.min' => 'The quantity must be at least :min.', 'quantity.max' => 'The quantity cannot exceed :max.',]);

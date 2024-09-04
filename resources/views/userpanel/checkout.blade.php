@@ -17,7 +17,6 @@
                     </ul>
                 </div>
             @endif
-
             @if ($errors->any())
                 <div class="alert alert-danger">
                     <ul>
@@ -34,7 +33,7 @@
                 <input type="hidden" name="language" value="EN" />
                 <input type="hidden" name="cancel_url" value="{{ url('payment-cancel') }}" />
                 <div class="row">
-                    <div class="col-lg-7">
+                    <div class="col-lg-7 ">
                         <div class="table-content table-responsive mb-5 card border-0 bg-greyblue p-5">
                             <div class="page-title">
                                 <h4 class="mont-font fw-500 font-xxl mb-5">Sender Details</h4>
@@ -171,7 +170,7 @@
                     </div>
 
 
-                    <div class="col-lg-5 cart-item">
+                    <div class="col-lg-5 cart-item ">
                         <div class="row justify-content-center">
                             <div class="card border-0 mb-4">
                                 <div class="card-header" id="headingTwo">
@@ -191,19 +190,19 @@
                                                         src="{{ $qsProd['images']->small == null ? URL::asset('/images/hamburger.jpg') : $qsProd['images']->small }}"
                                                         alt="Avatar" style="width:100%;">
                                                 </div>
-                                                <div class="col-md-7 col-sm-4 col-xs-9 ">
+                                                <div class="col-md-7 col-sm-4 col-xs-12 ">
                                                     <span class="product-name mont-font">{{ $qsProd->name }}</span>
                                                     <div class="row item-qty-subtotal">
-                                                        <div class="col-md-8 col-sm-4 col-xs-6"><span>Denomination
-                                                            : ₹{{ $qsProd->prodData['denomination'] }}</span>
-                                                    </div>
-                                                    <input type="hidden" name="denomination"
-                                                        value="{{ $qsProd->prodData['denomination'] }}" />
-                                                    <input type="hidden" name="numericCode"
-                                                        value="{{ $qsProd['currency']->numericCode }}" />
+                                                        <div class="col-12"><span>Denomination
+                                                                : ₹{{ $qsProd->prodData['denomination'] }}</span>
+                                                        </div>
+                                                        <input type="hidden" name="denomination"
+                                                            value="{{ $qsProd->prodData['denomination'] }}" />
+                                                        <input type="hidden" name="numericCode"
+                                                            value="{{ $qsProd['currency']->numericCode }}" />
                                                         <input type="hidden" name="sku"
                                                             value="{{ $qsProd->sku }}" />
-                                                        <div class="col-md-12 col-sm-4 col-xs-6"><span>Qty :
+                                                        <div class="col-12"><span>Qty :
                                                                 {{ $qsProd->prodData['quantity'] }}</span>
                                                         </div>
                                                         <input type="hidden" name="quantity"
@@ -277,13 +276,9 @@
     @push('scripts')
         <script type="text/javascript">
             $(document).ready(function() {
-
-
-
-
+                let debounceTimeout;
 
                 function updateSessionData() {
-
                     console.log(123);
                     var formData = {
                         billing_name: $('input[name="billing_name"]').val(),
@@ -316,12 +311,18 @@
                     });
                 }
 
-                // Bind updateSessionData function to the input event of input fields
+                // Debounced function
+                function debouncedUpdateSessionData() {
+                    clearTimeout(debounceTimeout);
+                    debounceTimeout = setTimeout(updateSessionData,
+                        600); // Adjust the delay as needed (600ms in this example)
+                }
+
+                // Bind debouncedUpdateSessionData function to the input event of input fields
                 $('input[name="billing_name"], input[name="billing_email"], input[name="billing_tel"], input[name="billing_zip"], input[name="billing_address"], input[name="billing_address_two"], input[name="billing_city"], input[name="billing_state"], input[name="billing_country"], input[name="billing_gst_number"]')
                     .on('input', function() {
-                        updateSessionData();
+                        debouncedUpdateSessionData();
                     });
-
 
                 // Optionally bind updateSessionData function to form submit event
                 $('form').submit(function(event) {

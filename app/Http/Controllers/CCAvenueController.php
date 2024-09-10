@@ -146,9 +146,30 @@ class CCAvenueController extends Controller
     }
     protected function updateQsOrder($sessionId, Request $request)
     {
+
+
         try {
             $qsOrder = QsOrder::where('id', $sessionId)->firstOrFail();
-            $updateData = ['sender_first_name' => $request->billing_name, 'sender_email' => $request->billing_email, 'sender_phone_no' => $request->billing_tel, 'sender_post_code' => $request->billing_zip, 'sender_address_1' => $request->billing_address, 'sender_address_2' => $request->billing_address_two, 'sender_city' => $request->billing_city, 'sender_state' => $request->billing_state, 'sku' => $request->sku, 'amount_payable_after_discount' => $request->amount, 'discounted_amount_value' => round($request->quantity * $request->denomination - $request->amount, 3), 'gst_number' => $request->billing_gst_number ?: 'Unregistered', 'country' => $request->billing_country,];
+            Log::info('qsorder is this', $qsOrder->toArray());
+
+
+            $updateData = [
+                'sender_first_name' => $request->billing_name ?? $qsOrder->sender_first_name,
+                'sender_email' => $request->billing_email ?? $qsOrder->sender_email,
+                'sender_phone_no' => $request->billing_tel ?? $qsOrder->sender_phone_no,
+                'sender_post_code' => $request->billing_zip ?? $qsOrder->sender_post_code,
+                'sender_address_1' => $request->billing_address ?? $qsOrder->sender_address_1,
+                'sender_address_2' => $request->billing_address_two ?? $qsOrder->sender_address_2,
+                'sender_city' => $request->billing_city ?? $qsOrder->sender_city,
+                'sender_state' => $request->billing_state ?? $qsOrder->sender_state,
+                'sku' => $request->has('sku') ? $request->sku : $qsOrder->sku,  // Only update if present
+                'amount_payable_after_discount' => $request->has('amount') ? $request->amount : $qsOrder->amount_payable_after_discount,  // Only update if present
+                'discounted_amount_value' => $request->has('quantity') && $request->has('denomination') && $request->has('amount')
+                    ? round($request->quantity * $request->denomination - $request->amount, 3)
+                    : $qsOrder->discounted_amount_value,  // Calculate only if quantity, denomination, and amount are present
+                'gst_number' => $request->billing_gst_number ?? $qsOrder->gst_number ?: 'Unregistered',
+                'country' => $request->billing_country ?? $qsOrder->country,
+            ];
             $qsOrder->update($updateData);
             return true;
         } catch (\Exception $e) {

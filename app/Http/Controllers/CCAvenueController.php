@@ -30,7 +30,7 @@ class CCAvenueController extends Controller
         Log::info('Session CSRF Token: ' . session()->token());
         Log::info('Request CSRF Token: ' . $request->input('_token'));
         Log::info('Process payment request', $request->all());
-        $sessionId = Session::get('session_qs_order_id');
+        $sessionId = session('session_qs_order_id');
         if (!$this->updateQsOrder($sessionId, $request)) {
             return view('order.order-status', ['errorMessage' => 'Record not found for session ID']);
         }
@@ -41,12 +41,31 @@ class CCAvenueController extends Controller
         return view('paymentFolder.ccavRequestHandler', compact('encryptedData', 'accessCode', 'ccavenueApiEndpoint'));
     }
     protected function preparePaymentData($sessionId, Request $request)
-    {
-        $paymentData = $request->all();
-        $paymentData['order_id'] = $sessionId;
-        $paymentData['merchant_id'] = config('paymentconfig.merchant_id');
-        return $paymentData;
-    }
+{
+    // Retrieve all request data
+    $paymentData = $request->all();
+
+    // Add or override values with session and configuration data
+    $paymentData['order_id'] = $sessionId;
+    $paymentData['denomination'] = session('denomination');
+    $paymentData['amount'] = session('total_payable_amount_after_discount');
+    $paymentData['quantity'] = session('quantity');
+
+    // Retrieve static values securely from configuration
+    $paymentData['numericCode'] = config('paymentconfig.numeric_code', '356');
+    $paymentData['currency'] = config('paymentconfig.currency', 'INR');
+    $paymentData['language'] = config('paymentconfig.language', 'EN');
+
+    // URLs for redirect and cancellation
+    $paymentData['redirect_url'] = route('response_ccavenue');
+    $paymentData['cancel_url'] = url('payment-cancel');
+
+    // Retrieve sensitive values from configuration
+    $paymentData['merchant_id'] = config('paymentconfig.merchant_id');
+
+    return $paymentData;
+}
+
     protected function encryptPaymentData($paymentData)
     {
         $merchantData = http_build_query($paymentData);

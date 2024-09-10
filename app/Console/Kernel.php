@@ -23,8 +23,9 @@ class Kernel extends ConsoleKernel
         // $schedule->command(GenerateBearerToken::class)->weekly()->mondays()->at('12:00');
 
         // Add the schedule to run the GenerateBearerToken command every minute for testing purpose
-        $schedule->command('generate:bearerToken')->weekly()->mondays()->at('01:00');
+        // $schedule->command('generate:bearerToken')->weekly()->mondays()->at('01:00');
 
+        $schedule->command('generate:bearerToken')->everyFiveMinutes();
         $schedule->command('fetch:categoryData')->monthlyOn(4, '02:30');
 
         $schedule->command('fetch:productList')->monthlyOn(4, '02:35');

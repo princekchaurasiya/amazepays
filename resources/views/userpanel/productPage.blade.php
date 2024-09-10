@@ -133,8 +133,6 @@
                                                 </div>
                                             </div>
                                         </div>
-
-
                                     </div>
                                     <div class="row justify-content-center mt-4 gifting-details">
                                         <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
@@ -181,8 +179,6 @@
                             </div>
                         </div>
                     </div>
-
-
 
                     <div class="row card-form add-gift-cards mb-4 p-4 shadow">
                         <h6 class="mb-3 fw-600 font-xss mt-2 text-center font-lg">Add Gift Cards to your Account</h6>

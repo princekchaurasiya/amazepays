@@ -11,21 +11,40 @@ class ProductPageController extends Controller
 {
     public function saveGiftCardFormValues(Request $request)
     {
+
+
         // Get all form data
         $formData = $request->all();
+
+
 
         // Save form data to the session
         session(['giftCardFormValues' => $formData]);
 
         // Log the form data with beautification
+        Log::info('444');
         Log::info('****** Form Data ******');
         Log::info(json_encode($formData, JSON_PRETTY_PRINT));
         Log::info('*************************');
+        Log::info('55');
 
         return response()->json(['status' => 'success']);
     }
     public function storePayNowData(Request $request, $slug)
     {
+
+
+
+        $product = QsProduct::where('slug', $slug)->first();
+
+
+        // Check if product exists
+        if (!$product) {
+            return redirect()->back()->with('error', 'Product not found.');
+        }
+
+        // Retrieve the SKU from the product
+        $sku = $product->sku;
 
         $checkoutData = session('checkout_data', []);
         Session::put('selected_product_slug', $slug);
@@ -39,6 +58,9 @@ class ProductPageController extends Controller
         Log::info(session()->all());
         $qsOrder = new QsOrder();
         $qsOrder->user_id = Auth::id();
+
+        $qsOrder->sku = $product->sku;
+
         $qsOrder->denomination = $request->denomination;
         $qsOrder->quantity = $request->quantity;
         $qsOrder->grand_payable_amount = $request->quantity * $request->denomination;
@@ -54,10 +76,13 @@ class ProductPageController extends Controller
         session()->put('session_qs_order_id', $qsOrder->id);
         session()->put('session_refno', $qsOrder->refno);
         $qsProd = QsProduct::where('slug', $slug)->first();
+
         if (!$qsProd) {
             abort(404);
         }
+
         $qsProd['prodData'] = $request->all();
+
         $qsProd['currency'] = json_decode($qsProd['currency']);
         $qsProd['images'] = json_decode($qsProd->images);
         return view('userpanel.checkout', compact('qsProd', 'checkoutData'));

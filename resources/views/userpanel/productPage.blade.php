@@ -112,55 +112,49 @@
                                         <div class="col-lg-4 mb-4 pl-lg-5">
                                             <h6 class="mb-3 fw-600 font-xss mt-2">Gift Send Option</h6>
                                             <div class="custom-control mr-4 custom-radio">
-                                                <input type="radio" class="custom-control-input" id="customRadio"
-                                                    name="gift_send_option" value="send_as_gift"
+                                                <input type="radio" class="custom-control-input gift-option"
+                                                    id="sendAsGiftRadio" name="gift_send_option" value="send_as_gift"
                                                     {{ old('gift_send_option', session('giftCardFormValues.gift_send_option', 'send_as_gift')) == 'send_as_gift' ? 'checked' : '' }}>
                                                 <label
                                                     class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
-                                                    for="customRadio">Send as Gift</label>
+                                                    for="sendAsGiftRadio">Send as Gift</label>
                                             </div>
                                             <div class="custom-control mr-0 custom-radio">
-                                                <input type="radio" class="custom-control-input" id="customRadio1"
-                                                    name="gift_send_option" value="buy_for_self"
+                                                <input type="radio" class="custom-control-input gift-option"
+                                                    id="buyForSelfRadio" name="gift_send_option" value="buy_for_self"
                                                     {{ old('gift_send_option', session('giftCardFormValues.gift_send_option')) == 'buy_for_self' ? 'checked' : '' }}>
                                                 <label
                                                     class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
-                                                    for="customRadio1">Buy for Self</label>
-                                                <div class="row">
-                                                    <div class="col-12 mb-4">
-                                                        <input type="hidden" name="delivery_mode" value="both">
+                                                    for="buyForSelfRadio">Buy for Self</label>
+                                                    <div class="row">
+                                                        <div class="col-12 mb-4">
+                                                            <input type="hidden" name="delivery_mode" value="both">
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
                                         </div>
                                     </div>
-                                    <div class="row justify-content-center mt-4 gifting-details">
+                                    <div class="row justify-content-center mt-4 gifting-details" style="display: block;">
                                         <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
-                                        <div class="col-12 col-lg-3 receiver-name">
-                                            <input type="text" class="form-control mb-3 credentails-field"
-                                                placeholder="Receiver Name" name="receiver_name" id="receiver-name"
-                                                value="{{ old('receiver_name', session('giftCardFormValues.receiver_name')) }}">
-                                            <span class="font-xssss fw-400 error-rec-name text-danger"></span>
-                                        </div>
-                                        <div class="col-lg-3 receiver-email">
-                                            <input type="text" class="form-control mb-3 credentails-field"
-                                                placeholder="Receiver Email" name="receiver_email" id="receiver-email"
-                                                value="{{ old('receiver_email', session('giftCardFormValues.receiver_email')) }}">
-                                            <span class="font-xssss fw-400 error-rec-email text-danger"></span>
-                                        </div>
-                                        <div class="col-12 col-lg-3 receiver-mobile">
-                                            <input type="text" class="form-control mb-3 credentails-field"
-                                                placeholder="Receiver Mobile Number" name="receiver_mobile"
-                                                id="receiver-mobile"
-                                                value="{{ old('receiver_mobile', session('giftCardFormValues.receiver_mobile')) }}">
-                                            <span class="font-xssss fw-400 error-rec-mobile text-danger"></span>
-                                        </div>
-                                        <div class="col-12 col-lg-3 receiver-message">
-                                            <input type="text" class="form-control mb-3 credentails-field"
-                                                placeholder="Message for Receiver" name="receiver_msg" id="receiver-msg"
-                                                value="{{ old('receiver_msg', session('giftCardFormValues.receiver_msg')) }}">
-                                        </div>
+                                        <div class="row"> <!-- Added .row to group the .col-lg-* elements -->
+                                            <div class="col-12 col-lg-3 receiver-name">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Name" name="receiver_name" id="receiver-name" value="">
+                                                <span class="font-xssss fw-400 error-rec-name text-danger"></span>
+                                            </div>
+                                            <div class="col-12 col-lg-3 receiver-email">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Email" name="receiver_email" id="receiver-email" value="">
+                                                <span class="font-xssss fw-400 error-rec-email text-danger"></span>
+                                            </div>
+                                            <div class="col-12 col-lg-3 receiver-mobile">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number" name="receiver_mobile" id="receiver-mobile" value="">
+                                                <span class="font-xssss fw-400 error-rec-mobile text-danger"></span>
+                                            </div>
+                                            <div class="col-12 col-lg-3 receiver-message">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver" name="receiver_msg" id="receiver-msg" value="">
+                                            </div>
+                                        </div> <!-- End .row -->
                                     </div>
+
                                     <div class="row">
                                         <div class="col-lg-12">
                                             @if (Auth::check())
@@ -254,6 +248,28 @@
     @push('scripts')
         <script>
             $(document).ready(function() {
+
+                // Check the initially selected radio button on page load
+                toggleReceiverFields();
+
+                // Attach change event listeners to the gift send options
+                $('input[name="gift_send_option"]').change(function() {
+                    toggleReceiverFields();
+                });
+
+                function toggleReceiverFields() {
+                    // Check which radio option is selected
+                    if ($('#sendAsGiftRadio').is(':checked')) {
+                        // Show gifting details if "Send as Gift" is selected
+                        $('.gifting-details').show();
+                    } else {
+                        // Hide gifting details if "Buy for Self" is selected
+                        $('.gifting-details').hide();
+
+                        // Clear receiver-related form fields when "Buy for Self" is selected
+
+                    }
+                }
 
                 let debounceTimeout;
                 let isAuthenticated = false; // Assume the user is not authenticated by default

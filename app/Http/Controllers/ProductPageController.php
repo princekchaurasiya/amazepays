@@ -59,7 +59,8 @@ class ProductPageController extends Controller
         $qsOrder = new QsOrder();
         $qsOrder->user_id = Auth::id();
 
-        $qsOrder->sku = $product->sku;
+        Log::info('QsOrder data before saving:', $qsOrder->toArray());
+
 
         $qsOrder->denomination = $request->denomination;
         $qsOrder->quantity = $request->quantity;
@@ -70,7 +71,14 @@ class ProductPageController extends Controller
         $qsOrder->receiver_email = $request->receiver_email;
         $qsOrder->receiver_mobile = $request->receiver_mobile;
         $qsOrder->receiver_msg = $request->receiver_msg;
+
+        Log::info('SKU:', ['sku' => $product->sku]);
+
+        $qsOrder->sku = $product->sku;
         $qsOrder->save();
+        Log::info('QsOrder data after saving:', $qsOrder->toArray());
+
+
         $qsOrder->refno = $this->generateUniqueReferenceNumber($qsOrder->id);
         $qsOrder->save();
         session()->put('session_qs_order_id', $qsOrder->id);
@@ -107,6 +115,7 @@ class ProductPageController extends Controller
     public function showCheckoutForm()
     {
         $checkoutData = session('checkout', []);
+        log::info('this is checkout data', $checkoutData);
         return view('checkout', compact('checkoutData'));
     }
 }

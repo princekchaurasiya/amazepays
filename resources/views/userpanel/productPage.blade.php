@@ -159,12 +159,12 @@
                                         <div class="col-lg-12">
                                             @if (Auth::check())
                                                 <input type="submit"
-                                                    class="form-control float-right h60 bg-current text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w100 login-button-color"
-                                                    value="Pay Now" id="pay-now">
+                                                    class="form-control float-right h60 bg-current text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color"
+                                                    value="Go to Checkout Page" id="pay-now">
                                             @else
                                                 <a href="#"
-                                                    class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w100 login-button-color"
-                                                    data-toggle="modal" data-target="#Modallogin">Pay Now</a>
+                                                    class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color"
+                                                    data-toggle="modal" data-target="#Modallogin">Go to Checkout Page</a>
                                             @endif
                                         </div>
                                     </div>

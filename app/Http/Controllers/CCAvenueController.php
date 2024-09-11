@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
 use App\Models\QsOrder;
 use App\Models\CcAvenuePayment;
+use App\Models\User;
 use App\Helpers\CommonHelper;
 use Carbon\Carbon;
 use Auth;
@@ -27,6 +28,24 @@ class CCAvenueController extends Controller
     }
     public function processPayment(Request $request)
     {
+
+
+
+        $user = Auth::user();
+
+        $user->update([
+            'name' => $request->input('billing_name'),
+            'email' => $request->input('billing_email'),
+            'mobile' => $request->input('billing_tel'),
+            'billing_zip' => $request->input('billing_zip'),
+            'billing_address' => $request->input('billing_address'),
+            'billing_address_two' => $request->input('billing_address_two'),
+            'billing_city' => $request->input('billing_city'),
+            'billing_state' => $request->input('billing_state'),
+            'billing_country' => $request->input('billing_country'),
+        ]);
+
+
         Log::info('Session CSRF Token: ' . session()->token());
         Log::info('Request CSRF Token: ' . $request->input('_token'));
         Log::info('Process payment request', $request->all());
@@ -41,30 +60,30 @@ class CCAvenueController extends Controller
         return view('paymentFolder.ccavRequestHandler', compact('encryptedData', 'accessCode', 'ccavenueApiEndpoint'));
     }
     protected function preparePaymentData($sessionId, Request $request)
-{
-    // Retrieve all request data
-    $paymentData = $request->all();
+    {
+        // Retrieve all request data
+        $paymentData = $request->all();
 
-    // Add or override values with session and configuration data
-    $paymentData['order_id'] = $sessionId;
-    $paymentData['denomination'] = session('denomination');
-    $paymentData['amount'] = session('total_payable_amount_after_discount');
-    $paymentData['quantity'] = session('quantity');
+        // Add or override values with session and configuration data
+        $paymentData['order_id'] = $sessionId;
+        $paymentData['denomination'] = session('denomination');
+        $paymentData['amount'] = session('total_payable_amount_after_discount');
+        $paymentData['quantity'] = session('quantity');
 
-    // Retrieve static values securely from configuration
-    $paymentData['numericCode'] = config('paymentconfig.numeric_code', '356');
-    $paymentData['currency'] = config('paymentconfig.currency', 'INR');
-    $paymentData['language'] = config('paymentconfig.language', 'EN');
+        // Retrieve static values securely from configuration
+        $paymentData['numericCode'] = config('paymentconfig.numeric_code', '356');
+        $paymentData['currency'] = config('paymentconfig.currency', 'INR');
+        $paymentData['language'] = config('paymentconfig.language', 'EN');
 
-    // URLs for redirect and cancellation
-    $paymentData['redirect_url'] = route('response_ccavenue');
-    $paymentData['cancel_url'] = url('payment-cancel');
+        // URLs for redirect and cancellation
+        $paymentData['redirect_url'] = route('response_ccavenue');
+        $paymentData['cancel_url'] = url('payment-cancel');
 
-    // Retrieve sensitive values from configuration
-    $paymentData['merchant_id'] = config('paymentconfig.merchant_id');
+        // Retrieve sensitive values from configuration
+        $paymentData['merchant_id'] = config('paymentconfig.merchant_id');
 
-    return $paymentData;
-}
+        return $paymentData;
+    }
 
     protected function encryptPaymentData($paymentData)
     {

@@ -105,7 +105,7 @@ class ProductPageController extends Controller
     }
     public function updateSessionData(Request $request)
     {
-        Log::info('updateSessionData called');
+        Log::info('updateSessionData for product page called');
         Log::info('Request data: ', $request->all());
         $requestData = $request->all();
         session()->put('checkout_data', $requestData);

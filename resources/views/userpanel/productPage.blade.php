@@ -138,19 +138,20 @@
                                         <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
                                         <div class="row"> <!-- Added .row to group the .col-lg-* elements -->
                                             <div class="col-12 col-lg-3 receiver-name">
-                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Name" name="receiver_name" id="receiver-name" value="">
+
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Name" name="receiver_name" id="receiver-name" value="{{ old('receiver_name', session('giftCardFormValues.receiver_name')) }}">
                                                 <span class="font-xssss fw-400 error-rec-name text-danger"></span>
                                             </div>
                                             <div class="col-12 col-lg-3 receiver-email">
-                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Email" name="receiver_email" id="receiver-email" value="">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Email" name="receiver_email" id="receiver-email" value="{{ old('receiver_email', session('giftCardFormValues.receiver_email')) }}">
                                                 <span class="font-xssss fw-400 error-rec-email text-danger"></span>
                                             </div>
                                             <div class="col-12 col-lg-3 receiver-mobile">
-                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number" name="receiver_mobile" id="receiver-mobile" value="">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number" name="receiver_mobile" id="receiver-mobile" value="{{ old('receiver_mobile', session('giftCardFormValues.receiver_mobile')) }}">
                                                 <span class="font-xssss fw-400 error-rec-mobile text-danger"></span>
                                             </div>
                                             <div class="col-12 col-lg-3 receiver-message">
-                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver" name="receiver_msg" id="receiver-msg" value="">
+                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver" name="receiver_msg" id="receiver-msg" value="{{ old('receiver_msg', session('giftCardFormValues.receiver_msg')) }}">
                                             </div>
                                         </div> <!-- End .row -->
                                     </div>

@@ -260,8 +260,8 @@
                                     <li><a class="font-xsss text-black" href="{{ url('privacy-policy') }}">Privacy
                                             Policy</a></li>
 
-                                            <li><a class="font-xsss text-black" href="{{ url('refund-policy') }}">Refund
-                                                Policy</a></li>
+                                    <li><a class="font-xsss text-black" href="{{ url('refund-policy') }}">Refund
+                                            Policy</a></li>
 
                                     <li><a class="font-xsss text-black"
                                             href="{{ config('companyDefaultValues.company_new_website_link') }}">Who
@@ -707,6 +707,42 @@
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open');
         });
+
+
+        // Close modal when clicking the 'close' button
+        document.querySelectorAll('.close').forEach(function(closeButton) {
+            closeButton.addEventListener('click', function() {
+                console.log(123); // Log to confirm the button was clicked
+
+                // Hide the modals
+                $('.ModalregisterD').modal('hide');
+                $('.Modallogin').modal('hide');
+
+                // Remove the backdrop
+                $('.modal-backdrop').remove();
+            });
+        });
+
+
+        // Close modal on outside (backdrop) click
+        $(document).on('click', function(event) {
+            console.log(456); // Log to confirm the button was clicked
+
+            if ($(event.target).hasClass('modal-backdrop')) {
+                // Hide both modals
+                $('.ModalregisterD').modal('hide');
+                $('.Modallogin').modal('hide');
+
+                // Remove the backdrop
+                $('.modal-backdrop').remove();
+
+                console.log('Modal closed on backdrop click');
+            }
+        });
+
+
+
+
         // for registration
         // $('.register-form').click(function(){
         //     $(".error-name").text('');
@@ -1165,4 +1201,5 @@
     @stack('scripts')
     </div>
 </body>
+
 </html>

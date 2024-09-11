@@ -3,144 +3,148 @@
     Amazepay | Checkout
 @endsection
 @section('content')
-<div class="container">
-    <div class="faq-wrapper pt-4 pb-0">
-        <h2 class="text-grey-900 fw-400 display1-size mb-4 pb-3 text-center">Checkout</h2>
-
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <form method="POST" name="customerData" action="{{ url('payment-process') }}" id="checkoutForm">
-            @csrf
-            <div class="row">
-                <div class="col-lg-7">
-                    <div class="table-content table-responsive mb-5 card border-0 bg-greyblue p-5">
-                        <div class="page-title">
-                            <h4 class="mont-font fw-500 font-xxl mb-5">Sender Details</h4>
-                            <div class="row">
-                                @foreach(['Name' => 'billing_name', 'Email' => 'billing_email', 'Phone' => 'billing_tel', 'Postcode' => 'billing_zip'] as $label => $name)
-                                    <div class="col-lg-6 mb-3">
-                                        <div class="form-group">
-                                            <label class="mont-font fw-500 font-xsss">{{ $label }}</label>
-                                            <input type="text" name="{{ $name }}" class="form-control billingFormInput"
-                                                value="{{ old($name, $checkoutData[$name] ?? (Auth::user()->$name ?? '')) }}"
-                                                maxlength="{{ $name == 'billing_tel' ? '10' : '255' }}">
-                                            @error($name)
-                                                <span class="text-danger">{{ $message }}</span>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                @endforeach
-                                @foreach(['Address 1' => 'billing_address', 'Address 2' => 'billing_address_two', 'Town / City' => 'billing_city', 'State' => 'billing_state', 'Country' => 'billing_country', 'GST Number (Optional)' => 'billing_gst_number'] as $label => $name)
-                                    <div class="col-lg-6 mb-3">
-                                        <div class="form-group">
-                                            <label class="mont-font fw-500 font-xsss">{{ $label }}</label>
-                                            <input type="text" name="{{ $name }}" class="form-control billingFormInput"
-                                                value="{{ old($name, $checkoutData[$name] ?? '') }}"
-                                                maxlength="{{ $name == 'billing_gst_number' ? '15' : '255' }}">
-                                            @error($name)
-                                                <span class="text-danger">{{ $message }}</span>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
+    <div class="container">
+        <div class="faq-wrapper pt-4 pb-0">
+            <h2 class="text-grey-900 fw-400 display1-size mb-4 pb-3 text-center">Checkout</h2>
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
+            @endif
 
-                @php
-                    // Fetch product details and calculate total amount and discount
-                    $denomination = $qsProd->prodData['denomination'];
-                    $quantity = $qsProd->prodData['quantity'];
-                    $discountPercentage = $qsProd->discount_percentage;
-
-                    // Calculate total and discounted amounts
-                    $totalAmount = $denomination * $quantity;
-                    $discountAmount = $totalAmount * ($discountPercentage / 100);
-                    $totalPayableAmountAfterDiscount = $totalAmount - $discountAmount;
-
-                    // Store the values in the session
-                    session([
-                        'denomination' => $denomination,
-                        'quantity' => $quantity,
-                        'discount_percentage' => $discountPercentage,
-                        'total_amount' => $totalAmount,
-                        'discount_amount' => $discountAmount,
-                        'total_payable_amount_after_discount' => $totalPayableAmountAfterDiscount,
-                    ]);
-                @endphp
-
-                <div class="col-lg-5 cart-item">
-                    <div class="row justify-content-center">
-                        <div class="card border-0 mb-4">
-                            <div class="card-header" id="headingTwo">
+            <form method="POST" name="customerData" action="{{ url('payment-process') }}" id="checkoutForm">
+                @csrf
+                <div class="row">
+                    <div class="col-lg-7">
+                        <div class="table-content table-responsive mb-5 card border-0 bg-greyblue p-5">
+                            <div class="page-title">
+                                <h4 class="mont-font fw-500 font-xxl mb-5">Sender Details</h4>
                                 <div class="row">
-                                    <div class="col-lg-12 col-sm-12">
-                                        <div class="row order-data">
-                                            <div class="mont-font col-md-6 col-sm-4 col-xs-6 order-summary">
-                                                <span>Order Summary</span>
-                                            </div>
-                                            <div class="col-md-6 col-sm-4 col-xp-6">
-                                                <a href="{{ route('get-product-by-slug', ['slug' => $qsProd->slug]) }}"
-                                                    class="float-right mont-font">Edit</a>
-                                            </div>
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">Full Name</label>
+                                            <input type="text" name="billing_name" class="form-control billingFormInput"
+                                                value="{{ old('billing_name', Auth::user()->name ?? '') }}"
+                                                maxlength="255">
+                                            @error('billing_name')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
                                         </div>
-                                        <div class="row cart-item-record">
-                                            <div class="col-md-5 col-sm-4 col-xs-12">
-                                                <img class="cart-coupan-img"
-                                                    src="{{ $qsProd['images']->small ?? URL::asset('/images/hamburger.jpg') }}"
-                                                    alt="Avatar" style="width:100%;">
-                                            </div>
-                                            <div class="col-md-7 col-sm-4 col-xs-12">
-                                                <span class="product-name mont-font">{{ $qsProd->name }}</span>
-                                                <div class="row item-qty-subtotal">
-                                                    <div class="col-12">
-                                                        <span>Denomination: ₹{{ session('denomination') }}</span>
-                                                    </div>
-                                                    <div class="col-12">
-                                                        <span>Qty: {{ session('quantity') }}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    </div>
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">Email</label>
+                                            <input type="text" name="billing_email" class="form-control billingFormInput"
+                                                value="{{ old('billing_email', Auth::user()->email ?? '') }}"
+                                                maxlength="255">
+                                            @error('billing_email')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
                                         </div>
-
-                                        <hr>
-
-                                        <div class="row total-amount justify-content-center">
-                                            <div class="row">
-                                                <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font">
-                                                    <span>Grand Total:</span>
-                                                </div>
-                                                <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font">
-                                                    <span>₹{{ session('total_amount') }}</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="row coupan-code-amount" id="discountDiv">
-                                                <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font apply-coupan">
-                                                    <span>Discount:</span>
-                                                </div>
-                                                <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font apply-coupan-amount">
-                                                    ₹{{ session('discount_amount') }}
-                                                </div>
-                                            </div>
-
-                                            <div class="row">
-                                                <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font">
-                                                    <span>Payable Amount:</span>
-                                                </div>
-                                                <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font">
-                                                    <span>₹{{ session('total_payable_amount_after_discount') }}</span>
-                                                </div>
-                                            </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">Phone</label>
+                                            <input type="text" name="billing_tel"
+                                                class="form-control billingFormInput inputDiv"
+                                                value="{{ old('billing_tel', Auth::user()->mobile ?? '') }}"
+                                                maxlength="10">
+                                            @error('billing_tel')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">Postcode</label>
+                                            <input type="text" name="billing_zip" class="form-control billingFormInput"
+                                                value="{{ old('billing_zip', Auth::user()->billing_zip ?? '') }}"
+                                                maxlength="6">
+                                            @error('billing_zip')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">Address 1</label>
+                                            <input type="text" name="billing_address"
+                                                class="form-control billingFormInput"
+                                                value="{{ old('billing_address', Auth::user()->billing_address ?? '') }}"
+                                                maxlength="255">
+                                            @error('billing_address')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">Address 2</label>
+                                            <input type="text" name="billing_address_two"
+                                                class="form-control billingFormInput"
+                                                value="{{ old('billing_address_two', Auth::user()->billing_address_two ?? '') }}"
+                                                maxlength="255">
+                                            @error('billing_address_two')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">Town / City</label>
+                                            <input type="text" name="billing_city" class="form-control billingFormInput"
+                                                value="{{ old('billing_city', Auth::user()->billing_city ?? '') }}"
+                                                maxlength="255">
+                                            @error('billing_city')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">State</label>
+                                            <input type="text" name="billing_state" class="form-control billingFormInput"
+                                                value="{{ old('billing_state', Auth::user()->billing_state ?? '') }}"
+                                                maxlength="255">
+                                            @error('billing_state')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">Country</label>
+                                            <input type="text" name="billing_country"
+                                                class="form-control billingFormInput"
+                                                value="{{ old('billing_country', Auth::user()->billing_country ?? '') }}"
+                                                maxlength="255">
+                                            @error('billing_country')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-500 font-xsss" for="comment-name">GST Number (Optional)</label>
+                                            <input type="text" name="billing_gst_number"
+                                                class="form-control billingFormInput"
+                                                value="{{ old('billing_gst_number', Auth::user()->billing_gst_number ?? '') }}"
+                                                maxlength="15">
+                                            @error('billing_gst_number')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>
@@ -148,16 +152,112 @@
                         </div>
                     </div>
 
-                    <div class="card shadow-none border-0">
-                        <input
-                            class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-600 ls-3"
-                            type="submit" value="Place Order" id="placeOrder">
+                    @php
+                        // Fetch product details and calculate total amount and discount
+                        $denomination = $qsProd->prodData['denomination'];
+                        $quantity = $qsProd->prodData['quantity'];
+                        $discountPercentage = $qsProd->discount_percentage;
+
+                        // Calculate total and discounted amounts
+                        $totalAmount = $denomination * $quantity;
+                        $discountAmount = $totalAmount * ($discountPercentage / 100);
+                        $totalPayableAmountAfterDiscount = $totalAmount - $discountAmount;
+
+                        // Store the values in the session
+                        session([
+                            'denomination' => $denomination,
+                            'quantity' => $quantity,
+                            'discount_percentage' => $discountPercentage,
+                            'total_amount' => $totalAmount,
+                            'discount_amount' => $discountAmount,
+                            'total_payable_amount_after_discount' => $totalPayableAmountAfterDiscount,
+                        ]);
+                    @endphp
+
+
+
+                    <div class="col-lg-5 cart-item">
+                        <div class="row justify-content-center">
+                            <div class="card border-0 mb-4">
+                                <div class="card-header" id="headingTwo">
+                                    <div class="row">
+                                        <div class="col-lg-12 col-sm-12">
+                                            <div class="row order-data">
+                                                <div class="mont-font col-md-6 col-sm-4 col-xs-6 order-summary">
+                                                    <span>Order Summary</span>
+                                                </div>
+                                                <div class="col-md-6 col-sm-4 col-xp-6">
+                                                    <a href="{{ route('get-product-by-slug', ['slug' => $qsProd->slug]) }}"
+                                                        class="float-right mont-font">Edit</a>
+                                                </div>
+                                            </div>
+                                            <div class="row cart-item-record">
+                                                <div class="col-md-5 col-sm-4 col-xs-12">
+                                                    <img class="cart-coupan-img"
+                                                        src="{{ $qsProd['images']->small ?? URL::asset('/images/hamburger.jpg') }}"
+                                                        alt="Avatar" style="width:100%;">
+                                                </div>
+                                                <div class="col-md-7 col-sm-4 col-xs-12">
+                                                    <span class="product-name mont-font">{{ $qsProd->name }}</span>
+                                                    <div class="row item-qty-subtotal">
+                                                        <div class="col-12">
+                                                            <span>Denomination: ₹{{ session('denomination') }}</span>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <span>Qty: {{ session('quantity') }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <hr>
+
+                                            <div class="row total-amount justify-content-center">
+                                                <div class="row">
+                                                    <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font">
+                                                        <span>Grand Total:</span>
+                                                    </div>
+                                                    <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font">
+                                                        <span>₹{{ session('total_amount') }}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row coupan-code-amount" id="discountDiv">
+                                                    <div
+                                                        class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font apply-coupan">
+                                                        <span>Discount:</span>
+                                                    </div>
+                                                    <div
+                                                        class="col-md-6 col-sm-4 col-xs-3 amount mont-font apply-coupan-amount">
+                                                        ₹{{ session('discount_amount') }}
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-md-6 col-sm-4 col-xs-9 amount-text mont-font">
+                                                        <span>Payable Amount:</span>
+                                                    </div>
+                                                    <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font">
+                                                        <span>₹{{ session('total_payable_amount_after_discount') }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card shadow-none border-0">
+                            <input
+                                class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-600 ls-3"
+                                type="submit" value="Place Order" id="placeOrder">
+                        </div>
                     </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 
     @push('scripts')
         <script type="text/javascript">

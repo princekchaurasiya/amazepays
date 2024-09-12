@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use App\Models\User;
 
 class CheckoutController extends Controller
 {
@@ -14,6 +15,7 @@ class CheckoutController extends Controller
 
         // Perform any additional logic as needed for checkout view
         return view('checkout', ['selectedProductSlug' => $selectedProductSlug]);
+
     }
 
     public function store(Request $request)
@@ -35,6 +37,18 @@ class CheckoutController extends Controller
         // Store validated form data in session
         Session::put('billing_data', $validatedData);
 
+        $user = Auth::user();
+        dd($user);
+        $user->update([
+            'name' => $validatedData['billing_name'], // You might not want to update the name directly
+            'email' => $validatedData['billing_email'],
+            'mobile' => $validatedData['billing_tel'],
+            'billing_zip' => $validatedData['billing_zip'],
+            'billing_address' => $validatedData['billing_address'],
+            'billing_city' => $validatedData['billing_city'],
+            'billing_state' => $validatedData['billing_state'],
+            'billing_country' => $validatedData['billing_country'],
+        ]);
 
         // dd(Session::get('billing_data'));
 
@@ -44,6 +58,7 @@ class CheckoutController extends Controller
 
     public function placeOrder()
     {
+        log::info(8787);
         // Retrieve stored billing data from session
         $billingData = Session::get('billing_data');
 

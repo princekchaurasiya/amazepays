@@ -83,8 +83,8 @@
                                                     <input type="text"
                                                         class="form-control credentails-field denomination-range"
                                                         placeholder="Enter Denomination" name="denomination"
-                                                        id="denomination-range"
-                                                        value="{{ old('denomination', session('giftCardFormValues.denomination', $productDetails['minPrice'])) }}"
+                                                        id="denomination-range" {{-- value="{{ old('denomination', session('giftCardFormValues.denomination', $productDetails['minPrice'])) }}" --}}
+                                                        value="{{ old('denomination', $productDetails['minPrice']) }}"
                                                         maxlength="6">
                                                     <small class="float-right form-text text-current font-xsss">Min:
                                                         ₹{{ $productDetails['minPrice'] }} Max:
@@ -94,6 +94,8 @@
                                                 @endif
                                             </div>
                                         </div>
+
+
                                         <div class="col-lg-4">
                                             <div class="row">
                                                 <div class="order-3 mb-3 mb-lg-0 coupon-quantity">
@@ -101,8 +103,7 @@
                                                         class="small-size fw-600 text-grey-900 font-xsss">Quantity</label>
                                                     <input type="text" class="form-control credentails-field"
                                                         placeholder="Quantity" name="quantity" id="quantity"
-                                                        value="{{ old('quantity', session('giftCardFormValues.quantity')) }}"
-                                                        maxlength="2">
+                                                        {{-- value="{{ old('quantity', session('giftCardFormValues.quantity')) }}" --}} value="1" maxlength="2">
                                                     <small class="float-right form-text text-current font-xsss">Min: 1 Max:
                                                         10</small>
                                                     <div class="font-xssss fw-400 error-rec-qnty text-danger mt-3"></div>
@@ -114,7 +115,7 @@
                                             <div class="custom-control mr-4 custom-radio">
                                                 <input type="radio" class="custom-control-input gift-option"
                                                     id="sendAsGiftRadio" name="gift_send_option" value="send_as_gift"
-                                                    {{ old('gift_send_option', session('giftCardFormValues.gift_send_option', 'send_as_gift')) == 'send_as_gift' ? 'checked' : '' }}>
+                                                    {{-- {{ old('gift_send_option', session('giftCardFormValues.gift_send_option', 'send_as_gift')) == 'send_as_gift' ? 'checked' : '' }} --}}>
                                                 <label
                                                     class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
                                                     for="sendAsGiftRadio">Send as Gift</label>
@@ -122,35 +123,46 @@
                                             <div class="custom-control mr-0 custom-radio">
                                                 <input type="radio" class="custom-control-input gift-option"
                                                     id="buyForSelfRadio" name="gift_send_option" value="buy_for_self"
-                                                    {{ old('gift_send_option', session('giftCardFormValues.gift_send_option')) == 'buy_for_self' ? 'checked' : '' }}>
+                                                    checked="checked" {{-- {{ old('gift_send_option', session('giftCardFormValues.gift_send_option')) == 'buy_for_self' ? 'checked' : '' }} --}}>
                                                 <label
                                                     class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
                                                     for="buyForSelfRadio">Buy for Self</label>
-                                                    <div class="row">
-                                                        <div class="col-12 mb-4">
-                                                            <input type="hidden" name="delivery_mode" value="both">
-                                                        </div>
+                                                <div class="row">
+                                                    <div class="col-12 mb-4">
+                                                        <input type="hidden" name="delivery_mode" value="both">
                                                     </div>
                                                 </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="row justify-content-center mt-4 gifting-details" style="display: block;">
                                         <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
                                         <div class="row"> <!-- Added .row to group the .col-lg-* elements -->
                                             <div class="col-12 col-lg-3 receiver-name">
-                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Name" name="receiver_name" id="receiver-name" value="">
+
+                                                <input type="text" class="form-control mb-3 credentails-field"
+                                                    placeholder="Receiver Name" name="receiver_name" id="receiver-name"
+                                                    {{-- value="{{ old('receiver_name', session('giftCardFormValues.receiver_name')) }}" --}} value="">
                                                 <span class="font-xssss fw-400 error-rec-name text-danger"></span>
                                             </div>
                                             <div class="col-12 col-lg-3 receiver-email">
-                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Email" name="receiver_email" id="receiver-email" value="">
+                                                <input type="text" class="form-control mb-3 credentails-field"
+                                                    placeholder="Receiver Email" name="receiver_email"
+                                                    id="receiver-email" {{-- value="{{ old('receiver_email', session('giftCardFormValues.receiver_email')) }" --}} value="">
                                                 <span class="font-xssss fw-400 error-rec-email text-danger"></span>
                                             </div>
                                             <div class="col-12 col-lg-3 receiver-mobile">
-                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number" name="receiver_mobile" id="receiver-mobile" value="">
+                                                <input type="text" class="form-control mb-3 credentails-field"
+                                                    placeholder="Receiver Mobile Number" name="receiver_mobile"
+                                                    id="receiver-mobile" {{-- value="
+                                                {{ old('receiver_mobile', session('giftCardFormValues.receiver_mobile')) }}
+                                                 " --}} value="">
                                                 <span class="font-xssss fw-400 error-rec-mobile text-danger"></span>
                                             </div>
                                             <div class="col-12 col-lg-3 receiver-message">
-                                                <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver" name="receiver_msg" id="receiver-msg" value="">
+                                                <input type="text" class="form-control mb-3 credentails-field"
+                                                    placeholder="Message for Receiver" name="receiver_msg"
+                                                    id="receiver-msg" {{-- value="{{ old('receiver_msg', session('giftCardFormValues.receiver_msg')) }}" --}} value="">
                                             </div>
                                         </div> <!-- End .row -->
                                     </div>
@@ -247,7 +259,12 @@
     </div>
     @push('scripts')
         <script>
+            //   $(document).ready(function(){
+            //     console.log("modal show");
+            //     $('#Modallogin').modal('show');
+            //  });
             $(document).ready(function() {
+
 
                 // Check the initially selected radio button on page load
                 toggleReceiverFields();
@@ -270,6 +287,10 @@
 
                     }
                 }
+
+
+
+
 
                 let debounceTimeout;
                 let isAuthenticated = false; // Assume the user is not authenticated by default
@@ -444,6 +465,15 @@
                     '{{ old('gift_send_option', session('giftCardFormValues.gift_send_option', 'send_as_gift')) }}';
                 $('input[name="gift_send_option"][value="' + selectedGiftSendOption + '"]').prop('checked', true);
             });
+
+
+            @if (!auth()->check())
+                // Show login modal if user is not authenticated
+                setTimeout(function() {
+                    console.log("Showing login modal");
+                    $('#Modallogin').modal('show');
+                }, 1000);
+            @endif
         </script>
     @endpush
 @endsection

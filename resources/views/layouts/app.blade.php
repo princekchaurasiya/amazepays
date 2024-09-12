@@ -331,7 +331,7 @@
         <!-- footer wrapper -->
     </div>
     <!-- Modal Register -->
-    <div class="modal fade" id="ModalregisterD" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+    <div class="modal fade" id="ModalregisterD"  tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
         data-backdrop="true" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-md modal-lg" role="document">
             <div class="modal-content border-0">
@@ -627,6 +627,8 @@
 
 
 
+
+
     <!-- modal otp validation ends here -->
     <!-- Forgot Password Modal -->
     <div class="modal bottom fade" id="Modalforgotpassword" tabindex="-1" role="dialog"
@@ -715,11 +717,12 @@
                 console.log(123); // Log to confirm the button was clicked
 
                 // Hide the modals
-                $('.ModalregisterD').modal('hide');
-                $('.Modallogin').modal('hide');
+                $('.modal').modal('hide');
+                // $('#Modallogin').modal('hide');
 
                 // Remove the backdrop
                 $('.modal-backdrop').remove();
+                $('.show').remove();
             });
         });
 
@@ -1197,6 +1200,9 @@
             }
             return true;
         };
+
+
+
     </script>
     @stack('scripts')
     </div>

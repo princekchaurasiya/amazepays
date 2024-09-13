@@ -115,7 +115,7 @@
                                             <div class="custom-control mr-4 custom-radio">
                                                 <input type="radio" class="custom-control-input gift-option"
                                                     id="sendAsGiftRadio" name="gift_send_option" value="send_as_gift"
-                                                    {{-- {{ old('gift_send_option', session('giftCardFormValues.gift_send_option', 'send_as_gift')) == 'send_as_gift' ? 'checked' : '' }} --}}>
+                                                    >
                                                 <label
                                                     class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
                                                     for="sendAsGiftRadio">Send as Gift</label>
@@ -123,7 +123,7 @@
                                             <div class="custom-control mr-0 custom-radio">
                                                 <input type="radio" class="custom-control-input gift-option"
                                                     id="buyForSelfRadio" name="gift_send_option" value="buy_for_self"
-                                                    checked="checked" {{-- {{ old('gift_send_option', session('giftCardFormValues.gift_send_option')) == 'buy_for_self' ? 'checked' : '' }} --}}>
+                                                    checked="checked" >
                                                 <label
                                                     class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
                                                     for="buyForSelfRadio">Buy for Self</label>
@@ -266,10 +266,9 @@
             $(document).ready(function() {
 
 
-                // Check the initially selected radio button on page load
+
                 toggleReceiverFields();
 
-                // Attach change event listeners to the gift send options
                 $('input[name="gift_send_option"]').change(function() {
                     toggleReceiverFields();
                 });
@@ -287,8 +286,6 @@
 
                     }
                 }
-
-
 
 
 
@@ -461,9 +458,9 @@
                 });
 
                 // Ensure the selected gift_send_option is retained on form reload or submission
-                var selectedGiftSendOption =
-                    '{{ old('gift_send_option', session('giftCardFormValues.gift_send_option', 'send_as_gift')) }}';
-                $('input[name="gift_send_option"][value="' + selectedGiftSendOption + '"]').prop('checked', true);
+                // var selectedGiftSendOption =
+                //     '{{ old('gift_send_option', session('giftCardFormValues.gift_send_option', 'send_as_gift')) }}';
+                // $('input[name="gift_send_option"][value="' + selectedGiftSendOption + '"]').prop('checked', true);
             });
 
 

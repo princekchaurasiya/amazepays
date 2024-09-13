@@ -30,61 +30,112 @@ class CCAvenueController extends Controller
     {
 
 
+        try {
+            // Define custom validation messages
+            $messages = [
+                'billing_name.required' => 'Please enter a name.',
+                'billing_name.regex' => 'Name can only contain letters and spaces.',
+                'billing_name.max' => 'Name cannot exceed 30 characters.',
+                'billing_email.required' => 'Please enter an email address.',
+                'billing_email.email' => 'Please enter a valid email address.',
+                'billing_email.max' => 'Email cannot exceed 50 characters.',
+                'billing_tel.required' => 'Please enter a phone number.',
+                'billing_tel.digits' => 'Phone number must be 10 digits.',
+                'billing_tel.regex' => 'Phone number must be a valid Indian number.',
+                'billing_zip.required' => 'Please enter a zip code.',
+                'billing_zip.digits' => 'Zip code must be 6 digits.',
+                'billing_zip.regex' => 'Zip code must be a valid numeric code.',
+                'billing_address.required' => 'Please enter your address.',
+                'billing_address.max' => 'Address cannot exceed 50 characters.',
+                'billing_address_two.required' => 'Please enter your second address.',
+                'billing_address_two.max' => 'Address cannot exceed 50 characters.',
+                'billing_city.required' => 'Please enter your city.',
+                'billing_city.max' => 'City cannot exceed 40 characters.',
+                'billing_state.required' => 'Please enter your state.',
+                'billing_state.max' => 'State cannot exceed 40 characters.',
+                'billing_country.required' => 'Please enter your country.',
+                'billing_country.max' => 'Country cannot exceed 40 characters.',
+                'billing_gst_number.max' => 'GST number cannot exceed 15 characters.',
+            ];
 
-        $user = Auth::user();
+            // Validate the form data
+            $request->validate([
+                'billing_name' => 'required|regex:/^[a-zA-Z\s]+$/|max:30',
+                'billing_email' => 'required|email|max:50',
+                'billing_tel' => ['required', 'digits:10', 'regex:/^[0-9]{10}$/'],
+                'billing_zip' => ['required', 'digits:6', 'regex:/^[0-9]{6}$/'],
+                'billing_address' => 'required|max:50',
+                'billing_address_two' => 'required|max:50',
+                'billing_city' => 'required|max:40',
+                'billing_state' => 'required|max:40',
+                'billing_country' => 'required|max:40',
+                'billing_gst_number' => 'nullable|max:15',
+            ], $messages);
 
-        $user->update([
-            'name' => $request->input('billing_name'),
-            'email' => $request->input('billing_email'),
-            'mobile' => $request->input('billing_tel'),
-            'billing_zip' => $request->input('billing_zip'),
-            'billing_address' => $request->input('billing_address'),
-            'billing_address_two' => $request->input('billing_address_two'),
-            'billing_city' => $request->input('billing_city'),
-            'billing_state' => $request->input('billing_state'),
-            'billing_country' => $request->input('billing_country'),
-        ]);
+            // Log request data for debugging
+            Log::info('Process payment request', $request->all());
 
+            // Update user details
+            $user = Auth::user();
+            $user->update([
+                'name' => $request->input('billing_name'),
+                'email' => $request->input('billing_email'),
+                'mobile' => $request->input('billing_tel'),
+                'billing_zip' => $request->input('billing_zip'),
+                'billing_address' => $request->input('billing_address'),
+                'billing_address_two' => $request->input('billing_address_two'),
+                'billing_city' => $request->input('billing_city'),
+                'billing_state' => $request->input('billing_state'),
+                'billing_country' => $request->input('billing_country'),
+            ]);
 
-        Log::info('Session CSRF Token: ' . session()->token());
-        Log::info('Request CSRF Token: ' . $request->input('_token'));
-        Log::info('Process payment request', $request->all());
-        $sessionId = session('session_qs_order_id');
-        if (!$this->updateQsOrder($sessionId, $request)) {
-            return view('order.order-status', ['errorMessage' => 'Record not found for session ID']);
+            // Handle payment processing
+            $sessionId = session('session_qs_order_id');
+            if (!$this->updateQsOrder($sessionId, $request)) {
+                Log::error('Record not found for session ID: ' . $sessionId);
+                return view('order.order-status', ['errorMessage' => 'Record not found for session ID']);
+            }
+
+            $paymentData = $this->preparePaymentData($sessionId, $request);
+            $encryptedData = $this->encryptPaymentData($paymentData);
+            $accessCode = config('paymentconfig.access_code');
+            $ccavenueApiEndpoint = config('paymentconfig.ccavenue_api_endpoint');
+
+            return view('paymentFolder.ccavRequestHandler', compact('encryptedData', 'accessCode', 'ccavenueApiEndpoint'));
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation exceptions
+            Log::error('Validation failed', [
+                'errors' => $e->errors(),
+                'message' => $e->getMessage()
+            ]);
+            return redirect()->back()->withErrors($e->errors())->withInput();
+
+        } catch (\Exception $e) {
+            // Handle general exceptions
+            Log::error('Payment processing failed', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return view('order.order-status', ['errorMessage' => 'An error occurred while processing your payment.']);
         }
-        $paymentData = $this->preparePaymentData($sessionId, $request);
-        $encryptedData = $this->encryptPaymentData($paymentData);
-        $accessCode = config('paymentconfig.access_code');
-        $ccavenueApiEndpoint = config('paymentconfig.ccavenue_api_endpoint');
-        return view('paymentFolder.ccavRequestHandler', compact('encryptedData', 'accessCode', 'ccavenueApiEndpoint'));
     }
+
     protected function preparePaymentData($sessionId, Request $request)
     {
-        // Retrieve all request data
         $paymentData = $request->all();
-
-        // Add or override values with session and configuration data
         $paymentData['order_id'] = $sessionId;
         $paymentData['denomination'] = session('denomination');
         $paymentData['amount'] = session('total_payable_amount_after_discount');
         $paymentData['quantity'] = session('quantity');
-
-        // Retrieve static values securely from configuration
         $paymentData['numericCode'] = config('paymentconfig.numeric_code', '356');
         $paymentData['currency'] = config('paymentconfig.currency', 'INR');
         $paymentData['language'] = config('paymentconfig.language', 'EN');
-
-        // URLs for redirect and cancellation
         $paymentData['redirect_url'] = route('response_ccavenue');
         $paymentData['cancel_url'] = url('payment-cancel');
-
-        // Retrieve sensitive values from configuration
         $paymentData['merchant_id'] = config('paymentconfig.merchant_id');
-
         return $paymentData;
     }
-
     protected function encryptPaymentData($paymentData)
     {
         $merchantData = http_build_query($paymentData);
@@ -165,30 +216,10 @@ class CCAvenueController extends Controller
     }
     protected function updateQsOrder($sessionId, Request $request)
     {
-
-
         try {
             $qsOrder = QsOrder::where('id', $sessionId)->firstOrFail();
             Log::info('qsorder is this', $qsOrder->toArray());
-
-
-            $updateData = [
-                'sender_first_name' => $request->billing_name ?? $qsOrder->sender_first_name,
-                'sender_email' => $request->billing_email ?? $qsOrder->sender_email,
-                'sender_phone_no' => $request->billing_tel ?? $qsOrder->sender_phone_no,
-                'sender_post_code' => $request->billing_zip ?? $qsOrder->sender_post_code,
-                'sender_address_1' => $request->billing_address ?? $qsOrder->sender_address_1,
-                'sender_address_2' => $request->billing_address_two ?? $qsOrder->sender_address_2,
-                'sender_city' => $request->billing_city ?? $qsOrder->sender_city,
-                'sender_state' => $request->billing_state ?? $qsOrder->sender_state,
-                'sku' => $request->has('sku') ? $request->sku : $qsOrder->sku,  // Only update if present
-                'amount_payable_after_discount' => $request->has('amount') ? $request->amount : $qsOrder->amount_payable_after_discount,  // Only update if present
-                'discounted_amount_value' => $request->has('quantity') && $request->has('denomination') && $request->has('amount')
-                    ? round($request->quantity * $request->denomination - $request->amount, 3)
-                    : $qsOrder->discounted_amount_value,  // Calculate only if quantity, denomination, and amount are present
-                'gst_number' => $request->billing_gst_number ?? $qsOrder->gst_number ?: 'Unregistered',
-                'country' => $request->billing_country ?? $qsOrder->country,
-            ];
+            $updateData = ['sender_first_name' => $request->billing_name ?? $qsOrder->sender_first_name, 'sender_email' => $request->billing_email ?? $qsOrder->sender_email, 'sender_phone_no' => $request->billing_tel ?? $qsOrder->sender_phone_no, 'sender_post_code' => $request->billing_zip ?? $qsOrder->sender_post_code, 'sender_address_1' => $request->billing_address ?? $qsOrder->sender_address_1, 'sender_address_2' => $request->billing_address_two ?? $qsOrder->sender_address_2, 'sender_city' => $request->billing_city ?? $qsOrder->sender_city, 'sender_state' => $request->billing_state ?? $qsOrder->sender_state, 'sku' => $request->has('sku') ? $request->sku : $qsOrder->sku, 'amount_payable_after_discount' => $request->has('amount') ? $request->amount : $qsOrder->amount_payable_after_discount, 'discounted_amount_value' => $request->has('quantity') && $request->has('denomination') && $request->has('amount') ? round($request->quantity * $request->denomination - $request->amount, 3) : $qsOrder->discounted_amount_value, 'gst_number' => $request->billing_gst_number ?? $qsOrder->gst_number ?: 'Unregistered', 'country' => $request->billing_country ?? $qsOrder->country,];
             $qsOrder->update($updateData);
             return true;
         } catch (\Exception $e) {

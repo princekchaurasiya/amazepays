@@ -104,7 +104,7 @@ Route::get('/all_transaction', function () {
 });
 Route::match(['get', 'post'], '/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
 
-// Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('placeOrder');
+Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('placeOrder');
 
 
 Route::post('/update-session-data', [ProductPageController::class, 'updateSessionData'])->name('updateSessionData');

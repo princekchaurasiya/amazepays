@@ -70,10 +70,7 @@ Route::group(['middleware' => 'guest'], function () {
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/user-logout', [UserPanelController::class, 'userLogOut'])->name('user-logout');
     Route::post('/apply-coupan', [UserPanelController::class, 'applyCoupan'])->name('apply-coupan');
-    Route::get('/profile', function () {
-        return view('userpanel/profile');
-    })->name('profile');
-    Route::get('/my-order', [MyOrderController::class, 'displayOrder'])->name('my-order');
+
 });
 
 Route::get('/unauthenticated', function () {
@@ -140,3 +137,14 @@ Route::view('/gift', 'layouts.giftmail');
 Route::fallback(function() {
     return response()->json(['message' => 'Route not found'], 404);
 });
+
+
+Route::get('/profile', function () {
+    return view('userpanel/profile');
+})->middleware('auth.modal')->name('profile');
+
+Route::get('/my-order', [MyOrderController::class, 'displayOrder'])->middleware('auth.modal')->name('my-order');
+
+Route::get('/unauthorized', function () {
+    return view('unauthorized');
+})->name('unauthorized');

@@ -25,10 +25,20 @@
                     </div>
                 </div>
                 <div class="col-lg-9">
-                    @if(session('success'))
-                    <div class="alert alert-success">
-                        {{ session('success') }}
-                    </div>
+                    @if (session('success'))
+                        <div class="alert alert-success">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
                     @endif
                     <div class="dashboard-tab cart-wrapper p-5 bg-white rounded-lg shadow-xs">
                         <form action="{{ route('update-profile') }}" method="POST" id="profileForm">
@@ -44,7 +54,7 @@
                                 <div class="col-lg-12 mb-3">
                                     <div class="form-group">
                                         <label class="mont-font fw-600 font-xsss" for="email">Email</label>
-                                        <input type="email" name="email" class="form-control"
+                                        <input  name="email" class="form-control"
                                             value="{{ Auth::user()->email }}">
                                     </div>
                                 </div>
@@ -68,7 +78,7 @@
     </div>
 
     @push('scripts')
-    <script type="text/javascript">
+        <script type="text/javascript">
         $(document).ready(function () {
             $.validator.addMethod("regex", function(value, element, regexp) {
                 var re = new RegExp(regexp);

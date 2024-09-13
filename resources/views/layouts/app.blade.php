@@ -704,26 +704,30 @@
 
 
 
+
+
         document.getElementById('closeModalButton').addEventListener('click', function() {
             $('#otpVerificationModal').modal('hide');
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open');
+
         });
 
 
-        // Close modal when clicking the 'close' button
-        document.querySelectorAll('.close').forEach(function(closeButton) {
-            closeButton.addEventListener('click', function() {
-                console.log(123); // Log to confirm the button was clicked
 
-                // Hide the modals
-                $('.modal').modal('hide');
-                // $('#Modallogin').modal('hide');
+
+        $('.close').click(function() {
+            if ($(event.target).hasClass('modal-backdrop')) {
+                // Hide both modals
+                $('.ModalregisterD').modal('hide');
+                $('.Modallogin').modal('hide');
 
                 // Remove the backdrop
                 $('.modal-backdrop').remove();
-                $('.show').remove();
-            });
+                $('body').removeClass('modal-open');
+
+                console.log('Modal closed on backdrop click');
+            }
         });
 
 
@@ -738,6 +742,7 @@
 
                 // Remove the backdrop
                 $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
 
                 console.log('Modal closed on backdrop click');
             }

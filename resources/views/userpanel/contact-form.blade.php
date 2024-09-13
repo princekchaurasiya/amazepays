@@ -11,10 +11,23 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-10 offset-lg-1">
+
+
+
                     <div class="contact-wrap bg-white shadow-lg rounded-lg position-relative">
                         @if (session('success'))
                             <div class="alert alert-success">
                                 {{ session('success') }}
+                            </div>
+                        @endif
+
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
                             </div>
                         @endif
                         <h1 class="text-grey-900 fw-700 display3-size mb-5 lh-1">Contact us</h1>
@@ -23,14 +36,14 @@
                             <div class="row">
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group mb-3">
-                                        <input type="text" name="name" class="form-control h60 bg-color-none text-grey-700"
-                                            placeholder="Name">
+                                        <input type="text" name="name"
+                                            class="form-control h60 bg-color-none text-grey-700" placeholder="Name">
                                     </div>
                                 </div>
                                 <div class="col-lg-6 col-md-12">
                                     <div class="form-group mb-3">
-                                        <input type="email" name="email" class="form-control h60 bg-color-none text-grey-700"
-                                            placeholder="Email">
+                                        <input type="email" name="email"
+                                            class="form-control h60 bg-color-none text-grey-700" placeholder="Email">
                                     </div>
                                 </div>
                                 <div class="col-12">
@@ -54,15 +67,18 @@
                     <div class="row">
                         <div class="col-lg-4 col-md-4 md-mb25">
                             <h4 class="text-grey-900 fw-600 font-xl ls-2">Address</h4>
-                            <h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">{{ config('companyDefaultValues.company_address') }}</h4>
+                            <h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">
+                                {{ config('companyDefaultValues.company_address') }}</h4>
                         </div>
                         <div class="col-lg-4 col-md-4 md-mb25">
                             <h4 class="text-grey-900 fw-600 font-xl ls-2">Email Us</h4>
-                            <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4 mb-0">{{ config('companyDefaultValues.company_email') }}</h5>
+                            <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4 mb-0">
+                                {{ config('companyDefaultValues.company_email') }}</h5>
                         </div>
                         <div class="col-lg-4 col-md-4 md-mb25">
                             <h4 class="text-grey-900 fw-600 font-xl ls-2">Contact Us</h4>
-                            <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-0">+91 {{ config('companyDefaultValues.company_contact_no') }}</h5>
+                            <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-0">+91
+                                {{ config('companyDefaultValues.company_contact_no') }}</h5>
                         </div>
                     </div>
                 </div>

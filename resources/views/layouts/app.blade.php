@@ -717,17 +717,22 @@
 
 
         $('.close').click(function() {
-            if ($(event.target).hasClass('modal-backdrop')) {
-                // Hide both modals
-                $('.ModalregisterD').modal('hide');
-                $('.Modallogin').modal('hide');
+            $('.modal').modal('hide');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
 
-                // Remove the backdrop
-                $('.modal-backdrop').remove();
-                $('body').removeClass('modal-open');
 
-                console.log('Modal closed on backdrop click');
-            }
+            // if ($(event.target).hasClass('modal-backdrop')) {
+            //     // Hide both modals
+            //     $('.modal').modal('hide');
+            //     // $('.Modallogin').modal('hide');
+
+            //     // Remove the backdrop
+            //     $('.modal-backdrop').remove();
+            //     $('body').removeClass('modal-open');
+
+            //     console.log('Modal closed on backdrop click');
+            // }
         });
 
 

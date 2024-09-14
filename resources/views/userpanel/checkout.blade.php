@@ -781,8 +781,19 @@
     </div>
 
     @push('scripts')
-        {{-- <script type="text/javascript">
+        <script type="text/javascript">
             $(document).ready(function() {
+
+
+                @if (!auth()->check())
+                // Show login modal if user is not authenticated
+                setTimeout(function() {
+                    console.log("Showing login modal");
+                    $('#Modallogin').modal('show');
+                }, 1000);
+            @endif
+
+
                 let debounceTimeout;
 
                 function updateSessionData() {
@@ -948,6 +959,6 @@
                     return /^[6-9]\d{9}$/.test(value);
                 }, "Please enter a valid Indian number");
             });
-        </script> --}}
+        </script>
     @endpush
 @endsection

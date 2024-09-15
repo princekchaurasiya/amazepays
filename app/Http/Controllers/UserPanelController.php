@@ -15,7 +15,7 @@ use Auth;
 use App\Helpers\CommonHelper;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\SmsController;
-use App\Http\Controllers\OtpVerificationController;
+use App\Http\Requests\OtpVerificationController;
 use App\Http\Controllers\Apis\AuthenticationController;
 use Illuminate\Support\Facades\Log;
 use Exception;
@@ -34,7 +34,7 @@ class UserPanelController extends Controller
         $this->commonController = new CommonController();
         $this->smsController = new SmsController();
         $this->authenticationController = new AuthenticationController();
-        $this->otpVerificationController = new OtpVerificationController();
+        // $this->otpVerificationController = new OtpVerificationController();
     }
 
     public function homePage()
@@ -73,20 +73,17 @@ class UserPanelController extends Controller
             // Validate request data
             $validator = Validator::make($request->all(), [
                 'name' => 'required|regex:/^[a-zA-Z\s]+$/',
-                'mobile' => ['required', 'digits:10', 'regex:/^(\+91[\-\s]?)?[789]\d{9}$/'],
+                'mobile' => 'required|regex:/^(?:(?:\+|0{0,2})91)?[789]\d{9}$/|unique:users,mobile',
                 'email' => 'required|email|unique:users,email',
-                'password' => 'required|min:8',
-                'confmPassword' => 'required|same:password|min:8',
+                'password' => 'required|confirmed|min:8',
             ], [
                 'name.regex' => 'Name should only contain letters and spaces',
                 'mobile.regex' => 'Invalid mobile number',
                 'mobile.unique' => 'Mobile number already exists',
                 'email.email' => 'Invalid email address',
                 'email.unique' => 'Email already exists',
+                'password.confirmed' => 'Password confirmation does not match',
                 'password.min' => 'Password must be at least 8 characters long',
-                'confmPassword.required' => 'Password confirmation is required',
-                'confmPassword.same' => 'Password confirmation does not match',
-                'confmPassword.min' => 'Password confirmation must be at least 8 characters long',
             ]);
 
             if ($validator->fails()) {
@@ -97,17 +94,16 @@ class UserPanelController extends Controller
                 Log::warning('Validation errors in userRegistration', ['errors' => $validator->errors()->toArray()]);
                 return response()->json($data);
             }
-            Log::info('OTP Response');
-            // Step 1: Send OTP using SmsController
-            $otpResponse = $this->smsController->registerWithOtp($request);
+
 
             // Verify OTP
-            $otpVerificationResponse = $this->otpVerificationController->registerVerifyOtp($request);
-            Log::info('OTP Verification Response', ['response' => $otpVerificationResponse]);
+            $otpVerificationResponse = $this->otpVerificationController->registerVerifyOtp($request->mobile, $request->otp);
 
             if ($otpVerificationResponse['status'] === 'error') {
                 return response()->json(['status' => 400, 'message' => $otpVerificationResponse['message']]);
             }
+
+
 
             // If OTP is verified, proceed to create the user
             User::create([
@@ -136,20 +132,13 @@ class UserPanelController extends Controller
 
             return response()->json($data);
         } catch (Exception $e) {
-            Log::error('Error in userRegistration method', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            Log::error('Error in userRegistration method', ['error' => $e->getMessage()]);
             return response()->json([
                 'status' => 500,
                 'msg' => 'Internal Server Error',
             ], 500);
         }
     }
-
-
-
-
 
     public function userLogin(Request $request)
     {

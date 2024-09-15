@@ -44,8 +44,6 @@ class OtpVerificationController extends Controller
     // Verify OTP for registration
     public function registerVerifyOtp(Request $request)
     {
-
-        log::info($request);
         try {
             $otp = $request->input('otp');
             $mobileNumber = $request->input('destination');
@@ -55,10 +53,13 @@ class OtpVerificationController extends Controller
 
             if ($verificationResult['status'] === 'success') {
                 // Create a new user record after successful OTP verification
+                $user = User::create([
+                    'mobile' => $mobileNumber,
+                    // Add other fields as necessary
+                ]);
 
-
-                // Auth::login($user); // Automatically log in the user after registration
-                // Log::info('Registration and login successful for user', ['user_id' => $user->id]);
+                Auth::login($user); // Automatically log in the user after registration
+                Log::info('Registration and login successful for user', ['user_id' => $user->id]);
             }
 
             return response()->json($verificationResult);

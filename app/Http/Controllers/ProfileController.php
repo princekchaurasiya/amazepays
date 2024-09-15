@@ -17,22 +17,22 @@ class ProfileController extends Controller
             $messages = [
                 'name.required' => 'Please enter your name.',
                 'name.string' => 'The name should be a valid string.',
-                'name.max' => 'The name should not exceed 255 characters.',
+                'name.max' => 'The name should not exceed 30 characters.',
                 'name.regex' => 'The name should not contain numbers or special characters.',
                 'email.required' => 'We need your email address.',
                 'email.email' => 'Please provide a valid email address.',
                 'email.unique' => 'This email is already registered. Please use a different email address.',
-                'phone.required' => 'A phone number is required.',
-                'phone.regex' => 'The phone number must be 10 digits and should not contain spaces or special characters.',
-                'phone.min' => 'The phone number must be exactly 10 digits.',
-                'phone.max' => 'The phone number must be exactly 10 digits.',
+                // 'phone.required' => 'A phone number is required.',
+                // 'phone.regex' => 'The phone number must be 10 digits and should not contain spaces or special characters.',
+                // 'phone.min' => 'The phone number must be exactly 10 digits.',
+                // 'phone.max' => 'The phone number must be exactly 10 digits.',
             ];
 
             // Validation rules
             $validatedData = $request->validate([
-                'name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s]+$/'], // Name must be letters and spaces only
+                'name' => ['required', 'string', 'max:30', 'regex:/^[a-zA-Z\s]+$/'], // Name must be letters and spaces only
                 'email' => 'required|email|unique:users,email,' . Auth::id(),
-                'phone' => ['required', 'regex:/^[0-9]{10}$/'], // Phone number must be 10 digits
+                // 'phone' => ['required', 'regex:/^[0-9]{10}$/'], // Phone number must be 10 digits
             ], $messages);
 
             // Log successful validation
@@ -42,7 +42,7 @@ class ProfileController extends Controller
             $user = Auth::user();
             $user->name = $validatedData['name'];
             $user->email = $validatedData['email'];
-            $user->mobile = $validatedData['phone'];
+            // $user->mobile = $validatedData['phone'];
 
             if ($user->save()) {
                 // Log successful save

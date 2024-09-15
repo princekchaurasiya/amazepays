@@ -156,8 +156,11 @@ Route::post('/save-gift-card-form-values', [ProductPageController::class, 'saveG
 
 
 
-Route::post('/send-sms', [SmsController::class, 'sendSms'])->name('send-sms');
-Route::post('/verify-otp', [OtpVerificationController::class, 'verifyOtp'])->name('verify-otp');
+Route::post('/send-sms', [SmsController::class, 'loginWithOtp'])->name('send-sms');
+Route::post('/register-otp', [SmsController::class, 'registerWithOtp'])->name('send-regsiter-otp');
+Route::post('/verify-otp', [OtpVerificationController::class, 'loginVerifyOtp'])->name('verify-otp');
+// Route for OTP verification during registration
+Route::post('/verify-register-otp', [OtpVerificationController::class, 'registerVerifyOtp'])->name('verify-register-otp');
 Route::get('/invoice', function () {
     return view('layouts.invoice');
 })->name('invoice');

@@ -60,13 +60,13 @@
                                             <input name="email" class="form-control" value="{{ Auth::user()->email }}">
                                         </div>
                                     </div>
-                                    <div class="col-lg-12 mb-3">
+                                    {{-- <div class="col-lg-12 mb-3">
                                         <div class="form-group">
                                             <label class="mont-font fw-600 font-xsss" for="phone">Phone</label>
                                             <input type="text" name="phone" class="form-control"
                                                 value="{{ Auth::user()->mobile }}">
                                         </div>
-                                    </div>
+                                    </div> --}}
                                     <div class="col-lg-12 mb-5">
                                         <button type="submit"
                                             class="form-control rounded-lg h20 float-left bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 w100">Update</button>
@@ -114,11 +114,11 @@
                                 required: true,
                                 email: true
                             },
-                            phone: {
-                                required: true,
-                                digits: true,
-                                maxlength: 10,
-                            }
+                            // phone: {
+                            //     required: true,
+                            //     digits: true,
+                            //     maxlength: 10,
+                            // }
                         },
                         messages: {
                             name: {
@@ -130,11 +130,11 @@
                                 required: "Please enter your email",
                                 email: "Please enter a valid email address"
                             },
-                            phone: {
-                                required: "Please enter your phone number",
-                                digits: "Please enter a valid phone number",
-                                maxlength: "Your phone number must not exceed 10 digits"
-                            }
+                            // phone: {
+                            //     required: "Please enter your phone number",
+                            //     digits: "Please enter a valid phone number",
+                            //     maxlength: "Your phone number must not exceed 10 digits"
+                            // }
                         },
                         submitHandler: function(form) {
                             form.submit(); // Submit the form if validation is successful

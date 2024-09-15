@@ -3,6 +3,7 @@
 @section('title', 'Unauthorized Access')
 
 @section('content')
+if au
     <div class="container mt-5">
         <div class="alert alert-warning">
             <h4 class="alert-heading">Oops!</h4>

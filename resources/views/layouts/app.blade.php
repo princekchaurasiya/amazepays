@@ -790,7 +790,7 @@
 
 
 
-        OTP verification logic (submit2)
+        // OTP verification logic (submit2)
         $('#submit2').on('click', function(e) {
             e.preventDefault();
             var otpData = {

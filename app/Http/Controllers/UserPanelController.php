@@ -16,7 +16,7 @@ use App\Helpers\CommonHelper;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\SmsController;
 use App\Http\Controllers\OtpVerificationController;
-use App\Http\Controllers\APIs\AuthenticationController;
+// use App\Http\Controllers\APIs\AuthenticationController;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
@@ -25,7 +25,7 @@ class UserPanelController extends Controller
 {
     protected $commonController;
     protected $smsController;
-    protected $authenticationController;
+    // protected $authenticationController;
     protected $otpVerificationController;
 
 
@@ -33,7 +33,7 @@ class UserPanelController extends Controller
     {
         $this->commonController = new CommonController();
         $this->smsController = new SmsController();
-        $this->authenticationController = new AuthenticationController();
+        // $this->authenticationController = new AuthenticationController();
         $this->otpVerificationController = new OtpVerificationController();
     }
 

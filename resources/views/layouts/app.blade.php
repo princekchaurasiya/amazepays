@@ -743,34 +743,81 @@
             return this.optional(element) || /^[a-zA-Z\s]+$/.test(value);
         }, "Name should only contain letters and spaces");
 
-        // OTP verification logic (submit2)
-        // $('#submit2').on('click', function(e) {
-        //     e.preventDefault();
-        //     var otpData = {
-        //         mobile: $('#mobile').val(),
-        //         otp: $('#registerOTP').val(),
-        //         _token: '{{ csrf_token() }}'
-        //     };
 
-        //     $.ajax({
-        //         type: 'POST',
-        //         url: '{{ route('verify-register-otp') }}',
-        //         data: otpData,
-        //         success: function(response) {
-        //             if (response.status === 200) {
-        //                 alert('OTP verified successfully! User registered.');
-        //                 window.location.href = '{{ route('home') }}';
-        //             } else {
-        //                 $('#otp-error-alert').removeClass('d-none').find('.error-message').text(response
-        //                     .message);
-        //             }
-        //         },
-        //         error: function() {
-        //             $('#otp-error-alert').removeClass('d-none').find('.error-message').text(
-        //                 'OTP verification failed.');
-        //         }
-        //     });
-        // });
+        $('.submit1').click(function() {
+
+            $('.otp-section').show();
+
+
+            const destination = $('#mobile').val();
+            var mobile = $('#mobile').val();
+            console.log('Destination mobile number:', destination);
+            console.log('Destination mobile number:', mobile);
+
+            $.ajax({
+                type: 'POST',
+                url: '{{ route('send-regsiter-otp') }}',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    destination: destination
+                },
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Response:', response);
+                    if (response.status === 'success') {
+                        console.log('OTP sent successfully.');
+                    } else {
+                        $('.error-loginMobNumb').text(response.message ||
+                            'Failed to send OTP. Please try again later.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', status, error);
+                    $('.error-loginMobNumb').text(
+                        'An error occurred while sending the request. Please try again later.');
+                }
+            });
+        });
+
+
+        // Optional: Handle resend OTP click (if needed)
+        $('.resend-otp-link').on('click', function(event) {
+            event.preventDefault();
+            // // Logic to resend OTP goes here
+            // alert('Resend OTP functionality needs to be implemented.');
+        });
+
+
+
+
+        OTP verification logic (submit2)
+        $('#submit2').on('click', function(e) {
+            e.preventDefault();
+            var otpData = {
+                mobile: $('#mobile').val(),
+                otp: $('#registerOTP').val(),
+                _token: '{{ csrf_token() }}'
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '{{ route('verify-register-otp') }}',
+                data: otpData,
+                success: function(response) {
+                    if (response.status === 200) {
+                        alert('OTP verified successfully! User registered.');
+                        window.location.href = '{{ route('home') }}';
+                    } else {
+                        $('#otp-error-alert').removeClass('d-none').find('.error-message').text(response
+                            .message);
+                    }
+                },
+                error: function() {
+                    $('#otp-error-alert').removeClass('d-none').find('.error-message').text(
+                        'OTP verification failed.');
+                }
+            });
+        });
 
         $('#loginUser').click(function(e) {
             e.preventDefault();
@@ -1042,52 +1089,6 @@
             }
             return true;
         };
-
-
-        // $('.submit1').click(function() {
-
-        //     $('.otp-section').show();
-
-
-        //     const destination = $('#mobile').val();
-        //     var mobile = $('#mobile').val();
-        //     console.log('Destination mobile number:', destination);
-        //     console.log('Destination mobile number:', mobile);
-
-        //     $.ajax({
-        //         type: 'POST',
-        //         url: '{{ route('send-regsiter-otp') }}',
-        //         data: {
-        //             _token: '{{ csrf_token() }}',
-        //             destination: destination
-        //         },
-        //         dataType: 'json',
-        //         success: function(response) {
-        //             console.log('Response:', response);
-        //             if (response.status === 'success') {
-        //                 console.log('OTP sent successfully.');
-        //             } else {
-        //                 $('.error-loginMobNumb').text(response.message ||
-        //                     'Failed to send OTP. Please try again later.');
-        //             }
-        //         },
-        //         error: function(xhr, status, error) {
-        //             console.error('AJAX Error:', status, error);
-        //             $('.error-loginMobNumb').text(
-        //                 'An error occurred while sending the request. Please try again later.');
-        //         }
-        //     });
-        // });
-
-
-        // Optional: Handle resend OTP click (if needed)
-        $('.resend-otp-link').on('click', function(event) {
-            event.preventDefault();
-            // // Logic to resend OTP goes here
-            // alert('Resend OTP functionality needs to be implemented.');
-        });
-
-        let isOtpVerified = false;
     </script>
     @stack('scripts')
     </div>

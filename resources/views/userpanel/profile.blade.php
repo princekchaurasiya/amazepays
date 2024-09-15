@@ -10,12 +10,17 @@
             <div class="row">
                 <div class="col-lg-3">
                     <div class="dashboard-nav bg-white rounded-lg shadow-xs">
-                        <a href="#" class="dash-menu d-none d-block-md"><i class="ti-package font-sm mr-2"></i> Menu <i class="ti-angle-down font-xsss float-right "></i></a>
+                        <a href="#" class="dash-menu d-none d-block-md"><i class="ti-package font-sm mr-2"></i> Menu <i
+                                class="ti-angle-down font-xsss float-right "></i></a>
                         <ul class="dash-menu-ul">
-                            <li class="d-block rounded-lg active"><a href="{{ route('profile') }}"><i class="ti-user font-sm"></i><span> Profile</span></a></li>
-                            <li class="d-block rounded-lg"><a href="{{ route('my-order') }}"><i class="ti-package font-sm"></i><span> My Order</span></a></li>
-                            <li class="d-block rounded-lg"><a href="{{ route('change-password') }}"><i class="ti-lock font-sm"></i><span> Change Password</span></a></li>
-                            <li class="d-block rounded-lg"><a href="{{ route('userLogOut') }}"><i class="ti-power-off font-sm"></i><span> Logout</span></a></li>
+                            <li class="d-block rounded-lg active"><a href="{{ route('profile') }}"><i
+                                        class="ti-user font-sm"></i><span> Profile</span></a></li>
+                            <li class="d-block rounded-lg"><a href="{{ route('my-order') }}"><i
+                                        class="ti-package font-sm"></i><span> My Order</span></a></li>
+                            <li class="d-block rounded-lg"><a href="{{ route('change-password') }}"><i
+                                        class="ti-lock font-sm"></i><span> Change Password</span></a></li>
+                            <li class="d-block rounded-lg"><a href="{{ route('userLogOut') }}"><i
+                                        class="ti-power-off font-sm"></i><span> Logout</span></a></li>
                         </ul>
                     </div>
                 </div>
@@ -37,33 +42,37 @@
                     @endif
 
                     <div class="dashboard-tab cart-wrapper p-5 bg-white rounded-lg shadow-xs">
-                        @if (Auth::check()) <!-- Check if user is authenticated -->
-                        <form action="{{ route('update-profile') }}" method="POST" id="profileForm">
-                            @csrf
-                            <div class="row">
-                                <div class="col-lg-12 mb-3">
-                                    <div class="form-group">
-                                        <label class="mont-font fw-600 font-xsss" for="name">Name</label>
-                                        <input type="text" name="name" class="form-control" value="{{ Auth::user()->name }}">
+                        @if (Auth::check())
+                            <!-- Check if user is authenticated -->
+                            <form action="{{ route('update-profile') }}" method="POST" id="profileForm">
+                                @csrf
+                                <div class="row">
+                                    <div class="col-lg-12 mb-3">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-600 font-xsss" for="name">Name</label>
+                                            <input type="text" name="name" class="form-control"
+                                                value="{{ Auth::user()->name }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-12 mb-3">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-600 font-xsss" for="email">Email</label>
+                                            <input name="email" class="form-control" value="{{ Auth::user()->email }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-12 mb-3">
+                                        <div class="form-group">
+                                            <label class="mont-font fw-600 font-xsss" for="phone">Phone</label>
+                                            <input type="text" name="phone" class="form-control"
+                                                value="{{ Auth::user()->mobile }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-12 mb-5">
+                                        <button type="submit"
+                                            class="form-control rounded-lg h20 float-left bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 w100">Update</button>
                                     </div>
                                 </div>
-                                <div class="col-lg-12 mb-3">
-                                    <div class="form-group">
-                                        <label class="mont-font fw-600 font-xsss" for="email">Email</label>
-                                        <input name="email" class="form-control" value="{{ Auth::user()->email }}">
-                                    </div>
-                                </div>
-                                <div class="col-lg-12 mb-3">
-                                    <div class="form-group">
-                                        <label class="mont-font fw-600 font-xsss" for="phone">Phone</label>
-                                        <input type="text" name="phone" class="form-control" value="{{ Auth::user()->mobile }}">
-                                    </div>
-                                </div>
-                                <div class="col-lg-12 mb-5">
-                                    <button type="submit" class="form-control rounded-lg h20 float-left bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 w100">Update</button>
-                                </div>
-                            </div>
-                        </form>
+                            </form>
                         @endif
                     </div>
                 </div>
@@ -74,15 +83,15 @@
     @push('scripts')
         <script type="text/javascript">
             $(document).ready(function() {
-                @if (session('login_required'))
-                    // Automatically trigger the login modal on page load
-                    $('#Modallogin').modal('show');
+                // @if (session('login_required'))
+                //     // Automatically trigger the login modal on page load
+                //     $('#Modallogin').modal('show');
 
-                    // Redirect to unauthorized page when the modal is closed
-                    $('#Modallogin').on('hidden.bs.modal', function () {
-                        window.location.href = "{{ route('unauthorized') }}";
-                    });
-                @endif
+                //     // Redirect to unauthorized page when the modal is closed
+                //     $('#Modallogin').on('hidden.bs.modal', function() {
+                //         window.location.href = "{{ route('unauthorized') }}";
+                //     });
+                // @endif
 
 
 
@@ -91,7 +100,7 @@
                     return this.optional(element) || re.test(value);
                 }, "Please check your input.");
 
-                $('#profileForm button[type="submit"]').on('click', function (e) {
+                $('#profileForm button[type="submit"]').on('click', function(e) {
                     e.preventDefault(); // Prevent default form submission
 
                     $("#profileForm").validate({
@@ -127,7 +136,7 @@
                                 maxlength: "Your phone number must not exceed 10 digits"
                             }
                         },
-                        submitHandler: function (form) {
+                        submitHandler: function(form) {
                             form.submit(); // Submit the form if validation is successful
                         }
                     });

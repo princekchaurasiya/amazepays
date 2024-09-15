@@ -8,326 +8,21 @@
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title> @yield('title')</title>
     @yield('css')
-    <link rel="stylesheet" href="{{ URL::asset('css/themify-icons.css') }}">
-    <!-- Favicon icon -->
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url('images/favicon.png') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" />
-    <!-- Bootstrap Stylesheet -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.0/css/bootstrap-grid.min.css" />
-    <!-- Bootstrap Select Stylesheet -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/jquery.slick/1.6.0/slick.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/jquery.slick/1.6.0/slick-theme.css" rel="stylesheet" />
-    <!-- Custom Stylesheet -->
-    <link rel="stylesheet" href="{{ URL::asset('css/style.css') }}">
+    @include('layouts.partials.css-links')
 </head>
 
 <body class="color-theme-blue open-font">
     <div class="cotainer-fluid">
         <div class="preloader"></div>
         <div class="main-wrapper">
-            <!-- header wrapper -->
-            {{--
-            <div class="upper-header bg-greylight">
-               <div class="container">
-                  <div class="row">
-                     <div class="col-md-6 col-xs-6 d-none d-block-md">
-                        <ul class="list-inline list-item-style mt-0 float-left pl-1">
-                           <li class="list-inline-item pl-0"><a href="#">(+1)866-540-3229</a></li>
-                        </ul>
-                     </div>
-                     @if (auth()->check())
-                     <div class="col-md-6 col-xs-6 d-none d-block-md">
-                        <ul class="list-inline list-item-style mt-0 float-right">
-                           <li class="list-inline-item"><a href="#"><i class="ti-user mr-2"></i> My
-                              Account</a>
-                           </li>
-                        </ul>
-                     </div>
-                     @endif
-                     <div class="col-12 d-none d-lg-block">
-                        <ul class="list-inline list-item-style mt-0 float-left pl-1">
-                           <li class="list-inline-item pl-0"><a href="#">BECOME AN AGENT</a></li>
-                           <li class="list-inline-item pl-0"><a href="tel:82088 93951">(+91) 82088 93951</a></li>
-                        </ul>
-                        <ul class="list-inline list-item-style mt-0 float-right">
-                           <li class="list-inline-item"><a href="#">PRIVACY</a></li>
-                           <li class="list-inline-item"><a href="#">CUSTOMER SERVICE </a></li>
-                           <li class="list-inline-item"><a href="#"><i class="ti-location-pin mr-2"></i>Store
-                              Locator</a>
-                           </li>
-                           <li class="list-inline-item"><a href="#"><i class="ti-user mr-2"></i> My Account</a>
-                           </li>
-                        </ul>
-                     </div>
-                  </div>
-               </div>
-            </div>
-            --}}
-            <!-- header wrapper desktop view -->
-            <nav class="navbar navbar-expand-md navbar-light bg-light d-none d-md-block navz fixed-top">
-                <div class="container">
-                    <a href="/" class="navbar-brand"><img src="{{ asset('images/logo.png') }}" alt="logo"
-                            class="custLogo"></a>
-                    <button class="navbar-toggler" type="button" data-toggle="collapse"
-                        data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
-                        aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                        <ul class="navbar-nav mr-auto">
-                            <li class="nav-item active">
-                                <a class="nav-link" href="/">Home</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('about') }}">About</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('contact-us') }}">Contact</a>
-                            </li>
-                        </ul>
-
-                        <form class="form-inline my-2 my-lg-0 flex-grow-1 mr-3" action="{{ route('search') }}"
-                            method="GET">
-                            <div class="input-group w-100">
-                                <input type="text" id="search" class="form-control ml-5"
-                                    placeholder="Search here..." name="query" required>
-                                <div class="input-group-append">
-                                    <button class="btn btn-outline-secondary" type="submit">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-
-                        <div class="ml-2">
-                            @if (Auth::check())
-                                <div class="dropdown">
-                                    <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton1"
-                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        {{ Auth::user()->name }}
-                                    </button>
-                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <a class="dropdown-item" href="{{ route('profile') }}"><i
-                                                class="ti-user font-sm"></i> Profile</a>
-                                        <a class="dropdown-item" href="{{ route('my-order') }}"><i
-                                                class="fa-sharp fa-solid fa-cart-shopping"></i> My Order</a>
-                                        <a class="dropdown-item" href="{{ route('userLogOut') }}"><i
-                                                class="fa-sharp fa-solid fa-power-off"></i> Logout</a>
-                                    </div>
-                                </div>
-                            @else
-                                <a href="#"
-                                    class="btn navbar-btn bg-dark fw-500 text-white font-xsss login-button"
-                                    data-toggle="modal" data-target="#Modallogin">Login</a>
-                                <a href="#"
-                                    class="btn navbar-btn bg-current fw-500 text-white font-xsss register-form register-button"
-                                    data-toggle="modal" data-target="#ModalregisterD">Register</a>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-
-
-
-            <!-- header wrapper mobile view -->
-            {{-- <div class="container-fluid"> <!-- Use a container to control the width of the content --> --}}
-
-            <nav class="navbar navbar-expand-lg navbar-light bg-light navz">
-                <div class="container-fluid">
-                    <!-- Logo -->
-                    <a class="navbar-brand mr-auto" href="/">
-                        <img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo">
-                    </a>
-
-                    <!-- Toggle button for collapsed navbar -->
-                    <button class="navbar-toggler ml-2 ml-lg-0" type="button" data-toggle="collapse"
-                        data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-
-                    <!-- Navbar items (hidden by default) -->
-                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                        <ul class="navbar-nav ml-auto">
-                            <li class="nav-item">
-                                <a class="nav-link" href="/">Home</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url('about') }}">About</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url('contact-us') }}">Contact Us</a>
-                            </li>
-
-                            @guest
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#" data-toggle="modal"
-                                        data-target="#ModalregisterD">New Customer?</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#" data-toggle="modal"
-                                        data-target="#Modallogin">Sign In</a>
-                                </li>
-                            @endguest
-
-                            @auth
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('profile') }}">{{ Auth::user()->name }}</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('userLogOut') }}">Logout</a>
-                                </li>
-                            @endauth
-
-                            <!-- Search Bar -->
-                            <form class="form-inline my-2 my-lg-0 ml-lg-3" action="{{ route('search') }}"
-                                method="GET">
-                                <div class="input-group">
-                                    <input type="text" id="search" class="form-control form-control-sm"
-                                        placeholder="Search here..." name="query" required>
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary btn-sm" type="submit">
-                                            <i class="fas fa-search"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
-
-
-            {{-- </div> --}}
-
-            <!-- Side Navigation -->
-            {{-- <div class="sidenav">
-                <ul class="sidenav-list">
-                    <li class="sidenav-item">
-                        <a class="sidenav-link" href="#">Home</a>
-                    </li>
-                    <li class="sidenav-item">
-                        <a class="sidenav-link" href="{{ url('about') }}">About</a>
-                    </li>
-                    <li class="sidenav-item">
-                        <a class="sidenav-link" href="{{ url('contact_us') }}">Contact Us</a>
-                    </li>
-                </ul>
-                <button class="btn close-sideNav-btn" onclick="closeNav()">&times;</button>
-            </div> --}}
-            <!-- header wrapper mobile view -->
+            <!-- navigation wrapper starts here -->
+            @include('layouts.partials.navbar')
+             <!-- navigation wrapper ends here -->
         </div>
         <!-- header wrapper -->
         @yield('content')
         <!-- footer wrapper -->
-        <div class="footer-wrapper mt-0">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="row">
-                            <div class="col-md-12 col-lg-4 col-sm-9 col-xs-12 md-mb25">
-                                <!-- <a href="index.html" class="logo"><img src="images/logo.png" alt="logo"></a> -->
-                                <a href="/" class="logo"><img src="{{ asset('images/logo.png') }}"
-                                        alt="logo" class="custLogo"></a>
-
-                                <p class="w-100 mt-4 text-black">
-                                    <strong>Company Name :</strong> <a
-                                        href="{{ env('COMPANY_NEW_WEBSITE_LINK_ABOUT_US') }}"
-                                        target="_blank">{{ env('COMPANY_NAME') }}</a><br />
-
-
-                                    <strong>CIN :</strong> {{ config('companyDefaultValues.company_cin') }}<br />
-                                    {{ config('companyDefaultValues.company_address') }}
-                                </p>
-
-                            </div>
-                            {{-- <div class="col-md-3 col-lg-2 col-sm-4 col-xs-6">
-                                <h5>Channel</h5>
-                                <ul>
-                                    <li><a href="#">Gift Cards</a></li>
-                                    <li><a href="#">bank Cards</a></li>
-                                    <li><a href="#">Vouchers</a></li>
-                                </ul>
-                            </div> --}}
-                            <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6">
-                                <h5 class="text-orange">Quick Read</h5>
-                                <ul>
-                                    <li><a class="font-xsss text-black" href="{{ url('terms-of-use') }}">Term of
-                                            use</a></li>
-                                    <li><a class="font-xsss text-black" href="{{ url('privacy-policy') }}">Privacy
-                                            Policy</a></li>
-
-                                    <li><a class="font-xsss text-black" href="{{ url('refund-policy') }}">Refund
-                                            Policy</a></li>
-
-                                    <li><a class="font-xsss text-black"
-                                            href="{{ config('companyDefaultValues.company_new_website_link') }}">Who
-                                            we are?</a></li>
-                                </ul>
-                            </div>
-                            <div class="col-md-3 col-lg-2 col-sm-3 col-xs-6">
-                                <h5 class="text-orange">Easy Guide</h5>
-                                <ul>
-                                    <li><a class="font-xsss text-black" href="{{ url('/') }}">Home</a></li>
-                                    <li><a class="font-xsss text-black" href="{{ url('about') }}">About</a></li>
-                                    <li><a class="font-xsss text-black" href="{{ url('contact-us') }}">Contact Us</a>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="col-md-3 col-lg-3 col-sm-3 col-xs-6 md-mb25">
-                                <h5 class="mb-3 text-orange">Contact us on</h5>
-                                <ul class="list-inline">
-                                    <li class="list-inline-item mr-3"><a href="#"><i
-                                                class="ti-facebook"></i></a>
-                                    </li>
-                                    <li class="list-inline-item mr-3"><a href="#"><i
-                                                class="ti-twitter-alt"></i></a>
-                                    </li>
-                                    <li class="list-inline-item mr-3"><a href="#"><i
-                                                class="ti-linkedin"></i></a>
-                                    </li>
-                                    <li class="list-inline-item"><a href="#"><i class="ti-instagram"></i></a>
-                                    </li>
-                                </ul>
-                                <ul class="mt-3">
-
-                                    <li>
-                                        <a class="text-black"
-                                            href="mailto:{{ config('companyDefaultValues.company_email') }}">
-                                            <i class="fas fa-envelope"></i>
-                                            {{ config('companyDefaultValues.company_email') }}
-                                        </a>
-                                    </li>
-
-
-                                    <li>
-                                        <a class="text-black"
-                                            href="tel:{{ str_replace(' ', '', config('companyDefaultValues.company_contact_no')) }}">
-                                            <i class="fas fa-phone-alt"></i> +91
-                                            {{ config('companyDefaultValues.company_contact_no') }}
-                                        </a>
-                                    </li>
-
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="middle-footer mt-5 pt-4"></div>
-                    </div>
-                    <div class="col-sm-12 lower-footer pt-0"></div>
-                    <div class="col-sm-6 col-xs-12">
-                        <p class="copyright-text">© {{ date('Y') }} copyright. All rights reserved.</p>
-                    </div>
-                    <div class="col-sm-6 col-xs-12 text-right">
-                        <p class="copyright-text float-right">Design & Develop by <a href="https://toutle.in/"
-                                class="">Toutle</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @include('layouts.partials.footer')
         <!-- footer wrapper -->
     </div>
     <!-- Modal Register -->
@@ -670,19 +365,13 @@
         </div>
     </div>
     <!-- end of Forgot Password Modal -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-    <!-- Bootstrap JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
-    </script>
-    <!-- Bootstrap Select Main JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
-    <script src="{{ URL::asset('js/plugin.js') }}"></script>
-    <script src="{{ URL::asset('js/scripts.js') }}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/jquery.slick/1.6.0/slick.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.min.js"></script>
+
+    <!-- Script links starts here -->
+    @include('layouts.partials.script-links')
+    <!-- Script links ends here -->
+
+
+
     <script>
         function moveToNext(currentInput, nextInputId) {
             if (currentInput.value.length >= currentInput.maxLength) {

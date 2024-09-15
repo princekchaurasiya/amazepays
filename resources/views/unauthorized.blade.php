@@ -12,23 +12,7 @@
 
     @push('scripts')
         <script type="text/javascript">
-            $(document).ready(function() {
-                @if (session('login_required'))
-                    // Automatically trigger the login modal on page load
 
-
-                    // Handle redirection after login
-                    $('#Modallogin').on('hidden.bs.modal', function () {
-                        let redirectUrl = "{{ session('intended_url') ? session('intended_url') : route('home') }}";
-                        window.location.href = redirectUrl;
-                    });
-
-                    @php
-                        session()->forget('login_required');
-                        session()->forget('intended_url');
-                    @endphp
-                @endif
-            });
         </script>
     @endpush
 @endsection

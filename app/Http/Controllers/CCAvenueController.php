@@ -144,15 +144,18 @@ class CCAvenueController extends Controller
     }
     public function handlePaymentCancellation(Request $request)
     {
+
         try {
             $qsOrder = QsOrder::where('id', $request->orderNo)->with('product')->firstOrFail();
             $qsProductSlug = $qsOrder->product->slug;
             $qsOrder->update(['order_status' => 'Cancelled']);
             Log::info("Order ID {$qsOrder->id} status updated to Cancelled");
-            return redirect()->route('checkoutPage', ['slug' => $qsProductSlug])->with('error-message', 'Payment was cancelled. Please try again.');
+            // return redirect()->route('checkoutPage', ['slug' => $qsProductSlug])->with('error-message', 'Payment was cancelled. Please try again.');
+            return view('order.order-status', ['transactionStatusMessage' => 'Payment was cancelled. Please try again.', 'isSuccessful' => false]);
         } catch (\Exception $e) {
             Log::error("Error handling payment cancellation: {$e->getMessage()}");
-            return redirect()->route('checkoutPage')->with('error-message', 'Order not found.');
+            // return redirect()->route('checkoutPage')->with('error-message', 'Order not found.');
+            return view('order.order-status', ['transactionStatusMessage' => 'An error occurred while processing your payment.', 'isSuccessful' => false]);
         }
     }
     public function responseCcavenue(Request $request)

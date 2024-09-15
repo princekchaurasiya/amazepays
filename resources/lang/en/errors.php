@@ -8,6 +8,7 @@ return [
     '400' => 'Order failed: There was an issue with the information provided. Please check your details.',
     '401' => 'Authorization failed. Please check your credentials and try again.',
     '403' => 'You do not have the necessary permissions to complete this order. Please contact support.',
+    
     '500' => 'Order failed: There was an internal server error. Please try again later.',
     '5035' => 'Order failed: The payment service is currently unavailable. Please try again later.',
     '5036' => 'Order failed: The payment amount does not match the required value. Please review and try again.',

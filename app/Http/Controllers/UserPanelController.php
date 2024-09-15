@@ -10,9 +10,13 @@ use Session;
 use Illuminate\Support\Facades\Http;
 use App\Models\QsOrder;
 use App\Models\GiftCard;
+use Illuminate\Support\Facades\Validator;
 use Auth;
 use App\Helpers\CommonHelper;
 use Illuminate\Support\Facades\Redirect;
+use App\Http\Controllers\SmsController;
+use App\Http\Controllers\OtpVerificationController;
+use App\Http\Controllers\Apis\AuthenticationController;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
@@ -20,10 +24,17 @@ use Illuminate\Http\Client\ConnectionException;
 class UserPanelController extends Controller
 {
     protected $commonController;
+    protected $smsController;
+    protected $authenticationController;
+    protected $otpVerificationController;
+
 
     public function __construct()
     {
         $this->commonController = new CommonController();
+        $this->smsController = new SmsController();
+        $this->authenticationController = new AuthenticationController();
+        $this->otpVerificationController = new OtpVerificationController();
     }
 
     public function homePage()
@@ -57,59 +68,88 @@ class UserPanelController extends Controller
     public function userRegistration(Request $request)
     {
         Log::info('userRegistration method called', ['request' => $request->all()]);
+
         try {
-            $mobileExists = User::where('mobile', $request->mobile)->exists();
-            $emailExists = User::where('email', $request->email)->exists();
-            $errors = [];
+            // Validate request data
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|regex:/^[a-zA-Z\s]+$/',
+                'mobile' => ['required', 'digits:10', 'regex:/^(\+91[\-\s]?)?[789]\d{9}$/'],
+                'email' => 'required|email|unique:users,email',
+                'password' => 'required|min:8',
+                'confmPassword' => 'required|same:password|min:8',
+            ], [
+                'name.regex' => 'Name should only contain letters and spaces',
+                'mobile.regex' => 'Invalid mobile number',
+                'mobile.unique' => 'Mobile number already exists',
+                'email.email' => 'Invalid email address',
+                'email.unique' => 'Email already exists',
+                'password.min' => 'Password must be at least 8 characters long',
+                'confmPassword.required' => 'Password confirmation is required',
+                'confmPassword.same' => 'Password confirmation does not match',
+                'confmPassword.min' => 'Password confirmation must be at least 8 characters long',
+            ]);
 
-            if ($mobileExists) {
-                $errors['mobile'] = 'Mobile number already exists';
-            }
-
-            if ($emailExists) {
-                $errors['email'] = 'Email already exists';
-            }
-
-            if (!empty($errors)) {
+            if ($validator->fails()) {
                 $data = [
                     'status' => 400,
-                    'errors' => $errors,
+                    'errors' => $validator->errors()->toArray(),
                 ];
-                Log::warning('Validation errors in userRegistration', ['errors' => $errors]);
-            } else {
-                User::create([
-                    'name' => $request->name,
-                    'email' => $request->email,
-                    'password' => bcrypt($request->password),
-                    'role_id' => 2,
-                    'mobile' => $request->mobile,
-                ]);
-                Log::info('User created', ['user' => $request->only(['name', 'email', 'mobile'])]);
+                Log::warning('Validation errors in userRegistration', ['errors' => $validator->errors()->toArray()]);
+                return response()->json($data);
+            }
+            Log::info('OTP Response');
+            // Step 1: Send OTP using SmsController
+            $otpResponse = $this->smsController->registerWithOtp($request);
 
-                if (Auth::attempt($request->only('email', 'password'))) {
-                    $data = [
-                        'status' => 200,
-                        'msg' => 'Login successful. Welcome back!',
-                    ];
-                    Log::info('User login successful', ['user' => $request->email]);
-                } else {
-                    $data = [
-                        'status' => 400,
-                        'msg' => 'Login failed. Please check your email and password and try again.',
-                    ];
-                    Log::warning('User login failed', ['user' => $request->email]);
-                }
+            // Verify OTP
+            $otpVerificationResponse = $this->otpVerificationController->registerVerifyOtp($request);
+            Log::info('OTP Verification Response', ['response' => $otpVerificationResponse]);
+
+            if ($otpVerificationResponse['status'] === 'error') {
+                return response()->json(['status' => 400, 'message' => $otpVerificationResponse['message']]);
+            }
+
+            // If OTP is verified, proceed to create the user
+            User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'role_id' => 2,
+                'mobile' => $request->mobile,
+            ]);
+            Log::info('User created', ['user' => $request->only(['name', 'email', 'mobile'])]);
+
+            // Attempt login
+            if (Auth::attempt($request->only('email', 'password'))) {
+                $data = [
+                    'status' => 200,
+                    'msg' => 'Login successful. Welcome back!',
+                ];
+                Log::info('User login successful', ['user' => $request->email]);
+            } else {
+                $data = [
+                    'status' => 400,
+                    'msg' => 'Login failed. Please check your email and password and try again.',
+                ];
+                Log::warning('User login failed', ['user' => $request->email]);
             }
 
             return response()->json($data);
         } catch (Exception $e) {
-            Log::error('Error in userRegistration method', ['error' => $e->getMessage()]);
+            Log::error('Error in userRegistration method', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'status' => 500,
                 'msg' => 'Internal Server Error',
             ], 500);
         }
     }
+
+
+
+
 
     public function userLogin(Request $request)
     {

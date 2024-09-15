@@ -16,7 +16,7 @@ Route::middleware('api')->group(function () {
     Route::prefix('auth')->group(function () {
         Route::post('sendUserLoginOtp', [AuthenticationController::class, 'sendUserLoginOtp']);
         Route::post('verifyUserLoginOtp', [AuthenticationController::class, 'verifyUserLoginOtp']);
-        // Route::post('userRegistration', [AuthenticationController::class, 'userRegistration']);
+
     });
 
     Route::prefix('products')->group(function () {

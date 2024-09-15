@@ -17,7 +17,7 @@
         <div class="main-wrapper">
             <!-- navigation wrapper starts here -->
             @include('layouts.partials.navbar')
-             <!-- navigation wrapper ends here -->
+            <!-- navigation wrapper ends here -->
         </div>
         <!-- header wrapper -->
         @yield('content')
@@ -25,17 +25,22 @@
         @include('layouts.partials.footer')
         <!-- footer wrapper -->
     </div>
+
+
     <!-- Modal Register -->
-    <div class="modal fade" id="ModalregisterD"  tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+    <div class="modal fade" id="ModalregisterD" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
         data-backdrop="true" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-md modal-lg" role="document">
             <div class="modal-content border-0">
+
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i
                         class="ti-close text-grey-500"></i></button>
                 <div class="modal-body">
+
                     <div class="row">
                         <div class="col-12">
                             <div class="login-signup">
+
                                 <div class="row">
                                     <div class="col-lg-5 left-side d-lg-block d-none">
                                         <div class="rounded-0 w-100 border-0">
@@ -67,85 +72,113 @@
                                             <div class="card-body rounded-0 text-left pt-0">
                                                 <h2 class="fw-600 display2-size mb-4">Create your account</h2>
                                                 <form id="registration-form">
+                                                    <!-- Error message area at the top of the modal -->
+                                                    <div class="alert alert-danger d-none" id="otp-error-alert">
+                                                        <span class="font-xssss fw-400 error-message error-otp"></span>
+                                                    </div>
                                                     <span
                                                         class="font-xssss fw-400 main-register-error text-center"></span>
+
+                                                    <!-- Success message area -->
+                                                    <div class="alert alert-success d-none" id="otp-success-alert">
+                                                        OTP has been sent to your mobile number. Please enter the OTP
+                                                        for verification.
+                                                    </div>
+
+                                                    <!-- Name Field -->
                                                     <div class="form-group mb-3">
                                                         <input type="text"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
-                                                            placeholder="Name" id="name" autocomplete="off">
-                                                        <span
-                                                            class="font-xssss fw-400 error-message error-name"></span>
+                                                            placeholder="Name" id="name" autocomplete="off"
+                                                            name="name">
+                                                        <span class="error-message error-name"></span>
                                                     </div>
+
+                                                    <!-- Mobile Number Field -->
                                                     <div class="form-group mb-3">
-                                                        <input type="text"
-                                                            class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
-                                                            placeholder="Mobile Number" id="mobile">
-                                                        <span
-                                                            class="font-xssss fw-400  error-message error-mobile"></span>
+                                                        <div class="input-group">
+                                                            <input type="text"
+                                                                class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
+                                                                placeholder="Mobile Number" id="mobile"
+                                                                name="mobile">
+                                                        </div>
+                                                        <span class="error-message error-mobile"></span>
                                                     </div>
+
+                                                    <!-- Email Field -->
                                                     <div class="form-group mb-3">
-                                                        <input type="text"
+                                                        <input type="email"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Email" id="email" autocomplete="off"
-                                                            id="registerEmail" name="registerEmail">
+                                                            name="email">
                                                         <span
                                                             class="font-xssss fw-400 error-message error-email"></span>
                                                     </div>
-                                                    <div class="form-group icon-tab mb-3">
+
+                                                    <!-- Password Field -->
+                                                    <div class="form-group mb-3">
                                                         <input type="password"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
-                                                            placeholder="Password" id="password">
-                                                        <i class="ti-lock text-grey-700 pr-0"></i>
-                                                        <i class="ti-eye toggle-register-Password-icon"
-                                                            id="toggleRegstPassword"></i>
+                                                            placeholder="Password" id="password" name="password">
                                                         <span
-                                                            class="font-xssss fw-400 error-password error-message"></span>
+                                                            class="font-xssss fw-400 error-message error-password"></span>
                                                     </div>
-                                                    <div class="form-group icon-tab mb-3">
+
+                                                    <!-- Confirm Password Field -->
+                                                    <div class="form-group mb-3">
                                                         <input type="password"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
-                                                            placeholder="Confirm Password" id="confmPassword">
-                                                        <i class="ti-eye toggle-register-Password-icon"
-                                                            id="toggleRegstConfirmPassword"></i>
-                                                        <i class="ti-lock text-grey-700 pr-0"></i>
+                                                            placeholder="Confirm Password" id="confmPassword"
+                                                            name="confmPassword">
                                                         <span
-                                                            class="font-xssss fw-400 error-confmPass error-message error-confmPassword"></span>
+                                                            class="font-xssss fw-400 error-message error-confmPassword"></span>
                                                     </div>
-                                                    <div class="form-group icon-tab mb-3">
-                                                        <a href="#"
-                                                            class="text-center register-button-color form-control h60 bg-current text-white font-xss fw-500 border-0 p-0"
-                                                            id="createUser">Create an account</a>
+
+                                                    <!-- Submit Button for initial validation and sending OTP -->
+                                                    <div class="form-group mb-3">
+                                                        <button type="submit"
+                                                            class="form-control bg-current text-white submit1"
+                                                            id="submit1">Submit One</button>
+                                                    </div>
+
+                                                    <!-- OTP Section -->
+                                                    <div class="form-group mb-3 otp-section d-none">
+                                                        <input type="text"
+                                                            class="form-control h60 border-2 bg-color-none text-grey-700"
+                                                            placeholder="Enter OTP" id="registerOTP" name="otp">
+                                                        <span class="font-xssss fw-400 error-message error-otp"></span>
+                                                    </div>
+
+                                                    <!-- Submit Button for OTP verification -->
+                                                    <div class="form-group mb-3 otp-section d-none">
+                                                        <button type="submit" id="submit2"
+                                                            class="form-control bg-current text-white submit2">Submit
+                                                            Two</button>
                                                     </div>
                                                 </form>
+
+
+                                                <!-- Footer -->
                                                 <div class="col-sm-12 p-0 text-center">
-                                                    <!-- <a href="#" class="form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0">Create an account</a> -->
-                                                    <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-4 lh-32">Are you
-                                                        already member?
-                                                        <a href="#" class="fw-700 ml-1 text-orange "
+                                                    <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-4 lh-32">Already
+                                                        a member?
+                                                        <a href="#" class="fw-700 ml-1 text-orange"
                                                             data-toggle="modal" data-target="#Modallogin"
                                                             data-dismiss="modal">Login</a>
                                                     </h6>
-                                                    {{-- <div class="row">
-                                                        <div class="col-6 pr-1"><a href="#"
-                                                                class="form-control h60 p-0 pl-5 bg-lightblue text-grey-700 border-2 border-0 font-xssss fw-600  position-relative">Login
-                                                                with OTP</a>
-                                                        </div>
-                                                        <div class="col-6 pl-1"><a href="#"
-                                                                class="form-control h60 p-0 pl-5 bg-lightblue text-grey-700 border-2 border-0 font-xssss fw-600  position-relative">Forgot
-                                                                Password?</a>
-                                                        </div>
-                                                    </div> --}}
                                                     <p
                                                         class="fw-500 font-xssss text-grey-600 mt-2 pt-3 d-inline-block">
-                                                        By continuing, you agree to Amazepay's <a
-                                                            href="blog-single.html" class="text-current">Term ans
-                                                            Condition</a> and <a href="blog-single.html"
-                                                            class="text-current">Privacy Policy </a>.
+                                                        By continuing, you agree to Amazepay's
+                                                        <a href="blog-single.html" class="text-current">Terms and
+                                                            Conditions</a>
+                                                        and <a href="blog-single.html" class="text-current">Privacy
+                                                            Policy</a>.
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
@@ -210,8 +243,8 @@
                                                         <input type="password"
                                                             class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                             placeholder="Enter Password" id="loginPass">
-                                                        <i class="ti-eye toggle-login-Password-icon"
-                                                            id="togglePassword"></i>
+                                                        {{-- <i class="ti-eye toggle-login-Password-icon"
+                                                            id="togglePassword"></i> --}}
                                                         <span
                                                             class="font-xssss fw-400 error-loginPass text-danger"></span>
                                                     </div>
@@ -277,44 +310,47 @@
     </div>
     <!-- end of Modal Login -->
     <!-- modal otp verificationstarts here  -->
+    <!-- OTP Verification Modal -->
     <div class="modal fade" id="otpVerificationModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
         data-backdrop="true" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="otpModalLabel">OTP Verification</h5>
+            <div class="modal-content shadow-lg border-0 rounded-lg">
+                <div class="modal-header bg-primary text-white py-4">
+                    <h5 class="modal-title font-weight-bold" id="otpModalLabel">OTP Verification</h5>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"
                         id="closeModalButton">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <h6 class="text-center">Please enter the one-time password<br>to verify your account</h6>
+                    <h6 class="text-center text-secondary">Please enter the one-time password<br>to verify your account
+                    </h6>
                     <div class="text-center mt-3">
                         <span>A code has been sent to</span>
-                        <small class="font-weight-bold">*******</small>
+                        <small class="font-weight-bold">******* <span id="maskedPhone">1234</span></small>
                     </div>
-                    <div id="otp" class="inputs d-flex justify-content-center mt-3">
+                    <div id="otp" class="inputs d-flex justify-content-center mt-4">
                         <!-- Create input fields for the OTP digits (1 to 6) -->
-                        <input class="m-2 text-center form-control rounded" type="text" id="first"
+                        <input class="m-2 text-center form-control rounded otp-input" type="text" id="first"
                             maxlength="1" oninput="moveToNext(this, 'second')" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="second"
+                        <input class="m-2 text-center form-control rounded otp-input" type="text" id="second"
                             maxlength="1" oninput="moveToNext(this, 'third')" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="third"
+                        <input class="m-2 text-center form-control rounded otp-input" type="text" id="third"
                             maxlength="1" oninput="moveToNext(this, 'fourth')" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="fourth"
+                        <input class="m-2 text-center form-control rounded otp-input" type="text" id="fourth"
                             maxlength="1" oninput="moveToNext(this, 'fifth')" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="fifth"
+                        <input class="m-2 text-center form-control rounded otp-input" type="text" id="fifth"
                             maxlength="1" oninput="moveToNext(this, 'sixth')" />
-                        <input class="m-2 text-center form-control rounded" type="text" id="sixth"
+                        <input class="m-2 text-center form-control rounded otp-input" type="text" id="sixth"
                             maxlength="1" />
                     </div>
                     <!-- Placeholder element for displaying error message -->
                     <div class="error-otpVerifyInput text-center text-danger mt-3 font-weight-bold"></div>
                 </div>
-                <div class="modal-footer justify-content-center">
+                <div class="modal-footer justify-content-center py-3">
                     <!-- Submit button to validate and verify the OTP -->
-                    <button class="btn btn-danger px-4" id="otpVerificationButton">Submit</button>
+                    <button class="btn btn-danger px-4 py-2 rounded-pill font-weight-bold"
+                        id="otpVerificationButton">Submit</button>
                 </div>
             </div>
         </div>
@@ -427,7 +463,7 @@
 
         // Close modal on outside (backdrop) click
         $(document).on('click', function(event) {
-            console.log(456); // Log to confirm the button was clicked
+
 
             if ($(event.target).hasClass('modal-backdrop')) {
                 // Hide both modals
@@ -438,7 +474,6 @@
                 $('.modal-backdrop').remove();
                 $('body').removeClass('modal-open');
 
-                console.log('Modal closed on backdrop click');
             }
         });
 
@@ -455,156 +490,287 @@
 
         // for hide and show login password
 
-        const togglePassword = document.querySelector("#togglePassword");
-        const loginPass = document.querySelector("#loginPass");
 
-        togglePassword.addEventListener("click", function() {
-            // toggle the type attribute
-            const type = loginPass.getAttribute("type") === "password" ? "text" : "password";
-            loginPass.setAttribute("type", type);
 
-            // toggle the icon
-            // this.classList.toggle("fa fa-eye-slash");
-        });
+        // const togglePassword = document.querySelector("#togglePassword");
+        // const loginPass = document.querySelector("#loginPass");
 
-        // for hide and show Register password
+        // togglePassword.addEventListener("click", function() {
+        //     // toggle the type attribute
+        //     const type = loginPass.getAttribute("type") === "password" ? "text" : "password";
+        //     loginPass.setAttribute("type", type);
 
-        const toggleRegstPassword = document.querySelector("#toggleRegstPassword");
-        const password = document.querySelector("#password");
+        //     // toggle the icon
+        //     // this.classList.toggle("fa fa-eye-slash");
+        // });
 
-        toggleRegstPassword.addEventListener("click", function() {
-            // toggle the type attribute
-            const type = password.getAttribute("type") === "password" ? "text" : "password";
-            password.setAttribute("type", type);
+        // // for hide and show Register password
 
-            // toggle the icon
-            // this.classList.toggle("fa fa-eye-slash");
-        });
+        // const toggleRegstPassword = document.querySelector("#toggleRegstPassword");
+        // const password = document.querySelector("#password");
 
-        // for hide and show Register Confirm password
+        // toggleRegstPassword.addEventListener("click", function() {
+        //     // toggle the type attribute
+        //     const type = password.getAttribute("type") === "password" ? "text" : "password";
+        //     password.setAttribute("type", type);
 
-        const toggleRegstConfirmPassword = document.querySelector("#toggleRegstConfirmPassword");
-        const confmPassword = document.querySelector("#confmPassword");
+        //     // toggle the icon
+        //     // this.classList.toggle("fa fa-eye-slash");
+        // });
 
-        toggleRegstConfirmPassword.addEventListener("click", function() {
-            // toggle the type attribute
-            const type = confmPassword.getAttribute("type") === "password" ? "text" : "password";
-            confmPassword.setAttribute("type", type);
+        // // for hide and show Register Confirm password
 
-            // toggle the icon
-            // this.classList.toggle("fa fa-eye-slash");
-        });
+        // const toggleRegstConfirmPassword = document.querySelector("#toggleRegstConfirmPassword");
+        // const confmPassword = document.querySelector("#confmPassword");
 
-        // prevent form submit
-        // const form = document.querySelector("form");
-        // form.addEventListener('submit', function (e) {
+        // toggleRegstConfirmPassword.addEventListener("click", function() {
+        //     // toggle the type attribute
+        //     const type = confmPassword.getAttribute("type") === "password" ? "text" : "password";
+        //     confmPassword.setAttribute("type", type);
+
+        //     // toggle the icon
+        //     // this.classList.toggle("fa fa-eye-slash");
+        // });
+
+        // // prevent form submit
+        // // const form = document.querySelector("form");
+        // // form.addEventListener('submit', function (e) {
+        // //     e.preventDefault();
+        // // });
+
+
+
+        // $('#createUser').click(function(e) {
         //     e.preventDefault();
+        //     var name = $('#name').val();
+        //     var mobile = $('#mobile').val();
+        //     var email = $('#email').val();
+        //     var password = $('#password').val();
+        //     var confmPassword = $('#confmPassword').val();
+        //     var regxMobile = /^(?:(?:\+|0{0,2})91)?[789]\d{9}$/;
+        //     var regxEmail = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]+$/;
+        //     var registerSendOtp = $('.registerOTP').val();
+        //     var status = true;
+
+
+        //     // Clear previous error messages
+        //     $('.error-message').empty();
+        //     $('.error-name').empty();
+        //     $('.error-mobile').empty();
+        //     $('.error-email').empty();
+        //     $('.error-password').empty();
+        //     $('.error-confmPassword').empty();
+        //     $('.error-otp').empty();
+
+        //     if (name.length === 0) {
+        //         status = false;
+        //         $(".error-name").text('Name is required').addClass('error-color');
+        //     } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+        //         status = false;
+        //         $(".error-name").text('Name should only contain letters and spaces').addClass('error-color');
+        //     }
+
+        //     if (mobile.length === 0) {
+        //         status = false;
+        //         $(".error-mobile").text('Mobile is required').addClass('error-color');
+        //     } else if (!regxMobile.test(mobile) || mobile.length !== 10) {
+        //         status = false;
+        //         $(".error-mobile").text('Invalid mobile number').addClass('error-color');
+        //     }
+
+        //     // OTP validation
+        //     if (registerSendOtp.length === 0) {
+        //         status = false;
+        //         $(".error-otp").text('Please enter the OTP to verify your mobile number').addClass('error-color');
+        //     }
+
+        //     if (email.length === 0) {
+        //         status = false;
+        //         $(".error-email").text('Email is required').addClass('error-color');
+        //     } else if (!regxEmail.test(email)) {
+        //         status = false;
+        //         $(".error-email").text('Invalid email address').addClass('error-color');
+        //     }
+
+        //     if (password.length === 0) {
+        //         status = false;
+        //         $(".error-password").text('Password is required').addClass('error-color');
+        //     } else if (confmPassword !== password) {
+        //         status = false;
+        //         $(".error-confmPassword").text('Password does not match').addClass('error-color');
+        //     }
+
+        //     if (status) {
+        //         userRegister(name, mobile, email, password);
+        //     }
+
+        //     return status;
         // });
 
 
 
-        $('#createUser').click(function(e) {
-            e.preventDefault();
-            var name = $('#name').val();
-            var mobile = $('#mobile').val();
-            var email = $('#email').val();
-            var password = $('#password').val();
-            var confmPassword = $('#confmPassword').val();
-            var regxMobile = /^(?:(?:\+|0{0,2})91)?[789]\d{9}$/;
-            var regxEmail = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]+$/;
-            var status = true;
 
-            // Clear previous error messages
-            $('.error-message').empty();
 
-            if (name.length === 0) {
-                status = false;
-                $(".error-name").text('Name is required').addClass('error-color');
-            } else if (!/^[a-zA-Z\s]+$/.test(name)) {
-                status = false;
-                $(".error-name").text('Name should only contain letters and spaces').addClass('error-color');
+
+
+
+
+        // function userRegister(name, mobile, email, password, otp) {
+        //     $.ajaxSetup({
+        //         headers: {
+        //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        //         }
+        //     });
+        //     var formData = new FormData();
+        //     formData.append('name', name);
+        //     formData.append('mobile', mobile);
+        //     formData.append('email', email);
+        //     formData.append('password', password);
+        //     formData.append('otp', otp);
+        //     var type = 'POST';
+        //     var ajaxurl = '{{ route('user-registration') }}';
+        //     $.ajax({
+        //         type: type,
+        //         url: ajaxurl,
+        //         data: formData,
+        //         processData: false,
+        //         contentType: false,
+        //         dataType: 'json', // Corrected: 'json' instead of 'Json'
+        //         success: function(data) {
+        //             if (data.status == 200) {
+        //                 location.reload(true);
+        //             } else if (data.status == 400 && data.errors) {
+        //                 // Display duplicate entry errors within the modal
+        //                 $.each(data.errors, function(key, value) {
+        //                     $('#' + key).siblings('.error-message').text(value).addClass('error-color');
+        //                 });
+        //             } else {
+        //                 $(".main-register-error").text(data.msg).addClass('error-color');
+        //             }
+        //         },
+        //         error: function(jqXHR) {
+        //             $(".main-register-error").text('Something went wrong. Please try again later.');
+        //             console.log(jqXHR); // Log the error for debugging purposes
+        //         }
+        //     });
+        //     return false;
+        // }
+
+
+
+        // Validation and OTP sending logic
+        $('#registration-form').validate({
+            rules: {
+                name: {
+                    required: true,
+                    lettersonly: true
+                },
+                mobile: {
+                    required: true,
+                    digits: true,
+                    minlength: 10,
+                    maxlength: 10
+                },
+                email: {
+                    required: true,
+                    email: true
+                },
+                password: {
+                    required: true,
+                    minlength: 8
+                },
+                confmPassword: {
+                    required: true,
+                    equalTo: "#password"
+                }
+            },
+            messages: {
+                name: {
+                    required: "Name is required",
+                    lettersonly: "Name should only contain letters and spaces"
+                },
+                mobile: {
+                    required: "Mobile number is required",
+                    digits: "Enter a valid 10-digit mobile number"
+                },
+                email: {
+                    required: "Email is required",
+                    email: "Enter a valid email address"
+                },
+                password: {
+                    required: "Password is required",
+                    minlength: "Password must be at least 8 characters long"
+                },
+                confmPassword: {
+                    required: "Please confirm your password",
+                    equalTo: "Passwords do not match"
+                }
+            },
+            submitHandler: function(form) {
+                var formData = $(form).serialize();
+                $.ajax({
+                    type: 'POST',
+                    url: '{{ route('user-registration') }}',
+                    data: formData,
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(data) {
+                        if (data.status === 200) {
+                            // Display success message and show OTP input
+                            $('#otp-success-alert').removeClass('d-none');
+                            $('.otp-section').removeClass('d-none');
+                        } else if (data.status === 400 && data.errors) {
+                            $.each(data.errors, function(key, value) {
+                                $('#' + key).siblings('.error-message').text(value)
+                                    .addClass('error-color');
+                            });
+                        } else {
+                            $(".main-register-error").text(data.msg).addClass('error-color');
+                        }
+                    },
+                    error: function(jqXHR) {
+                        $(".main-register-error").text(
+                            'Something went wrong. Please try again later.');
+                    }
+                });
             }
-
-            if (mobile.length === 0) {
-                status = false;
-                $(".error-mobile").text('Mobile is required').addClass('error-color');
-            } else if (!regxMobile.test(mobile) || mobile.length !== 10) {
-                status = false;
-                $(".error-mobile").text('Invalid mobile number').addClass('error-color');
-            }
-
-            if (email.length === 0) {
-                status = false;
-                $(".error-email").text('Email is required').addClass('error-color');
-            } else if (!regxEmail.test(email)) {
-                status = false;
-                $(".error-email").text('Invalid email address').addClass('error-color');
-            }
-
-            if (password.length === 0) {
-                status = false;
-                $(".error-password").text('Password is required').addClass('error-color');
-            } else if (confmPassword !== password) {
-                status = false;
-                $(".error-confmPassword").text('Password does not match').addClass('error-color');
-            }
-
-            if (status) {
-                userRegister(name, mobile, email, password);
-            }
-
-            return status;
         });
 
-        function userRegister(name, mobile, email, password) {
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            var formData = new FormData();
-            formData.append('name', name);
-            formData.append('mobile', mobile);
-            formData.append('email', email);
-            formData.append('password', password);
-            var type = 'POST';
-            var ajaxurl = '{{ route('user-registration') }}';
-            $.ajax({
-                type: type,
-                url: ajaxurl,
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: 'json', // Corrected: 'json' instead of 'Json'
-                success: function(data) {
-                    if (data.status == 200) {
-                        location.reload(true);
-                    } else if (data.status == 400 && data.errors) {
-                        // Display duplicate entry errors within the modal
-                        $.each(data.errors, function(key, value) {
-                            $('#' + key).siblings('.error-message').text(value).addClass('error-color');
-                        });
-                    } else {
-                        $(".main-register-error").text(data.msg).addClass('error-color');
-                    }
-                },
-                error: function(jqXHR) {
-                    $(".main-register-error").text('Something went wrong. Please try again later.');
-                    console.log(jqXHR); // Log the error for debugging purposes
-                }
-            });
-            return false;
-        }
+        // Add method for name validation
+        jQuery.validator.addMethod("lettersonly", function(value, element) {
+            return this.optional(element) || /^[a-zA-Z\s]+$/.test(value);
+        }, "Name should only contain letters and spaces");
 
+        // OTP verification logic (submit2)
+        // $('#submit2').on('click', function(e) {
+        //     e.preventDefault();
+        //     var otpData = {
+        //         mobile: $('#mobile').val(),
+        //         otp: $('#registerOTP').val(),
+        //         _token: '{{ csrf_token() }}'
+        //     };
 
-
-        //  end registration
-
-        // for login
-        // $('.login-form').click(function(){
-        //         $(".error-loginMobNumb").text('');
-        //         $(".error-loginPass").text('');
+        //     $.ajax({
+        //         type: 'POST',
+        //         url: '{{ route('verify-register-otp') }}',
+        //         data: otpData,
+        //         success: function(response) {
+        //             if (response.status === 200) {
+        //                 alert('OTP verified successfully! User registered.');
+        //                 window.location.href = '{{ route('home') }}';
+        //             } else {
+        //                 $('#otp-error-alert').removeClass('d-none').find('.error-message').text(response
+        //                     .message);
+        //             }
+        //         },
+        //         error: function() {
+        //             $('#otp-error-alert').removeClass('d-none').find('.error-message').text(
+        //                 'OTP verification failed.');
+        //         }
         //     });
+        // });
 
         $('#loginUser').click(function(e) {
             e.preventDefault();
@@ -794,25 +960,33 @@
                     },
                     dataType: 'json',
                     success: function(response) {
+                        console.log(
+                            response); // Always log the response to see the exact structure
+
                         if (response.status === 'success') {
                             // OTP verification successful, redirect the user or show a success message
                             window.location.href = '/'; // Redirect to the desired page
-                        } else if (response.status === 'error' && response.message ===
-                            'Invalid Mobile Number') {
-                            // Invalid mobile number
-                            $('.error-loginMobNumb').text(
-                                'Invalid mobile number. Please try again.');
-                        } else if (response.status === 'error' && response.message ===
-                            'Invalid OTP.') {
-                            // Invalid OTP
-                            $('.error-otpVerifyInput').text('Invalid OTP. Please try again.');
-                        } else if (response.status === 'error' && response.message ===
-                            'OTP has expired.') {
-                            // OTP has expired
-                            $('.error-otpVerifyInput').text(
-                                'OTP has expired. Please request a new OTP.');
-                            // Show the "Resend OTP" button
-                            $('#resendOtpButton').show();
+                        } else if (response.status === 'error') {
+                            // Handle error based on message content
+                            if (response.message.includes('Invalid Mobile Number')) {
+                                // Invalid mobile number
+                                $('.error-loginMobNumb').text(
+                                    'Invalid mobile number. Please try again.');
+                            } else if (response.message.includes('Invalid OTP')) {
+                                // Invalid OTP
+                                $('.error-otpVerifyInput').text(
+                                    'Invalid OTP. Please try again.');
+                            } else if (response.message.includes('OTP has expired')) {
+                                // OTP has expired
+                                $('.error-otpVerifyInput').text(
+                                    'OTP has expired. Please request a new OTP.');
+                                // Show the "Resend OTP" button
+                                $('#resendOtpButton').show();
+                            } else {
+                                // Handle any other unexpected errors
+                                $('.error-otpVerifyInput').text(
+                                    'An unexpected error occurred. Please try again.');
+                            }
                         }
                     },
                     error: function() {
@@ -822,44 +996,13 @@
                         );
                     }
                 });
+
             });
         });
 
 
-        // When the resend button is clicked
-        $('#resendOtpButton').click(function() {
-            // Hide the resend button again
-            $(this).hide();
 
-            // Get the destination (mobile number)
-            const destination = $('#loginMobNumb').val();
 
-            // Make the AJAX request to resend OTP
-            $.ajax({
-                type: 'POST',
-                url: '{{ route('send-sms') }}',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    destination: destination
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        // OTP sent successfully, show a message or perform any other action if needed
-                        // ...
-                    } else {
-                        // Failed to send OTP, show the error message
-                        $('.error-loginMobNumb').text(response.message ||
-                            'Failed to send OTP. Please try again later.');
-                    }
-                },
-                error: function() {
-                    // AJAX request failed, show the error message
-                    $('.error-loginMobNumb').text(
-                        'An error occurred while sending the request. Please try again later.');
-                }
-            });
-        });
 
         $(document).ready(function() {
             // Toggle the 'collapsed' class and side navigation width when the collapse button is clicked
@@ -901,7 +1044,50 @@
         };
 
 
+        // $('.submit1').click(function() {
 
+        //     $('.otp-section').show();
+
+
+        //     const destination = $('#mobile').val();
+        //     var mobile = $('#mobile').val();
+        //     console.log('Destination mobile number:', destination);
+        //     console.log('Destination mobile number:', mobile);
+
+        //     $.ajax({
+        //         type: 'POST',
+        //         url: '{{ route('send-regsiter-otp') }}',
+        //         data: {
+        //             _token: '{{ csrf_token() }}',
+        //             destination: destination
+        //         },
+        //         dataType: 'json',
+        //         success: function(response) {
+        //             console.log('Response:', response);
+        //             if (response.status === 'success') {
+        //                 console.log('OTP sent successfully.');
+        //             } else {
+        //                 $('.error-loginMobNumb').text(response.message ||
+        //                     'Failed to send OTP. Please try again later.');
+        //             }
+        //         },
+        //         error: function(xhr, status, error) {
+        //             console.error('AJAX Error:', status, error);
+        //             $('.error-loginMobNumb').text(
+        //                 'An error occurred while sending the request. Please try again later.');
+        //         }
+        //     });
+        // });
+
+
+        // Optional: Handle resend OTP click (if needed)
+        $('.resend-otp-link').on('click', function(event) {
+            event.preventDefault();
+            // // Logic to resend OTP goes here
+            // alert('Resend OTP functionality needs to be implemented.');
+        });
+
+        let isOtpVerified = false;
     </script>
     @stack('scripts')
     </div>

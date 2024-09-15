@@ -15,7 +15,7 @@ use Auth;
 use App\Helpers\CommonHelper;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\SmsController;
-use App\Http\Requests\OtpVerificationController;
+use App\Http\Controllers\OtpVerificationController;
 use App\Http\Controllers\Apis\AuthenticationController;
 use Illuminate\Support\Facades\Log;
 use Exception;
@@ -34,7 +34,7 @@ class UserPanelController extends Controller
         $this->commonController = new CommonController();
         $this->smsController = new SmsController();
         $this->authenticationController = new AuthenticationController();
-        // $this->otpVerificationController = new OtpVerificationController();
+        $this->otpVerificationController = new OtpVerificationController();
     }
 
     public function homePage()
@@ -72,8 +72,8 @@ class UserPanelController extends Controller
         try {
             // Validate request data
             $validator = Validator::make($request->all(), [
-                'name' => 'required|regex:/^[a-zA-Z\s]+$/',
-                'mobile' => 'required|regex:/^(?:(?:\+|0{0,2})91)?[789]\d{9}$/|unique:users,mobile',
+                'name' => ['required','regex:/^[a-zA-Z\s]+$/'],
+                'mobile' => ['required','regex:/^(?:(?:\+|0{0,2})91)?[789]\d{9}$/','unique:users,mobile'],
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required|confirmed|min:8',
             ], [
@@ -97,10 +97,10 @@ class UserPanelController extends Controller
 
 
             // Verify OTP
-            $otpVerificationResponse = $this->otpVerificationController->registerVerifyOtp($request->mobile, $request->otp);
+            $otpVerificationResponse = $this->otpVerificationController->VerifyOtp($request->mobile, $request->otp);
 
             if ($otpVerificationResponse['status'] === 'error') {
-                return response()->json(['status' => 400, 'message' => $otpVerificationResponse['message']]);
+                return response()->json(['status' => 400, 'errors' => ['registerOTP'=> [$otpVerificationResponse['message']]]]);
             }
 
 

@@ -85,9 +85,12 @@
                                                                     type="button" id="registerSendOTP">Send
                                                                     OTP</button>
                                                             </div>
+                                                            <span
+                                                            class="font-xssss fw-400 error-registerMobNumb error-message text-danger error-mobile"></span>
+                                                           
                                                         </div>
-                                                        <span
-                                                            class="font-xssss fw-400 error-message error-mobile"></span>
+                                                      
+                                                        
                                                     </div>
 
                                                     <div class="form-group mb-3 otp-section" style="display: none;">
@@ -96,11 +99,16 @@
                                                                 class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field registerOTP"
                                                                 placeholder="Enter Your OTP code" id="registerOTP">
                                                             <div class="input-group-append">
-                                                                {{-- <a href="#"
-                                                                    class="input-group-text text-decoration-none resend-otp-link">Resend
-                                                                    OTP</a> --}}
+                                                                <button id="resendRegistrationOtpButton"
+                                                                    class="input-group-text text-decoration-none resend-otp-link hidden" hidden>Resend
+                                                                    OTP</button>
                                                             </div>
+                                                           
+                                                             
                                                         </div>
+                                                        <span
+                                                        class="font-xssss fw-400 error-registerOtp error-message text-danger"></span>
+                                                       
                                                     </div>
 
 
@@ -459,9 +467,9 @@
 
             if ($(event.target).hasClass('modal-backdrop')) {
                 // Hide both modals
-                $('.ModalregisterD').modal('hide');
-                $('.Modallogin').modal('hide');
-
+                // $('.ModalregisterD').modal('hide');
+                // $('.Modallogin').modal('hide');
+                $('.modal').modal('hide');
                 // Remove the backdrop
                 $('.modal-backdrop').remove();
                 $('body').removeClass('modal-open');
@@ -539,6 +547,7 @@
             var mobile = $('#mobile').val();
             var email = $('#email').val();
             var password = $('#password').val();
+            var otp = $('#registerOTP').val();
             var confmPassword = $('#confmPassword').val();
             var regxMobile = /^(?:(?:\+|0{0,2})91)?[789]\d{9}$/;
             var regxEmail = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]+$/;
@@ -553,7 +562,7 @@
             $('.error-email').empty();
             $('.error-password').empty();
             $('.error-confmPassword').empty();
-            $('.error-otp').empty();
+            $('.error-registerOtp').empty();
 
             if (name.length === 0) {
                 status = false;
@@ -574,7 +583,7 @@
             // OTP validation
             if (registerSendOtp.length === 0) {
                 status = false;
-                $(".error-otp").text('Please enter the OTP to verify your mobile number').addClass('error-color');
+                $(".error-registerOtp").text('Please enter the OTP to verify your mobile number').addClass('error-color');
             }
 
             if (email.length === 0) {
@@ -594,7 +603,7 @@
             }
 
             if (status) {
-                userRegister(name, mobile, email, password);
+                userRegister(name, mobile, email, password,confmPassword, otp);
             }
 
             return status;
@@ -605,7 +614,7 @@
 
 
 
-        function userRegister(name, mobile, email, password, otp) {
+        function userRegister(name, mobile, email, password,confmPassword, otp) {
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -616,6 +625,8 @@
             formData.append('mobile', mobile);
             formData.append('email', email);
             formData.append('password', password);
+            formData.append('password_confirmation', confmPassword);
+
             formData.append('otp', otp);
             var type = 'POST';
             var ajaxurl = '{{ route('user-registration') }}';
@@ -632,7 +643,13 @@
                     } else if (data.status == 400 && data.errors) {
                         // Display duplicate entry errors within the modal
                         $.each(data.errors, function(key, value) {
+                            // debugger;
+                            if(key == 'registerOTP'){
+                                $('.error-registerOtp').text(value).addClass('error-color');
+                            }
                             $('#' + key).siblings('.error-message').text(value).addClass('error-color');
+                            // $('#' + key+"+span").text(value).addClass('error-color');
+
                         });
                     } else {
                         $(".main-register-error").text(data.msg).addClass('error-color');
@@ -929,14 +946,31 @@
 
 
         $('.registerSendOTP').click(function() {
-            $(this).closest('.form-group').hide();
-            $('.otp-section').show();
-
+           
 
             const destination = $('#mobile').val();
             var mobile = $('#mobile').val();
             console.log('Destination mobile number:', destination);
             console.log('Destination mobile number:', mobile);
+            sendotp(destination)
+
+           
+        });
+        $('#resendRegistrationOtpButton').click(function() {
+           
+
+           const destination = $('#mobile').val();
+           var mobile = $('#mobile').val();
+           console.log('Destination mobile number:', destination);
+           console.log('Destination mobile number:', mobile);
+           sendotp(destination)
+
+          
+       });
+
+
+
+        function sendotp( destination){
 
             $.ajax({
                 type: 'POST',
@@ -950,8 +984,14 @@
                     console.log('Response:', response);
                     if (response.status === 'success') {
                         console.log('OTP sent successfully.');
+                        $('.registerSendOTP').closest('.form-group').hide();
+                        $('.otp-section').show();
+                        setTimeout(function(){  
+                            $('#resendRegistrationOtpButton').removeAttr('hidden');
+                            }, 30000);
+
                     } else {
-                        $('.error-loginMobNumb').text(response.message ||
+                        $('.error-registerMobNumb').text(response.message ||
                             'Failed to send OTP. Please try again later.');
                     }
                 },
@@ -961,7 +1001,7 @@
                         'An error occurred while sending the request. Please try again later.');
                 }
             });
-        });
+        }
 
 
         // Optional: Handle resend OTP click (if needed)

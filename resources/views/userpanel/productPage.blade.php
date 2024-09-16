@@ -468,7 +468,7 @@
                 // Show login modal if user is not authenticated
                 setTimeout(function() {
                     $('#Modallogin').modal('show');
-                }, 100);
+                }, 1000);
             @endif
         </script>
     @endpush

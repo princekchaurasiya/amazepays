@@ -3,7 +3,7 @@
 @section('title', 'Unauthorized Access')
 
 @section('content')
-if au
+
     <div class="container mt-5">
         <div class="alert alert-warning">
             <h4 class="alert-heading">Oops!</h4>
@@ -13,7 +13,10 @@ if au
 
     @push('scripts')
         <script type="text/javascript">
-
+             setTimeout(function() {
+                    console.log("Showing login modal");
+                    $('#Modallogin').modal('show');
+                }, 100);
         </script>
     @endpush
 @endsection

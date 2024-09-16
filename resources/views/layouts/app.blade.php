@@ -88,9 +88,13 @@
                                                                     type="button" id="registerSendOTP">Send
                                                                     OTP</button>
                                                             </div>
+                                                           
+                                                           
                                                         </div>
                                                         <span
-                                                            class="font-xssss fw-400 error-registerMobNumb error-message text-danger error-mobile"></span>
+                                                        class="font-xssss fw-400 error-registerMobNumb error-message text-danger error-mobile"></span>
+                                                      
+                                                        
                                                     </div>
 
                                                     <div class="form-group mb-3 otp-section" style="display: none;">
@@ -533,9 +537,9 @@
             // OTP validation
             if (registerSendOtp.length === 0) {
                 status = false;
-                $(".error-registerOtp").text(
-                        'Please click on "Send OTP" to receive a verification code and verify your mobile number.')
-                    .addClass('error-color fw-800');
+                $(".error-registerOtp").text('Please enter the OTP to verify your mobile number').addClass('error-color');
+                $(".error-registerMobNumb").text('Please enter the OTP to verify your mobile number').addClass('error-color');
+
             }
 
             if (email.length === 0) {
@@ -598,6 +602,9 @@
                             // debugger;
                             if (key == 'registerOTP') {
                                 $('.error-registerOtp').text(value).addClass('error-color');
+                            }
+                            if(key == 'mobile'){
+                                $('.error-registerMobNumb').text(value).addClass('error-color');
                             }
                             $('#' + key).siblings('.error-message').text(value).addClass('error-color');
                             // $('#' + key+"+span").text(value).addClass('error-color');
@@ -955,11 +962,9 @@
 
 
         // Optional: Handle resend OTP click (if needed)
-        $('.resend-otp-link').on('click', function(event) {
-            event.preventDefault();
-            // // Logic to resend OTP goes here
-            // alert('Resend OTP functionality needs to be implemented.');
-        });
+       
+
+        let isOtpVerified = false;
     </script>
     @stack('scripts')
     </div>

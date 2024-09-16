@@ -311,7 +311,7 @@
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
                         success: function(response) {
-                            console.log('Form data saved successfully:', response);
+
                             if (callback) callback(); // Call the callback if provided
                         },
                         error: function(response) {
@@ -467,7 +467,6 @@
             @if (!auth()->check())
                 // Show login modal if user is not authenticated
                 setTimeout(function() {
-                    console.log("Showing login modal");
                     $('#Modallogin').modal('show');
                 }, 1000);
             @endif

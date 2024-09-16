@@ -469,7 +469,7 @@
                 setTimeout(function() {
                     console.log("Showing login modal");
                     $('#Modallogin').modal('show');
-                }, 100);
+                }, 1000);
             @endif
         </script>
     @endpush

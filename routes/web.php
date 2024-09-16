@@ -172,9 +172,13 @@ Route::get('/search', [SearchController::class, 'search'])->name('search');
 
 Route::view('/gift', 'layouts.giftmail');
 
-Route::fallback(function () {
-    return response()->json(['message' => 'Route not found'], 404);
-});
+// Route::fallback(function () {
+//     return response()->json(['message' => 'Route not found'], 404);
+// });
+
+Route::get('/404', function(){
+    abort(404);
+})->name('404');
 
 
 Route::get('/profile', function () {

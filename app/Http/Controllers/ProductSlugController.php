@@ -20,7 +20,11 @@ class ProductSlugController extends Controller
 
             if (!$product) {
                 // If product is not found, show a friendly error message
-                return view('userpanel.wentWrong')->with('errorMessage', 'Requested product does not exist. Please try with a different product.');
+                // abort(404);
+
+                // return view('userpanel.wentWrong')->with('errorMessage', 'Requested product does not exist. Please try with a different product.');
+
+                return view('errors.404');
             }
 
             $productDetails = $product->toArray();

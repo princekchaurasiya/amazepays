@@ -46,6 +46,7 @@ class SmsController extends Controller
                 'message' => 'User Already Exist Please try to log in',
             ]);
         }
+        
         return $this->sendSms($request);
     }
 

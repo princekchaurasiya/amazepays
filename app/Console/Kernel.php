@@ -15,7 +15,7 @@ class Kernel extends ConsoleKernel
      * @return void
      */
 
-    protected $commands = [\App\Console\Commands\GenerateBearerToken::class];
+    protected $commands = [GenerateBearerToken::class];
 
     protected function schedule(Schedule $schedule)
     {
@@ -23,19 +23,20 @@ class Kernel extends ConsoleKernel
         // $schedule->command(GenerateBearerToken::class)->weekly()->mondays()->at('12:00');
 
         // Add the schedule to run the GenerateBearerToken command every minute for testing purpose
-        // $schedule->command('generate:bearerToken')->weekly()->mondays()->at('01:00');
 
-        $schedule->command('generate:bearerToken')->everyMinute();
+        $schedule->command('generate:bearerToken')->weekly()->mondays()->at('01:00');
 
-        // $schedule->command('fetch:categoryData')->monthlyOn(4, '02:30');
-        $schedule->command('fetch:categoryData')->everyMinute();
+        // $schedule->command('generate:bearerToken')->everyMinute();
 
-        // $schedule->command('fetch:productList')->monthlyOn(4, '02:35');
-        $schedule->command('fetch:productList')->everyMinute();
+        $schedule->command('fetch:categoryData')->monthlyOn(4, '02:30');
+        // $schedule->command('fetch:categoryData')->everyMinute();
+
+        $schedule->command('fetch:productList')->monthlyOn(4, '02:35');
+        // $schedule->command('fetch:productList')->everyMinute();
 
 
-        // $schedule->command('fetch:productData')->monthlyOn(4, '02:40');
-        $schedule->command('fetch:productData')->everyMinute();
+        $schedule->command('fetch:productData')->monthlyOn(4, '02:40');
+        // $schedule->command('fetch:productData')->everyMinute();
     }
 
     /**

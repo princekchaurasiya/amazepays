@@ -274,6 +274,8 @@ class WoohooOrderController extends Controller
         if ($order["delivery_mode"] == "both") {
             $this->sendTransactionMail($prepareMailDetails);
             $this->sendGiftMail($prepareMailDetails, $cardsArray);
+            $this->sendTransactionalMessage($prepareSmsDetails);
+            $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
         } elseif ($order["delivery_mode"] == "email") {
             $this->sendTransactionMail($prepareMailDetails);
             $this->sendTransactionalMessage($prepareSmsDetails);

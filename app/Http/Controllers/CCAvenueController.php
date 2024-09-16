@@ -78,9 +78,9 @@ class CCAvenueController extends Controller
             // Update user details
             $user = Auth::user();
             $user->update([
-                'name' => $request->input('billing_name'),
-                'email' => $request->input('billing_email'),
-                'mobile' => $request->input('billing_tel'),
+                // 'name' => $request->input('billing_name'),
+                // 'email' => $request->input('billing_email'),
+                // 'mobile' => $request->input('billing_tel'),
                 'billing_zip' => $request->input('billing_zip'),
                 'billing_address' => $request->input('billing_address'),
                 'billing_address_two' => $request->input('billing_address_two'),

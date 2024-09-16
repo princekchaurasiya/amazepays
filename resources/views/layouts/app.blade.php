@@ -26,8 +26,8 @@
         <!-- footer wrapper -->
     </div>
     <!-- Modal Register -->
-    <div class="modal fade" id="ModalregisterD" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-        data-backdrop="true" aria-hidden="true">
+    <div class="modal fade ModalregisterD" id="ModalregisterD" tabindex="-1" role="dialog"
+        aria-labelledby="myModalLabel" data-backdrop="true" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-md modal-lg" role="document">
             <div class="modal-content border-0">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i
@@ -66,7 +66,10 @@
                                         <div class="card shadow-none rounded-0 w-100 p-2 mt-3 pt-3 border-0">
                                             <div class="card-body rounded-0 text-left pt-0">
                                                 <h2 class="fw-600 display2-size mb-4">Create your account</h2>
+
+                                                <span class="font-xssss fw-400 error-message error-registerOtp"></span>
                                                 <form id="registration-form">
+
                                                     <span
                                                         class="font-xssss fw-400 main-register-error text-center"></span>
                                                     <div class="form-group mb-3">
@@ -85,12 +88,9 @@
                                                                     type="button" id="registerSendOTP">Send
                                                                     OTP</button>
                                                             </div>
-                                                            <span
-                                                            class="font-xssss fw-400 error-registerMobNumb error-message text-danger error-mobile"></span>
-                                                           
                                                         </div>
-                                                      
-                                                        
+                                                        <span
+                                                            class="font-xssss fw-400 error-registerMobNumb error-message text-danger error-mobile"></span>
                                                     </div>
 
                                                     <div class="form-group mb-3 otp-section" style="display: none;">
@@ -100,17 +100,13 @@
                                                                 placeholder="Enter Your OTP code" id="registerOTP">
                                                             <div class="input-group-append">
                                                                 <button id="resendRegistrationOtpButton"
-                                                                    class="input-group-text text-decoration-none resend-otp-link hidden" hidden>Resend
+                                                                    class="input-group-text text-decoration-none resend-otp-link hidden"
+                                                                    hidden>Resend
                                                                     OTP</button>
                                                             </div>
-                                                           
-                                                             
                                                         </div>
-                                                        <span
-                                                        class="font-xssss fw-400 error-registerOtp error-message text-danger"></span>
-                                                       
-                                                    </div>
 
+                                                    </div>
 
                                                     <div class="form-group mb-3">
                                                         <input type="text"
@@ -140,8 +136,6 @@
                                                         <span
                                                             class="font-xssss fw-400 error-confmPass error-message error-confmPassword"></span>
                                                     </div>
-
-
 
 
                                                     <div class="form-group icon-tab mb-3">
@@ -190,8 +184,8 @@
     <!-- end of Modal Register -->
 
     <!-- Modal Login -->
-    <div class="modal bottom fade" id="Modallogin" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-        data-backdrop="true" aria-hidden="true">
+    <div class="modal bottom fade Modallogin" id="Modallogin" tabindex="-1" role="dialog"
+        aria-labelledby="myModalLabel" data-backdrop="true" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-md modal-lg" role="document">
             <div class="modal-content border-0">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><i
@@ -281,7 +275,7 @@
                                                 <div class="col-sm-12 p-0 text-center">
                                                     <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Don't
                                                         have an account? <a href="#"
-                                                            class="fw-700 ml-1 text-current register-form"
+                                                            class="fw-700 ml-1 text-current register-form modal-register-link"
                                                             data-toggle="modal" data-target="#ModalregisterD"
                                                             data-dismiss="modal">Register</a></h6>
                                                 </div>
@@ -383,7 +377,7 @@
                                 <a href="#"
                                     class="form-control h60 bg-current text-white font-xss fw-500 border-2 border-0 p-0">Submit</a>
                                 <h6 class="text-grey-500 font-xsss fw-500 mt-2 mb-0 lh-32">Dont have account <a
-                                        href="#" class="fw-700 ml-1 text-orange" data-toggle="modal"
+                                        href="#" class="fw-700 ml-1 text-orange Modallogin" data-toggle="modal"
                                         data-target="#Modallogin" data-dismiss="modal">Login</a></h6>
                             </div>
                             <div class="col-sm-12 p-0 text-center">
@@ -446,29 +440,14 @@
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open');
 
-
-            // if ($(event.target).hasClass('modal-backdrop')) {
-            //     // Hide both modals
-            //     $('.modal').modal('hide');
-            //     // $('.Modallogin').modal('hide');
-
-            //     // Remove the backdrop
-            //     $('.modal-backdrop').remove();
-            //     $('body').removeClass('modal-open');
-
-            //     console.log('Modal closed on backdrop click');
-            // }
         });
 
 
         // Close modal on outside (backdrop) click
         $(document).on('click', function(event) {
-            console.log(456); // Log to confirm the button was clicked
+
 
             if ($(event.target).hasClass('modal-backdrop')) {
-                // Hide both modals
-                // $('.ModalregisterD').modal('hide');
-                // $('.Modallogin').modal('hide');
                 $('.modal').modal('hide');
                 // Remove the backdrop
                 $('.modal-backdrop').remove();
@@ -478,66 +457,37 @@
             }
         });
 
+        $(".modal-register-link").click(function() {
+            $('.Modallogin').modal('hide');
+        });
 
 
 
-        // for registration
-        // $('.register-form').click(function(){
-        //     $(".error-name").text('');
-        //     $(".error-mobile").text('');
-        //     $(".error-email").text('');
-        //     $(".error-password").text('');
-        // });
+        $(document).ready(function() {
+            // Toggle visibility for login password
+            $("#togglePassword").click(function() {
+                const loginPass = $("#loginPass");
+                const type = loginPass.attr("type") === "password" ? "text" : "password";
+                loginPass.attr("type", type);
+                $(this).toggleClass("fa-eye fa-eye-slash");
+            });
 
-        // for hide and show login password
+            // Toggle visibility for register password
+            $("#toggleRegstPassword").click(function() {
+                const password = $("#password");
+                const type = password.attr("type") === "password" ? "text" : "password";
+                password.attr("type", type);
+                $(this).toggleClass("fa-eye fa-eye-slash");
+            });
 
-
-
-        // const togglePassword = document.querySelector("#togglePassword");
-        // const loginPass = document.querySelector("#loginPass");
-
-        // togglePassword.addEventListener("click", function() {
-        //     // toggle the type attribute
-        //     const type = loginPass.getAttribute("type") === "password" ? "text" : "password";
-        //     loginPass.setAttribute("type", type);
-
-        //     // toggle the icon
-        //     // this.classList.toggle("fa fa-eye-slash");
-        // });
-
-        // // for hide and show Register password
-
-        // const toggleRegstPassword = document.querySelector("#toggleRegstPassword");
-        // const password = document.querySelector("#password");
-
-        // toggleRegstPassword.addEventListener("click", function() {
-        //     // toggle the type attribute
-        //     const type = password.getAttribute("type") === "password" ? "text" : "password";
-        //     password.setAttribute("type", type);
-
-        //     // toggle the icon
-        //     // this.classList.toggle("fa fa-eye-slash");
-        // });
-
-        // // for hide and show Register Confirm password
-
-        // const toggleRegstConfirmPassword = document.querySelector("#toggleRegstConfirmPassword");
-        // const confmPassword = document.querySelector("#confmPassword");
-
-        // toggleRegstConfirmPassword.addEventListener("click", function() {
-        //     // toggle the type attribute
-        //     const type = confmPassword.getAttribute("type") === "password" ? "text" : "password";
-        //     confmPassword.setAttribute("type", type);
-
-        //     // toggle the icon
-        //     // this.classList.toggle("fa fa-eye-slash");
-        // });
-
-        // // prevent form submit
-        // // const form = document.querySelector("form");
-        // // form.addEventListener('submit', function (e) {
-        // //     e.preventDefault();
-        // // });
+            // Toggle visibility for register confirm password
+            $("#toggleRegstConfirmPassword").click(function() {
+                const confmPassword = $("#confmPassword");
+                const type = confmPassword.attr("type") === "password" ? "text" : "password";
+                confmPassword.attr("type", type);
+                $(this).toggleClass("fa-eye fa-eye-slash");
+            });
+        });
 
 
 
@@ -566,44 +516,46 @@
 
             if (name.length === 0) {
                 status = false;
-                $(".error-name").text('Name is required').addClass('error-color');
+                $(".error-name").text('Name is required').addClass('error-color fw-800');
             } else if (!/^[a-zA-Z\s]+$/.test(name)) {
                 status = false;
-                $(".error-name").text('Name should only contain letters and spaces').addClass('error-color');
+                $(".error-name").text('Name should only contain letters and spaces').addClass('error-color fw-800');
             }
 
             if (mobile.length === 0) {
                 status = false;
-                $(".error-mobile").text('Mobile is required').addClass('error-color');
+                $(".error-mobile").text('Mobile Number is required').addClass('error-color fw-800');
             } else if (!regxMobile.test(mobile) || mobile.length !== 10) {
                 status = false;
-                $(".error-mobile").text('Invalid mobile number').addClass('error-color');
+                $(".error-mobile").text('Invalid mobile number').addClass('error-color fw-800');
             }
 
             // OTP validation
             if (registerSendOtp.length === 0) {
                 status = false;
-                $(".error-registerOtp").text('Please enter the OTP to verify your mobile number').addClass('error-color');
+                $(".error-registerOtp").text(
+                        'Please click on "Send OTP" to receive a verification code and verify your mobile number.')
+                    .addClass('error-color fw-800');
             }
 
             if (email.length === 0) {
                 status = false;
-                $(".error-email").text('Email is required').addClass('error-color');
+                $(".error-email").text('Email is required').addClass('error-color fw-800');
             } else if (!regxEmail.test(email)) {
                 status = false;
-                $(".error-email").text('Invalid email address').addClass('error-color');
+                $(".error-email").text('Invalid email address').addClass('error-color fw-800');
             }
 
             if (password.length === 0) {
                 status = false;
-                $(".error-password").text('Password is required').addClass('error-color');
+                $(".error-password").text('Password is required').addClass('error-color fw-800');
             } else if (confmPassword !== password) {
                 status = false;
-                $(".error-confmPassword").text('Password does not match').addClass('error-color');
+                $(".error-confmPassword").text('Password does not match').addClass('error-color fw-800');
             }
 
             if (status) {
-                userRegister(name, mobile, email, password,confmPassword, otp);
+                userRegister(name, mobile, email, password, confmPassword, otp);
             }
 
             return status;
@@ -614,7 +566,7 @@
 
 
 
-        function userRegister(name, mobile, email, password,confmPassword, otp) {
+        function userRegister(name, mobile, email, password, confmPassword, otp) {
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -644,7 +596,7 @@
                         // Display duplicate entry errors within the modal
                         $.each(data.errors, function(key, value) {
                             // debugger;
-                            if(key == 'registerOTP'){
+                            if (key == 'registerOTP') {
                                 $('.error-registerOtp').text(value).addClass('error-color');
                             }
                             $('#' + key).siblings('.error-message').text(value).addClass('error-color');
@@ -903,8 +855,6 @@
 
 
 
-
-
         $(document).ready(function() {
             // Toggle the 'collapsed' class and side navigation width when the collapse button is clicked
             $(".navbar-toggler").click(function(event) {
@@ -946,7 +896,7 @@
 
 
         $('.registerSendOTP').click(function() {
-           
+
 
             const destination = $('#mobile').val();
             var mobile = $('#mobile').val();
@@ -954,23 +904,23 @@
             console.log('Destination mobile number:', mobile);
             sendotp(destination)
 
-           
+
         });
         $('#resendRegistrationOtpButton').click(function() {
-           
-
-           const destination = $('#mobile').val();
-           var mobile = $('#mobile').val();
-           console.log('Destination mobile number:', destination);
-           console.log('Destination mobile number:', mobile);
-           sendotp(destination)
-
-          
-       });
 
 
+            const destination = $('#mobile').val();
+            var mobile = $('#mobile').val();
+            console.log('Destination mobile number:', destination);
+            console.log('Destination mobile number:', mobile);
+            sendotp(destination)
 
-        function sendotp( destination){
+
+        });
+
+
+
+        function sendotp(destination) {
 
             $.ajax({
                 type: 'POST',
@@ -986,9 +936,9 @@
                         console.log('OTP sent successfully.');
                         $('.registerSendOTP').closest('.form-group').hide();
                         $('.otp-section').show();
-                        setTimeout(function(){  
+                        setTimeout(function() {
                             $('#resendRegistrationOtpButton').removeAttr('hidden');
-                            }, 30000);
+                        }, 30000);
 
                     } else {
                         $('.error-registerMobNumb').text(response.message ||
@@ -1010,8 +960,6 @@
             // // Logic to resend OTP goes here
             // alert('Resend OTP functionality needs to be implemented.');
         });
-
-        let isOtpVerified = false;
     </script>
     @stack('scripts')
     </div>

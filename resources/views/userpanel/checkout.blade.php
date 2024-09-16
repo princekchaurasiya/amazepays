@@ -801,7 +801,6 @@
                 @if (!auth()->check())
                     // Show login modal if user is not authenticated
                     setTimeout(function() {
-                        console.log("Showing login modal");
                         $('#Modallogin').modal('show');
                     }, 1000);
                 @endif
@@ -810,7 +809,7 @@
                 let debounceTimeout;
 
                 function updateSessionData() {
-                    console.log(123);
+
                     var formData = {
                         billing_name: $('input[name="billing_name"]').val(),
                         billing_email: $('input[name="billing_email"]').val(),

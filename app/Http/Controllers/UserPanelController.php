@@ -16,7 +16,7 @@ use App\Helpers\CommonHelper;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\SmsController;
 use App\Http\Controllers\OtpVerificationController;
-// use App\Http\Controllers\APIs\AuthenticationController; 
+// use App\Http\Controllers\APIs\AuthenticationController;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
@@ -142,7 +142,7 @@ class UserPanelController extends Controller
 
     public function userLogin(Request $request)
     {
-        Log::info('userLogin method called', ['request' => $request->all()]);
+        Log::info('userLogin method called');
         try {
             if (Auth::attempt($request->only('mobile', 'password'))) {
                 Log::info('User login successful', ['user' => $request->mobile]);

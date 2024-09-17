@@ -105,7 +105,7 @@
                                                             <div class="input-group-append">
                                                                 <button id="resendRegistrationOtpButton"
                                                                     class="input-group-text text-decoration-none resend-otp-link hidden"
-                                                                    hidden>Resend
+                                                                    hidden type="button">Resend
                                                                     OTP</button>
                                                             </div>
                                                         </div>
@@ -920,7 +920,12 @@
             var mobile = $('#mobile').val();
             console.log('Destination mobile number:', destination);
             console.log('Destination mobile number:', mobile);
-            sendotp(destination)
+            $(this).hide();
+           
+            sendotp(destination);
+            setTimeout(function(){  
+                            $(this).show();
+                            }, 30000);
 
 
         });

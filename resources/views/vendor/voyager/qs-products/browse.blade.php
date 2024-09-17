@@ -20,6 +20,17 @@
             <i class="voyager-upload"></i> <span>Upload Discount Sheet Here</span>
         </a>
 
+        <a href="{{ route('download-product-details') }}" class="btn btn-add-new" style="background-color: #4CAF50; color: white;">
+            <i class="voyager-download"></i> <span>Download Product Details</span>
+        </a>
+
+
+
+
+
+
+
+
         @can('edit', app($dataType->model_name))
             @if (!empty($dataType->order_column) && !empty($dataType->order_display_column))
                 <a href="{{ route('voyager.' . $dataType->slug . '.order') }}" class="btn btn-primary btn-add-new">

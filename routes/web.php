@@ -28,7 +28,8 @@ use App\Http\Controllers\{
     Voyager\VoyagerFetchProductListController,
     Voyager\VoyagerFetchProductDataController,
     Voyager\VoyagerProductDiscountImportController,
-    Voyager\VoyagerOrderExportController
+    Voyager\VoyagerOrderExportController,
+    Voyager\ProductDetailsExportController,
 };
 
 /*
@@ -48,6 +49,8 @@ Route::group(['prefix' => 'admin'], function () {
     // Route::get('/import-data', [DocumentController::class, 'importDocument']);
     Route::view('/upload-document', 'documentUpload');
     Route::post('/upload-data', [DocumentController::class, 'uploadData'])->name('uploadData');
+
+    Route::get('download-product-details', [ProductDetailsExportController::class, 'export'])->name('download-product-details');
 
     Route::match(['get', 'post'], '/voyager/bearer-token', [VoyagerGenerateBearerTokenController::class, 'generateBearerToken'])->name('voyager.bearerToken');
     Route::match(['get', 'post'], '/voyager/get-category', [VoyagerGetCategoryController::class, 'getCategory'])->name('voyager.getCategory');

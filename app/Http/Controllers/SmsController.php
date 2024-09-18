@@ -72,7 +72,21 @@ class SmsController extends Controller
         // Extract the destination number from the request
         $destination = $request->input('destination');
 
+        $latestOtpEntry = Otp::where('mobile_number', $destination)->latest()->first();
 
+        $expirationTime = Carbon::parse($latestOtpEntry->created_at)->addMinutes(1);
+        \Log::info('Expriation Time:', ['expirationTime' => $expirationTime]);
+
+        if (!Carbon::now()->greaterThan($expirationTime)) {
+
+            \Log::info('Inside If:');
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Wait for a minute before you resend the OTP',
+            ]);
+
+        }
 
         // Get the user's stored mobile number
         // $userStoredMobileNumber = $user->mobile;

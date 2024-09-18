@@ -88,13 +88,13 @@
                                                                     type="button" id="registerSendOTP">Send
                                                                     OTP</button>
                                                             </div>
-                                                           
-                                                           
+
+
                                                         </div>
                                                         <span
                                                         class="font-xssss fw-400 error-registerMobNumb error-message text-danger error-mobile"></span>
-                                                      
-                                                        
+
+
                                                     </div>
 
                                                     <div class="form-group mb-3 otp-section" style="display: none;">
@@ -967,7 +967,7 @@
 
 
         // Optional: Handle resend OTP click (if needed)
-       
+
 
         let isOtpVerified = false;
     </script>

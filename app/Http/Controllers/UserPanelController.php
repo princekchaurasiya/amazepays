@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use DB;
 use App\Models\User;
 use App\Models\QsProduct;
+use App\Models\QsCategory;
+
 use Session;
 use Illuminate\Support\Facades\Http;
 use App\Models\QsOrder;
@@ -41,22 +43,26 @@ class UserPanelController extends Controller
     {
         Log::info('homePage method called');
         try {
-            $getCategory = DB::table('qs_categories')->first();
+            $getCategory = QsCategory::first();
             // Log::info('Fetched category', ['getCategory' => $getCategory]);
 
-            $allProducts = DB::table('qs_products')
-                ->select('qs_products.*', 'qs_categories.name as category_name')
-                ->leftJoin('qs_categories', 'qs_products.qs_category_id', '=', 'qs_categories.id')
-                ->orderBy('qs_products.name')
-                ->get();
+            // Fetch all products with their associated category using Eloquent
+            $allProducts = QsProduct::with('category')
+            ->orderByRaw('IFNULL(priority, 999999) ASC') // Sort by priority in ascending order if null treat as 99999
+            ->get();
             // Log::info('Fetched all products', ['allProducts' => $allProducts]);
+
 
             $allProducts->map(function ($item) {
                 $item->currency = json_decode($item->currency);
                 $item->price = json_decode($item->price);
                 $item->images = json_decode($item->images);
-                // Log::info('Processed product', ['item' => $item]);
+                Log::info('Processed product', ['item' => $item]);
+
+
             });
+
+
 
             return view('userpanel/index', compact('allProducts', 'getCategory'));
         } catch (Exception $e) {
@@ -72,8 +78,8 @@ class UserPanelController extends Controller
         try {
             // Validate request data
             $validator = Validator::make($request->all(), [
-                'name' => ['required','regex:/^[a-zA-Z\s]+$/'],
-                'mobile' => ['required','regex:/^(?:(?:\+|0{0,2})91)?[789]\d{9}$/','unique:users,mobile'],
+                'name' => ['required', 'regex:/^[a-zA-Z\s]+$/'],
+                'mobile' => ['required', 'regex:/^(?:(?:\+|0{0,2})91)?[789]\d{9}$/', 'unique:users,mobile'],
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required|confirmed|min:8',
             ], [
@@ -100,7 +106,7 @@ class UserPanelController extends Controller
             $otpVerificationResponse = $this->otpVerificationController->VerifyOtp($request->mobile, $request->otp);
 
             if ($otpVerificationResponse['status'] === 'error') {
-                return response()->json(['status' => 400, 'errors' => ['registerOTP'=> [$otpVerificationResponse['message']]]]);
+                return response()->json(['status' => 400, 'errors' => ['registerOTP' => [$otpVerificationResponse['message']]]]);
             }
 
 

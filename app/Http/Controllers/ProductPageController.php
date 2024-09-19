@@ -16,8 +16,6 @@ class ProductPageController extends Controller
         // Get all form data
         $formData = $request->all();
 
-
-
         // Save form data to the session
         session(['giftCardFormValues' => $formData]);
 
@@ -36,7 +34,6 @@ class ProductPageController extends Controller
 
 
         $product = QsProduct::where('slug', $slug)->first();
-
 
         // Check if product exists
         if (!$product) {

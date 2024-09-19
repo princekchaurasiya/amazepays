@@ -61,7 +61,7 @@ class UserPanelController extends Controller
                 $item->currency = json_decode($item->currency);
                 $item->price = json_decode($item->price);
                 $item->images = json_decode($item->images);
-                Log::info('Processed product', ['item' => $item]);
+                // Log::info('Processed product', ['item' => $item]);
 
 
             });

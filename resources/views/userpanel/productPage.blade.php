@@ -30,6 +30,7 @@
                             <div class="row justify-content-center">
                                 <div class="col-lg-3">
                                     <div class="cardImage">
+
                                         @if ($productDetails['discount_percentage'] && $productDetails['discount_percentage'] > 0)
                                             <div class="ribbon ribbon-product-page">
                                                 <span>{{ $productDetails['discount_percentage'] }}% off</span>
@@ -128,9 +129,9 @@
                                                     class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
                                                     for="buyForSelfRadio">Buy for Self</label>
                                                 <div class="row">
-                                                    <div class="col-12 mb-4">
+                                                    {{-- <div class="col-12 mb-4">
                                                         <input type="hidden" name="delivery_mode" value="both">
-                                                    </div>
+                                                    </div> --}}
                                                 </div>
                                             </div>
                                         </div>

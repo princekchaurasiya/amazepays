@@ -98,38 +98,37 @@
                     <!-- loop product here -->
                     <div class="col-12 col-sm-12 col-md-12 col-lg-10 col-xl-10">
                         <div class="row">
-                            @foreach ($allProducts as $product)
-                                <div class="col-lg-3 col-6">
 
+                            @foreach ($allProducts as $product)
+                            @if ($product->slug && $product->images && $product->images->small)
+                                <div class="col-lg-3 col-6">
                                     <div class="product-wrapper-image">
-                                        {{-- <h4 class="fw-600 ls-2 float-right font-xsssss text-white text-uppercase bg-current p-2 d-inline-block">30% off</h4> --}}
-                                        <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}"
-                                            class="d-block text-center">
+                                        <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}" class="d-block text-center">
                                             <p class="single-image-wrapper">
-                                                <img src="{{ $product->images->small == null ? URL::asset('/images/no-image.png') : $product->images->small }}"
-                                                    alt="product-image" class="w-100 mt-4 d-inline-block">
+                                                <img src="{{ $product->images->small ?? URL::asset('/images/no-image.png') }}"
+                                                     alt="product-image" class="w-100 mt-4 d-inline-block">
                                             </p>
                                         </a>
 
                                         <hr>
                                         <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}">
                                             <div class="product-image-text-wrapper m-lg-1">
-                                                <p
-                                                    class="text-center fw-600 text-product-name-color text-product-name-font-size mt-lg-2 mt-3">
+                                                <p class="text-center fw-600 text-product-name-color text-product-name-font-size mt-lg-2 mt-3">
                                                     {{ ucwords($product->name) }}
                                                 </p>
                                             </div>
                                         </a>
 
-
                                         @if ($product->discount_percentage && $product->discount_percentage > 0)
-                                            <div class="ribbon"><span>{{ $product->discount_percentage }}% off</span>
+                                            <div class="ribbon">
+                                                <span>{{ $product->discount_percentage }}% off</span>
                                             </div>
                                         @endif
-
                                     </div>
                                 </div>
-                            @endforeach
+                            @endif
+                        @endforeach
+
                         </div>
                     </div>
                 </div>

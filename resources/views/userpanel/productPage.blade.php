@@ -69,7 +69,7 @@
                                                                     class="custom-control-input denomination-slab"
                                                                     id="customRadio-{{ $key }}" name="denomination"
                                                                     value="{{ $denomination }}"
-                                                                    {{ $key === 0 || old('denomination', session('giftCardFormValues.denomination')) == $denomination ? 'checked' : '' }}>
+                                                                    {{ $key === 0 || old('denomination') == $denomination ? 'checked' : '' }}>
                                                                 <label class="small-size fw-500 font-xsss"
                                                                     for="customRadio-{{ $key }}">{{ $denomination }}</label>
                                                             </div>

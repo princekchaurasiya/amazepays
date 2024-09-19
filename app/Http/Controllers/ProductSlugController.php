@@ -15,8 +15,10 @@ class ProductSlugController extends Controller
 {
     public function getProductBySlug(Request $request)
     {
+
         try {
             $product = QsProduct::where('slug', $request->slug)->first();
+
 
             if (!$product) {
                 // If product is not found, show a friendly error message

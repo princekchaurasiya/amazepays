@@ -43,13 +43,17 @@ class UserPanelController extends Controller
     {
         Log::info('homePage method called');
         try {
-            $getCategory = QsCategory::first();
+            // $getCategory = QsCategory::first();
             // Log::info('Fetched category', ['getCategory' => $getCategory]);
 
             // Fetch all products with their associated category using Eloquent
-            $allProducts = QsProduct::with('category')
-            ->orderByRaw('IFNULL(priority, 999999) ASC') // Sort by priority in ascending order if null treat as 99999
-            ->get();
+            // $allProducts = QsProduct::with('category')
+            // ->orderByRaw('IFNULL(priority, 999999) ASC') // Sort by priority in ascending order if null treat as 99999
+            // ->get();
+
+            $allProducts = QsProduct::orderByRaw('IFNULL(priority, 999999) ASC')->get();
+
+
             // Log::info('Fetched all products', ['allProducts' => $allProducts]);
 
 
@@ -64,7 +68,7 @@ class UserPanelController extends Controller
 
 
 
-            return view('userpanel/index', compact('allProducts', 'getCategory'));
+            return view('userpanel/index', compact('allProducts'));
         } catch (Exception $e) {
             Log::error('Error in homePage method', ['error' => $e->getMessage()]);
             return $e->getMessage();

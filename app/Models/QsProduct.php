@@ -10,8 +10,8 @@ class QsProduct extends Model
     protected $fillable = ['discount_percentage'];
 
     // Define the relationship with QsCategory
-    public function category()
-    {
-        return $this->belongsTo(QsCategory::class, 'qs_category_id');
-    }
+    // public function category()
+    // {
+    //     return $this->belongsTo(QsCategory::class, 'qs_category_id');
+    // }
 }

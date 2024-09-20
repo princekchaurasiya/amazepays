@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use TCG\Voyager\Events\RoutingAdmin;
+
 use App\Http\Controllers\{
     UserPanelController,
     CommonController,
@@ -45,9 +47,14 @@ use App\Http\Controllers\{
 
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
+    $namespacePrefix = '\\'.config('voyager.controllers.namespace').'\\';
+
     // Route::resource('/cc-avenue-payment', 'VoyagerCcAvenueController');
     // Route::get('/import-data', [DocumentController::class, 'importDocument']);
+   Route::group(['middleware' => ['admin.user']], function() use ($namespacePrefix){
     Route::view('/upload-document', 'documentUpload');
+    event(new RoutingAdmin());
+
     Route::post('/upload-data', [DocumentController::class, 'uploadData'])->name('uploadData');
 
     Route::get('download-product-details', [ProductDetailsExportController::class, 'export'])->name('download-product-details');
@@ -59,7 +66,7 @@ Route::group(['prefix' => 'admin'], function () {
     // Route::get('admin/import-product-discount',  [VoyagerProductDiscountImportController::class, 'import'])->name('import-product-discount');
 
     Route::get('/download-order-sheet', [VoyagerOrderExportController::class, 'export'])->name('downloadOrderSheet');
-
+});
 });
 
 

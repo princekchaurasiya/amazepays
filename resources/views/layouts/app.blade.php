@@ -921,9 +921,9 @@
             console.log('Destination mobile number:', destination);
             console.log('Destination mobile number:', mobile);
             $(this).hide();
-           
+
             sendotp(destination);
-            setTimeout(function(){  
+            setTimeout(function(){
                             $(this).show();
                             }, 30000);
 

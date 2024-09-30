@@ -125,9 +125,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/payment-cancel', [CCAvenueController::class, 'handlePaymentCancellation'])->name('payment-cancel');
 
 
-    Route::post('/update-profile', [ProfileController::class, 'update'])->name('update-profile');
+    Route::post('/update-profile', [ProfileController::class, 'updateProfile'])->name('update-profile');
     Route::post('/card-details', [ViewCardDetailsController::class, 'index'])->name('view-card-details');
-    Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'])->name('woohoo.createOrder');
+
 
 
 
@@ -215,3 +215,6 @@ Route::post(
     '/response_ccavenue',
     [CCAvenueController::class, 'responseCcavenue']
 )->name('response_ccavenue');
+
+
+Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'])->name('woohoo.createOrder');

@@ -18,7 +18,7 @@ class ProfileController extends Controller
         $this->otpVerificationController = new OtpVerificationController();
     }
 
-    public function update(Request $request)
+    public function updateProfile(Request $request)
     {
         // Log when the profile update request is received
         Log::info('Profile Update Request received for user: ' . Auth::id(), ['request_data' => $request->all()]);
@@ -31,32 +31,34 @@ class ProfileController extends Controller
                 'name' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z\s]+$/'],
                 'email' => 'required|email|unique:users,email,' . Auth::id(),
                 'mobile' => ['required', 'regex:/^[0-9]{10}$/'],
-                'otp' => 'required|string|size:6',
+                'otp' => 'nullable|string|size:6'
             ]);
 
             Log::info('Validation passed for user: ' . Auth::id(), ['validated_data' => $validatedData]);
 
             $user = Auth::user();
 
-            // Log before OTP verification
-            Log::info('Verifying OTP for user: ' . Auth::id(), [
-                'mobile' => $validatedData['mobile'],
-                'otp' => $validatedData['otp']
-            ]);
-
-            // Verify the OTP for the new phone number
-            $otpVerificationResponse = $this->otpVerificationController->profileUpdateVerifyOtp($validatedData['mobile'], $validatedData['otp']);
-
-            Log::info('OTP verification response for user: ' . Auth::id(), ['otp_verification_response' => $otpVerificationResponse]);
-
-            if ($otpVerificationResponse['status'] === 'error') {
-                Log::warning('OTP verification failed for user: ' . Auth::id(), ['otp_verification_response' => $otpVerificationResponse]);
-
-                return response()->json([
-                    'status' => 'error',
-                    'status_code' => 400,
-                    'msg' => $otpVerificationResponse['message']
+            // Check if the mobile number has changed
+            if ($user->mobile !== $validatedData['mobile']) {
+                // Log before OTP verification
+                Log::info('Mobile number has changed, verifying OTP for user: ' . Auth::id(), [
+                    'mobile' => $validatedData['mobile'],
+                    'otp' => $validatedData['otp']
                 ]);
+
+                // Verify the OTP for the new phone number
+                $otpVerificationResponse = $this->otpVerificationController->profileUpdateVerifyOtp($validatedData['mobile'], $validatedData['otp']);
+
+                Log::info('OTP verification response for user: ' . Auth::id(), ['otp_verification_response' => $otpVerificationResponse]);
+
+                if ($otpVerificationResponse['status'] === 'error') {
+                    Log::warning('OTP verification failed for user: ' . Auth::id(), ['otp_verification_response' => $otpVerificationResponse]);
+
+                    // Store the error message in session
+                    return redirect()->back()->withErrors(['otp' => $otpVerificationResponse['message']]);
+                }
+            } else {
+                Log::info('Mobile number has not changed, skipping OTP verification for user: ' . Auth::id());
             }
 
             // Log before updating the profile
@@ -70,47 +72,38 @@ class ProfileController extends Controller
             if ($user->save()) {
                 Log::info('Profile updated successfully for user: ' . Auth::id());
 
-                return response()->json([
-                    'status' => 'success',
-                    'status_code' => 200,
-                    'msg' => 'Profile updated successfully!',
-                ]);
+                // Store success message in session
+                return redirect()->back()->with('success', 'Profile updated successfully!');
             } else {
                 Log::error('Failed to save profile for user: ' . Auth::id());
 
-                return response()->json([
-                    'status' => 'error',
-                    'status_code' => 500,
-                    'msg' => 'Failed to update the profile. Please try again later.'
-                ]);
+                // Store error message in session
+                return redirect()->back()->withErrors(['general' => 'Failed to update the profile. Please try again later.']);
             }
         } catch (ValidationException $e) {
             Log::error('Validation errors for user: ' . Auth::id(), ['errors' => $e->errors()]);
 
-            return response()->json([
-                'status' => 'error',
-                'status_code' => 422,
-                'msg' => 'Validation errors occurred.',
-                'errors' => $e->errors()
-            ]);
+            // Store validation errors in session
+            return redirect()->back()->withErrors($e->errors());
         } catch (\Exception $e) {
             Log::error('Unexpected error during profile update for user: ' . Auth::id(), ['exception' => $e->getMessage()]);
 
-            return response()->json([
-                'status' => 'error',
-                'status_code' => 500,
-                'msg' => 'An unexpected error occurred. Please try again.'
-            ]);
+            // Store unexpected error message in session
+            return redirect()->back()->withErrors(['general' => 'An unexpected error occurred. Please try again.']);
         }
     }
+
+
 
     // The method to check if the mobile number is already in use
     public function isMobileNumberInUse(Request $request)
     {
         Log::info('Checking if mobile number is in use: ' . $request->destination);
 
-        // Find user with this mobile number
-        $isInUse = User::where('mobile', $request->destination)->exists();
+        // Find if the mobile number exists for another user
+        $isInUse = User::where('mobile', $request->destination)
+            ->where('id', '!=', auth()->id()) // Ensure it's not the same user
+            ->exists(); // Use exists to check if a record exists
 
         if ($isInUse) {
             Log::info('Mobile number is already in use: ' . $request->destination);
@@ -128,4 +121,5 @@ class ProfileController extends Controller
             'message' => 'This mobile number is available.',
         ]);
     }
+
 }

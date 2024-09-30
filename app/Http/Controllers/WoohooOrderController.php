@@ -329,7 +329,7 @@ class WoohooOrderController extends Controller
     public function sendOrderFailureMail()
     {
         // Fixed recipient email
-        $senderEmail = 'it@amazepys.in';
+        $senderEmail = 'it@amazepays.in';
 
         // Define the email content for the order failure notification
         $emailContent = "Your payment was successful, but the order has failed.";

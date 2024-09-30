@@ -47,26 +47,26 @@ use App\Http\Controllers\{
 
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
-    $namespacePrefix = '\\'.config('voyager.controllers.namespace').'\\';
+    $namespacePrefix = '\\' . config('voyager.controllers.namespace') . '\\';
 
     // Route::resource('/cc-avenue-payment', 'VoyagerCcAvenueController');
     // Route::get('/import-data', [DocumentController::class, 'importDocument']);
-   Route::group(['middleware' => ['admin.user']], function() use ($namespacePrefix){
-    Route::view('/upload-document', 'documentUpload');
-    event(new RoutingAdmin());
+    Route::group(['middleware' => ['admin.user']], function () use ($namespacePrefix) {
+        Route::view('/upload-document', 'documentUpload');
+        event(new RoutingAdmin());
 
-    Route::post('/upload-data', [DocumentController::class, 'uploadData'])->name('uploadData');
+        Route::post('/upload-data', [DocumentController::class, 'uploadData'])->name('uploadData');
 
-    Route::get('download-product-details', [ProductDetailsExportController::class, 'export'])->name('download-product-details');
+        Route::get('download-product-details', [ProductDetailsExportController::class, 'export'])->name('download-product-details');
 
-    Route::match(['get', 'post'], '/voyager/bearer-token', [VoyagerGenerateBearerTokenController::class, 'generateBearerToken'])->name('voyager.bearerToken');
-    Route::match(['get', 'post'], '/voyager/get-category', [VoyagerGetCategoryController::class, 'getCategory'])->name('voyager.getCategory');
-    Route::match(['get', 'post'], '/voyager/fetch-product-list', [VoyagerFetchProductListController::class, 'fetchProductList'])->name('voyager.productList');
-    Route::match(['get', 'post'], '/voyager/fetch-product-data', [VoyagerFetchProductDataController::class, 'fetchProductData'])->name('voyager.fetchProductData');
-    // Route::get('admin/import-product-discount',  [VoyagerProductDiscountImportController::class, 'import'])->name('import-product-discount');
+        Route::match(['get', 'post'], '/voyager/bearer-token', [VoyagerGenerateBearerTokenController::class, 'generateBearerToken'])->name('voyager.bearerToken');
+        Route::match(['get', 'post'], '/voyager/get-category', [VoyagerGetCategoryController::class, 'getCategory'])->name('voyager.getCategory');
+        Route::match(['get', 'post'], '/voyager/fetch-product-list', [VoyagerFetchProductListController::class, 'fetchProductList'])->name('voyager.productList');
+        Route::match(['get', 'post'], '/voyager/fetch-product-data', [VoyagerFetchProductDataController::class, 'fetchProductData'])->name('voyager.fetchProductData');
+        // Route::get('admin/import-product-discount',  [VoyagerProductDiscountImportController::class, 'import'])->name('import-product-discount');
 
-    Route::get('/download-order-sheet', [VoyagerOrderExportController::class, 'export'])->name('downloadOrderSheet');
-});
+        Route::get('/download-order-sheet', [VoyagerOrderExportController::class, 'export'])->name('downloadOrderSheet');
+    });
 });
 
 
@@ -74,20 +74,20 @@ Route::get('logout', [UserPanelController::class, 'userLogOut'])->name('userLogO
 Route::get('/', [UserPanelController::class, 'homePage'])->name('home');
 
 // Route to handle redirection based on authentication status
-Route::get('/redirect-based-on-auth', [ProductSlugController::class, 'redirectBasedOnAuth'])->name('redirect-based-on-auth');
+// Route::get('/redirect-based-on-auth', [ProductSlugController::class, 'redirectBasedOnAuth'])->name('redirect-based-on-auth');
 
 
 // Route to handle redirection based on authentication
-Route::get('/gift-product/{slug}', [ProductPageController::class, 'handleGiftRedirect'])->name('giftProductBySlug');
+// Route::get('/gift-product/{slug}', [ProductPageController::class, 'handleGiftRedirect'])->name('giftProductBySlug');
 
 Route::get('/product/{slug}', [ProductSlugController::class, 'getProductBySlug'])->name('get-product-by-slug');
 
-Route::get('/product-category', [ProductCategoryController::class, 'getProductCategory'])->name('get-product-category');
+// Route::get('/product-category', [ProductCategoryController::class, 'getProductCategory'])->name('get-product-category');
 
 
-Route::get('/productPage/{id}', function () {
-    return view('userpanel/productPage_old');
-})->name('productPage');
+// Route::get('/productPage/{id}', function () {
+//     return view('userpanel/productPage_old');
+// })->name('productPage');
 
 
 
@@ -100,6 +100,7 @@ Route::get('/refund-policy', function () {
 Route::group(['middleware' => 'guest'], function () {
     Route::post('/user-registration', [UserPanelController::class, 'userRegistration'])->name('user-registration');
     Route::post('/user-login', [UserPanelController::class, 'userLogin'])->name('user-login');
+
     Route::get('/unauthorized', function () {
         return view('unauthorized');
     })->name('login');
@@ -110,24 +111,41 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/user-logout', [UserPanelController::class, 'userLogOut'])->name('user-logout');
     Route::post('/apply-coupan', [UserPanelController::class, 'applyCoupan'])->name('apply-coupan');
 
+    Route::post('/payment-process', [CCAvenueController::class, 'processPayment'])->name('payment-process');
+    Route::get('/my-order', [MyOrderController::class, 'displayOrder'])->name('my-order');
+
     Route::get('/change-password', function () {
         return view('userpanel/change-password');
     })->name('change-password');
-    Route::get('/my-order', [MyOrderController::class, 'displayOrder'])->name('my-order');
-
-    Route::post('/payment-process', [CCAvenueController::class, 'processPayment'])->name('payment-process');
 
 
-Route::post('/payment-cancel', [CCAvenueController::class, 'handlePaymentCancellation'])->name('payment-cancel');
+    Route::post('/check-mobile-number', [ProfileController::class, 'isMobileNumberInUse'])->name('check-mobile-number');
 
-Route::post(
-    '/response_ccavenue',
-    [CCAvenueController::class, 'responseCcavenue']
-)->name('response_ccavenue');
 
-Route::post('/update-profile', [ProfileController::class, 'update'])->name('update-profile');
-Route::post('/card-details', [ViewCardDetailsController::class, 'index'])->name('view-card-details');
-Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'])->name('woohoo.createOrder');
+    Route::post('/payment-cancel', [CCAvenueController::class, 'handlePaymentCancellation'])->name('payment-cancel');
+
+
+    Route::post('/update-profile', [ProfileController::class, 'updateProfile'])->name('update-profile');
+    Route::post('/card-details', [ViewCardDetailsController::class, 'index'])->name('view-card-details');
+
+
+
+
+    Route::post('/profile-update-send-otp', [SmsController::class, 'profileUpdateSendOtp'])->name('profile-update-send-otp');
+    Route::post('/profile-update-verify-otp', [ProfileController::class, 'profileUpdateVerifyOtp'])->name('profile-update-verify-otp');
+
+    Route::match(['get', 'post'], '/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
+
+    // Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('placeOrder');
+
+
+    Route::post('/update-session-data', [ProductPageController::class, 'updateSessionData'])->name('updateSessionData');
+
+
+
+    Route::post('/save-gift-card-form-values', [ProductPageController::class, 'saveGiftCardFormValues'])
+        ->name('saveGiftCardFormValues');
+
 
 });
 
@@ -152,18 +170,6 @@ Route::get('/privacy-policy', function () {
 Route::get('/all_transaction', function () {
     return view('userpanel/all_transaction');
 });
-Route::match(['get', 'post'], '/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
-
-// Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('placeOrder');
-
-
-Route::post('/update-session-data', [ProductPageController::class, 'updateSessionData'])->name('updateSessionData');
-
-
-
-Route::post('/save-gift-card-form-values', [ProductPageController::class, 'saveGiftCardFormValues'])
-    ->name('saveGiftCardFormValues');
-
 
 
 Route::post('/send-sms', [SmsController::class, 'loginWithOtp'])->name('send-sms');
@@ -186,7 +192,7 @@ Route::view('/gift', 'layouts.giftmail');
 //     return response()->json(['message' => 'Route not found'], 404);
 // });
 
-Route::get('/404', function(){
+Route::get('/404', function () {
     abort(404);
 })->name('404');
 
@@ -198,12 +204,17 @@ Route::get('/profile', function () {
 
 
 
-
-
-
 Route::get('/unauthenticated', function () {
     $message = session('message', 'You are not authenticated.');
     return redirect()->route('error', ['message' => $message]);
 })->name('unauthenticated')->middleware('web');
 
 
+
+Route::post(
+    '/response_ccavenue',
+    [CCAvenueController::class, 'responseCcavenue']
+)->name('response_ccavenue');
+
+
+Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'])->name('woohoo.createOrder');

@@ -62,7 +62,7 @@
                         <form class="form-inline my-2 my-lg-0 flex-grow-1 mr-3" action="{{ route('search') }}"
                             method="GET">
                             <div class="input-group w-100">
-                                <input type="text" id="search" class="form-control ml-5"
+                                <input type="text"  class="form-control ml-5"
                                     placeholder="Search here..." name="query" required>
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="submit">
@@ -158,7 +158,7 @@
                             <form class="form-inline my-2 my-lg-0 ml-lg-3" action="{{ route('search') }}"
                                 method="GET">
                                 <div class="input-group">
-                                    <input type="text" id="search" class="form-control form-control-sm"
+                                    <input type="text"  class="form-control form-control-sm"
                                         placeholder="Search here..." name="query" required>
                                     <div class="input-group-append">
                                         <button class="btn btn-outline-secondary btn-sm" type="submit">

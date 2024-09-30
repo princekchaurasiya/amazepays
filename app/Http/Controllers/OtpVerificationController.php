@@ -21,6 +21,8 @@ class OtpVerificationController extends Controller
             Log::info('Attempting OTP verification for login', ['mobile' => $mobileNumber, 'otp' => $otp]);
             $verificationResult = $this->VerifyOtp($mobileNumber, $otp);
 
+            Log::info('OTP verification result', $verificationResult);
+
             if ($verificationResult['status'] === 'success') {
                 $user = User::where('mobile', $mobileNumber)->first();
 
@@ -34,7 +36,6 @@ class OtpVerificationController extends Controller
             }
 
             return response()->json($verificationResult);
-
         } catch (\Exception $e) {
             Log::error('Error during login OTP verification', ['error' => $e->getMessage()]);
             return response()->json(['status' => 'error', 'message' => 'An error occurred during verification.']);
@@ -51,6 +52,8 @@ class OtpVerificationController extends Controller
             Log::info('Attempting OTP verification for registration', ['mobile' => $mobileNumber, 'otp' => $otp]);
             $verificationResult = $this->VerifyOtp($mobileNumber, $otp);
 
+            Log::info('OTP verification result', $verificationResult);
+
             if ($verificationResult['status'] === 'success') {
                 // Create a new user record after successful OTP verification
                 $user = User::create([
@@ -63,20 +66,36 @@ class OtpVerificationController extends Controller
             }
 
             return response()->json($verificationResult);
-
         } catch (\Exception $e) {
             Log::error('Error during registration OTP verification', ['error' => $e->getMessage()]);
             return response()->json(['status' => 'error', 'message' => 'An error occurred during registration.']);
         }
     }
 
+    // Profile update verification of OTP
+    public function profileUpdateVerifyOtp($mobileNumber, $otp)
+    {
+        Log::info("in profileUpdateVerifyOtp function with mobile number = " . $mobileNumber . " & otp = " . $otp);
+        try {
+            Log::info('profileUpdateVerifyOtp function Attempting OTP verification for profile update', ['mobile' => $mobileNumber, 'otp' => $otp]);
+            return $this->VerifyOtp($mobileNumber, $otp);
+        } catch (\Exception $e) {
+            Log::error('Error during profile update OTP verification', ['error' => $e->getMessage()]);
+            return ['status' => 'error', 'message' => 'An error occurred during profile update verification.'];
+        }
+    }
+
     // OTP verification logic
     public function VerifyOtp($mobileNumber, $otp)
     {
+
+        Log::info("in VerifyOtp function with mobile number = " . $mobileNumber . " & otp = " . $otp);
+
         try {
             Log::info('Starting OTP verification', ['mobile' => $mobileNumber]);
 
             $latestOtpEntry = Otp::where('mobile_number', $mobileNumber)->latest()->first();
+            Log::info('Latest OTP entry found', ['otp_entry' => $latestOtpEntry]);
 
             if (!$latestOtpEntry) {
                 Log::error('No OTP entry found for mobile number', ['mobile' => $mobileNumber]);
@@ -84,6 +103,7 @@ class OtpVerificationController extends Controller
             }
 
             $expirationTime = Carbon::parse($latestOtpEntry->created_at)->addMinutes(5);
+            Log::info('OTP expiration time', ['expiration_time' => $expirationTime]);
 
             if (Carbon::now()->greaterThan($expirationTime)) {
                 Log::warning('OTP has expired', ['mobile' => $mobileNumber]);
@@ -97,7 +117,6 @@ class OtpVerificationController extends Controller
                 Log::error('Invalid OTP entered', ['mobile' => $mobileNumber]);
                 return ['status' => 'error', 'message' => 'Invalid OTP'];
             }
-
         } catch (\Exception $e) {
             Log::error('Error during OTP verification process', ['error' => $e->getMessage()]);
             return ['status' => 'error', 'message' => 'An error occurred during OTP verification.'];

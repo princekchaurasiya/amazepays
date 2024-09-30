@@ -6,9 +6,9 @@
 -------------------------------------------------------------*/
 
 /*-----------------------------------------------------------
-    Table of Content: 
+    Table of Content:
 
-    
+
     2. Bootstrap CSS
     1. Abstract
     3. Base
@@ -16,9 +16,9 @@
     5. Pages
     7. Header
     8. Footer
-    
-    
-    
+
+
+
 */
 @import "./abstract/abstract";
 @import "./../vendor/bootstrap/scss/bootstrap.scss";
@@ -31,10 +31,10 @@
 
 body {font-family: 'Roboto', sans-serif;}
 .center-div {
-    max-width: 1500px; 
+    max-width: 1500px;
     margin: 0 auto;
 }
- 
+
 
 
 @media (min-width: 992px) {
@@ -55,9 +55,9 @@ body {font-family: 'Roboto', sans-serif;}
     .p-md--2 {padding: 0.5rem !important;}
     .p-md-0 {padding: 0;}
 
-    .pt-lg--7 {padding-top: 75px !important; } 
+    .pt-lg--7 {padding-top: 75px !important; }
     .pb-lg--7 {padding-bottom: 75px !important; }
-    .pt-lg--10 {padding-top: 125px !important; } 
+    .pt-lg--10 {padding-top: 125px !important; }
 
 }
 @media (min-width: 1600px) {
@@ -66,12 +66,12 @@ body {font-family: 'Roboto', sans-serif;}
 }
 @media (max-width: 991px) {
     .md-mb25 {
-        margin-bottom: 25px; 
+        margin-bottom: 25px;
     }
     .footer-wrapper p {
         width: 100%;
     }
-     
+
     .d-block-md {display: block !important; }
     .d-none-md {display: none !important; }
 
@@ -84,11 +84,11 @@ body {font-family: 'Roboto', sans-serif;}
 @media (max-width: 768px) {
     .col-xs-6 { flex: 0 0 50%; max-width: 50%; }
     .col-xs-12 { flex: 0 0 100%; max-width: 100%; }
-    
+
     .col-xs-6 {flex: 0 0 50%;max-width: 50%; }
     .col-xs-3 {flex: 0 0 25%;max-width: 25%; }
     .col-xs-9 {flex: 0 0 75%;max-width: 75%; }
-    
+
     .ptb-sm-3 {padding-top: 10px; padding-bottom: 10px; }
     .post-content.pt-7.pb-7 {padding-bottom: 50px; padding-top: 50px; }
     .mt-md--3 {margin-top: 10px;}

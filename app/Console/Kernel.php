@@ -26,7 +26,7 @@ class Kernel extends ConsoleKernel
 
         // $schedule->command('generate:bearerToken')->weekly()->mondays()->at('01:00');
 
-        $schedule->command('generate:bearerToken')->everyMinute();
+        $schedule->command('generate:bearerToken')->everyFiveMinutes();
 
         $schedule->command('fetch:categoryData')->monthlyOn(4, '02:30');
         // $schedule->command('fetch:categoryData')->everyMinute();

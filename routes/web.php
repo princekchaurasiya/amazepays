@@ -66,6 +66,10 @@ Route::group(['prefix' => 'admin'], function () {
         // Route::get('admin/import-product-discount',  [VoyagerProductDiscountImportController::class, 'import'])->name('import-product-discount');
 
         Route::get('/download-order-sheet', [VoyagerOrderExportController::class, 'export'])->name('downloadOrderSheet');
+
+        // In routes/web.php
+Route::get('cactus/logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
+
     });
 });
 
@@ -218,3 +222,5 @@ Route::post(
 
 
 Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'])->name('woohoo.createOrder');
+
+

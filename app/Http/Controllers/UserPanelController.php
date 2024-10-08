@@ -51,7 +51,9 @@ class UserPanelController extends Controller
             // ->orderByRaw('IFNULL(priority, 999999) ASC') // Sort by priority in ascending order if null treat as 99999
             // ->get();
 
-            $allProducts = QsProduct::orderByRaw('IFNULL(priority, 999999) ASC')->get();
+            $allProducts = QsProduct::where('show_product', true)
+            ->orderByRaw('IFNULL(priority, 999999) ASC') // Sort by priority in ascending order, treating nulls as 99999
+            ->get();
 
 
             // Log::info('Fetched all products', ['allProducts' => $allProducts]);
@@ -183,10 +185,12 @@ class UserPanelController extends Controller
     public function viewAllProduct()
     {
         Log::info('viewAllProduct method called');
-        $viewProds = QsProduct::all();
-        Log::info('Fetched all products', ['viewProds' => $viewProds]);
+        // Fetch all products that are visible (show_product = true)
+        $viewProds = QsProduct::where('show_product', true)->get();
+        Log::info('Fetched all visible products', ['viewProds' => $viewProds]);
         return $viewProds;
     }
+
 
     public function checkOut(Request $request, $sku)
     {

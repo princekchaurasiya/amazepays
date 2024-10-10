@@ -17707,6 +17707,67 @@ body {
 
 }
 
-.carousel-control-next, .carousel-control-prev{
+.carousel-control-next,
+.carousel-control-prev {
     z-index: 0 !important;
+}
+
+
+.shop-category-circle {
+    border-radius: 50% !important;
+    height: 100px;
+    width: 100px !important;
+    /* Use !important with caution */
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0px;
+    /* Padding might affect the circular shape */
+    border: 1px solid #d5d5d5;
+    overflow: hidden;
+    /* Ensure no overflow from the image */
+    border: 4px solid #d5d5d5;
+}
+
+.shop-category-circle-image {
+    width: 100%;
+    /* Fill the width of the circle */
+    height: auto;
+    /* Maintain aspect ratio */
+
+    border-radius: 50% !important;
+}
+
+
+.custom-prev,
+.custom-next {
+    color: white; /* Change this to your desired color */
+    background-color: rgba(0, 0, 0, 0.5); /* Optional semi-transparent background */
+    border-radius: 50%; /* Optional: rounded corners */
+    padding: 10px; /* Optional: padding */
+}
+
+.custom-prev:hover,
+.custom-next:hover {
+    background-color: rgba(0, 0, 0, 0.7); /* Darker background on hover */
+}
+
+/* Optional: Adjust positioning of arrows */
+.custom-prev {
+    position: absolute;
+    top: 50%;
+    left: -50px;
+    /* Adjust this as needed */
+    transform: translateY(-50%);
+    vertical-align: middle;
+}
+
+.custom-next {
+    position: absolute;
+    top: 50%;
+    right: -50px;
+    /* Adjust this as needed */
+    transform: translateY(-50%);
+    vertical-align: middle;
 }

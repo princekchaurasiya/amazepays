@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use App\Models\QsOrder;
 use App\Models\QsProduct;
@@ -7,221 +9,170 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+
 class ProductPageController extends Controller
 {
     public function saveGiftCardFormValues(Request $request)
     {
-
-
-        // Get all form data
         $formData = $request->all();
-
-        // Save form data to the session
         session(['giftCardFormValues' => $formData]);
 
-        // Log the form data with beautification
-        Log::info('444');
-        Log::info('****** Form Data ******');
-        Log::info(json_encode($formData, JSON_PRETTY_PRINT));
-        Log::info('*************************');
-        Log::info('55');
+        Log::info('Saving gift card form values');
+        Log::info('Form Data:', $formData);
 
         return response()->json(['status' => 'success']);
     }
-    // public function storePayNowData(Request $request, $slug)
-    // {
-
-
-
-
-    //     $product = QsProduct::where('slug', $slug)->first();
-
-
-
-    //     // Check if product exists
-    //     if (!$product) {
-    //         return redirect()->back()->with('error', 'Product not found.');
-    //     }
-
-    //     // Retrieve the SKU from the product
-    //     $sku = $product->sku;
-
-
-
-    //     $checkoutData = session('checkout_data', []);
-    //     Session::put('selected_product_slug', $slug);
-    //     $validator = Validator::make($request->all(), ['quantity' => 'required|integer|min:1|max:10', 'gift_send_option' => 'required|string', 'delivery_mode' => 'required|string', 'denomination' => 'required',], ['quantity.min' => 'The quantity must be at least :min.', 'quantity.max' => 'The quantity cannot exceed :max.',]);
-    //     if (!Auth::check()) {
-    //         return redirect()->route('login');
-    //     }
-    //     if ($validator->fails()) {
-    //         return redirect()->back()->withErrors($validator)->withInput();
-    //     }
-    //     Log::info(session()->all());
-    //     $qsOrder = new QsOrder();
-    //     $qsOrder->user_id = Auth::id();
-
-    //     Log::info('QsOrder data before saving:', $qsOrder->toArray());
-
-
-    //     $qsOrder->denomination = $request->denomination;
-    //     $qsOrder->quantity = $request->quantity;
-    //     $qsOrder->grand_payable_amount = $request->quantity * $request->denomination;
-    //     $qsOrder->gift_send_option = $request->gift_send_option;
-    //     $qsOrder->delivery_mode = $request->delivery_mode;
-    //     $qsOrder->receiver_name = $request->receiver_name;
-    //     $qsOrder->receiver_email = $request->receiver_email;
-    //     $qsOrder->receiver_mobile = $request->receiver_mobile;
-    //     $qsOrder->receiver_msg = $request->receiver_msg;
-
-    //     Log::info('SKU:', ['sku' => $product->sku]);
-
-    //     $qsOrder->sku = $product->sku;
-    //     $qsOrder->save();
-    //     Log::info('QsOrder data after saving:', $qsOrder->toArray());
-
-
-    //     $qsOrder->refno = $this->generateUniqueReferenceNumber($qsOrder->id);
-    //     $qsOrder->save();
-    //     session()->put('session_qs_order_id', $qsOrder->id);
-    //     session()->put('session_refno', $qsOrder->refno);
-    //     $qsProd = QsProduct::where('slug', $slug)->first();
-
-    //     if (!$qsProd) {
-    //         abort(404);
-    //     }
-
-    //     $qsProd['prodData'] = $request->all();
-
-    //     $qsProd['currency'] = json_decode($qsProd['currency']);
-    //     $qsProd['images'] = json_decode($qsProd->images);
-    //     return view('userpanel.checkout', compact('qsProd', 'checkoutData'));
-    // }
 
     public function storePayNowData(Request $request, $slug)
-{
-    // Retrieve the product based on the slug
-    $product = QsProduct::where('slug', $slug)->firstOrFail();
+    {
+        Log::info('storePayNowData initiated with slug: ' . $slug);
 
-    $checkoutData = session('checkout_data', []);
-    // Decode the price attribute if it's a JSON string
-    $product->price = json_decode($product->price);
+        // Fetch product by slug
+        $product = QsProduct::where('slug', $slug)->firstOrFail();
 
-    // Define validation rules
-    $rules = [
-        'denomination' => [
-            'required',
-            function ($attribute, $value, $fail) use ($product) {
-                // Check if price is an object or array
-                if (is_object($product->price)) {
-                    // If type is SLAB, check if the value exists in denominations
-                    if ($product->price->type === 'SLAB') {
-                        if (!in_array($value, $product->price->denominations)) {
+
+        // Retrieve the checkout session data if available
+        $checkoutData = session('checkout_data', []);
+        Log::info('Retrieved checkout data from session: ', $checkoutData);
+
+        // Validate the product price as either SLAB or RANGE
+        $product->price = json_decode($product->price);
+        Log::info('Decoded product price: ', ['price' => $product->price]);
+
+        // Validation rules for the form
+        $rules = [
+            'denomination' => [
+                'required',
+                function ($attribute, $value, $fail) use ($product) {
+                    Log::info('Validating denomination', ['denomination' => $value]);
+                    if (is_object($product->price)) {
+                        if ($product->price->type === 'SLAB' && !in_array($value, $product->price->denominations)) {
+                            Log::warning('Invalid denomination value', ['denomination' => $value]);
                             $fail('Invalid denomination value.');
-                        }
-                    }
-                    // If type is RANGE, check if value is within the min-max range
-                    if ($product->price->type === 'RANGE') {
-                        if ($value < $product->minPrice || $value > $product->maxPrice) {
+                        } elseif ($product->price->type === 'RANGE' && ($value < $product->minPrice || $value > $product->maxPrice)) {
+                            Log::warning('Denomination out of range', ['denomination' => $value, 'minPrice' => $product->minPrice, 'maxPrice' => $product->maxPrice]);
                             $fail("The denomination must be between ₹{$product->minPrice} and ₹{$product->maxPrice}.");
                         }
+                    } else {
+                        Log::error('Price information is not available for the product');
+                        $fail('Price information is not available.');
                     }
-                } else {
-                    $fail('Price information is not available.');
-                }
-            },
-        ],
-        'quantity' => 'required|integer|min:1|max:10',
-        'gift_send_option' => 'required|in:send_as_gift,buy_for_self',
-        'receiver_name' => [
-            'nullable',
-            'required_if:gift_send_option,send_as_gift',
-            'string',
-            'max:255'
-        ],
-        'receiver_email' => [
-            'nullable',
-            'required_if:gift_send_option,send_as_gift',
-            'email'
-        ],
-        'receiver_mobile' => [
-            'nullable',
-            'required_if:gift_send_option,send_as_gift',
-            'digits:10'
-        ],
-        'receiver_msg' => 'nullable|string|max:500',
-    ];
+                },
+            ],
+            'quantity' => 'required|integer|min:1|max:10',
+            'gift_send_option' => 'required|in:send_as_gift,buy_for_self',
+            'receiver_name' => 'nullable|required_if:gift_send_option,send_as_gift|string|max:255',
+            'receiver_email' => 'nullable|required_if:gift_send_option,send_as_gift|email',
+            'receiver_mobile' => 'nullable|required_if:gift_send_option,send_as_gift|digits:10',
+            'receiver_msg' => 'nullable|string|max:500',
+        ];
 
-    // Static delivery_mode value
-    $request->merge(['delivery_mode' => 'both']);
+        // Merge additional request data
+        $request->merge(['delivery_mode' => 'both']);
+        Log::info('Merged delivery mode to request data.');
 
-    // Perform validation
-    $validator = Validator::make($request->all(), $rules);
+        // Validate the request input
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            Log::warning('Validation failed', ['errors' => $validator->errors()]);
+            return back()->withErrors($validator)->withInput();
+        }
 
-    if ($validator->fails()) {
-        return back()->withErrors($validator)->withInput();
+        // Calculate total purchases for the current month
+        $userId = Auth::id();
+        $sku = $product->sku;
+        Log::info("Calculating total purchases for user $userId and SKU $sku");
+
+        $totalPurchasesThisMonth = QsOrder::where('user_id', $userId)
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->where('created_at', '<=', now()->endOfMonth())
+            ->where('sku', $sku)
+            ->where('order_status', 'COMPLETE')
+            ->sum('grand_payable_amount');
+
+        Log::info('Total purchases this month:', ['total' => $totalPurchasesThisMonth]);
+
+        // Fetch the monthly purchase limit for the product
+        $monthlyPurchaseLimit = $product->sku_limits;
+        Log::info('Fetched monthly purchase limit:', ['limit' => $monthlyPurchaseLimit]);
+
+        // Calculate the remaining available limit
+        $remainingLimit = $monthlyPurchaseLimit - $totalPurchasesThisMonth;
+        Log::info('Calculated remaining limit:', ['remainingLimit' => $remainingLimit]);
+
+        // Check if the remaining limit is 0 or negative
+        if ($remainingLimit <= 0) {
+            $errorMessage = "You have exceeded your monthly purchase limit of ₹{$monthlyPurchaseLimit} for this product. You have an available limit of ₹0 this month that you can purchase.";
+            Log::warning('User exceeded monthly purchase limit.', ['remainingLimit' => $remainingLimit]);
+            return back()->withErrors(['message' => $errorMessage])->withInput();
+        }
+
+        // Calculate the grand payable amount for the current order
+        $grandPayableAmount = $request->quantity * $request->denomination;
+        Log::info('Calculated grand payable amount:', ['grandPayableAmount' => $grandPayableAmount]);
+
+        // Check if the current order exceeds the remaining limit
+        if ($grandPayableAmount > $remainingLimit) {
+            $errorMessage = "Your monthly purchase limit is ₹{$monthlyPurchaseLimit}, and you have already purchased ₹{$totalPurchasesThisMonth} this month. you can only purchase ₹{$remainingLimit} more this month.";
+            Log::warning('Order exceeds remaining limit.', ['remainingLimit' => $remainingLimit, 'attemptedAmount' => $grandPayableAmount]);
+            return back()->withErrors(['message' => $errorMessage])->withInput();
+        }
+
+        // Create a new order since the limit is not exceeded
+        Log::info('Creating a new order for user:', ['user_id' => Auth::id()]);
+        $qsOrder = new QsOrder();
+        $qsOrder->user_id = Auth::id();
+        $qsOrder->denomination = $request->denomination;
+        $qsOrder->quantity = $request->quantity;
+        $qsOrder->grand_payable_amount = $grandPayableAmount;
+        $qsOrder->gift_send_option = $request->gift_send_option;
+        $qsOrder->delivery_mode = 'both';
+        $qsOrder->receiver_name = $request->receiver_name;
+        $qsOrder->receiver_email = $request->receiver_email;
+        $qsOrder->receiver_mobile = $request->receiver_mobile;
+        $qsOrder->receiver_msg = $request->receiver_msg;
+        $qsOrder->save();
+
+        Log::info('Order saved successfully', ['order_id' => $qsOrder->id]);
+
+        // Generate reference number after saving the order
+        $qsOrder->refno = 'Amz' . $qsOrder->id;
+        $qsOrder->save();
+
+        Log::info('Generated reference number:', ['refno' => $qsOrder->refno]);
+
+        // Store order reference in session for further processing
+        session()->put('session_qs_order_id', $qsOrder->id);
+        session()->put('session_refno', $qsOrder->refno);
+
+        Log::info('Order ID and reference number stored in session.');
+
+        // Retrieve and prepare the product data for checkout
+        $qsProd = QsProduct::where('slug', $slug)->firstOrFail();
+        $qsProd['prodData'] = $request->all();
+        $qsProd['currency'] = json_decode($qsProd['currency']);
+        $qsProd['images'] = json_decode($qsProd->images);
+
+
+
+        // Render the checkout view with product and checkout data
+        return view('userpanel.checkout', compact('qsProd', 'checkoutData'));
     }
 
-    // Proceed with payment or further processing
-    $qsOrder = new QsOrder();
-    $qsOrder->user_id = Auth::id();
-    $qsOrder->denomination = $request->denomination;
-    $qsOrder->quantity = $request->quantity;
-    $qsOrder->grand_payable_amount = $request->quantity * $request->denomination;
-    $qsOrder->gift_send_option = $request->gift_send_option;
-    $qsOrder->delivery_mode = 'both'; // Set delivery mode to 'both'
-    $qsOrder->receiver_name = $request->receiver_name;
-    $qsOrder->receiver_email = $request->receiver_email;
-    $qsOrder->receiver_mobile = $request->receiver_mobile;
-    $qsOrder->receiver_msg = $request->receiver_msg;
-
-    $qsOrder->sku = $product->sku;
-    $qsOrder->save();
-
-    // Generate a unique reference number
-    $qsOrder->refno = $this->generateUniqueReferenceNumber($qsOrder->id);
-    $qsOrder->save();
-
-    // Store order information in the session
-    session()->put('session_qs_order_id', $qsOrder->id);
-    session()->put('session_refno', $qsOrder->refno);
-
-    // Retrieve the product again for the view
-    $qsProd = QsProduct::where('slug', $slug)->firstOrFail();
-    $qsProd['prodData'] = $request->all();
-    $qsProd['currency'] = json_decode($qsProd['currency']);
-    $qsProd['images'] = json_decode($qsProd->images);
-
-    // Redirect to checkout view with the product and order data
-    return view('userpanel.checkout', compact('qsProd', 'checkoutData'));
-}
-
-
-
-
-
-
-    private function generateUniqueReferenceNumber($orderId)
-    {
-        do {
-            $uniqueSuffix = substr(md5(uniqid(rand(), true)), 0, 8);
-            $referenceNumber = 'Amz' . $orderId . $uniqueSuffix;
-        } while (QsOrder::where('refno', $referenceNumber)->exists());
-        return $referenceNumber;
-    }
     public function updateSessionData(Request $request)
     {
-        Log::info('updateSessionData for product page called');
-        Log::info('Request data: ', $request->all());
+        Log::info('updateSessionData called with request data:', $request->all());
         $requestData = $request->all();
         session()->put('checkout_data', $requestData);
-        Log::info('Session data stored');
+        Log::info('Checkout data stored in session.');
         return response()->json(['message' => 'Session data updated successfully']);
     }
+
     public function showCheckoutForm()
     {
+        Log::info('showCheckoutForm called.');
         $checkoutData = session('checkout', []);
-        log::info('this is checkout data', $checkoutData);
+        Log::info('Checkout data retrieved from session:', $checkoutData);
         return view('checkout', compact('checkoutData'));
     }
 }

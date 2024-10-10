@@ -92,7 +92,7 @@
 
                                                         </div>
                                                         <span
-                                                        class="font-xssss fw-400 error-registerMobNumb error-message text-danger error-mobile"></span>
+                                                            class="font-xssss fw-400 error-registerMobNumb error-message text-danger error-mobile"></span>
 
 
                                                     </div>
@@ -537,8 +537,10 @@
             // OTP validation
             if (registerSendOtp.length === 0) {
                 status = false;
-                $(".error-registerOtp").text('Please enter the OTP to verify your mobile number').addClass('error-color');
-                $(".error-registerMobNumb").text('Please enter the OTP to verify your mobile number').addClass('error-color');
+                $(".error-registerOtp").text('Please enter the OTP to verify your mobile number').addClass(
+                    'error-color');
+                $(".error-registerMobNumb").text('Please enter the OTP to verify your mobile number').addClass(
+                    'error-color');
 
             }
 
@@ -603,7 +605,7 @@
                             if (key == 'registerOTP') {
                                 $('.error-registerOtp').text(value).addClass('error-color');
                             }
-                            if(key == 'mobile'){
+                            if (key == 'mobile') {
                                 $('.error-registerMobNumb').text(value).addClass('error-color');
                             }
                             $('#' + key).siblings('.error-message').text(value).addClass('error-color');
@@ -923,9 +925,9 @@
             $(this).hide();
 
             sendotp(destination);
-            setTimeout(function(){
-                            $(this).show();
-                            }, 30000);
+            setTimeout(function() {
+                $(this).show();
+            }, 30000);
 
 
         });

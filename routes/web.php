@@ -4,7 +4,10 @@ use Illuminate\Support\Facades\Route;
 use TCG\Voyager\Events\RoutingAdmin;
 
 use App\Http\Controllers\{
+    HomePageController,
     UserPanelController,
+    AmazepayCategoryController,
+    AmazepayBrandController,
     CommonController,
     PaymentController,
     MyOrderController,
@@ -68,14 +71,16 @@ Route::group(['prefix' => 'admin'], function () {
         Route::get('/download-order-sheet', [VoyagerOrderExportController::class, 'export'])->name('downloadOrderSheet');
 
         // In routes/web.php
-Route::get('cactus/logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
+        Route::get('cactus/logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
 
     });
 });
 
 
 Route::get('logout', [UserPanelController::class, 'userLogOut'])->name('userLogOut');
-Route::get('/', [UserPanelController::class, 'homePage'])->name('home');
+
+Route::get('/', [HomePageController::class, 'homePage'])->name('home');
+// Route::get('/', [UserPanelController::class, 'homePage'])->name('home');
 
 // Route to handle redirection based on authentication status
 // Route::get('/redirect-based-on-auth', [ProductSlugController::class, 'redirectBasedOnAuth'])->name('redirect-based-on-auth');
@@ -224,3 +229,6 @@ Route::post(
 Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'])->name('woohoo.createOrder');
 
 
+Route::get('/category/{slug}', [AmazepayCategoryController::class, 'show'])->name('categories.show');
+
+Route::get('/brand/{slug}', [AmazepayBrandController::class, 'show'])->name('brands.show');

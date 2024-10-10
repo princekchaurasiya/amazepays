@@ -5,6 +5,7 @@ class CryptoController extends Controller
 {
     public function encryptCCAvenue($plainText, $key)
     {
+
         $key = $this->hextobin(md5($key));
         $initVector = pack("C*", 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f);
         $openMode = openssl_encrypt($plainText, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $initVector);
@@ -13,6 +14,7 @@ class CryptoController extends Controller
     }
     public function decryptCCAvenue($encryptedText, $key)
     {
+
         $key = $this->hextobin(md5($key));
         $initVector = pack("C*", 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f);
         $encryptedText = $this->hextobin($encryptedText);
@@ -21,6 +23,7 @@ class CryptoController extends Controller
     }
     private function hextobin($hexString)
     {
+
         $length = strlen($hexString);
         $binString = "";
         $count = 0;

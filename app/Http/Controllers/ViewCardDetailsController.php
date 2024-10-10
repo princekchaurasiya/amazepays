@@ -18,7 +18,7 @@ class ViewCardDetailsController extends Controller
 
         // $cardData = json_decode(decrypt($orderData->cards, env('ENCRYPTION_KEY')), true);
 
-        \Log::info('Encryption Key: ' . env('ENCRYPTION_KEY'));
+        // \Log::info('Encryption Key: ' . env('ENCRYPTION_KEY'));
 
         $cardsData = json_decode(decrypt($orderData->cards, env('ENCRYPTION_KEY')));
 

@@ -6082,6 +6082,7 @@ input[type="submit"].btn-block {
 .nav-link {
     display: block;
     padding: 0.5rem 1rem;
+    font-weight: 700;
 }
 
 .nav-link:focus,
@@ -17346,7 +17347,8 @@ body {
 }
 
 .hot-deal-text {
-    color: #ff6601 !important;
+    color: #00000d !important;
+
 }
 
 .hot-deal-text-danger {
@@ -17354,7 +17356,7 @@ body {
 }
 
 .normalhr {
-    background-color: #01007f;
+    background-color: #000;
     width: 5.5rem;
     height: 4px;
     margin-top: 0;

@@ -92,7 +92,7 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping
         return [
 
 
-            Carbon::parse($order->created_at)->format('Y-m-d'),  // Order Date
+            Carbon::parse($order->created_at)->format('d-m-Y'),  // Order Date
             Carbon::parse($order->created_at)->format('H:i:s'),  // Order Time
             $order->woohoo_order_id ?? 'N/A',
             $order->refno ?? 'N/A',

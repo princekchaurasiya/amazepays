@@ -26,13 +26,12 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping
             ->select([
                 'qs_orders.*',
                 'qs_products.name as product_name',
-                'qs_products.discount_percentage as discount_percentage'
+                'qs_products.discount_percentage as discount_percentage',
+                'qs_products.CGST',  // Include CGST
+                'qs_products.SGST',  // Include SGST
+                'qs_products.IGST'    // Include IGST
             ])
-            ->join('qs_products', 'qs_orders.sku', '=', 'qs_products.sku')
-            ->where('qs_orders.order_status', 'COMPLETE')
-            ->whereNotNull('qs_orders.order_status');
-
-
+            ->join('qs_products', 'qs_orders.sku', '=', 'qs_products.sku');
 
 
         $filter = Request::get('filter');
@@ -64,7 +63,9 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping
         return [
             'Order Date',
             'Order Time',
-            'Order Number',
+            'Woohoo Order Number',
+            'Order Ref Number',
+            'Order Status',
             'Voucher Type',
             'Invoice Number',
             'Customer Name',
@@ -77,36 +78,41 @@ class OrdersExport implements FromQuery, WithHeadings, WithMapping
             'Discount Percentage',
             'Discount Amount',
             'Payable Amount',
+            'CGST',                     // Add CGST to headings
+            'SGST',                     // Add SGST to headings
+            'IGST',                     // Add IGST to headings
             'Payment Id'
         ];
     }
 
     public function map($order): array
-{
-    // Format the created_at date and time
-    $orderDate = Carbon::parse($order->created_at)->format('Y-m-d'); // Order Date
-    $orderTime = Carbon::parse($order->created_at)->format('H:i:s'); // Order Time
+    {
 
-    return [
-        $orderDate,                                              // Order Date
-        $orderTime,                                             // Order Time
-        $order->refno ?? 'N/A',                       // Order Number (use 'N/A' if null)
-        'B2C',                                                  // Voucher Type
-        $order->invoice_number ?? 'N/A',                        // Invoice Number (use 'N/A' if null)
-        $order->sender_first_name ?? 'N/A',                     // Customer Name (use 'N/A' if null)
-        $order->gst_number ?? 'N/A',                            // Customer GSTIN (use 'N/A' if null)
-        $order->sender_state ?? 'N/A',                          // State (use 'N/A' if null)
-        $order->product_name,                                   // Product Name
-        $order->quantity,                                       // Quantity
-        $order->denomination,                                   // Denomination
-        $order->grand_payable_amount,                           // Total Amount
-        $order->discount_percentage . '%',                      // Discount Percentage
-        $order->discounted_amount_value ?? 0,                  // Discount Amount (use 0 if null)
-        $order->amount_payable_after_discount ?? 0,            // Payable Amount (use 0 if null)
-        $order->id                                             // Payment Id
-    ];
+
+        return [
+
+
+            Carbon::parse($order->created_at)->format('Y-m-d'),  // Order Date
+            Carbon::parse($order->created_at)->format('H:i:s'),  // Order Time
+            $order->woohoo_order_id ?? 'N/A',
+            $order->refno ?? 'N/A',
+            $order->order_status ?? 'N/A',                                 // Order Number
+            'B2C',                                               // Voucher Type
+            $order->invoice_number ?? 'N/A',                              // Invoice Number
+            $order->sender_first_name ?? 'N/A',                 // Customer Name
+            $order->gst_number ?? 'N/A',                         // Customer GSTIN
+            $order->sender_state ?? 'N/A',                       // State
+            $order->product_name,                                // Product Name
+            $order->quantity,                                    // Quantity
+            $order->denomination,                                // Denomination
+            $order->grand_payable_amount,                        // Total Amount
+            $order->discount_percentage . '%',                   // Discount Percentage
+            $order->discounted_amount_value ?? 'N/A',            // Discount Amount
+            $order->amount_payable_after_discount ?? 'N/A',      // Payable Amount
+            $order->CGST ?? 'N/A',                               // CGST
+            $order->SGST ?? 'N/A',                               // SGST
+            $order->IGST ?? 'N/A',                               // IGST
+            $order->id                                           // Payment Id
+        ];
+    }
 }
-}
-
-
-

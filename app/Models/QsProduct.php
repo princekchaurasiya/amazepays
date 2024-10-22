@@ -10,7 +10,9 @@ class QsProduct extends Model
 
     use HasFactory;
     protected $table = 'qs_products';
-    protected $fillable = ['discount_percentage'];
+    protected $fillable = ['discount_percentage', 'CGST',
+        'SGST',
+        'IGST',];
 
     // Define the relationship with QsCategory
     public function amazepayCategories()

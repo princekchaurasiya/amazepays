@@ -48,22 +48,20 @@
                     </button>
                     <div class="collapse navbar-collapse" id="navbarNavDropdown">
                         <ul class="navbar-nav mr-auto">
-                            <li class="nav-item active">
+                            <li class="nav-item {{ Request::is('/') ? 'active' : '' }}">
                                 <a class="nav-link" href="/">Home</a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item {{ Request::is('about') ? 'active' : '' }}">
                                 <a class="nav-link" href="{{ route('about') }}">About</a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item {{ Request::is('contact-us') ? 'active' : '' }}">
                                 <a class="nav-link" href="{{ route('contact-us') }}">Contact</a>
                             </li>
                         </ul>
 
-                        <form class="form-inline my-2 my-lg-0 flex-grow-1 mr-3" action="{{ route('search') }}"
-                            method="GET">
+                        <form class="form-inline my-2 my-lg-0 flex-grow-1 mr-3" action="{{ route('search') }}" method="GET">
                             <div class="input-group w-100">
-                                <input type="text"  class="form-control ml-5"
-                                    placeholder="Search here..." name="query" required>
+                                <input type="text" class="form-control ml-5" placeholder="Search here..." name="query" required>
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="submit">
                                         <i class="fas fa-search"></i>
@@ -80,24 +78,26 @@
                                         {{ Auth::user()->name }}
                                     </button>
                                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <a class="dropdown-item" href="{{ route('profile') }}"><i
-                                                class="ti-user font-sm"></i> Profile</a>
-                                        <a class="dropdown-item" href="{{ route('my-order') }}"><i
-                                                class="fa-sharp fa-solid fa-cart-shopping"></i> My Order</a>
-                                        <a class="dropdown-item" href="{{ route('userLogOut') }}"><i
-                                                class="fa-sharp fa-solid fa-power-off"></i> Logout</a>
+                                        <a class="dropdown-item" href="{{ route('profile') }}">
+                                            <i class="ti-user font-sm"></i> Profile
+                                        </a>
+                                        <a class="dropdown-item" href="{{ route('my-order') }}">
+                                            <i class="fa-sharp fa-solid fa-cart-shopping"></i> My Order
+                                        </a>
+                                        <a class="dropdown-item" href="{{ route('userLogOut') }}">
+                                            <i class="fa-sharp fa-solid fa-power-off"></i> Logout
+                                        </a>
                                     </div>
                                 </div>
                             @else
-                                <a href="#"
-                                    class="btn navbar-btn bg-dark fw-500 text-white font-xsss login-button"
-                                    data-toggle="modal" data-target="#Modallogin">Login</a>
-                                <a href="#"
-                                    class="btn navbar-btn bg-current fw-500 text-white font-xsss register-form register-button"
-                                    data-toggle="modal" data-target="#ModalregisterD">Register</a>
+                                <a href="#" class="btn navbar-btn bg-dark fw-500 text-white font-xsss login-button"
+                                   data-toggle="modal" data-target="#Modallogin">Login</a>
+                                <a href="#" class="btn navbar-btn bg-current fw-500 text-white font-xsss register-form register-button"
+                                   data-toggle="modal" data-target="#ModalregisterD">Register</a>
                             @endif
                         </div>
                     </div>
+
                 </div>
             </nav>
 

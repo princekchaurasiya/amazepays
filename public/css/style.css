@@ -17594,7 +17594,7 @@ body {
 
 
 
-@media (max-width: 768px) {
+@media (min-width: 1500px) {
     .product-wrapper-image {
         height: 320px;
     }}

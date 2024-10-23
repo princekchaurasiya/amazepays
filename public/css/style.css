@@ -17582,12 +17582,22 @@ body {
     padding: 5px 20px;
 }
 
+
+
+
 .product-wrapper-image {
     box-shadow: rgba(100, 100, 111, 0.2) 0 7px 29px 0;
     padding: 15px;
     margin-top: 16px;
     height: 280px;
 }
+
+
+
+@media (max-width: 768px) {
+    .product-wrapper-image {
+        height: 320px;
+    }}
 
 .product-wrapper-image:hover {
     box-shadow: rgba(0, 0, 0, 0.24) 0 3px 8px;

@@ -62,7 +62,7 @@
                                                     </a>
                                                     <hr>
                                                     <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}">
-                                                        <p class="text-center fw-600 mt-3">{{ ucwords($product->name) }}</p>
+                                                        <p class="text-center fw-600 mt-3 produtName">{{ ucwords($product->name) }}</p>
                                                     </a>
                                                     @if ($product->discount_percentage > 0)
                                                         <div class="ribbon">
@@ -130,7 +130,7 @@
                                                     </a>
                                                     <hr>
                                                     <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}">
-                                                        <p class="text-center fw-600 mt-3">{{ ucwords($product->name) }}</p>
+                                                        <p class="text-center fw-600 mt-3 produtName">{{ ucwords($product->name) }}</p>
                                                     </a>
                                                     @if ($product->discount_percentage > 0)
                                                         <div class="ribbon">

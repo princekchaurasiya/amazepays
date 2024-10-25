@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 use App\Models\QsOrder;
+use App\Models\OrderSummary;
 use Carbon\Carbon;
 use PDF;
 use Mail;
@@ -15,21 +16,30 @@ class WoohooOrderController extends Controller
 {
     public function createOrder(Request $request)
     {
-        $qsOrderDetails = Session::get("payment_data");
+        $request->validate(['order_id' => 'nullable|integer|exists:qs_orders,id',]);
+        if ($request->order_id) {
+            $qsOrderDetails = QsOrder::where('id', $request->order_id)->first();
+            if (!$qsOrderDetails) {
+                Log::error("No order details found for ID: " . $request->order_id);
+                return view("order.order-status", ['transactionStatusMessage' => __("errors.order_not_found"), 'isSuccessful' => false,]);
+            }
+            $newRefNo = 'Amzr' . $qsOrderDetails->id;
+            $qsOrderDetails->refno = $newRefNo;
+            $qsOrderDetails->save();
+        } else {
+            $qsOrderDetails = Session::get("payment_data", null);
+        }
         Log::info("Payment data collected from session and stored in \$qsOrderDetails variable is: " . json_encode($qsOrderDetails));
         $isSuccessful = false;
         $transactionStatusMessage = __("errors.default");
         if ($qsOrderDetails) {
             $orderCreatedResponse = $this->createWoohooOrderRequest($qsOrderDetails);
-
             if ($orderCreatedResponse) {
                 if (isset($orderCreatedResponse["status"]) && $orderCreatedResponse["status"] == "COMPLETE") {
-
                     $transactionStatusMessage = __("errors.201");
                     $isSuccessful = true;
                     log::info(111);
                     $this->handleSuccessFullOrder($orderCreatedResponse);
-
                     log::info(333);
                 } elseif (isset($orderCreatedResponse["status_code"]) && $orderCreatedResponse["status_code"] == "400") {
                     $this->sendOrderFailureMail();
@@ -53,7 +63,6 @@ class WoohooOrderController extends Controller
             }
         } else {
             $this->sendOrderFailureMail();
-
             $transactionStatusMessage = __("errors.default");
             Log::error("No payment data found in session.");
         }
@@ -95,7 +104,6 @@ class WoohooOrderController extends Controller
                 Log::info("200 response received; now checking if the status is COMPLETE or PROCESSING");
                 $orderCreatedResponse = $createOrderResponse->json();
                 if (isset($orderCreatedResponse["status"])) {
-
                     if ($orderCreatedResponse["status"] === "COMPLETE") {
                         return $orderCreatedResponse;
                     } elseif ($orderCreatedResponse["status"] === "PROCESSING") {
@@ -103,7 +111,6 @@ class WoohooOrderController extends Controller
                         Log::info("Going to the getStatusByReferenceNumber function");
                         $statusFunctionResponse = $this->getStatusByReferenceNumber($refno);
                         if ($statusFunctionResponse && $statusFunctionResponse['status'] === 'COMPLETE') {
-
                             return $statusFunctionResponse;
                         } else {
                             Log::error("No valid response received from getStatusByReferenceNumber. Returning failure.");
@@ -128,14 +135,11 @@ class WoohooOrderController extends Controller
                 Log::info("Status function response is complete. Returning response.");
                 return $statusFunctionResponse;
             } else {
-
                 $this->sendOrderFailureMail();
                 Log::info("Status function response is not complete. Returning failure.");
                 return ["transactionStatusMessage" => __("errors.7002"), "status_code" => 500, "errorCode" => "7002", "errorMessage" => __("errors.7002"), "defaultErrorMessage" => __("errors.default"), "isSuccessful" => false];
             }
         } catch (\Exception $e) {
-
-
             $this->sendOrderFailureMail();
             Log::error("Unexpected exception: " . $e->getMessage());
             return $this->handleUnexpectedErrorResponse($e);
@@ -145,7 +149,6 @@ class WoohooOrderController extends Controller
     {
         $isSuccessful = false;
         $errorCode = $createOrderResponse["code"] ?? null;
-
         $defaultErrorMessage = __("errors.default");
         $errorMessage = __("errors." . $errorCode, [], $defaultErrorMessage);
         if ($errorMessage == "errors." . $errorCode) {
@@ -155,12 +158,10 @@ class WoohooOrderController extends Controller
         Log::error("Error Message: {$errorMessage}");
         Log::error("Status Code: {$statusCode}");
         $transactionStatusMessage = $errorMessage;
-
         return ["transactionStatusMessage" => $transactionStatusMessage, "status_code" => $statusCode, "errorCode" => $errorCode, "errorMessage" => $errorMessage, "defaultErrorMessage" => $defaultErrorMessage, "isSuccessful" => $isSuccessful,];
     }
     private function handleUnexpectedErrorResponse(Exception $exception)
     {
-
         Log::error("Failed to place order. Exception caught: " . $exception->getMessage(), ["exception" => $exception]);
         return ["transactionStatusMessage" => $exception->getMessage(), "status_code" => 500, "errorCode" => "7002", "errorMessage" => __("errors.7002"), "defaultErrorMessage" => __("errors.default"), "isSuccessful" => false,];
     }
@@ -281,7 +282,6 @@ class WoohooOrderController extends Controller
         if ($images && isset($images["small"])) {
             $smallImageUrl = $images["small"];
         }
-
         log::info(888);
         QsOrder::where("id", $orderId)->update(["invoice_number" => $invoiceNumber,]);
         $prepareMailDetails = ["name" => $order["sender_first_name"], "order_id" => $order["woohoo_order_id"], "reference_id" => $order["id"], "order_date" => $order["created_at"], "billing_name" => $order["sender_first_name"], "billing_email" => $order["sender_email"], "billing_tel" => $order["sender_phone_no"], "billing_address" => $order["sender_address_1"] . " " . $order["sender_address_2"] . ", " . $order["sender_city"] . ", " . $order["sender_state"] . " " . $order["sender_post_code"], "payment_mode" => $order["payment_mode"], "bank_ref_no" => $order["bank_ref_no"], "grand_payable_amount" => $order["grand_payable_amount"], "gst_number" => $order["gst_number"] ?: "Unregistered", "discount" => $order["discounted_amount_value"], "amount_payable_after_discount" => $order["amount_payable_after_discount"], "contact_person" => $order["sender_first_name"], "shipping_address" => $order["delivery_mode"] === "email" ? $order["sender_email"] : $order["sender_address_1"] . " " . $order["sender_address_2"] . ", " . $order["sender_city"] . ", " . $order["sender_state"] . " " . $order["sender_post_code"], "invoice_number" => $invoiceNumber, "invoice_date" => $invoiceDate, "cardSku" => $order["sku"], "cardProductName" => $order["name"], "shipToName" => $order["receiver_name"] ?? $order["sender_first_name"], "shipToEmail" => $order["receiver_email"] ?? $order["sender_email"], "shipToContactNo" => $order["receiver_mobile"] ?? $order["sender_phone_no"], "quantity" => $order["quantity"], "smallImageUrl" => $smallImageUrl, "giftSendOption" => $order["gift_send_option"], "denomination" => $order["denomination"], "discount_percentage" => $order["discount_percentage"],];
@@ -308,6 +308,9 @@ class WoohooOrderController extends Controller
         $qsOrderUpdate = QsOrder::where("refno", $orderCreatedResponse["refno"])->first();
         if ($qsOrderUpdate) {
             $qsOrderUpdate->update(["woohoo_order_id" => $orderCreatedResponse["orderId"], "order_status" => $orderCreatedResponse["status"], "cards" => encrypt(json_encode($orderCreatedResponse["cards"]), env("ENCRYPTION_KEY")), "order_cancel" => json_encode($orderCreatedResponse["cancel"]), "order_payment" => isset($orderCreatedResponse["payments"]) ? json_encode($orderCreatedResponse["payments"]) : null, "currency" => json_encode($orderCreatedResponse["currency"]), "additionalTxnFields" => isset($orderCreatedResponse["additionalTxnFields"]) ? json_encode($orderCreatedResponse["additionalTxnFields"]) : null,]);
+            $existingOrderSummary = OrderSummary::where('order_id', $qsOrderUpdate->id)->first();
+            $existingOrderSummary->order_status = $orderCreatedResponse["status"];
+            $existingOrderSummary->save();
             return $qsOrderUpdate->id;
         } else {
             $transactionStatusMessage = "Order with ID with referene number not found.";
@@ -319,39 +322,21 @@ class WoohooOrderController extends Controller
     {
         $pdf = PDF::loadView("layouts.invoice", $prepareMailDetails);
         Mail::send(["html" => "layouts.mail"], compact("prepareMailDetails", "pdf"), function ($message) use ($prepareMailDetails, $pdf) {
-            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))->to($prepareMailDetails["billing_email"], $prepareMailDetails["billing_name"])->subject(config("companyDefaultValues.default_subject"))->attachData($pdf->output(), "invoice.pdf");
-        });
+            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))->to($prepareMailDetails["billing_email"], $prepareMailDetails["billing_name"])->subject(config("companyDefaultValues.default_subject"))->attachData($pdf->output(), "invoice.pdf"); });
         $msg = "Trasnaction Mail created successfully!";
         $status = "success";
     }
-
-
     public function sendOrderFailureMail()
     {
-        // Fixed recipient email
         $senderEmail = 'it@amazepays.in';
-
-        // Define the email content for the order failure notification
         $emailContent = "Your payment was successful, but the order has failed.";
-
-        // Send the email to the specified address without using a layout
         Mail::raw($emailContent, function ($message) use ($senderEmail) {
-            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))
-                ->to($senderEmail) // Send to fixed address
-                ->subject("Order Failure Notification"); // Custom subject
-        });
+            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))->to($senderEmail)->subject("Order Failure Notification"); });
     }
-
-
-
-
-
-
     public function sendGiftMail($prepareMailDetails, $cardsArray)
     {
         Mail::send(["html" => "layouts.giftmail"], compact("prepareMailDetails", "cardsArray"), function ($message) use ($prepareMailDetails) {
-            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))->to($prepareMailDetails["shipToEmail"], $prepareMailDetails["shipToName"])->subject(config("companyDefaultValues.gift_subject"));
-        });
+            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))->to($prepareMailDetails["shipToEmail"], $prepareMailDetails["shipToName"])->subject(config("companyDefaultValues.gift_subject")); });
         $msg = "Gift Mail created successfully!";
         $status = "success";
     }

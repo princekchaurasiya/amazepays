@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
 use App\Models\QsOrder;
 use App\Models\CcAvenuePayment;
+use App\Models\OrderSummary;
 use App\Models\User;
 use App\Helpers\CommonHelper;
 use Carbon\Carbon;
@@ -121,21 +122,62 @@ class CCAvenueController extends Controller
         }
     }
 
+    // protected function preparePaymentData($sessionId, Request $request)
+    // {
+
+
+    //     $paymentData = $request->all();
+
+    //     $paymentData['order_id'] = $sessionId;
+    //     $paymentData['denomination'] = session('denomination');
+    //     $paymentData['amount'] = session('total_payable_amount_after_discount');
+    //     $paymentData['quantity'] = session('quantity');
+    //     $paymentData['numericCode'] = config('paymentconfig.numeric_code', '356');
+    //     $paymentData['currency'] = config('paymentconfig.currency', 'INR');
+    //     $paymentData['language'] = config('paymentconfig.language', 'EN');
+    //     $paymentData['redirect_url'] = route('response_ccavenue');
+    //     $paymentData['cancel_url'] = url('payment-cancel');
+    //     $paymentData['merchant_id'] = config('paymentconfig.merchant_id');
+    //     return $paymentData;
+    // }
+
+
     protected function preparePaymentData($sessionId, Request $request)
     {
         $paymentData = $request->all();
+
+        // Grouping session variables
         $paymentData['order_id'] = $sessionId;
-        $paymentData['denomination'] = session('denomination');
-        $paymentData['amount'] = session('total_payable_amount_after_discount');
-        $paymentData['quantity'] = session('quantity');
+
+        $orderData = QsOrder::where('id', $sessionId)->first();
+        // dd($orderData);
+
+
+        $paymentData['denomination'] = $orderData->denomination;
+        $paymentData['quantity'] = $orderData->quantity;
+        $paymentData['amount'] = $orderData->amount_payable_after_discount;
+
+        // Payment configuration
         $paymentData['numericCode'] = config('paymentconfig.numeric_code', '356');
         $paymentData['currency'] = config('paymentconfig.currency', 'INR');
         $paymentData['language'] = config('paymentconfig.language', 'EN');
+        $paymentData['merchant_id'] = config('paymentconfig.merchant_id');
+
+        // URLs
         $paymentData['redirect_url'] = route('response_ccavenue');
         $paymentData['cancel_url'] = url('payment-cancel');
-        $paymentData['merchant_id'] = config('paymentconfig.merchant_id');
+
+
         return $paymentData;
     }
+
+
+
+
+
+
+
+
     protected function encryptPaymentData($paymentData)
     {
         $merchantData = http_build_query($paymentData);
@@ -174,6 +216,8 @@ class CCAvenueController extends Controller
                     $order_status = $val;
                 }
             }
+
+
             Log::info('CC Avenue Response', $ccAvenueCollectedDataArray);
             $qsOrderDetails = QsOrder::where('id', $ccAvenueCollectedDataArray['order_id'])->firstOrFail();
             $this->storeCcAvenueData($qsOrderDetails, $ccAvenueCollectedDataArray);
@@ -206,15 +250,34 @@ class CCAvenueController extends Controller
     }
     protected function storeCcAvenueData($qsOrderDetails, $ccAvenueCollectedDataArray)
     {
-        $newCcAvenueOrder = new CcAvenuePayment();
-        $newCcAvenueOrder->fill(['user_id' => $qsOrderDetails->user_id, 'price' => $qsOrderDetails->denomination, 'qty' => $qsOrderDetails->quantity,]);
+
+
+        // Find the existing payment record by order_id
+        $existingPayment = CcAvenuePayment::where('order_id', $qsOrderDetails->id)->first();
+
+
+
+        if (!$existingPayment) {
+            Log::error('Payment record not found for order_id: ' . $qsOrderDetails->order_id);
+            return;
+        }
+
+
         $commonFields = ['order_id', 'tracking_id', 'bank_ref_no', 'order_status', 'failure_message', 'payment_mode', 'card_name', 'status_code', 'status_message', 'currency', 'amount', 'billing_name', 'billing_address', 'billing_city', 'billing_state', 'billing_zip', 'billing_country', 'billing_tel', 'billing_email', 'delivery_name', 'delivery_address', 'delivery_city', 'delivery_state', 'delivery_zip', 'delivery_country', 'delivery_tel', 'merchant_param1', 'merchant_param2', 'merchant_param3', 'merchant_param4', 'merchant_param5', 'vault', 'offer_type', 'offer_code', 'discount_value', 'mer_amount', 'eci_value', 'retry', 'response_code', 'billing_notes', 'trans_date', 'bin_country'];
         foreach ($commonFields as $field) {
             if (isset($ccAvenueCollectedDataArray[$field])) {
-                $newCcAvenueOrder->{$field} = $ccAvenueCollectedDataArray[$field];
+                $existingPayment->{$field} = $ccAvenueCollectedDataArray[$field];
             }
         }
-        $newCcAvenueOrder->save();
+        $existingPayment->save();
+
+
+        $existingOrderSummary = OrderSummary::where('order_id', $existingPayment->order_id)->first();
+        $existingOrderSummary->payment_status = $existingPayment->order_status;
+        $existingOrderSummary->save();
+
+
+
         Log::info('CC Avenue data stored successfully');
     }
     protected function updateQsOrder($sessionId, Request $request)
@@ -224,6 +287,28 @@ class CCAvenueController extends Controller
             Log::info('qsorder is this', $qsOrder->toArray());
             $updateData = ['sender_first_name' => $request->billing_name ?? $qsOrder->sender_first_name, 'sender_email' => $request->billing_email ?? $qsOrder->sender_email, 'sender_phone_no' => $request->billing_tel ?? $qsOrder->sender_phone_no, 'sender_post_code' => $request->billing_zip ?? $qsOrder->sender_post_code, 'sender_address_1' => $request->billing_address ?? $qsOrder->sender_address_1, 'sender_address_2' => $request->billing_address_two ?? $qsOrder->sender_address_2, 'sender_city' => $request->billing_city ?? $qsOrder->sender_city, 'sender_state' => $request->billing_state ?? $qsOrder->sender_state, 'sku' => $request->has('sku') ? $request->sku : $qsOrder->sku, 'amount_payable_after_discount' => $request->has('amount') ? $request->amount : $qsOrder->amount_payable_after_discount, 'discounted_amount_value' => $request->has('quantity') && $request->has('denomination') && $request->has('amount') ? round($request->quantity * $request->denomination - $request->amount, 3) : $qsOrder->discounted_amount_value, 'gst_number' => $request->billing_gst_number ?? $qsOrder->gst_number ?: 'Unregistered', 'country' => $request->billing_country ?? $qsOrder->country,];
             $qsOrder->update($updateData);
+
+
+            // Fetch the related OrderSummary using the same order ID
+            $orderSummary = OrderSummary::where('order_id', $qsOrder->id)->first();
+
+
+
+            if ($orderSummary) {
+                // Prepare update data for OrderSummary
+                $orderSummary->update([
+                    'sender_name' => $updateData['sender_first_name'],  // Update sender name
+                    'sender_email' => $updateData['sender_email'],      // Update sender email
+                    'sender_phone' => $updateData['sender_phone_no'],   // Update sender phone number
+                ]);
+                Log::info("OrderSummary updated for order_id: {$qsOrder->id}");
+            } else {
+                Log::warning("OrderSummary not found for order_id: {$qsOrder->id}");
+            }
+
+
+
+
             return true;
         } catch (\Exception $e) {
             Log::error("Record not found for session ID: $sessionId - {$e->getMessage()}");

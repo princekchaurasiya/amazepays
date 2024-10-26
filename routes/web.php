@@ -73,6 +73,13 @@ Route::group(['prefix' => 'admin'], function () {
         // In routes/web.php
         Route::get('cactus/logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
 
+        Route::post('/resend-order', [WoohooOrderController::class, 'createOrder'])->name('resend.order');
+
+        Route::get('/enter-order-id', function () {
+            return view('resendCard');
+        })->name('enter.order.id');
+
+
     });
 });
 

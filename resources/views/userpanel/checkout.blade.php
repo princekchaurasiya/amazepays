@@ -686,7 +686,9 @@
                         </div>
                     </div>
 
-                    @php
+
+
+                    {{-- @php
                         // Fetch product details and calculate total amount and discount
                         $denomination = $qsProd->prodData['denomination'];
                         $quantity = $qsProd->prodData['quantity'];
@@ -706,7 +708,7 @@
                             'discount_amount' => $discountAmount,
                             'total_payable_amount_after_discount' => $totalPayableAmountAfterDiscount,
                         ]);
-                    @endphp
+                    @endphp --}}
 
 
 
@@ -735,10 +737,10 @@
                                                     <span class="product-name mont-font">{{ $qsProd->name }}</span>
                                                     <div class="row item-qty-subtotal">
                                                         <div class="col-12">
-                                                            <span>Denomination: ₹{{ session('denomination') }}</span>
+                                                            <span>Denomination: ₹{{ $qsOrder->denomination }}</span>
                                                         </div>
                                                         <div class="col-12">
-                                                            <span>Qty: {{ session('quantity') }}</span>
+                                                            <span>Qty: {{ $qsOrder->quantity }}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -752,7 +754,7 @@
                                                         <span>Grand Total:</span>
                                                     </div>
                                                     <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font">
-                                                        <span>₹{{ session('total_amount') }}</span>
+                                                        <span>₹{{ $qsOrder->grand_payable_amount }}</span>
                                                     </div>
                                                 </div>
 
@@ -763,7 +765,7 @@
                                                     </div>
                                                     <div
                                                         class="col-md-6 col-sm-4 col-xs-3 amount mont-font apply-coupan-amount">
-                                                        ₹{{ session('discount_amount') }}
+                                                        ₹{{ $qsOrder->discounted_amount_value }}
                                                     </div>
                                                 </div>
 
@@ -772,7 +774,7 @@
                                                         <span>Payable Amount:</span>
                                                     </div>
                                                     <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font">
-                                                        <span>₹{{ session('total_payable_amount_after_discount') }}</span>
+                                                        <span>₹{{ $qsOrder->amount_payable_after_discount }}</span>
                                                     </div>
                                                 </div>
                                             </div>

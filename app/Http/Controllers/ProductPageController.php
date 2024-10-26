@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\QsOrder;
 use App\Models\QsProduct;
+use App\Models\OrderSummary;
+use App\Models\CcAvenuePayment;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
@@ -30,12 +32,11 @@ class ProductPageController extends Controller
         // Fetch product by slug
         $product = QsProduct::where('slug', $slug)->firstOrFail();
 
-
         // Retrieve the checkout session data if available
         $checkoutData = session('checkout_data', []);
         Log::info('Retrieved checkout data from session: ', $checkoutData);
 
-        // Validate the product price as either SLAB or RANGE
+        // Decode the product price
         $product->price = json_decode($product->price);
         Log::info('Decoded product price: ', ['price' => $product->price]);
 
@@ -50,7 +51,7 @@ class ProductPageController extends Controller
                             Log::warning('Invalid denomination value', ['denomination' => $value]);
                             $fail('Invalid denomination value.');
                         } elseif ($product->price->type === 'RANGE' && ($value < $product->minPrice || $value > $product->maxPrice)) {
-                            Log::warning('Denomination out of range', ['denomination' => $value, 'minPrice' => $product->minPrice, 'maxPrice' => $product->maxPrice]);
+                            Log::warning('Denomination out of range', ['denomination' => $value]);
                             $fail("The denomination must be between ₹{$product->minPrice} and ₹{$product->maxPrice}.");
                         }
                     } else {
@@ -67,11 +68,9 @@ class ProductPageController extends Controller
             'receiver_msg' => 'nullable|string|max:500',
         ];
 
-        // Merge additional request data
         $request->merge(['delivery_mode' => 'both']);
         Log::info('Merged delivery mode to request data.');
 
-        // Validate the request input
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             Log::warning('Validation failed', ['errors' => $validator->errors()]);
@@ -92,72 +91,104 @@ class ProductPageController extends Controller
 
         Log::info('Total purchases this month:', ['total' => $totalPurchasesThisMonth]);
 
-        // Fetch the monthly purchase limit for the product
-        $monthlyPurchaseLimit = $product->sku_limits;
-        Log::info('Fetched monthly purchase limit:', ['limit' => $monthlyPurchaseLimit]);
+        // Check if the SKU limit is set
+        $monthlyPurchaseLimit = $product->sku_limits ?? null;
+        Log::info('Monthly purchase limit:', ['limit' => $monthlyPurchaseLimit]);
 
-        // Calculate the remaining available limit
-        $remainingLimit = $monthlyPurchaseLimit - $totalPurchasesThisMonth;
-        Log::info('Calculated remaining limit:', ['remainingLimit' => $remainingLimit]);
 
-        // Check if the remaining limit is 0 or negative
-        if ($remainingLimit <= 0) {
-            $errorMessage = "You have exceeded your monthly purchase limit of ₹{$monthlyPurchaseLimit} for this product. You have an available limit of ₹0 this month that you can purchase.";
-            Log::warning('User exceeded monthly purchase limit.', ['remainingLimit' => $remainingLimit]);
-            return back()->withErrors(['message' => $errorMessage])->withInput();
+        // If no limit is set, allow the order to proceed without restriction
+        if ($monthlyPurchaseLimit !== null && $monthlyPurchaseLimit != '') {
+            $remainingLimit = $monthlyPurchaseLimit - $totalPurchasesThisMonth;
+
+            if ($remainingLimit <= 0) {
+                return back()->withErrors([
+                    'message' => "You have exceeded your monthly purchase limit of ₹{$monthlyPurchaseLimit}."
+                ])->withInput();
+            }
+
+            // Calculate the grand payable amount for the current order
+            $grandPayableAmount = $request->quantity * $request->denomination;
+
+            if ($grandPayableAmount > $remainingLimit) {
+                return back()->withErrors([
+                    'message' => "The remaining purchase limit for this product is ₹{$remainingLimit}, but your order total is ₹{$grandPayableAmount}. Please try placing an order within the available limit."
+                ])->withInput();
+            }
+        } else {
+            // No limit, proceed to calculate the grand payable amount
+            $grandPayableAmount = $request->quantity * $request->denomination;
         }
 
-        // Calculate the grand payable amount for the current order
-        $grandPayableAmount = $request->quantity * $request->denomination;
-        Log::info('Calculated grand payable amount:', ['grandPayableAmount' => $grandPayableAmount]);
-
-        // Check if the current order exceeds the remaining limit
-        if ($grandPayableAmount > $remainingLimit) {
-            $errorMessage = "Your monthly purchase limit is ₹{$monthlyPurchaseLimit}, and you have already purchased ₹{$totalPurchasesThisMonth} this month. you can only purchase ₹{$remainingLimit} more this month.";
-            Log::warning('Order exceeds remaining limit.', ['remainingLimit' => $remainingLimit, 'attemptedAmount' => $grandPayableAmount]);
-            return back()->withErrors(['message' => $errorMessage])->withInput();
-        }
-
-        // Create a new order since the limit is not exceeded
+        // Create a new order since all validations passed
         Log::info('Creating a new order for user:', ['user_id' => Auth::id()]);
+
         $qsOrder = new QsOrder();
+        // dd($product,$qsOrder);
         $qsOrder->user_id = Auth::id();
+        $qsOrder->sku = $product->sku;
+        $qsOrder->product_name = $product->name;
         $qsOrder->denomination = $request->denomination;
         $qsOrder->quantity = $request->quantity;
         $qsOrder->grand_payable_amount = $grandPayableAmount;
+        // calculation for discount
+        $discountPercentage = $product->discount_percentage;
+        $discountAmount = $grandPayableAmount * ($discountPercentage / 100);
+        $totalPayableAmountAfterDiscount = $grandPayableAmount - $discountAmount;
+        $qsOrder->discounted_amount_value = $discountAmount;
+        $qsOrder->amount_payable_after_discount = $totalPayableAmountAfterDiscount;
         $qsOrder->gift_send_option = $request->gift_send_option;
         $qsOrder->delivery_mode = 'both';
         $qsOrder->receiver_name = $request->receiver_name;
         $qsOrder->receiver_email = $request->receiver_email;
         $qsOrder->receiver_mobile = $request->receiver_mobile;
         $qsOrder->receiver_msg = $request->receiver_msg;
+        $qsOrder->order_status = 'Pending';
         $qsOrder->save();
-
         Log::info('Order saved successfully', ['order_id' => $qsOrder->id]);
-
-        // Generate reference number after saving the order
         $qsOrder->refno = 'Amz' . $qsOrder->id;
         $qsOrder->save();
 
+
+
+        $payment = new CcAvenuePayment();
+
+
+        $payment->order_id = $qsOrder->id;
+        $payment->user_id = Auth::id();
+        $payment->mer_amount = $qsOrder->grand_payable_amount;
+        $payment->price = $qsOrder->denomination;
+        $payment->qty = $qsOrder->quantity;
+        $payment->order_status = 'UnPaid';
+        $payment->save();
+
+        // Populate the OrderSummary
+        $orderSummary = new OrderSummary();
+        $orderSummary->order_id = $qsOrder->id;
+        $orderSummary->payment_id = $payment->id;
+        $orderSummary->product_name = $qsOrder->product_name;
+        $orderSummary->payment_status = $payment->order_status; // payment status
+        $orderSummary->order_status = $qsOrder->order_status; // Assuming `order_status` exists in QsOrder
+        $orderSummary->save();
+
+
+
+
         Log::info('Generated reference number:', ['refno' => $qsOrder->refno]);
 
-        // Store order reference in session for further processing
         session()->put('session_qs_order_id', $qsOrder->id);
         session()->put('session_refno', $qsOrder->refno);
 
         Log::info('Order ID and reference number stored in session.');
 
-        // Retrieve and prepare the product data for checkout
         $qsProd = QsProduct::where('slug', $slug)->firstOrFail();
         $qsProd['prodData'] = $request->all();
         $qsProd['currency'] = json_decode($qsProd['currency']);
         $qsProd['images'] = json_decode($qsProd->images);
 
 
-
-        // Render the checkout view with product and checkout data
-        return view('userpanel.checkout', compact('qsProd', 'checkoutData'));
+        return view('userpanel.checkout', compact('qsProd', 'checkoutData', 'qsOrder'));
     }
+
 
     public function updateSessionData(Request $request)
     {

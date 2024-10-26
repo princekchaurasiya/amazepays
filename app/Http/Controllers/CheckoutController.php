@@ -39,7 +39,6 @@ class CheckoutController extends Controller
         Session::put('billing_data', $validatedData);
 
         $user = Auth::user();
-        dd($user);
         $user->update([
             'name' => $validatedData['billing_name'], // You might not want to update the name directly
             'email' => $validatedData['billing_email'],

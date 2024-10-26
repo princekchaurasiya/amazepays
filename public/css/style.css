@@ -17783,3 +17783,7 @@ body {
     transform: translateY(-50%);
     vertical-align: middle;
 }
+
+.produtName{
+    color: #000 !important;
+}

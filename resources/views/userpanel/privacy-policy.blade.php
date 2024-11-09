@@ -83,7 +83,7 @@
 
             <div class="mt-4">
                 <h2>Data Security</h2>
-                <p>We implement reasonable physical, technical, and administrative measures to protect your data. However, we cannot guarantee complete security for data transmitted over the internet. Our security measures comply with applicable laws and standards, including ISO 27001 and SOC1, Type 2.</p>
+                <p>We implement reasonable physical, technical, and administrative measures to protect your data. However, we cannot guarantee complete security for data transmitted over the internet. Our security measures comply with applicable laws and standards.</p>
             </div>
 
             <div class="mt-4">

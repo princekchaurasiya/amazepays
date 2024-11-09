@@ -75,10 +75,6 @@ Route::group(['prefix' => 'admin'], function () {
 
         Route::post('/resend-order', [WoohooOrderController::class, 'createOrder'])->name('resend.order');
 
-        Route::get('/enter-order-id', function () {
-            return view('resendCard');
-        })->name('enter.order.id');
-
 
     });
 });
@@ -239,3 +235,7 @@ Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'
 Route::get('/category/{slug}', [AmazepayCategoryController::class, 'show'])->name('categories.show');
 
 Route::get('/brand/{slug}', [AmazepayBrandController::class, 'show'])->name('brands.show');
+
+
+
+

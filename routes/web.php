@@ -237,17 +237,5 @@ Route::get('/category/{slug}', [AmazepayCategoryController::class, 'show'])->nam
 Route::get('/brand/{slug}', [AmazepayBrandController::class, 'show'])->name('brands.show');
 
 
-Route::get('/test-order-failure', function () {
-    $orderDetails = [
-        'order_id' => '123456',
-        'customer_name' => 'John Doe',
-        'email' => 'johndoe@example.com',
-        'order_date' => now()->format('d-M-Y'),
-        'total_amount' => '$99.99',
-        'status' => 'Failed',
-    ];
-
-    return view('order-failure', $orderDetails);
-});
 
 

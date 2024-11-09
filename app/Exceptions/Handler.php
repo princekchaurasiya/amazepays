@@ -7,6 +7,7 @@ use Throwable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Validation\ValidationException;
+use Sentry\Laravel\Integration;
 
 class Handler extends ExceptionHandler
 {
@@ -35,10 +36,10 @@ class Handler extends ExceptionHandler
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->reportable(function (Throwable $e) {
-            //
+            Integration::captureUnhandledException($e);
         });
     }
 

@@ -43,19 +43,19 @@
                                         <div class="card product-card">
                                             <div class="card-body my-order-card-body">
                                                 <div class="row">
-                                                    <div class="col-lg-auto">
+                                                    <div class="col-lg-4 ">
                                                         @if ($images && isset($images['small']))
                                                             <img class="my-order-image-div img-fluid mb-3 mb-lg-0"
                                                                 src="{{ $images['small'] }}" alt="">
                                                         @endif
                                                     </div>
-                                                    <div class="col-lg-auto ">
+                                                    <div class="col-lg-4 ">
                                                         <h2>{{ $orderItem->sku }}</h2>
                                                         <p class="mb-0">Brand: <b>{{ $orderItem->brandName }}</b></p>
                                                         <p class="mb-0">Denomination: <b>{{ $orderItem->denomination }}</b></p>
                                                         <p class="mb-0">Quantity: <b>{{ $orderItem->quantity }}</b></p>
                                                     </div>
-                                                    <div class="col-lg-auto ml-auto text-lg-right mt-3 mt-lg-0">
+                                                    <div class="col-lg-4  ml-auto text-lg-right mt-3 mt-lg-0">
                                                         <h2>
                                                             <span
                                                                 class="{{ $orderItem->order_status == 'COMPLETE' ? 'text-success' : 'text-danger' }} font-weight-bold">

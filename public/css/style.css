@@ -10153,6 +10153,19 @@ button.bg-dark:hover {
     }
 }
 
+@supports (position: sticky) {
+    .sticky-top-changed {
+        position: sticky;
+        top: 100px;
+
+    }
+}
+
+
+
+
+
+
 .sr-only {
     position: absolute;
     width: 1px;
@@ -14808,7 +14821,7 @@ strong {
 }
 
 .contact-wrap {
-    z-index: 1;
+    z-index: 0;
     top: -100px;
     padding: 60px 80px 70px 80px;
 }
@@ -17803,4 +17816,10 @@ body {
 
 .ti-instagram-color {
     color: #E4405F !important;
+}
+
+.about-page-links{
+text-decoration: none;
+color: #212529 !important;
+font-weight: 700;
 }

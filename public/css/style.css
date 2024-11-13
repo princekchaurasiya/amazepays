@@ -13355,6 +13355,11 @@ strong {
     color: #212529 !important;
 }
 
+
+
+
+
+
 .fw-100 {
     font-weight: 100 !important;
 }
@@ -17786,4 +17791,16 @@ body {
 
 .produtName{
     color: #000 !important;
+}
+
+.ti-facebook-color{
+    color: #5890FF !important;
+}
+
+.ti-linkedin-color{
+    color: #0077B5 !important;
+}
+
+.ti-instagram-color {
+    color: #E4405F !important;
 }

@@ -3,8 +3,8 @@
     Amazepay | Privacy Policy
 @endsection
 @section('content')
-    <div class="faq-wrapper pt-4 pb-0">
-        <div class="container mt-5">
+    <div class="faq-wrapper pt-4 pb-0 text-grey-900">
+        <div class="container mt-5 ">
             <h1 class="text-center"> <b>Privacy Policy</b> </h1>
 
             <div class="mt-4">
@@ -14,67 +14,38 @@
 
             <div class="mt-4">
                 <h2>Information We Collect</h2>
+
                 <h4>Automatically Collected Information:</h4>
-                <ul>
-                    <li>Anonymous data from server logs, such as:
-                        <ul>
-                            <li>Cookies</li>
-                            <li>IP address</li>
-                            <li>Browser type</li>
-                        </ul>
-                    </li>
-                </ul>
+                <p>1. We collect anonymous data from server logs, including cookies, IP address, and browser type.</p>
+
                 <h4>Actively Collected Personal Information:</h4>
-                <ul>
-                    <li>Name (first and last)</li>
-                    <li>Email address</li>
-                    <li>Mobile phone number and contact details</li>
-                    <li>Address and postal code</li>
-                    <li>Identity proof</li>
-                    <li>Product/service preferences</li>
-                    <li>Opinions on website features</li>
-                    <li>Usage data, including:
-                        <ul>
-                            <li>Pages visited</li>
-                            <li>Links clicked</li>
-                            <li>Frequency of page visits</li>
-                            <li>Interaction counts</li>
-                        </ul>
-                    </li>
-                </ul>
+                <p>2. We actively collect personal information to improve our services. This includes your name (first and last), email address, mobile phone number, contact details, address, postal code, identity proof, product/service preferences, and opinions on website features.</p>
+                <p>3. We also collect usage data, such as pages visited, links clicked, frequency of page visits, and interaction counts.</p>
+
                 <h4>Payment Information:</h4>
-                <ul>
-                    <li>Name and billing address (processed by our payment partners)</li>
-                </ul>
+                <p>4. For payments, we collect your name and billing address, which is securely processed by our payment partners.</p>
+
                 <h4>Analytics Tools:</h4>
-                <p>We use tools like Google Analytics to understand website usage, which may involve cookies and tracking information about your viewing habits and geographic data.</p>
+                <p>5. We use analytics tools like Google Analytics to understand website usage. This may involve cookies and tracking data, including viewing habits and geographic information.</p>
             </div>
+
+
 
             <div class="mt-4">
                 <h2>Purpose of Collecting Information</h2>
-                <p>We use your data to:</p>
-                <ul>
-                    <li>Tailor the website to your interests</li>
-                    <li>Fulfill contracts and provide requested services</li>
-                    <li>Respond to inquiries and process requests</li>
-                    <li>Improve website functionality based on usage patterns</li>
-                    <li>Conduct market research</li>
-                    <li>Communicate about products, services, promotions, and feedback</li>
-                    <li>Ensure security and prevent fraud</li>
-                </ul>
+                <p>
+                    We collect your information to enhance your experience on our website by tailoring content to your interests, fulfilling contracts, and providing the services you request. Additionally, we use it to respond to inquiries, improve website functionality based on user patterns, conduct market research, and communicate updates on products, services, promotions, and feedback. Your information also helps us ensure security and prevent fraud.
+                </p>
             </div>
 
+
             <div class="mt-4">
-                <h2>Sharing Information</h2>
-                <p>We do not sell or rent your personal data. We may share your information only under the following circumstances:</p>
-                <ul>
-                    <li>With your consent</li>
-                    <li>To provide and facilitate services</li>
-                    <li>For legal reasons, such as complying with court orders or defending against legal claims</li>
-                    <li>With business successors or affiliates</li>
-                    <li>In aggregate form with partners and advertisers</li>
-                </ul>
+                <h2>Sharing Your Information</h2>
+                <p>
+                    We value your privacy and do not sell or rent your personal data. However, there are limited circumstances under which we may share your information: with your consent; to provide and facilitate services through trusted partners; for legal reasons, such as complying with court orders or defending against legal claims; with business successors or affiliates in the event of a merger or acquisition; and in an aggregated, non-identifiable form with partners and advertisers to enhance our services.
+                </p>
             </div>
+
 
             <div class="mt-4">
                 <h2>Third-Party Platforms</h2>
@@ -89,7 +60,7 @@
             <div class="mt-4">
                 <h2>Your Rights</h2>
                 <p>You have rights regarding your personal data, including:</p>
-                <ul>
+                <ol>
                     <li>Accessing and reviewing your data</li>
                     <li>Requesting corrections</li>
                     <li>Deleting or stopping the use of your data</li>
@@ -97,7 +68,7 @@
                     <li>Objecting to direct marketing</li>
                     <li>Providing guidance on data use after your death</li>
                     <li>Raising complaints with local data protection authorities</li>
-                </ul>
+                </ol>
                 <p>To exercise these rights, contact us at <a href="mailto:support@amazepays.in">support@amazepays.in</a>.</p>
             </div>
 

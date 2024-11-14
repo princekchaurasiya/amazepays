@@ -8,8 +8,8 @@
             <div class="row">
                 <div class="col-lg-12">
                     <h2 class="font-xss lh-24 fw-500 text-grey-900 mt-4">
-						Welcome to <a href="{{ config('companyDefaultValues.company_website') }}" target="_blank">Amazepays</a>.
-						The website <a href="{{ config('companyDefaultValues.company_website') }}" target="_blank">{{ config('companyDefaultValues.company_website') }}</a> is owned and operated by <b>{{ config('companyDefaultValues.company_official_name') }}</b>
+						Welcome to <a href="{{ config('companyDefaultValues.company_website') }}" target="_blank" class="about-page-links">Amazepays</a>.
+						The website <a href="{{ config('companyDefaultValues.company_website') }}" target="_blank" class="about-page-links">{{ config('companyDefaultValues.company_website') }}</a> is owned and operated by <b>{{ config('companyDefaultValues.company_official_name') }}</b>
 						with its registered office at <b>{{ config('companyDefaultValues.company_address') }}</b>
 					</h2>
 
@@ -40,9 +40,9 @@
                     </h4>
                 </div>
                 <div class="col-lg-12 mt-5 text-center pt-4">
-                    <a href="{{ url('contact-us') }}"
+                    {{-- <a href="{{ url('contact-us') }}"
                         class="ml-1 mr-1 rounded-lg alert-primary text-primary font-xss border-size-md border-0 fw-600 open-font p-3 w200 btn">Contact
-                        Us</a>
+                        Us</a> --}}
                 </div>
             </div>
         </div>

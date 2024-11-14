@@ -43,7 +43,7 @@ return [
     'sendMailFrom' => env('SEND_MAIL_FROM', 'it@amazepays'),
     'company_website' => env('COMPANY_WEBSITE', 'https://amazepays.in/'),
     'company_contact_no' => env('COMPANY_CONTACT_NO', '8208893951'),
-    'company_new_website_link' => env('COMPANY_NEW_WEBSITE_LINK', 'https://theamazeindia.com'),
+    'company_new_website_link' => env('COMPANY_NEW_WEBSITE_LINK', 'https://freneticindia.com/'),
     'company_new_website_link_about_us' => env('COMPANY_NEW_WEBSITE_LINK', 'https://theamazeindia.com/about.html'),
 
 ];

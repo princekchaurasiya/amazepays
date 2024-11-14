@@ -7,7 +7,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-3">
-                    <div class="dashboard-nav bg-white rounded-lg shadow-xs sticky-top">
+                    <div class="dashboard-nav bg-white rounded-lg shadow-xs sticky-top-changed">
                         <a href="#" class="dash-menu d-none d-block-md"><i class="ti-package font-sm mr-2"></i> Menu <i
                                 class="ti-angle-down font-xsss float-right "></i></a>
                         <ul class="dash-menu-ul">

@@ -9,9 +9,12 @@
                                 alt="logo" class="custLogo"></a>
 
                         <p class="w-100 mt-4 text-black">
-                            <strong>Company Name :</strong> <a
+                            <strong>Company Name :</strong> {{ env('COMPANY_NAME') }}
+
+                            {{-- <a
                                 href="{{ env('COMPANY_NEW_WEBSITE_LINK_ABOUT_US') }}"
-                                target="_blank">{{ env('COMPANY_NAME') }}</a><br />
+                                target="_blank">{{ env('COMPANY_NAME') }}</a> --}}
+                                <br />
 
 
                             <strong>CIN :</strong> {{ config('companyDefaultValues.company_cin') }}<br />

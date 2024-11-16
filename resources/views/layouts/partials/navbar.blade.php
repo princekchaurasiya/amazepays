@@ -149,6 +149,12 @@
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('profile') }}">{{ Auth::user()->name }}</a>
                                 </li>
+
+
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('my-order') }}">My Order</a>
+                                </li>
+
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('userLogOut') }}">Logout</a>
                                 </li>

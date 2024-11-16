@@ -7,7 +7,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-3">
-                    <div class="dashboard-nav bg-white rounded-lg shadow-xs sticky-top">
+                    <div class="dashboard-nav bg-white rounded-lg shadow-xs sticky-top-changed">
                         <a href="#" class="dash-menu d-none d-block-md"><i class="ti-package font-sm mr-2"></i> Menu <i
                                 class="ti-angle-down font-xsss float-right "></i></a>
                         <ul class="dash-menu-ul">
@@ -43,29 +43,35 @@
                                         <div class="card product-card">
                                             <div class="card-body my-order-card-body">
                                                 <div class="row">
-                                                    <div class="col-lg-auto">
+                                                    <div class="col-lg-4 ">
                                                         @if ($images && isset($images['small']))
                                                             <img class="my-order-image-div img-fluid mb-3 mb-lg-0"
-                                                                src="{{ $images['small'] }}" alt="">
+                                                                src="{{ $images['small'] }}" alt=""
+                                                                style="width: 244px; height: auto;">
                                                         @endif
+
                                                     </div>
-                                                    <div class="col-lg-auto ">
+                                                    <div class="col-lg-4 ">
                                                         <h2>{{ $orderItem->sku }}</h2>
                                                         <p class="mb-0">Brand: <b>{{ $orderItem->brandName }}</b></p>
-                                                        <p class="mb-0">Denomination: <b>{{ $orderItem->denomination }}</b></p>
+                                                        <p class="mb-0">Denomination:
+                                                            <b>{{ $orderItem->denomination }}</b></p>
                                                         <p class="mb-0">Quantity: <b>{{ $orderItem->quantity }}</b></p>
                                                     </div>
-                                                    <div class="col-lg-auto ml-auto text-lg-right mt-3 mt-lg-0">
+                                                    <div class="col-lg-4  ml-auto text-lg-right mt-3 mt-lg-0">
                                                         <h2>
                                                             <span
                                                                 class="{{ $orderItem->order_status == 'COMPLETE' ? 'text-success' : 'text-danger' }} font-weight-bold">
                                                                 Order {{ ucfirst(strtolower($orderItem->order_status)) }}
                                                             </span>
                                                         </h2>
-                                                        <p class="mb-0">Order ID: <b>{{ $orderItem->woohoo_order_id }}</b>
+                                                        <p class="mb-0">Order ID:
+                                                            <b>{{ $orderItem->woohoo_order_id }}</b>
                                                         </p>
-                                                        <p class="mb-0">Discount: <b>{{ $orderItem->discounted_amount_value }}</b></p>
-                                                        <p class="mb-0">Total Amount Paid: <b>{{ $orderItem->amount_payable_after_discount }}</b></p>
+                                                        <p class="mb-0">Discount:
+                                                            <b>{{ $orderItem->discounted_amount_value }}</b></p>
+                                                        <p class="mb-0">Total Amount Paid:
+                                                            <b>{{ $orderItem->amount_payable_after_discount }}</b></p>
 
                                                         {{-- <p class="mb-0"><a href="{{ route('get-order-status', ['refno' => $orderItem->qs_id]) }}"><b>get card data</b></a></p> --}}
 

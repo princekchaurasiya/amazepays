@@ -18,14 +18,14 @@ class ContactUsController extends Controller
             $messages = [
                 'name.required' => 'Please enter your name.',
                 'name.regex' => 'The name can only contain letters and spaces.',
-                'name.max' => 'The name should not exceed 255 characters.',
+                'name.max' => 'The name should not exceed 50 characters.',
                 'email.required' => 'We need your email address.',
                 'email.email' => 'Please provide a valid email address.',
-                'email.max' => 'The email should not exceed 255 characters.',
+                'email.max' => 'The email should not exceed 100 characters.',
                 'message.required' => 'Please enter a message.',
                 'message.string' => 'The message should be a valid string.',
                 'message.min' => 'The message should be at least 10 characters long.',
-                'message.max' => 'The message should not exceed 1000 characters.',
+                'message.max' => 'The message should not exceed 70 characters.',
             ];
 
             // Validate the form data with regex constraints

@@ -9,9 +9,12 @@
                                 alt="logo" class="custLogo"></a>
 
                         <p class="w-100 mt-4 text-black">
-                            <strong>Company Name :</strong> <a
+                            <strong>Company Name :</strong> {{ env('COMPANY_NAME') }}
+
+                            {{-- <a
                                 href="{{ env('COMPANY_NEW_WEBSITE_LINK_ABOUT_US') }}"
-                                target="_blank">{{ env('COMPANY_NAME') }}</a><br />
+                                target="_blank">{{ env('COMPANY_NAME') }}</a> --}}
+                                <br />
 
 
                             <strong>CIN :</strong> {{ config('companyDefaultValues.company_cin') }}<br />
@@ -55,16 +58,16 @@
                     <div class="col-md-3 col-lg-3 col-sm-3 col-xs-6 md-mb25">
                         <h5 class="mb-3 text-orange">Contact us on</h5>
                         <ul class="list-inline">
-                            <li class="list-inline-item mr-3"><a href="#"><i
-                                        class="ti-facebook"></i></a>
+                            <li class="list-inline-item mr-3"><a href="{{ env('FACEBOOK_URL') }}" class="ti-facebook-color "><i
+                                        class="ti-facebook font-md "></i></a>
                             </li>
-                            <li class="list-inline-item mr-3"><a href="#"><i
-                                        class="ti-twitter-alt"></i></a>
+                            {{-- <li class="list-inline-item mr-3"><a href="#"><i
+                                        class="ti-twitter-alt font-md"></i></a>
+                            </li> --}}
+                            <li class="list-inline-item mr-3"><a href="{{ env('LINKEDIN_URL') }}" class="ti-linkedin-color"><i
+                                        class="ti-linkedin font-md"></i></a>
                             </li>
-                            <li class="list-inline-item mr-3"><a href="#"><i
-                                        class="ti-linkedin"></i></a>
-                            </li>
-                            <li class="list-inline-item"><a href="#"><i class="ti-instagram"></i></a>
+                            <li class="list-inline-item"><a href="{{ env('INSTAGRAM_URL') }}" class="ti-instagram-color"><i class="ti-instagram font-md"></i></a>
                             </li>
                         </ul>
                         <ul class="mt-3">

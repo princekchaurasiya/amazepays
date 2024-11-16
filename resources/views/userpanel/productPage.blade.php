@@ -205,8 +205,7 @@
                                 <div class="card p-3 border-0 shadow-sm">
                                     <div class="text-center">
                                         <img src="{{ asset('images/addWallet.png') }}" alt="amazepay_addTemp">
-                                        <p class="font-xss fw-500 text-black lh-26 mt-2">The e-gift card that you order
-                                            from this page, will be added to your AmazePays account automatically.</p>
+                                        <p class="font-xss fw-500 text-black lh-26 mt-2">Once you order an e-gift card, it will appear on your 'My Orders' page and the details will be sent to you via email and SMS.</p>
                                     </div>
                                 </div>
                             </div>

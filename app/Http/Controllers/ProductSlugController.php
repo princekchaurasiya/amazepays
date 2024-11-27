@@ -17,7 +17,7 @@ class ProductSlugController extends Controller
     {
 
         try {
-            $product = QsProduct::where('slug', $request->slug)->first();
+            $product = QsProduct::where('url', $request->slug)->first();
 
 
             if (!$product) {

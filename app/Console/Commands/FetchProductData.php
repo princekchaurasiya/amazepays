@@ -76,7 +76,7 @@ class FetchProductData extends Command
                     'cpg' => isset($prdtDetails['cpg']) ? serialize($prdtDetails['cpg']) : serialize([]),
                     'payout' => isset($prdtDetails['payout']) ? serialize($prdtDetails['payout']) : serialize([]),
                     'allowedfulfillments' => isset($prdtDetails['allowedfulfillments']) ? json_encode($prdtDetails['allowedfulfillments']) : json_encode([]),
-                    $slug = $prdtDetails['url'] ?? ($prdtDetails['name'] ?? null ? Str::slug($prdtDetails['name']) : '');
+                    $slug = $prdtDetails['url'] ?? ($prdtDetails['name'] ?? null ? Str::slug($prdtDetails['name']) : '')
                 ];
 
                 QsProduct::updateOrInsert(['sku' => $sku], $data);

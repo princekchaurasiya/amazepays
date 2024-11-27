@@ -56,12 +56,12 @@
                                         @if ($product->slug && $product->images && $product->images->small)
                                             <div class="col-lg-3 col-6">
                                                 <div class="product-wrapper-image">
-                                                    <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}" class="d-block text-center">
+                                                    <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
                                                         <img src="{{ $product->images->small ?? URL::asset('/images/no-image.png') }}"
                                                             alt="product-image" class="w-100 mt-4">
                                                     </a>
                                                     <hr>
-                                                    <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}">
+                                                    <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
                                                         <p class="text-center fw-600 mt-3 produtName">{{ ucwords($product->name) }}</p>
                                                     </a>
                                                     @if ($product->discount_percentage > 0)
@@ -124,12 +124,12 @@
                                         @if ($product->slug && $product->images && $product->images->small)
                                             <div class="col-lg-3 col-6">
                                                 <div class="product-wrapper-image">
-                                                    <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}" class="d-block text-center">
+                                                    <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
                                                         <img src="{{ $product->images->small ?? URL::asset('/images/no-image.png') }}"
                                                             alt="product-image" class="w-100 mt-4">
                                                     </a>
                                                     <hr>
-                                                    <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}">
+                                                    <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
                                                         <p class="text-center fw-600 mt-3 produtName">{{ ucwords($product->name) }}</p>
                                                     </a>
                                                     @if ($product->discount_percentage > 0)

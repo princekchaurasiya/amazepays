@@ -31,31 +31,29 @@
                             <div class="row justify-content-center">
                                 <div class="col-lg-3">
                                     <div class="cardImage">
-
-                                        @if ($productDetails['discount_percentage'] && $productDetails['discount_percentage'] > 0)
+                                        @if (!empty($productDetails['discount_percentage']) && $productDetails['discount_percentage'] > 0)
                                             <div class="ribbon ribbon-product-page">
                                                 <span>{{ $productDetails['discount_percentage'] }}% off</span>
                                             </div>
                                         @endif
                                         <img class="img-fluid single-gift-image"
-                                            src="{{ $productDetails['images']->small == null ? URL::asset('/images/hamburger.jpg') : $productDetails['images']->small }}"
+                                            src="{{ $productDetails['images']->small ?? URL::asset('/images/hamburger.jpg') }}"
                                             alt="product-detail-image">
                                     </div>
                                     <div class="cardText">
-                                        <h6 class=" fw-600 font-md mt-2" name="product_name">{{ $productDetails['name'] }}
+                                        <h6 class="fw-600 font-md mt-2" name="product_name">
+                                            {{ $productDetails['name'] ?? 'N/A' }}
                                         </h6>
-                                        <p class="mb-3 font-xssss fw-600 mt-2">Validity: {{ $productDetails['expiry'] }}</p>
+                                        <p class="mb-3 font-xssss fw-600 mt-2">Validity: {{ $productDetails['expiry'] ?? 'N/A' }}</p>
                                         <p>
                                             <span class="mb-3 fw-600 font-xs mt-2 text-orange">Brand</span>:
-                                            <span
-                                                class="mb-3 text-black font-xsss fw-400 mt-2">{{ $productDetails['brandName'] }}</span>
+                                            <span class="mb-3 text-black font-xsss fw-400 mt-2">
+                                                {{ $productDetails['brandName'] ?? 'N/A' }}
+                                            </span>
                                         </p>
-                                        {{-- <p>
-                                            <span class="mb-3 fw-600 font-xs mt-2 text-orange">Category</span>:
-                                            <span class="mb-3 text-black font-xsss fw-400 mt-2">Fashion</span>
-                                        </p> --}}
                                     </div>
                                 </div>
+
                                 <div class="col-lg-9">
                                     <div class="row">
                                         <div class="col-lg-4">
@@ -219,12 +217,12 @@
                                     <input type="radio" name="tabs" id="tabtwo">
                                     <label for="tabtwo">Description</label>
                                     <div class="tab p-3 font-xsss">
-                                        <p>{{ $productDetails['description'] }}</p>
+                                        <p>{{ $productDetails['description'] ?? '' }}</p>
                                     </div>
                                     <input type="radio" name="tabs" id="tabthree">
                                     <label for="tabthree">Terms & Condition</label>
                                     <div class="tab term-condition p-3 font-xsss">
-                                        {!! $productDetails['tnc']->content !!}
+                                        {!! $productDetails['tnc']->content ?? '' !!}
                                     </div>
                                 </div>
                             </div>
@@ -451,3 +449,8 @@
         </script>
     @endpush
 @endsection
+
+
+
+
+

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Exception;
-use Carbon;
+use Carbon\Carbon;
 
 class FetchProductData extends Command
 {

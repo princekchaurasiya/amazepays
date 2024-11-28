@@ -35,7 +35,7 @@ class FetchProductData extends Command
                 $clientSecret = setting('api.qs_clientSecret');
                 $bearerToken = setting('api.bearer_token');
                 $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
-                $dateAtClient = Carbon\Carbon::now()->toIso8601String();
+                $dateAtClient = Carbon::now()->toIso8601String();
 
                 $products_resp = Http::acceptJson()
                     ->withToken($bearerToken)
@@ -49,6 +49,13 @@ class FetchProductData extends Command
                 ]);
 
                 $prdtDetails = $products_resp->json();
+
+                // Check if the response is valid and contains 'name'
+                if (!isset($prdtDetails['name'])) {
+                    $this->error("Missing 'name' for SKU: $sku");
+                    Log::error("Missing 'name' in response for SKU: $sku", ['response' => $prdtDetails]);
+                    continue; // Skip to the next SKU if 'name' is missing
+                }
 
                 // Null-safe handling for each field
                 $data = [
@@ -93,7 +100,7 @@ class FetchProductData extends Command
             }
         }
 
-        $updateTime = Carbon\Carbon::now('Asia/Kolkata')->format('d/m/y H:i:s');
+        $updateTime = Carbon::now('Asia/Kolkata')->format('d/m/y H:i:s');
         $this->info('Product data fetch and update completed.');
         Log::info('Product data fetch and update completed in the database at:', ['update_time' => $updateTime]);
 
@@ -102,6 +109,7 @@ class FetchProductData extends Command
         Log::error('Product data fetch and update failed: ' . $e->getMessage());
     }
 }
+
 
 }
 

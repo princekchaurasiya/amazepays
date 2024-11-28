@@ -6,7 +6,8 @@
     <div class="gift-card-detail-page pt-lg--7 pb-lg--7 pb-5">
         <div class="container-fluid">
             <div class="row">
-                <form action="{{ route('checkoutPage', ['slug' => $productDetails['slug']]) }}" method="POST"
+
+                <form action="{{ route('checkoutPage', ['slug' => $productDetails['url']]) }}" method="POST"
                     id="giftCardPageForm">
                     {{ csrf_field() }}
                     <div>

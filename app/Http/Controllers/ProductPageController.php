@@ -16,6 +16,7 @@ class ProductPageController extends Controller
 {
     public function saveGiftCardFormValues(Request $request)
     {
+
         $formData = $request->all();
         session(['giftCardFormValues' => $formData]);
 
@@ -32,6 +33,7 @@ class ProductPageController extends Controller
         // Fetch product by slug
         $product = QsProduct::where('slug', $slug)->firstOrFail();
 
+
         // Retrieve the checkout session data if available
         $checkoutData = session('checkout_data', []);
         Log::info('Retrieved checkout data from session: ', $checkoutData);
@@ -40,12 +42,14 @@ class ProductPageController extends Controller
         $product->price = json_decode($product->price);
         Log::info('Decoded product price: ', ['price' => $product->price]);
 
+
         // Validation rules for the form
         $rules = [
             'denomination' => [
                 'required',
                 function ($attribute, $value, $fail) use ($product) {
                     Log::info('Validating denomination', ['denomination' => $value]);
+
                     if (is_object($product->price)) {
                         if ($product->price->type === 'SLAB' && !in_array($value, $product->price->denominations)) {
                             Log::warning('Invalid denomination value', ['denomination' => $value]);
@@ -151,8 +155,6 @@ class ProductPageController extends Controller
 
 
         $payment = new CcAvenuePayment();
-
-
         $payment->order_id = $qsOrder->id;
         $payment->user_id = Auth::id();
         $payment->mer_amount = $qsOrder->grand_payable_amount;

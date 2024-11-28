@@ -59,129 +59,106 @@
                                     <div class="row">
                                         <div class="col-lg-4">
                                             <div class="order-2 mb-3 mb-lg-0 coupon-quantity">
-                                                <!-- slab means checkbox -->
-                                                @if ($productDetails['price']->type == 'SLAB')
-                                                    <label class="small-size fw-600 text-grey-900 font-xsss">Select
-                                                        Denomination</label>
+                                                <!-- Handle both SLAB and RANGE types or missing price type -->
+                                                @if (isset($productDetails['price']->type) && $productDetails['price']->type == 'SLAB')
+                                                    <label class="small-size fw-600 text-grey-900 font-xsss">Select Denomination</label>
                                                     <div class="radio-btn-row boxed">
                                                         @foreach ($productDetails['price']->denominations as $key => $denomination)
                                                             <div class="boxed">
                                                                 <input type="radio"
-                                                                    class="custom-control-input denomination-slab"
-                                                                    id="customRadio-{{ $key }}" name="denomination"
-                                                                    value="{{ $denomination }}"
-                                                                    {{ $key === 0 || old('denomination') == $denomination ? 'checked' : '' }}>
+                                                                       class="custom-control-input denomination-slab"
+                                                                       id="customRadio-{{ $key }}"
+                                                                       name="denomination"
+                                                                       value="{{ $denomination }}"
+                                                                       {{ $key === 0 || old('denomination') == $denomination ? 'checked' : '' }}>
                                                                 <label class="small-size fw-500 font-xsss"
-                                                                    for="customRadio-{{ $key }}">{{ $denomination }}</label>
+                                                                       for="customRadio-{{ $key }}">{{ $denomination }}</label>
                                                             </div>
                                                         @endforeach
-
                                                         <span class="font-xssss fw-400 error-rec-deno text-danger"></span>
                                                     </div>
-                                                @elseif ($productDetails['price']->type === 'RANGE')
-                                                    <label class="small-size fw-600 text-grey-900 font-xsss">Enter
-                                                        Denomination</label>
+                                                @elseif (isset($productDetails['price']->type) && $productDetails['price']->type == 'RANGE' || !isset($productDetails['price']->type))
+                                                    <label class="small-size fw-600 text-grey-900 font-xsss">Enter Denomination</label>
                                                     <input type="text"
-                                                        class="form-control credentails-field denomination-range"
-                                                        placeholder="Enter Denomination" name="denomination"
-                                                        id="denomination-range" {{-- value="{{ old('denomination', session('giftCardFormValues.denomination', $productDetails['minPrice'])) }}" --}}
-                                                        value="{{ old('denomination', $productDetails['minPrice']) }}"
-                                                        maxlength="6">
-                                                    <small class="float-right form-text text-current font-xsss">Min:
-                                                        ₹{{ $productDetails['minPrice'] }} Max:
-                                                        ₹{{ $productDetails['maxPrice'] }}</small>
-                                                    <div class="font-xssss fw-400 error-rec-deno-range text-danger mt-3">
-                                                    </div>
+                                                           class="form-control credentails-field denomination-range"
+                                                           placeholder="Enter Denomination"
+                                                           name="denomination"
+                                                           id="denomination-range"
+                                                           value="{{ old('denomination', $productDetails['minPrice']) }}"
+                                                           maxlength="6">
+                                                    <small class="float-right form-text text-current font-xsss">
+                                                        Min: ₹{{ $productDetails['minPrice'] }} Max: ₹{{ $productDetails['maxPrice'] }}
+                                                    </small>
+                                                    <div class="font-xssss fw-400 error-rec-deno-range text-danger mt-3"></div>
+                                                @else
+                                                    <span class="font-xssss fw-400 text-danger">Price type is not valid.</span>
                                                 @endif
                                             </div>
                                         </div>
 
-
                                         <div class="col-lg-4">
                                             <div class="row">
                                                 <div class="order-3 mb-3 mb-lg-0 coupon-quantity">
-                                                    <label
-                                                        class="small-size fw-600 text-grey-900 font-xsss">Quantity</label>
-                                                    <input type="text" class="form-control credentails-field"
-                                                        placeholder="Quantity" name="quantity" id="quantity"
-                                                        {{-- value="{{ old('quantity', session('giftCardFormValues.quantity')) }}" --}} value="1" maxlength="2">
-                                                    <small class="float-right form-text text-current font-xsss">Min: 1 Max:
-                                                        10</small>
+                                                    <label class="small-size fw-600 text-grey-900 font-xsss">Quantity</label>
+                                                    <input type="text"
+                                                           class="form-control credentails-field"
+                                                           placeholder="Quantity"
+                                                           name="quantity"
+                                                           id="quantity"
+                                                           value="{{ old('quantity', 1) }}"
+                                                           maxlength="2">
+                                                    <small class="float-right form-text text-current font-xsss">Min: 1 Max: 10</small>
                                                     <div class="font-xssss fw-400 error-rec-qnty text-danger mt-3"></div>
                                                 </div>
                                             </div>
                                         </div>
+
                                         <div class="col-lg-4 mb-4 pl-lg-5">
                                             <h6 class="mb-3 fw-600 font-xss mt-2">Gift Send Option</h6>
                                             <div class="custom-control mr-4 custom-radio">
-                                                <input type="radio" class="custom-control-input gift-option"
-                                                    id="sendAsGiftRadio" name="gift_send_option" value="send_as_gift"
-                                                    >
-                                                <label
-                                                    class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
-                                                    for="sendAsGiftRadio">Send as Gift</label>
+                                                <input type="radio"
+                                                       class="custom-control-input gift-option"
+                                                       id="sendAsGiftRadio"
+                                                       name="gift_send_option"
+                                                       value="send_as_gift"
+                                                       {{ old('gift_send_option', 'send_as_gift') == 'send_as_gift' ? 'checked' : '' }}>
+                                                <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="sendAsGiftRadio">
+                                                    Send as Gift
+                                                </label>
                                             </div>
                                             <div class="custom-control mr-0 custom-radio">
-                                                <input type="radio" class="custom-control-input gift-option"
-                                                    id="buyForSelfRadio" name="gift_send_option" value="buy_for_self"
-                                                    checked="checked" >
-                                                <label
-                                                    class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
-                                                    for="buyForSelfRadio">Buy for Self</label>
-                                                <div class="row">
-                                                    {{-- <div class="col-12 mb-4">
-                                                        <input type="hidden" name="delivery_mode" value="both">
-                                                    </div> --}}
-                                                </div>
+                                                <input type="radio"
+                                                       class="custom-control-input gift-option"
+                                                       id="buyForSelfRadio"
+                                                       name="gift_send_option"
+                                                       value="buy_for_self"
+                                                       {{ old('gift_send_option', 'send_as_gift') == 'buy_for_self' ? 'checked' : '' }}>
+                                                <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="buyForSelfRadio">
+                                                    Buy for Self
+                                                </label>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="row justify-content-center mt-4 gifting-details" style="display: block;">
-                                        <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
-                                        <div class="row"> <!-- Added .row to group the .col-lg-* elements -->
-                                            <div class="col-12 col-lg-3 receiver-name">
-
-                                                <input type="text" class="form-control mb-3 credentails-field"
-                                                    placeholder="Receiver Name" name="receiver_name" id="receiver-name"
-                                                    {{-- value="{{ old('receiver_name', session('giftCardFormValues.receiver_name')) }}" --}} value="">
-                                                <span class="font-xssss fw-400 error-rec-name text-danger"></span>
-                                            </div>
-                                            <div class="col-12 col-lg-3 receiver-email">
-                                                <input type="text" class="form-control mb-3 credentails-field"
-                                                    placeholder="Receiver Email" name="receiver_email"
-                                                    id="receiver-email" {{-- value="{{ old('receiver_email', session('giftCardFormValues.receiver_email')) }" --}} value="">
-                                                <span class="font-xssss fw-400 error-rec-email text-danger"></span>
-                                            </div>
-                                            <div class="col-12 col-lg-3 receiver-mobile">
-                                                <input type="text" class="form-control mb-3 credentails-field"
-                                                    placeholder="Receiver Mobile Number" name="receiver_mobile"
-                                                    id="receiver-mobile" {{-- value="
-                                                {{ old('receiver_mobile', session('giftCardFormValues.receiver_mobile')) }}
-                                                 " --}} value="">
-                                                <span class="font-xssss fw-400 error-rec-mobile text-danger"></span>
-                                            </div>
-                                            <div class="col-12 col-lg-3 receiver-message">
-                                                <input type="text" class="form-control mb-3 credentails-field"
-                                                    placeholder="Message for Receiver" name="receiver_msg"
-                                                    id="receiver-msg" {{-- value="{{ old('receiver_msg', session('giftCardFormValues.receiver_msg')) }}" --}} value="">
-                                            </div>
-                                        </div> <!-- End .row -->
                                     </div>
 
                                     <div class="row">
                                         <div class="col-lg-12">
                                             @if (Auth::check())
                                                 <input type="submit"
-                                                    class="form-control float-right h60 bg-current text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color"
-                                                    value="Go to Checkout Page" id="pay-now">
+                                                       class="form-control float-right h60 bg-current text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color"
+                                                       value="Go to Checkout Page"
+                                                       id="pay-now">
                                             @else
                                                 <a href="#"
-                                                    class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color"
-                                                    data-toggle="modal" data-target="#Modallogin">Go to Checkout Page</a>
+                                                   class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color"
+                                                   data-toggle="modal"
+                                                   data-target="#Modallogin">
+                                                    Go to Checkout Page
+                                                </a>
                                             @endif
                                         </div>
                                     </div>
                                 </div>
+
 
                             </div>
                         </div>

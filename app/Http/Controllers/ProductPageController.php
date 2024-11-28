@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
-
 class ProductPageController extends Controller
 {
     public function saveGiftCardFormValues(Request $request)
@@ -28,10 +27,14 @@ class ProductPageController extends Controller
 
     public function storePayNowData(Request $request, $slug)
     {
+
+
+
         Log::info('storePayNowData initiated with slug: ' . $slug);
 
         // Fetch product by slug
-        $product = QsProduct::where('slug', $slug)->firstOrFail();
+        $product = QsProduct::where('url', $slug)->firstOrFail();
+
 
 
         // Retrieve the checkout session data if available
@@ -42,25 +45,68 @@ class ProductPageController extends Controller
         $product->price = json_decode($product->price);
         Log::info('Decoded product price: ', ['price' => $product->price]);
 
-
         // Validation rules for the form
         $rules = [
             'denomination' => [
                 'required',
                 function ($attribute, $value, $fail) use ($product) {
-                    Log::info('Validating denomination', ['denomination' => $value]);
+                    Log::info('Validating denomination', [
+                        'denomination' => $value,
+                        'product_id' => $product->id,
+                        'price' => is_object($product->price) ? json_encode($product->price) : $product->price, // Log as JSON if object
+                    ]);
 
-                    if (is_object($product->price)) {
-                        if ($product->price->type === 'SLAB' && !in_array($value, $product->price->denominations)) {
-                            Log::warning('Invalid denomination value', ['denomination' => $value]);
-                            $fail('Invalid denomination value.');
-                        } elseif ($product->price->type === 'RANGE' && ($value < $product->minPrice || $value > $product->maxPrice)) {
-                            Log::warning('Denomination out of range', ['denomination' => $value]);
-                            $fail("The denomination must be between ₹{$product->minPrice} and ₹{$product->maxPrice}.");
+                    Log::info('Debugging product price:', ['type' => gettype($product->price), 'value' => $product->price]);
+
+                    // If $product->price is an object, convert it to an array
+                    $priceData = (array) $product->price;
+
+                    // Check for valid price data
+                    if (!is_array($priceData)) {
+                        Log::warning('Invalid price format', ['price' => $product->price]);
+                        $fail('Invalid product price configuration.');
+                        return;
+                    }
+
+                    // Default to 'RANGE' if type is missing
+                    $priceType = $priceData['type'] ?? 'RANGE';
+
+                    // Now handle SLAB or RANGE validation
+                    if ($priceType === 'SLAB') {
+                        // Validate SLAB type denominations
+                        $denominations = $priceData['denominations'] ?? [];
+                        if (!in_array((string) $value, $denominations)) {
+                            Log::warning('Invalid SLAB denomination', [
+                                'denomination' => $value,
+                                'allowed' => $denominations
+                            ]);
+                            $fail('Invalid denomination value. Allowed values are: ' . implode(', ', $denominations));
+                        }
+                    } elseif ($priceType === 'RANGE') {
+                        // Validate RANGE type price range
+                        $minPrice = $priceData['min'] ?? $product->minPrice;
+                        $maxPrice = $priceData['max'] ?? $product->maxPrice;
+
+                        // Default to the range if missing
+                        if ($minPrice === null || $maxPrice === null) {
+                            Log::warning('Missing min/max values for RANGE type, using default min/max', [
+                                'minPrice' => $minPrice,
+                                'maxPrice' => $maxPrice,
+                                'product_id' => $product->id
+                            ]);
+                        }
+
+                        if ($value < $minPrice || $value > $maxPrice) {
+                            Log::warning('Denomination out of RANGE', [
+                                'denomination' => $value,
+                                'min' => $minPrice,
+                                'max' => $maxPrice
+                            ]);
+                            $fail("The denomination must be between ₹{$minPrice} and ₹{$maxPrice}.");
                         }
                     } else {
-                        Log::error('Price information is not available for the product');
-                        $fail('Price information is not available.');
+                        Log::warning('Unknown price type', ['priceType' => $priceType]);
+                        $fail('Invalid price configuration.');
                     }
                 },
             ],
@@ -71,6 +117,8 @@ class ProductPageController extends Controller
             'receiver_mobile' => 'nullable|required_if:gift_send_option,send_as_gift|digits:10',
             'receiver_msg' => 'nullable|string|max:500',
         ];
+
+
 
         $request->merge(['delivery_mode' => 'both']);
         Log::info('Merged delivery mode to request data.');
@@ -99,7 +147,6 @@ class ProductPageController extends Controller
         $monthlyPurchaseLimit = $product->sku_limits ?? null;
         Log::info('Monthly purchase limit:', ['limit' => $monthlyPurchaseLimit]);
 
-
         // If no limit is set, allow the order to proceed without restriction
         if ($monthlyPurchaseLimit !== null && $monthlyPurchaseLimit != '') {
             $remainingLimit = $monthlyPurchaseLimit - $totalPurchasesThisMonth;
@@ -127,13 +174,13 @@ class ProductPageController extends Controller
         Log::info('Creating a new order for user:', ['user_id' => Auth::id()]);
 
         $qsOrder = new QsOrder();
-        // dd($product,$qsOrder);
         $qsOrder->user_id = Auth::id();
         $qsOrder->sku = $product->sku;
         $qsOrder->product_name = $product->name;
         $qsOrder->denomination = $request->denomination;
         $qsOrder->quantity = $request->quantity;
         $qsOrder->grand_payable_amount = $grandPayableAmount;
+
         // calculation for discount
         $discountPercentage = $product->discount_percentage;
         $discountAmount = $grandPayableAmount * ($discountPercentage / 100);
@@ -151,8 +198,6 @@ class ProductPageController extends Controller
         Log::info('Order saved successfully', ['order_id' => $qsOrder->id]);
         $qsOrder->refno = 'Amz' . $qsOrder->id;
         $qsOrder->save();
-
-
 
         $payment = new CcAvenuePayment();
         $payment->order_id = $qsOrder->id;
@@ -172,9 +217,6 @@ class ProductPageController extends Controller
         $orderSummary->order_status = $qsOrder->order_status; // Assuming `order_status` exists in QsOrder
         $orderSummary->save();
 
-
-
-
         Log::info('Generated reference number:', ['refno' => $qsOrder->refno]);
 
         session()->put('session_qs_order_id', $qsOrder->id);
@@ -182,14 +224,14 @@ class ProductPageController extends Controller
 
         Log::info('Order ID and reference number stored in session.');
 
-        $qsProd = QsProduct::where('slug', $slug)->firstOrFail();
+        $qsProd = QsProduct::where('url', $slug)->firstOrFail();
         $qsProd['prodData'] = $request->all();
         $qsProd['currency'] = json_decode($qsProd['currency']);
         $qsProd['images'] = json_decode($qsProd->images);
 
-
         return view('userpanel.checkout', compact('qsProd', 'checkoutData', 'qsOrder'));
     }
+
 
 
     public function updateSessionData(Request $request)

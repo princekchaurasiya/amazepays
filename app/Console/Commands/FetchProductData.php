@@ -22,10 +22,11 @@ class FetchProductData extends Command
     }
 
     public function handle()
-    {
-        $skus = QsProduct::pluck('sku');
-        try {
-            foreach ($skus as $sku) {
+{
+    $skus = QsProduct::pluck('sku');
+    try {
+        foreach ($skus as $sku) {
+            try {
                 $this->info("Fetching product data for SKU: $sku");
 
                 $requestBody = '';
@@ -77,24 +78,31 @@ class FetchProductData extends Command
                     'payout' => isset($prdtDetails['payout']) ? serialize($prdtDetails['payout']) : serialize([]),
                     'allowedfulfillments' => isset($prdtDetails['allowedfulfillments']) ? json_encode($prdtDetails['allowedfulfillments']) : json_encode([]),
                     'slug' => $prdtDetails['url'] ?? ($prdtDetails['name'] ? Str::slug($prdtDetails['name']) : ''),
-
                 ];
 
                 QsProduct::updateOrInsert(['sku' => $sku], $data);
                 $productId = $prdtDetails['id'] ?? 'N/A';
                 $this->info("Updated product data for SKU: $sku (ID: $productId)");
                 Log::info("Updated product data for SKU: $sku (ID: $productId)");
+
+            } catch (Exception $e) {
+                // Log the error for the specific SKU and continue with the next one
+                $this->error("Error fetching data for SKU: $sku - " . $e->getMessage());
+                Log::error("Error fetching data for SKU: $sku - " . $e->getMessage());
+                continue; // Continue with the next SKU
             }
-
-            $updateTime = Carbon\Carbon::now('Asia/Kolkata')->format('d/m/y H:i:s');
-            $this->info('Product data fetch and update completed.');
-            Log::info('Product data fetch and update completed in the database at:', ['update_time' => $updateTime]);
-
-        } catch (Exception $e) {
-            $this->error($e->getMessage());
-            Log::error('Product data fetch and update failed: ' . $e->getMessage());
         }
+
+        $updateTime = Carbon\Carbon::now('Asia/Kolkata')->format('d/m/y H:i:s');
+        $this->info('Product data fetch and update completed.');
+        Log::info('Product data fetch and update completed in the database at:', ['update_time' => $updateTime]);
+
+    } catch (Exception $e) {
+        $this->error($e->getMessage());
+        Log::error('Product data fetch and update failed: ' . $e->getMessage());
     }
+}
+
 }
 
 

@@ -57,6 +57,9 @@ class FetchProductData extends Command
                     continue; // Skip to the next SKU if 'name' is missing
                 }
 
+                $productName = $prdtDetails['name'];
+                $this->info("Fetched product data for SKU: $sku (Product Name: $productName)");
+
                 // Null-safe handling for each field
                 $data = [
                     'product_id' => $prdtDetails['id'] ?? null,

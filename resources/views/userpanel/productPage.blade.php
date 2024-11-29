@@ -86,7 +86,11 @@
                                                            value="{{ old('denomination', $productDetails['minPrice']) }}"
                                                            maxlength="6">
                                                     <small class="float-right form-text text-current font-xsss">
-                                                        Min: ₹{{ $productDetails['minPrice'] }} Max: ₹{{ $productDetails['maxPrice'] }}
+                                                        @if ($productDetails['minPrice'] === $productDetails['maxPrice'])
+                                                            Price: ₹{{ $productDetails['minPrice'] }}
+                                                        @else
+                                                            Min: ₹{{ $productDetails['minPrice'] }} Max: ₹{{ $productDetails['maxPrice'] }}
+                                                        @endif
                                                     </small>
                                                     <div class="font-xssss fw-400 error-rec-deno-range text-danger mt-3"></div>
                                                 @else
@@ -157,6 +161,7 @@
                                         </div>
                                     </div>
                                 </div>
+
 
 
                             </div>

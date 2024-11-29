@@ -20,11 +20,6 @@ class ProductSlugController extends Controller
             $product = QsProduct::where('url', $request->slug)->first();
 
             if (!$product) {
-                // If product is not found, show a friendly error message
-                // abort(404);
-
-                // return view('userpanel.wentWrong')->with('errorMessage', 'Requested product does not exist. Please try with a different product.');
-
                 return view('errors.404');
             }
 
@@ -33,13 +28,10 @@ class ProductSlugController extends Controller
             $productDetails['images'] = json_decode($productDetails['images']);
             $productDetails['tnc'] = json_decode($productDetails['tnc']);
 
-            // Use dd to inspect the productDetails
-
-
             // Ensure `minPrice` and `maxPrice` are available and valid
             if (
                 !isset($productDetails['minPrice']) || !isset($productDetails['maxPrice']) ||
-                $productDetails['minPrice'] <= 0 || $productDetails['maxPrice'] <= $productDetails['minPrice']
+                $productDetails['minPrice'] <= 0 || $productDetails['maxPrice'] <= 0
             ) {
                 Log::error('Invalid or missing min/max price for product ID: ' . $productDetails['id']);
                 return view('userpanel.wentWrong')->with(
@@ -48,10 +40,21 @@ class ProductSlugController extends Controller
                 );
             }
 
+            // Handle case where minPrice and maxPrice are the same
+            if ($productDetails['minPrice'] === $productDetails['maxPrice']) {
+                Log::info('Product has identical minPrice and maxPrice for product ID: ' . $productDetails['id']);
+                $productDetails['priceRange'] = ['singlePrice' => $productDetails['minPrice']];
+            } else {
+                // Valid range, pass minPrice and maxPrice
+                $productDetails['priceRange'] = [
+                    'minPrice' => $productDetails['minPrice'],
+                    'maxPrice' => $productDetails['maxPrice']
+                ];
+            }
+
             // Check if `price->type` is valid if it exists
             if (isset($productDetails['price']->type) && !in_array($productDetails['price']->type, ['RANGE', 'SLAB'])) {
                 Log::warning('Invalid product price type: ' . $productDetails['price']->type . ' for product ID: ' . $productDetails['id']);
-                // Continue rendering the product page as long as minPrice and maxPrice are valid
             }
 
             // If `price->type` is not present, log the absence and continue
@@ -60,15 +63,13 @@ class ProductSlugController extends Controller
             }
 
             // Render the product page
-            Log::info('Product available with minPrice and maxPrice. Rendering product page for product ID: ' . $productDetails['id']);
+            Log::info('Product available with valid price details. Rendering product page for product ID: ' . $productDetails['id']);
             return view('userpanel.productPage', compact('productDetails'));
-
-
 
         } catch (Exception $e) {
             Log::error('Error fetching product by slug: ' . $e->getMessage());
-
             return view('userpanel.wentWrong')->with('errorMessage', 'Something Went Wrong. Please try again later.');
         }
+
     }
 }

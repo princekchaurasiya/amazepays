@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ContactUs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ContactUsController extends Controller
 {
@@ -46,6 +47,28 @@ class ContactUsController extends Controller
             ]);
 
             Log::info('Contact information saved successfully');
+
+           // Prepare email data
+           $leadDetails = [
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'message' => $validatedData['message'],
+        ];
+
+        // Define the recipient email
+        $recipientEmail = 'it@amazepays.in';
+
+        // Send the email using Blade template
+        Mail::send('email.new_lead_inquiry', [
+            'leadDetails' => $leadDetails  // Pass the lead details to the view
+        ], function ($message) use ($recipientEmail) {
+            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))
+                ->to($recipientEmail)
+                ->subject("New Lead Inquiry for Amazepay");
+        });
+
+        Log::info('Lead inquiry email sent to admin.');
+
 
             return redirect()->back()->with('success', 'Contact information saved successfully!');
         } catch (\Illuminate\Validation\ValidationException $e) {

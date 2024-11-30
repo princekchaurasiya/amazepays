@@ -40,7 +40,7 @@ class FetchCategoryData extends Command
                 return json_encode(['status' => 200, 'data' => 'Stored Successfully']);
             } else {
                 Log::error('Something went wrong while fetching the category.', ['error' => $category_resp->body()]);
-                $this->info($e->$category_resp->body());
+                $this->info($category_resp->body());
                 return json_encode(['status' => 400, 'data' => 'Something went wrong']);
             }
         } catch (\Exception $e) {

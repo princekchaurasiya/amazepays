@@ -18,18 +18,19 @@
                         <!-- loop product here -->
                         <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12">
                             <div class="row">
+
                                 @foreach ($products as $product)
                                     @if ($product->slug && isset($product->images) && isset($product->images['small']))
                                         <div class="col-lg-3 col-6">
                                             <div class="product-wrapper-image">
-                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}" class="d-block text-center">
+                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
                                                     <p class="single-image-wrapper">
                                                         <img src="{{ $product->images['small'] ?? URL::asset('/images/no-image.png') }}" alt="product-image" class="w-100 mt-4 d-inline-block">
                                                     </p>
                                                 </a>
 
                                                 <hr>
-                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->slug]) }}">
+                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
                                                     <div class="product-image-text-wrapper m-lg-1">
                                                         <p class="text-center fw-600 text-product-name-color text-product-name-font-size mt-lg-2 mt-3">
                                                             {{ ucwords($product->name) }}

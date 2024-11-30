@@ -42,27 +42,27 @@ class WoohooOrderController extends Controller
                     $this->handleSuccessFullOrder($orderCreatedResponse);
                     log::info(333);
                 } elseif (isset($orderCreatedResponse["status_code"]) && $orderCreatedResponse["status_code"] == "400") {
-                    $this->sendOrderFailureMail();
+                    $this->sendOrderFailureMail($qsOrderDetails);
                     $errorCode = $orderCreatedResponse["errorCode"] ?? "default";
                     $transactionStatusMessage = __("errors." . $errorCode);
                     Log::error("Order creation failed with status 400 and error code: " . $errorCode);
                 } elseif (isset($orderCreatedResponse["status_code"]) && $orderCreatedResponse["status_code"] == "500") {
-                    $this->sendOrderFailureMail();
+                    $this->sendOrderFailureMail($qsOrderDetails);
                     $errorCode = $orderCreatedResponse["errorCode"] ?? "default";
                     $transactionStatusMessage = __("errors." . $errorCode);
                     Log::error("Order creation failed with status 500 and error code: " . $errorCode);
                 } else {
-                    $this->sendOrderFailureMail();
+                    $this->sendOrderFailureMail($qsOrderDetails);
                     $transactionStatusMessage = __("errors.default");
                     Log::error("Unexpected response from order creation: " . json_encode($orderCreatedResponse));
                 }
             } else {
                 $transactionStatusMessage = __("errors.default");
-                $this->sendOrderFailureMail();
+                $this->sendOrderFailureMail($qsOrderDetails);
                 Log::error("Order creation request failed. No response received.");
             }
         } else {
-            $this->sendOrderFailureMail();
+            $this->sendOrderFailureMail($qsOrderDetails);
             $transactionStatusMessage = __("errors.default");
             Log::error("No payment data found in session.");
         }
@@ -122,7 +122,7 @@ class WoohooOrderController extends Controller
                     return ["transactionStatusMessage" => __("errors.7002"), "status_code" => 500, "status" => null, "errorCode" => "7002", "errorMessage" => __("errors.7002"), "defaultErrorMessage" => __("errors.default"), "isSuccessful" => false];
                 }
             } else {
-                $this->sendOrderFailureMail();
+                $this->sendOrderFailureMail($qsOrderDetails);
                 $statusCode = $createOrderResponse->status();
                 $response = json_decode($createOrderResponse->body(), true);
                 $errorResponse = $this->handleErrorResponse($statusCode, $response, $qsOrderDetails, $createOrderResponse);
@@ -135,12 +135,12 @@ class WoohooOrderController extends Controller
                 Log::info("Status function response is complete. Returning response.");
                 return $statusFunctionResponse;
             } else {
-                $this->sendOrderFailureMail();
+                $this->sendOrderFailureMail($qsOrderDetails);
                 Log::info("Status function response is not complete. Returning failure.");
                 return ["transactionStatusMessage" => __("errors.7002"), "status_code" => 500, "errorCode" => "7002", "errorMessage" => __("errors.7002"), "defaultErrorMessage" => __("errors.default"), "isSuccessful" => false];
             }
         } catch (\Exception $e) {
-            $this->sendOrderFailureMail();
+            $this->sendOrderFailureMail($qsOrderDetails);
             Log::error("Unexpected exception: " . $e->getMessage());
             return $this->handleUnexpectedErrorResponse($e);
         }
@@ -322,21 +322,34 @@ class WoohooOrderController extends Controller
     {
         $pdf = PDF::loadView("layouts.invoice", $prepareMailDetails);
         Mail::send(["html" => "layouts.mail"], compact("prepareMailDetails", "pdf"), function ($message) use ($prepareMailDetails, $pdf) {
-            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))->to($prepareMailDetails["billing_email"], $prepareMailDetails["billing_name"])->subject(config("companyDefaultValues.default_subject"))->attachData($pdf->output(), "invoice.pdf"); });
+            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))->to($prepareMailDetails["billing_email"], $prepareMailDetails["billing_name"])->subject(config("companyDefaultValues.default_subject"))->attachData($pdf->output(), "invoice.pdf");
+        });
         $msg = "Trasnaction Mail created successfully!";
         $status = "success";
     }
-    public function sendOrderFailureMail()
+    public function sendOrderFailureMail($qsOrderDetails)
     {
-        $senderEmail = 'it@amazepays.in';
-        $emailContent = "Your payment was successful, but the order has failed.";
-        Mail::raw($emailContent, function ($message) use ($senderEmail) {
-            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))->to($senderEmail)->subject("Order Failure Notification"); });
+        // Define the recipient email
+        $recipientEmail = 'it@amazepays.in';
+
+        // Send the email using Blade template
+        Mail::send('email.order-failure', [
+            'orderDetails' => $qsOrderDetails  // Pass order details to the view
+        ], function ($message) use ($recipientEmail) {
+            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))
+                ->to($recipientEmail)
+                ->subject("Order Failure Notification");
+        });
+
+        Log::info("Order Failure email sent to: " . $recipientEmail);
     }
+
+
     public function sendGiftMail($prepareMailDetails, $cardsArray)
     {
         Mail::send(["html" => "layouts.giftmail"], compact("prepareMailDetails", "cardsArray"), function ($message) use ($prepareMailDetails) {
-            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))->to($prepareMailDetails["shipToEmail"], $prepareMailDetails["shipToName"])->subject(config("companyDefaultValues.gift_subject")); });
+            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))->to($prepareMailDetails["shipToEmail"], $prepareMailDetails["shipToName"])->subject(config("companyDefaultValues.gift_subject"));
+        });
         $msg = "Gift Mail created successfully!";
         $status = "success";
     }

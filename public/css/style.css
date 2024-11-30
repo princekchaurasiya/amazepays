@@ -17823,3 +17823,60 @@ text-decoration: none;
 color: #212529 !important;
 font-weight: 700;
 }
+
+.btn-blue-background-color{
+    background-color: #01007f !important;
+}
+
+.btn-orange-background-color{
+    background-color: #ff6601 !important
+}
+
+.success-icon, .error-icon {
+    font-size: 50px;
+    color: #4CAF50; /* Green for success */
+}
+
+.error-icon {
+    color: #F44336; /* Red for errors */
+}
+
+.success-text {
+    font-weight: bold;
+    color: #4CAF50; /* Green text for success message */
+}
+
+.error-text {
+    font-weight: bold;
+    color: #F44336; /* Red text for error message */
+}
+
+.success-message, .error-message {
+    font-size: 18px;
+    color: #333;
+}
+
+.refund-info {
+    font-size: 16px;
+    color: #FF9800; /* Orange color for refund information */
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+.Order-status-link {
+    font-size: 16px;
+    color: #007BFF; /* Blue link color */
+    font-weight: 500;
+}
+
+.Order-status-link:hover {
+    text-decoration: underline;
+}
+
+.error-link {
+    color: #FF5722; /* Red link color for error message */
+}
+
+.error-link:hover {
+    text-decoration: underline;
+}

@@ -723,7 +723,7 @@
                                                     <span>Order Summary</span>
                                                 </div>
                                                 <div class="col-md-6 col-sm-4 col-xp-6">
-                                                    <a href="{{ route('get-product-by-slug', ['slug' => $qsProd->slug]) }}"
+                                                    <a href="{{ route('get-product-by-slug', ['slug' => $qsProd->url]) }}"
                                                         class="float-right mont-font">Edit</a>
                                                 </div>
                                             </div>

@@ -241,3 +241,6 @@ Route::get('/check-balance', [CardBalanceController::class, 'showCheckBalanceFor
 Route::post('/check-balance', [CardBalanceController::class, 'checkBalance'])->name('checkCardBalance');
 
 
+Route::get('/order-failure', function () {
+    return view('order-failure'); // This will render the order-failure.blade.php view
+});

@@ -57,6 +57,9 @@
                             <li class="nav-item {{ Request::is('contact-us') ? 'active' : '' }}">
                                 <a class="nav-link" href="{{ route('contact-us') }}">Contact</a>
                             </li>
+                            <li class="nav-item {{ Request::is('check-balance') ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ route('showCheckBalanceForm') }}">Check Balance</a>
+                            </li>
                         </ul>
 
                         <form class="form-inline my-2 my-lg-0 flex-grow-1 mr-3" action="{{ route('search') }}" method="GET">

@@ -27,6 +27,7 @@ use App\Http\Controllers\{
     DocumentController,
     ViewCardDetailsController,
     ContactUsController,
+    CardBalanceController,
     ChangePasswordUpdateController,
     Voyager\VoyagerGenerateBearerTokenController,
     Voyager\VoyagerGetCategoryController,
@@ -236,6 +237,7 @@ Route::get('/category/{slug}', [AmazepayCategoryController::class, 'show'])->nam
 
 Route::get('/brand/{slug}', [AmazepayBrandController::class, 'show'])->name('brands.show');
 
-
+Route::get('/check-balance', [CardBalanceController::class, 'showCheckBalanceForm'])->name('showCheckBalanceForm');
+Route::post('/check-balance', [CardBalanceController::class, 'checkBalance'])->name('checkCardBalance');
 
 

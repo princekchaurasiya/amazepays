@@ -329,19 +329,28 @@ class WoohooOrderController extends Controller
     }
     public function sendOrderFailureMail($qsOrderDetails)
     {
-        // Define the recipient email
-        $recipientEmail = 'it@amazepays.in';
+        // Fetch the recipient emails from the .env file
+        $orderFailureAdminEmail = env('ORDER_FAILURE_ADMIN_EMAIL');
+        $orderFailureITAdminEmail = env('ORDER_FAILURE_IT_ADMIN_EMAIL');
 
-        // Send the email using Blade template
-        Mail::send('email.order-failure', [
-            'orderDetails' => $qsOrderDetails  // Pass order details to the view
-        ], function ($message) use ($recipientEmail) {
-            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))
-                ->to($recipientEmail)
-                ->subject("Order Failure Notification");
-        });
+        try {
+            // Send the email using Blade template
+            Mail::send('email.order-failure', [
+                'orderDetails' => $qsOrderDetails  // Pass order details to the view
+            ], function ($message) use ($orderFailureAdminEmail, $orderFailureITAdminEmail) {
+                $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))
+                    ->to($orderFailureAdminEmail) // Main recipient (admin)
+                    ->cc($orderFailureITAdminEmail)   // IT admin in CC
+                    ->subject("Order Failure Notification");
+            });
 
-        Log::info("Order Failure email sent to: " . $recipientEmail);
+            // Log the email sent information
+            Log::info("Order Failure email sent to admin: " . $orderFailureAdminEmail . " and IT admin: " . $orderFailureITAdminEmail);
+
+        } catch (\Exception $e) {
+            // Log any errors during the email sending process
+            Log::error("Failed to send Order Failure email: " . $e->getMessage());
+        }
     }
 
 

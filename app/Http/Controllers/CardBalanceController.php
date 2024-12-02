@@ -48,19 +48,16 @@ class CardBalanceController extends Controller
             $data["sku"] = $request->input('sku');
         }
 
-
         $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/balance';
         $clientSecret = setting("api.qs_clientSecret");
         $bearerToken = setting("api.bearer_token");
         $requestHttpMethod = "post";
         $requestBody = json_encode($data);
-        // dd($absApiUrl,$clientSecret,$bearerToken,$requestHttpMethod,$requestBody );
 
         // Generate signature
         $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         $dateAtClient = Carbon::now()->toIso8601String();
 
-        // Log the API request
         Log::info("Sending Woohoo Balance Check API Request", [
             "URL" => $absApiUrl,
             "Request Body" => $data,
@@ -70,7 +67,7 @@ class CardBalanceController extends Controller
             // Make API call
             $response = Http::withHeaders([
                 "Authorization" => "Bearer " . $bearerToken,
-                "Woohoo-Signature" => $signature,
+                "signature" => $signature,
                 "dateAtClient" => $dateAtClient,
                 "Content-Type" => "application/json",
             ])->post($absApiUrl, $data);
@@ -83,12 +80,20 @@ class CardBalanceController extends Controller
             // Handle API errors
             $errorCode = $response->json('code') ?? $response->status();
             $errorMessage = $response->json('message') ?? 'An error occurred while fetching the balance.';
+            $responseBody = $response->body();
+
             Log::warning("API Response Error", [
                 'status_code' => $response->status(),
                 'error_code' => $errorCode,
                 'error_message' => $errorMessage,
+                'response_body' => $responseBody,
             ]);
-            return redirect()->back()->withErrors(['error' => "Error $errorCode: $errorMessage"]);
+
+            $userFriendlyMessage = $responseBody === 'Service temporary unavailable'
+                ? 'The service is temporarily unavailable. Please try again later.'
+                : $errorMessage;
+
+            return redirect()->back()->withErrors(['error' => "Error $errorCode: $userFriendlyMessage"]);
 
         } catch (ConnectionException $e) {
             Log::error("Connection error during Balance Check API call", [
@@ -103,4 +108,5 @@ class CardBalanceController extends Controller
             return redirect()->back()->withErrors(['error' => 'An unexpected error occurred. Please try again later.']);
         }
     }
+
 }

@@ -26,7 +26,9 @@ class ContactUsController extends Controller
                 'message.required' => 'Please enter a message.',
                 'message.string' => 'The message should be a valid string.',
                 'message.min' => 'The message should be at least 10 characters long.',
-                'message.max' => 'The message should not exceed 70 characters.',
+                'message.max' => 'The message should not exceed 1000 characters.',
+                'contact_number.required' => 'Please enter your contact number.',
+                'contact_number.regex' => 'Please provide a valid contact number.',
             ];
 
             // Validate the form data with regex constraints
@@ -34,41 +36,45 @@ class ContactUsController extends Controller
                 'name' => ['required', 'string', 'regex:/^[\pL\s]+$/u', 'max:255'],
                 'email' => ['required', 'email', 'max:255'],
                 'message' => ['required', 'string', 'min:10', 'max:1000'],
+                'contact_number' => ['required', 'string', 'regex:/^\+?[0-9]{7,15}$/'], // Make contact_number mandatory
             ], $messages);
 
             // Log validated data
             Log::info('Contact Us validation passed', $validatedData);
 
-            // Save the data to the "contacts" table
+            // Save the data to the "contact_us" table
             ContactUs::create([
                 'name' => $validatedData['name'],
                 'email' => $validatedData['email'],
                 'message' => $validatedData['message'],
+                'contact_number' => $validatedData['contact_number'], // Save contact number
             ]);
 
             Log::info('Contact information saved successfully');
 
-           // Prepare email data
-           $leadDetails = [
-            'name' => $validatedData['name'],
-            'email' => $validatedData['email'],
-            'message' => $validatedData['message'],
-        ];
+            // Prepare email data
+            $leadDetails = [
+                'name' => $validatedData['name'],
+                'email' => $validatedData['email'],
+                'message' => $validatedData['message'],
+                'contact_number' => $validatedData['contact_number'], // Include contact number
+            ];
 
-        // Define the recipient email
-        $recipientEmail = 'it@amazepays.in';
+            // Define the recipient email from the .env file
+            $recipientEmail = env('CONTACT_US_ADMIN_EMAIL');
+            $itAdminEmail = env('CONTACT_US_IT_ADMIN_EMAIL'); // IT admin email for CC
 
-        // Send the email using Blade template
-        Mail::send('email.new_lead_inquiry', [
-            'leadDetails' => $leadDetails  // Pass the lead details to the view
-        ], function ($message) use ($recipientEmail) {
-            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))
-                ->to($recipientEmail)
-                ->subject("New Lead Inquiry for Amazepay");
-        });
+            // Send the email using Blade template
+            Mail::send('email.new_lead_inquiry', [
+                'leadDetails' => $leadDetails  // Pass the lead details to the view
+            ], function ($message) use ($recipientEmail, $itAdminEmail) {
+                $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))
+                        ->to($recipientEmail)
+                        ->cc($itAdminEmail) // Add IT admin to CC
+                        ->subject("New Lead Inquiry for Amazepay");
+            });
 
-        Log::info('Lead inquiry email sent to admin.');
-
+            Log::info('Lead inquiry email sent to admin and IT admin in CC.');
 
             return redirect()->back()->with('success', 'Contact information saved successfully!');
         } catch (\Illuminate\Validation\ValidationException $e) {

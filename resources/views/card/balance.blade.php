@@ -10,6 +10,26 @@
         </div>
         <div class="col-lg-8">
             <h2>Check Your Card Balance</h2>
+
+            {{-- Success Message --}}
+            @if(session('response'))
+                <div class="alert alert-success mt-3">
+                    <h4>Balance Information</h4>
+                    <p><strong>Card Number:</strong> {{ session('response.cardNumber') }}</p>
+                    <p><strong>Balance:</strong> ₹{{ session('response.balance') }}</p>
+                    <p><strong>Expiry:</strong> {{ session('response.expiry') }}</p>
+                    <p><strong>Status:</strong> {{ session('response.status') }}</p>
+                </div>
+            @endif
+
+            {{-- Error Message --}}
+            @if($errors->any())
+                <div class="alert alert-danger mt-3">
+
+                    <p>{{ $errors->first('error') }}</p>
+                </div>
+            @endif
+
             <div class="card p-4 mb-5">
                 <form id="checkBalanceForm" action="{{ route('checkCardBalance') }}" method="POST">
                     @csrf
@@ -39,15 +59,5 @@
             </div>
         </div>
     </div>
-
-    @if(session('response'))
-        <div class="mt-4 alert alert-info">
-            <h4>Balance Information</h4>
-            <p><strong>Card Number:</strong> {{ session('response.cardNumber') }}</p>
-            <p><strong>Balance:</strong> ₹{{ session('response.balance') }}</p>
-            <p><strong>Expiry:</strong> {{ session('response.expiry') }}</p>
-            <p><strong>Status:</strong> {{ session('response.status') }}</p>
-        </div>
-    @endif
 </div>
 @endsection

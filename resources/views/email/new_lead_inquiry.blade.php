@@ -65,6 +65,10 @@
                 <td>{{ $leadDetails['name'] }}</td>
             </tr>
             <tr>
+                <th>Mobile Number</th>
+                <td>{{ $leadDetails['contact_number']  }}</td>
+            </tr>
+            <tr>
                 <th>Email</th>
                 <td>{{ $leadDetails['email'] }}</td>
             </tr>

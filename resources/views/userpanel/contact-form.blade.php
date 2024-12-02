@@ -1,7 +1,9 @@
 @extends('layouts.app')
+
 @section('title')
     {{ env('APP_NAME') }} | Contact
 @endsection
+
 @section('content')
     <div class="section">
         <div id="map" class="rounded-lg overflow-hidden" style="height: 150px;"></div>
@@ -24,8 +26,7 @@
                         </div>
 
                         <div class="col-lg-7 align-self-center">
-
-                            <div class="contact-wrap bg-white shadow-lg rounded-lg ">
+                            <div class="contact-wrap bg-white shadow-lg rounded-lg">
                                 @if (session('success'))
                                     <div class="alert alert-success">
                                         {{ session('success') }}
@@ -48,19 +49,40 @@
                                         <div class="col-lg-12 col-md-12">
                                             <div class="form-group mb-3">
                                                 <input type="text" name="name"
-                                                    class="form-control h60 bg-color-none text-grey-700" placeholder="Name">
+                                                    class="form-control h60 bg-color-none text-grey-700 @error('name') is-invalid @enderror"
+                                                    placeholder="Name" value="{{ old('name') }}" required maxlength="90" >
+                                                @error('name')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
                                         </div>
                                         <div class="col-lg-12 col-md-12">
                                             <div class="form-group mb-3">
                                                 <input type="email" name="email"
-                                                    class="form-control h60 bg-color-none text-grey-700"
-                                                    placeholder="Email">
+                                                    class="form-control h60 bg-color-none text-grey-700 @error('email') is-invalid @enderror"
+                                                    placeholder="Email" value="{{ old('email') }}" required maxlength="60" >
+                                                @error('email')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12 col-md-12">
+                                            <div class="form-group mb-3">
+                                                <input type="text" name="contact_number" maxlength="15"
+                                                    class="form-control h60 bg-color-none text-grey-700 @error('contact_number') is-invalid @enderror"
+                                                    placeholder="Contact Number" value="{{ old('contact_number') }}" required>
+                                                @error('contact_number')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
                                         </div>
                                         <div class="col-12">
                                             <div class="form-group mb-3 md-mb25">
-                                                <textarea class="w-100 h125 p-3 form-control" name="message" placeholder="Message"></textarea>
+                                                <textarea class="w-100 h125 p-3 form-control @error('message') is-invalid @enderror"
+                                                    name="message" placeholder="Message" required>{{ old('message') }}</textarea>
+                                                @error('message')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
                                             <button type="submit"
                                                 class="form-control rounded-lg h60 float-right bg-current text-white text-center font-xss fw-500 border-2 border-0 p-0 w175">Submit
@@ -68,14 +90,11 @@
                                         </div>
                                     </div>
                                 </form>
-
                             </div>
-
-
-
                         </div>
                     </div>
                 </div>
+
                 <div class="row mt-5">
                     <div class="col-lg-12 offset-lg-1 col-xl-12 offset-xl-1">
                         <div class="row">
@@ -102,9 +121,7 @@
                 </div>
             </div>
         </div>
-    </div>
 @endsection
-
 
 @push('scripts')
     <script type="text/javascript">
@@ -118,12 +135,16 @@
                     },
                     email: {
                         required: true,
-                        email: true // This rule will use the built-in email validation
+                        email: true
+                    },
+                    contact_number: {
+                        required: true,
+                        regex: /^\+?[0-9]{7,15}$/ // Allow valid phone numbers
                     },
                     message: {
                         required: true,
                         minlength: 10,
-                        maxlength: 70
+                        maxlength: 1000
                     }
                 },
                 messages: {
@@ -136,18 +157,19 @@
                         required: "Please enter your email",
                         email: "Please enter a valid email address"
                     },
+                    contact_number: {
+                        required: "Please enter your contact number",
+                        regex: "Please provide a valid contact number"
+                    },
                     message: {
                         required: "Please enter your message",
                         minlength: "Your message must be at least 10 characters long",
-                        maxlength: "Your message should not exceed 70 characters long"
+                        maxlength: "Your message should not exceed 1000 characters"
                     }
                 },
                 errorPlacement: function(error, element) {
                     // Display error message after the form element
                     error.insertAfter(element);
-                },
-                submitHandler: function(form) {
-                    form.submit(); // Submit the form if validation is successful
                 }
             });
 
@@ -155,12 +177,6 @@
             $.validator.addMethod("letterswithspace", function(value, element) {
                 return this.optional(element) || /^[a-zA-Z\s]*$/.test(value);
             }, "Please enter letters and spaces only");
-
-            // Prevent form submission on button click (to allow validation to run)
-            $('#contactForm button[type="submit"]').on('click', function(e) {
-                e.preventDefault(); // Prevent default form submission
-                $("#contactForm").submit(); // Trigger form validation and submission
-            });
         });
     </script>
 @endpush

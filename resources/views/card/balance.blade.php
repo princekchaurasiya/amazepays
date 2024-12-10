@@ -42,7 +42,7 @@
                     </div>
                     <div class="form-group">
                         <label for="pin">Card PIN*</label>
-                        <input type="password" class="form-control @error('pin') is-invalid @enderror" id="pin" name="pin" required maxlength="6">
+                        <input type="password" class="form-control @error('pin') is-invalid @enderror" id="pin" name="pin"  maxlength="6">
                         @error('pin')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

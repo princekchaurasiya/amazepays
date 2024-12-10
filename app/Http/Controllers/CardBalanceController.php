@@ -23,11 +23,11 @@ class CardBalanceController extends Controller
         try {
             $request->validate([
                 'cardNumber' => 'required|digits:16',
-                'pin' => 'required|digits:6',
+                'pin' => 'nullable|digits:6', // Pin is now optional
                 'sku' => 'nullable|string|max:30',
             ], [
                 'cardNumber.digits' => 'Card number must be exactly 16 digits.',
-                'pin.digits' => 'PIN must be exactly 6 digits.',
+                'pin.digits' => 'PIN must be exactly 6 digits.', // Validation error for invalid pin
                 'sku.max' => 'SKU cannot be longer than 30 characters.',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -35,18 +35,23 @@ class CardBalanceController extends Controller
                 'errors' => $e->errors(),
                 'input' => $request->all()
             ]);
-            return redirect()->back()->withErrors($e->errors());
+            return redirect()->back()->withErrors($e->errors())->withInput();
         }
+
 
         // Prepare data for API request
         $data = [
             "cardNumber" => $request->input('cardNumber'),
-            "pin" => $request->input('pin'),
         ];
+
+        if ($request->filled('pin')) {
+            $data["pin"] = $request->input('pin');
+        }
 
         if ($request->filled('sku')) {
             $data["sku"] = $request->input('sku');
         }
+
 
         $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/balance';
         $clientSecret = setting("api.qs_clientSecret");
@@ -57,6 +62,32 @@ class CardBalanceController extends Controller
         // Generate signature
         $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         $dateAtClient = Carbon::now()->toIso8601String();
+
+
+        Log::info("Sending API Request", [
+            "url" => $absApiUrl,
+            "method" => $requestHttpMethod,
+            "headers" => [
+                "Content-Type" => "application/json",
+                "Authorization" => "Bearer " . substr($bearerToken, 0, 4) . str_repeat('*', strlen($bearerToken) - 8) . substr($bearerToken, -4), // Masked token
+                "Accept" => "*/*",
+                "dateAtClient" => $dateAtClient,
+                "signature" => substr($signature, 0, 6) . str_repeat('*', strlen($signature) - 6), // Masked signature
+            ],
+            "body" => json_decode($requestBody, true), // Converts JSON to array for better readability
+        ]);
+
+        Log::info("********** API Request Initiated: Awaiting Response **********");
+
+        $queryParams = http_build_query($data);
+        $finalUrl = $absApiUrl . '?' . $queryParams;
+
+        Log::info("Final API URL with Query Parameters:", [
+            "url" => $finalUrl
+        ]);
+
+
+
 
         Log::info("Sending Woohoo Balance Check API Request", [
             "URL" => $absApiUrl,

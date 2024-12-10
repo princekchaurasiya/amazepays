@@ -17880,3 +17880,17 @@ font-weight: 700;
 .error-link:hover {
     text-decoration: underline;
 }
+
+
+.instructions ul {
+    /* list-style-type: disc !important; */
+    padding-left: 10px;
+
+}
+
+.instructions ul li {
+    margin-bottom: 8px;
+    font-size: 14px;
+    list-style-type: disc !important;
+
+}

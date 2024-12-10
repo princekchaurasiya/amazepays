@@ -56,4 +56,52 @@ class CommonHelper
     }
 
     // Define other helper functions as needed
+
+
+    public static function extractTnc($data) {
+        if (isset($data['content'])) {
+            $content = $data['content'];
+
+            // Convert only the first level bullet points into valid <li> tags wrapped in a single <ul>
+            $content = preg_replace('/^.*?(\n?•\s.*?)(?=\n|$)/', '<li>$1</li>', $content);
+            $content = preg_replace('/•\s*(.*?)\n/', '<li>$1</li>', $content);
+
+            // Wrap only the first-level items with `<ul>` without creating multiple nesting layers.
+            $content = "<ul>" . $content . "</ul>";
+
+            return $content;
+        }
+
+        return 'No terms & conditions available.';
+    }
+
+
+
+    // Helper to process "How to Redeem" with proper formatting
+    public static function extractHowToRedeem($data) {
+        if (isset($data)) {
+            // Replace bullet points with <li> tags and wrap in <ul>
+            $formattedContent = preg_replace('/•\s*(.*?)(?=•|$)/', '<li>$1</li>', e($data));
+            $formattedContent = "<ul>$formattedContent</ul>";
+
+            return $formattedContent;
+        }
+
+        return 'No instructions available.';
+    }
+
+    // Helper to process "Terms & Conditions" with proper formatting
+    public static function extractDescription( $data)
+    {
+
+        return isset($data)
+            ? nl2br(e($data))
+            : 'No description available.';
+    }
+
+
+
+
 }
+
+

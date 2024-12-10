@@ -44,7 +44,8 @@
                                         <h6 class="fw-600 font-md mt-2" name="product_name">
                                             {{ $productDetails['name'] ?? 'N/A' }}
                                         </h6>
-                                        <p class="mb-3 font-xssss fw-600 mt-2">Validity: {{ $productDetails['expiry'] ?? 'N/A' }}</p>
+                                        <p class="mb-3 font-xssss fw-600 mt-2">Validity:
+                                            {{ $productDetails['expiry'] ?? 'N/A' }}</p>
                                         <p>
                                             <span class="mb-3 fw-600 font-xs mt-2 text-orange">Brand</span>:
                                             <span class="mb-3 text-black font-xsss fw-400 mt-2">
@@ -60,41 +61,46 @@
                                             <div class="order-2 mb-3 mb-lg-0 coupon-quantity">
                                                 <!-- Handle both SLAB and RANGE types or missing price type -->
                                                 @if (isset($productDetails['price']->type) && $productDetails['price']->type == 'SLAB')
-                                                    <label class="small-size fw-600 text-grey-900 font-xsss">Select Denomination</label>
+                                                    <label class="small-size fw-600 text-grey-900 font-xsss">Select
+                                                        Denomination</label>
                                                     <div class="radio-btn-row boxed">
                                                         @foreach ($productDetails['price']->denominations as $key => $denomination)
                                                             <div class="boxed">
                                                                 <input type="radio"
-                                                                       class="custom-control-input denomination-slab"
-                                                                       id="customRadio-{{ $key }}"
-                                                                       name="denomination"
-                                                                       value="{{ $denomination }}"
-                                                                       {{ $key === 0 || old('denomination') == $denomination ? 'checked' : '' }}>
+                                                                    class="custom-control-input denomination-slab"
+                                                                    id="customRadio-{{ $key }}" name="denomination"
+                                                                    value="{{ $denomination }}"
+                                                                    {{ $key === 0 || old('denomination') == $denomination ? 'checked' : '' }}>
                                                                 <label class="small-size fw-500 font-xsss"
-                                                                       for="customRadio-{{ $key }}">{{ $denomination }}</label>
+                                                                    for="customRadio-{{ $key }}">{{ $denomination }}</label>
                                                             </div>
                                                         @endforeach
                                                         <span class="font-xssss fw-400 error-rec-deno text-danger"></span>
                                                     </div>
-                                                @elseif (isset($productDetails['price']->type) && $productDetails['price']->type == 'RANGE' || !isset($productDetails['price']->type))
-                                                    <label class="small-size fw-600 text-grey-900 font-xsss">Enter Denomination</label>
+                                                @elseif (
+                                                    (isset($productDetails['price']->type) && $productDetails['price']->type == 'RANGE') ||
+                                                        !isset($productDetails['price']->type))
+                                                    <label class="small-size fw-600 text-grey-900 font-xsss">Enter
+                                                        Denomination</label>
                                                     <input type="text"
-                                                           class="form-control credentails-field denomination-range"
-                                                           placeholder="Enter Denomination"
-                                                           name="denomination"
-                                                           id="denomination-range"
-                                                           value="{{ old('denomination', $productDetails['minPrice']) }}"
-                                                           maxlength="6">
+                                                        class="form-control credentails-field denomination-range"
+                                                        placeholder="Enter Denomination" name="denomination"
+                                                        id="denomination-range"
+                                                        value="{{ old('denomination', $productDetails['minPrice']) }}"
+                                                        maxlength="6">
                                                     <small class="float-right form-text text-current font-xsss">
                                                         @if ($productDetails['minPrice'] === $productDetails['maxPrice'])
                                                             Price: ₹{{ $productDetails['minPrice'] }}
                                                         @else
-                                                            Min: ₹{{ $productDetails['minPrice'] }} Max: ₹{{ $productDetails['maxPrice'] }}
+                                                            Min: ₹{{ $productDetails['minPrice'] }} Max:
+                                                            ₹{{ $productDetails['maxPrice'] }}
                                                         @endif
                                                     </small>
-                                                    <div class="font-xssss fw-400 error-rec-deno-range text-danger mt-3"></div>
+                                                    <div class="font-xssss fw-400 error-rec-deno-range text-danger mt-3">
+                                                    </div>
                                                 @else
-                                                    <span class="font-xssss fw-400 text-danger">Price type is not valid.</span>
+                                                    <span class="font-xssss fw-400 text-danger">Price type is not
+                                                        valid.</span>
                                                 @endif
                                             </div>
                                         </div>
@@ -102,15 +108,13 @@
                                         <div class="col-lg-4">
                                             <div class="row">
                                                 <div class="order-3 mb-3 mb-lg-0 coupon-quantity">
-                                                    <label class="small-size fw-600 text-grey-900 font-xsss">Quantity</label>
-                                                    <input type="text"
-                                                           class="form-control credentails-field"
-                                                           placeholder="Quantity"
-                                                           name="quantity"
-                                                           id="quantity"
-                                                           value="{{ old('quantity', 1) }}"
-                                                           maxlength="2">
-                                                    <small class="float-right form-text text-current font-xsss">Min: 1 Max: 10</small>
+                                                    <label
+                                                        class="small-size fw-600 text-grey-900 font-xsss">Quantity</label>
+                                                    <input type="text" class="form-control credentails-field"
+                                                        placeholder="Quantity" name="quantity" id="quantity"
+                                                        value="{{ old('quantity', 1) }}" maxlength="2">
+                                                    <small class="float-right form-text text-current font-xsss">Min: 1 Max:
+                                                        10</small>
                                                     <div class="font-xssss fw-400 error-rec-qnty text-danger mt-3"></div>
                                                 </div>
                                             </div>
@@ -119,24 +123,22 @@
                                         <div class="col-lg-4 mb-4 pl-lg-5">
                                             <h6 class="mb-3 fw-600 font-xss mt-2">Gift Send Option</h6>
                                             <div class="custom-control mr-4 custom-radio">
-                                                <input type="radio"
-                                                       class="custom-control-input gift-option"
-                                                       id="sendAsGiftRadio"
-                                                       name="gift_send_option"
-                                                       value="send_as_gift"
-                                                       {{ old('gift_send_option', 'send_as_gift') == 'send_as_gift' ? 'checked' : '' }}>
-                                                <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="sendAsGiftRadio">
+                                                <input type="radio" class="custom-control-input gift-option"
+                                                    id="sendAsGiftRadio" name="gift_send_option" value="send_as_gift"
+                                                    {{ old('gift_send_option', 'send_as_gift') == 'send_as_gift' ? 'checked' : '' }}>
+                                                <label
+                                                    class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
+                                                    for="sendAsGiftRadio">
                                                     Send as Gift
                                                 </label>
                                             </div>
                                             <div class="custom-control mr-0 custom-radio">
-                                                <input type="radio"
-                                                       class="custom-control-input gift-option"
-                                                       id="buyForSelfRadio"
-                                                       name="gift_send_option"
-                                                       value="buy_for_self"
-                                                       {{ old('gift_send_option', 'send_as_gift') == 'buy_for_self' ? 'checked' : '' }}>
-                                                <label class="custom-control-label small-size fw-500 text-grey-900 font-xssss" for="buyForSelfRadio">
+                                                <input type="radio" class="custom-control-input gift-option"
+                                                    id="buyForSelfRadio" name="gift_send_option" value="buy_for_self"
+                                                    {{ old('gift_send_option', 'send_as_gift') == 'buy_for_self' ? 'checked' : '' }}>
+                                                <label
+                                                    class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
+                                                    for="buyForSelfRadio">
                                                     Buy for Self
                                                 </label>
                                             </div>
@@ -147,14 +149,12 @@
                                         <div class="col-lg-12">
                                             @if (Auth::check())
                                                 <input type="submit"
-                                                       class="form-control float-right h60 bg-current text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color"
-                                                       value="Go to Checkout Page"
-                                                       id="pay-now">
+                                                    class="form-control float-right h60 bg-current text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color"
+                                                    value="Go to Checkout Page" id="pay-now">
                                             @else
                                                 <a href="#"
-                                                   class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color"
-                                                   data-toggle="modal"
-                                                   data-target="#Modallogin">
+                                                    class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color"
+                                                    data-toggle="modal" data-target="#Modallogin">
                                                     Go to Checkout Page
                                                 </a>
                                             @endif
@@ -186,7 +186,9 @@
                                 <div class="card p-3 border-0 shadow-sm">
                                     <div class="text-center">
                                         <img src="{{ asset('images/addWallet.png') }}" alt="amazepay_addTemp">
-                                        <p class="font-xss fw-500 text-black lh-26 mt-2">Once you order an e-gift card, it will appear on your 'My Orders' page and the details will be sent to you via email and SMS.</p>
+                                        <p class="font-xss fw-500 text-black lh-26 mt-2">Once you order an e-gift card, it
+                                            will appear on your 'My Orders' page and the details will be sent to you via
+                                            email and SMS.</p>
                                     </div>
                                 </div>
                             </div>
@@ -201,38 +203,48 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="row personalise-gift-card p-0">
                         <div class="col-lg-12 p-0">
                             <div class="card p-4 shadow">
                                 <div class="tabs">
+
+                                    {{-- How to Redeem Tab --}}
+                                    @if ($formatteddecodedHowToUse)
                                     <input type="radio" name="tabs" id="tabone" checked="checked">
                                     <label for="tabone">How to Redeem</label>
-                                    <div class="tab p-3 font-xsss">
-                                        <ul class="list-unstyled">
-                                            <li>To redeem your Gift Card from AmazePays, follow these simple steps:</li>
-                                            <li>1. Visit <a href="https://www.amazepays.in" target="_blank"
-                                                    rel="noopener noreferrer">www.amazepays.in</a> </li>
-                                            <li>2. Log in to your AmazePays account</li>
-                                            <li>3. Navigate to the "My Orders" section.</li>
-                                            <li>4. Enter the Gift Card ID number and PIN provided, alternatively, check your
-                                                SMS or email for the Gift Card ID number and PIN.</li>
-                                        </ul>
+                                    <div class="tab p-3 font-xsss instructions">
+                                        {!! $formatteddecodedHowToUse !!}
+                                    </div>
+                                @endif
 
-                                    </div>
-                                    <input type="radio" name="tabs" id="tabtwo">
-                                    <label for="tabtwo">Description</label>
-                                    <div class="tab p-3 font-xsss">
-                                        <p>{{ $productDetails['description'] ?? '' }}</p>
-                                    </div>
-                                    <input type="radio" name="tabs" id="tabthree">
-                                    <label for="tabthree">Terms & Condition</label>
-                                    <div class="tab term-condition p-3 font-xsss">
-                                        {!! $productDetails['tnc']->content ?? '' !!}
-                                    </div>
+
+                                    {{-- Description Tab --}}
+                                    @if ($descriptionData)
+                                        <input type="radio" name="tabs" id="tabtwo">
+                                        <label for="tabtwo">Description</label>
+                                        <div class="tab p-3 font-xsss">
+                                            {!! $descriptionData !!}
+                                        </div>
+                                    @endif
+
+                                    {{-- Terms & Conditions Tab --}}
+
+                                    @if ($formattedTncData)
+
+                                        <input type="radio" name="tabs" id="tabthree">
+                                        <label for="tabthree">Terms & Condition</label>
+                                        <div class="tab term-condition p-3 font-xsss termsConditions">
+                                            {!! $formattedTncData !!}
+                                        </div>
+                                    @endif
+
                                 </div>
                             </div>
                         </div>
                     </div>
+
+
 
                 </form>
             </div>
@@ -454,8 +466,3 @@
         </script>
     @endpush
 @endsection
-
-
-
-
-

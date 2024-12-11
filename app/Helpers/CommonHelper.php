@@ -83,11 +83,15 @@ class CommonHelper
 {
     if (!isset($data) || empty(trim($data))) {
         // Return default static instructions
+        // return '<ul>
+        //     <li><div class="">Visit the outlet near you.</div></li>
+        //     <li><div class="">Before making the purchase confirm about the acceptance of Gift Card at the store.</div></li>
+        //     <li><div class="">Choose the products you would like to buy.</div></li>
+        //     <li><div class="">Show your Gift Card details to the cashier at the time of billing &amp; pay any balance amount by cash or card.</div></li>
+        // </ul>';
+
         return '<ul>
-            <li><div class="">Visit the outlet near you.</div></li>
-            <li><div class="">Before making the purchase confirm about the acceptance of Gift Card at the store.</div></li>
-            <li><div class="">Choose the products you would like to buy.</div></li>
-            <li><div class="">Show your Gift Card details to the cashier at the time of billing &amp; pay any balance amount by cash or card.</div></li>
+            <li><div class="">How to redeem instructions are not available.</div></li>
         </ul>';
     }
 

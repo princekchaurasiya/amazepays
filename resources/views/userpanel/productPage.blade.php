@@ -213,7 +213,7 @@
                                     @if ($formatteddecodedHowToUse)
                                     <input type="radio" name="tabs" id="tabone" checked="checked">
                                     <label for="tabone">How to Redeem</label>
-                                    <div class="tab p-3 font-xsss instructions">
+                                    <div class="tab p-3 font-xsss instructions ">
                                         {!! $formatteddecodedHowToUse !!}
                                     </div>
                                 @endif

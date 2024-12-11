@@ -58,7 +58,8 @@ class CommonHelper
     // Define other helper functions as needed
 
 
-    public static function extractTnc($data) {
+    public static function extractTnc($data)
+    {
         if (isset($data['content'])) {
             $content = $data['content'];
 
@@ -78,20 +79,37 @@ class CommonHelper
 
 
     // Helper to process "How to Redeem" with proper formatting
-    public static function extractHowToRedeem($data) {
-        if (isset($data)) {
-            // Replace bullet points with <li> tags and wrap in <ul>
-            $formattedContent = preg_replace('/•\s*(.*?)(?=•|$)/', '<li>$1</li>', e($data));
-            $formattedContent = "<ul>$formattedContent</ul>";
-
-            return $formattedContent;
+    public static function extractHowToRedeem($data)
+    {
+        if (!isset($data) || empty(trim($data))) {
+            // Return default static instructions
+            return '<ul>
+                <li><div class="">Visit the outlet near you.</div></li>
+                <li><div class="">Before making the purchase confirm about the acceptance of Gift Card at the store.</div></li>
+                <li><div class="">Choose the products you would like to buy.</div></li>
+                <li><div class="">Show your Gift Card details to the cashier at the time of billing &amp; pay any balance amount by cash or card.</div></li>
+            </ul>';
         }
 
-        return 'No instructions available.';
+        // Split the data into individual lines based on the bullet character (•)
+        $lines = preg_split('/•\s*/', $data, -1, PREG_SPLIT_NO_EMPTY);
+
+        // Wrap each line in <li><div></div></li> and handle styling
+        $formattedLines = array_map(function ($line) {
+            // Escape the content and add necessary styling
+            return '<li><div style="margin-bottom: 8px; font-size: 14px;">' . e(trim($line)) . '</div></li>';
+        }, $lines);
+
+        // Combine all lines into a single <ul>
+        $formattedContent = '<ul style="list-style-type: none; padding: 0;">' . implode('', $formattedLines) . '</ul>';
+
+        return $formattedContent;
     }
 
+
+
     // Helper to process "Terms & Conditions" with proper formatting
-    public static function extractDescription( $data)
+    public static function extractDescription($data)
     {
 
         return isset($data)

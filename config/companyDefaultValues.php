@@ -40,6 +40,7 @@ return [
     'sms_source' => env('SMS_SOURCE', 'FRNTIC'),
     'sms_entity_id' => env('SMS_ENTITY_ID', '1101633530000071318'),
     'sms_temp_id' => env('SMS_TEMP_ID', '1107169019646710710'),
+    'sms_tmid' => env('SMS_TMID', '1101633530000071318,1602100000000009244'),
     'sendMailFrom' => env('SEND_MAIL_FROM', 'it@amazepays'),
     'company_website' => env('COMPANY_WEBSITE', 'https://amazepays.in/'),
     'company_contact_no' => env('COMPANY_CONTACT_NO', '8208893951'),

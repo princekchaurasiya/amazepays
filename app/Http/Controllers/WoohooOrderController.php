@@ -376,7 +376,9 @@ class WoohooOrderController extends Controller
         $sms_message = "Hello " . $name . ", Your order no " . $orderNumber . " of " . $orderAmount . " is generated successfully. Please check out respected Email for that. Thanks - FRENETIC INDIA.";
         $sms_entity_id = config("transactionSms.sms_entity_id");
         $sms_temp_id = config("transactionSms.sms_temp_id");
-        $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
+        $sms_tmid = config("transactionSms.sms_tmid");
+
+        $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id&tmid=$sms_tmid";
         $response = Http::get($apiUrl);
         \Log::info("API Response:", ["response" => $response]);
         \Log::info("response status:", ["response status" => $response->status(),]);
@@ -394,6 +396,7 @@ class WoohooOrderController extends Controller
         $sms_source = config("giftSms.sms_source");
         $sms_entity_id = config("giftSms.sms_entity_id");
         $sms_temp_id = config("giftSms.sms_temp_id");
+        $sms_tmid = config("giftSms.sms_tmid");
         foreach ($cardsArray as $card) {
             $cardId = $card["cardNumber"];
             $cardPin = $card["cardPin"];
@@ -402,7 +405,7 @@ class WoohooOrderController extends Controller
             $cardActivationURL = $card["activationUrl"];
             $cardValidity = date("d-M-Y", strtotime($card["validity"]));
             $sms_message = "Hello " . $name . " You received a gift card and your Card details: " . "Card ID: " . $cardId . " Card Pin: " . $cardPin . " Amount " . $cardAmount . " Activation Code " . $cardActivationCode . " Activation URL " . $cardActivationURL . " Validity " . $cardValidity . " Please check your respected Email for more information. Thanks - FRENETIC INDIA";
-            $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id";
+            $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id&tmid=$sms_tmid";
             $response = Http::get($apiUrl);
             \Log::info("API Response:", ["response" => $response]);
             \Log::info("response status:", ["response status" => $response->status(),]);

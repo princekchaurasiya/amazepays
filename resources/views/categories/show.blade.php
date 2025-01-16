@@ -10,6 +10,31 @@
                         <hr class="normalhr">
                     </div>
                 </div>
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <div class="row mt-5 mb-5 justify-content-center mx-0 gx-0 ">
+                            <div class="all-category-slick-slider">
+                                @foreach ($allCategories as $singleCategory)
+                                    <div class="col-lg-1 mx-auto col-3">
+                                        <a href="{{ route('brands.show', ['slug' => $singleCategory->slug]) }}">
+                                            <div class="shop-category-circle">
+                                                <img src="{{ Voyager::image($brand->logo ?? 'path/to/default/logo.jpeg') }}"
+                                                    alt="{{ $singleCategory->name }}"
+                                                    class="shop-category-circle-image img-fluid">
+                                            </div>
+                                            <p class="text-center text-black mt-2">{{ $singleCategory->name }}</p>
+                                        </a>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
             </div>
 
             <div class="row">
@@ -54,3 +79,34 @@
         </div> <!-- Closing product wrapper -->
     </div> <!-- Closing main container -->
 @endsection
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('.all-category-slick-slider').slick({
+                slidesToShow: 8, // Desktop
+                slidesToScroll: 1, // Scroll 1 slide at a time
+                infinite: true, // Enable infinite scrolling
+                arrows: false, // Disable arrows for navigation
+                dots: true, // Enable dots for navigation
+                autoplay: true, // Enables automatic scrolling
+                autoplaySpeed: 2000, // Autoplay speed in milliseconds (1 second)
+                centerMode: true, // Center active slide
+                centerPadding: '10px', // Adjust this for how much of the next item you want visible
+                responsive: [{
+                    breakpoint: 768, // Mobile
+                    settings: {
+                        slidesToShow: 3,
+                        slidesToScroll: 1, // Scroll 1 slide at a time on mobile for better user experience
+                        infinite: true, // Ensure infinite scrolling is enabled on mobile
+                        centerMode: true, // Center active slide on mobile
+                        centerPadding: '10px', // Adjust for mobile visibility
+                        arrows: false, // Disable arrows for mobile
+                        dots: true, // Enable dots for mobile
+                        autoplay: true, // Enable autoplay on mobile
+                        autoplaySpeed: 1000, // Autoplay speed for mobile (1 second)
+                    }
+                }]
+            });
+        });
+    </script>
+@endpush

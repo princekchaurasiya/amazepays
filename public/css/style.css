@@ -17896,3 +17896,8 @@ font-weight: 700;
 
 }
 
+#invoice-terms ul {
+    list-style: none; /* Removes the bullet points */
+    padding: 0;
+    margin: 0;
+}

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use TCG\Voyager\Events\RoutingAdmin;
+use Illuminate\Support\Facades\Log;
 
 use App\Http\Controllers\{
     HomePageController,
@@ -244,3 +245,9 @@ Route::post('/check-balance', [CardBalanceController::class, 'checkBalance'])->n
 Route::get('/order-failure', function () {
     return view('order-failure'); // This will render the order-failure.blade.php view
 });
+
+// Wildcard route (should always be last)
+Route::get('/{any}', function ($any) {
+    Log::info("Wildcard route triggered", ['path' => $any]);
+    return "Caught request: $any";
+})->where('any', '.*');

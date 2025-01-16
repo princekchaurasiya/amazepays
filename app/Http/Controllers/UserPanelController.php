@@ -52,8 +52,8 @@ class UserPanelController extends Controller
             // ->get();
 
             $allProducts = QsProduct::where('show_product', true)
-            ->orderByRaw('IFNULL(priority, 999999) ASC') // Sort by priority in ascending order, treating nulls as 99999
-            ->get();
+                ->orderByRaw('IFNULL(priority, 999999) ASC') // Sort by priority in ascending order, treating nulls as 99999
+                ->get();
 
 
             // Log::info('Fetched all products', ['allProducts' => $allProducts]);

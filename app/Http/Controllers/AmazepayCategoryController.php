@@ -13,6 +13,7 @@ class AmazepayCategoryController extends Controller
     public function show($slug)
     {
         $category = AmazepayCategory::where('slug', $slug)->first();
+        $allCategories = AmazepayCategory::orderBy('order')->get();
 
         if (!$category) {
             Log::warning('Category not found:', ['slug' => $slug]);
@@ -45,7 +46,7 @@ class AmazepayCategoryController extends Controller
 
         Log::info('Fetched products:', ['products_count' => $products->count()]);
 
-        return view('categories.show', compact('category', 'products'));
+        return view('categories.show', compact('category', 'products', 'allCategories'));
     }
 
 }

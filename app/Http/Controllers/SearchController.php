@@ -7,8 +7,12 @@ class SearchController extends Controller
     public function search(Request $request)
     {
         $query = $request->input('query');
-        $results = QsProduct::where('show_product', true)->where(function ($q) use ($query) {
-            $q->where('name', 'LIKE', "%$query%")->orWhere('description', 'LIKE', "%$query%"); })->get();
+        // $results = QsProduct::where('show_product', true)->where(function ($q) use ($query) {
+        //     $q->where('name', 'LIKE', "%$query%")->orWhere('description', 'LIKE', "%$query%"); })->get();
+
+        //kev
+        $results = QsProduct::where('show_product', true)->where('name', 'LIKE', "%$query%")->orWhere('description', 'LIKE', "%$query%")->get();
+        //kev
         return view('search.results', compact('results'));
     }
 }

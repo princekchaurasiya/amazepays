@@ -327,6 +327,42 @@ class WoohooOrderController extends Controller
         $msg = "Trasnaction Mail created successfully!";
         $status = "success";
     }
+
+
+    // public function sendInvoiceTestMail()
+    // {
+    //     // Generate the PDF without any dynamic data (static template)
+    //     $pdf = PDF::loadView("layouts.invoice2");
+
+    //     // Use static email and subject
+    //     $recipientEmail = "prince.toutle@gmail.com";
+    //     $recipientName = "Prince";
+
+    //     // Send the email
+    //     Mail::send(["html" => "layouts.mail2"], compact("pdf"), function ($message) use ($pdf, $recipientEmail, $recipientName) {
+    //         $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))
+    //             ->to($recipientEmail, $recipientName)
+    //             ->subject(config("companyDefaultValues.default_subject"))
+    //             ->attachData($pdf->output(), "invoice.pdf");
+    //     });
+
+    //     // Return response
+    //     return response()->json([
+    //         "message" => "Test transaction mail sent successfully!",
+    //         "status" => "success",
+    //     ]);
+    // }
+
+
+    // public function viewTestMail()
+    // {
+    //     return view ('layouts.invoice2');
+    // }
+
+
+
+
+
     public function sendOrderFailureMail($qsOrderDetails)
     {
         // Fetch the recipient emails from the .env file
@@ -384,6 +420,11 @@ class WoohooOrderController extends Controller
         \Log::info("response status:", ["response status" => $response->status(),]);
         \Log::info("API URL IS:", ["API URL" => $apiUrl]);
     }
+
+
+
+
+
     public function sendGiftMessage($prepareSmsDetails, $cardsArray)
     {
         $name = $prepareSmsDetails["shipToName"];

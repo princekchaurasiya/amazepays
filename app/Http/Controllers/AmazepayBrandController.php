@@ -13,6 +13,8 @@ class AmazepayBrandController extends Controller
     {
         // Fetch the brand based on the slug
         $brand = AmazepayBrand::where('slug', $slug)->first();
+        $allBrands = AmazepayBrand::orderBy('order')->get();
+
 
         if (!$brand) {
             Log::warning('Brand not found:', ['slug' => $slug]);
@@ -33,6 +35,6 @@ class AmazepayBrandController extends Controller
             $product->currency = json_decode($product->currency, true);
         }
 
-        return view('brands.show', compact('brand', 'products'));
+        return view('brands.show', compact('brand', 'products', 'allBrands'));
     }
 }

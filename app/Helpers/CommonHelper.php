@@ -130,6 +130,44 @@ class CommonHelper
     }
 
 
+    public static function getFormattedInvoiceTermsAndConditions()
+    {
+        // Fetch the content for terms and conditions
+        $content = setting('site.invoice_t&c'); // or another method to fetch content
+
+        // Ensure that content is not empty
+        if (empty($content)) {
+            return 'No terms & conditions available.';
+        }
+
+        // Detect if content already contains <ul> or <li> tags
+        if (stripos($content, '<ul>') !== false || stripos($content, '<li>') !== false) {
+            // If it already contains valid list HTML, just return it as-is
+            return $content;
+        }
+
+        // Split the content by lines
+        $lines = preg_split('/\r\n|\r|\n/', $content);
+
+        // Filter out empty or whitespace-only lines
+        $lines = array_filter($lines, function ($line) {
+            return !empty(trim($line));
+        });
+
+        // Wrap each line with <li> tags
+        $formattedLines = array_map(function ($line) {
+            return '<li>' . trim($line) . '</li>';
+        }, $lines);
+
+        // Wrap all lines inside a <ul>
+        $formattedContent = '<ul class="no-bullets">' . implode('', $formattedLines) . '</ul>';
+
+        return $formattedContent;
+    }
+
+
+
+
 
 
 }

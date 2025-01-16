@@ -827,7 +827,7 @@
 
                         if (response.status === 'success') {
                             // OTP verification successful, redirect the user or show a success message
-                            window.location.href = '/'; // Redirect to the desired page
+                            window.location.href = response.redirect_url; // Redirect to the desired page
                         } else if (response.status === 'error') {
                             // Handle error based on message content
                             if (response.message.includes('Invalid Mobile Number')) {

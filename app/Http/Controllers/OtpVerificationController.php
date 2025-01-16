@@ -29,6 +29,13 @@ class OtpVerificationController extends Controller
                 if ($user) {
                     Auth::login($user);
                     Log::info('Login successful for user', ['user_id' => $user->id]);
+
+                    // Return the intended URL or homepage URL as the redirect URL
+                    return response()->json([
+                        'status' => 'success',
+                        'message' => 'Login successful',
+                        'redirect_url' => url()->previous() // This will provide the URL the user intended to visit
+                    ]);
                 } else {
                     Log::error('User not found for login', ['mobile' => $mobileNumber]);
                     return response()->json(['status' => 'error', 'message' => 'User not found.']);
@@ -63,6 +70,7 @@ class OtpVerificationController extends Controller
 
                 Auth::login($user); // Automatically log in the user after registration
                 Log::info('Registration and login successful for user', ['user_id' => $user->id]);
+                return redirect()->intended(url()->previous());
             }
 
             return response()->json($verificationResult);

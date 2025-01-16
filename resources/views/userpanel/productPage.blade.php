@@ -145,6 +145,38 @@
                                         </div>
                                     </div>
 
+                                    <div class="row justify-content-center mt-4 gifting-details" style="display: block;">
+                                        <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
+                                        <div class="row"> <!-- Added .row to group the .col-lg-* elements -->
+                                            <div class="col-12 col-lg-3 receiver-name">
+
+                                                <input type="text" class="form-control mb-3 credentails-field"
+                                                    placeholder="Receiver Name" name="receiver_name" id="receiver-name"
+                                                    {{-- value="{{ old('receiver_name', session('giftCardFormValues.receiver_name')) }}" --}} value="">
+                                                <span class="font-xssss fw-400 error-rec-name text-danger"></span>
+                                            </div>
+                                            <div class="col-12 col-lg-3 receiver-email">
+                                                <input type="text" class="form-control mb-3 credentails-field"
+                                                    placeholder="Receiver Email" name="receiver_email"
+                                                    id="receiver-email" {{-- value="{{ old('receiver_email', session('giftCardFormValues.receiver_email')) }" --}} value="">
+                                                <span class="font-xssss fw-400 error-rec-email text-danger"></span>
+                                            </div>
+                                            <div class="col-12 col-lg-3 receiver-mobile">
+                                                <input type="text" class="form-control mb-3 credentails-field"
+                                                    placeholder="Receiver Mobile Number" name="receiver_mobile"
+                                                    id="receiver-mobile" {{-- value="
+                                                {{ old('receiver_mobile', session('giftCardFormValues.receiver_mobile')) }}
+                                                 " --}} value="">
+                                                <span class="font-xssss fw-400 error-rec-mobile text-danger"></span>
+                                            </div>
+                                            <div class="col-12 col-lg-3 receiver-message">
+                                                <input type="text" class="form-control mb-3 credentails-field"
+                                                    placeholder="Message for Receiver" name="receiver_msg"
+                                                    id="receiver-msg" {{-- value="{{ old('receiver_msg', session('giftCardFormValues.receiver_msg')) }}" --}} value="">
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="row">
                                         <div class="col-lg-12">
                                             @if (Auth::check())
@@ -211,12 +243,12 @@
 
                                     {{-- How to Redeem Tab --}}
                                     @if ($formatteddecodedHowToUse)
-                                    <input type="radio" name="tabs" id="tabone" checked="checked">
-                                    <label for="tabone">How to Redeem</label>
-                                    <div class="tab p-3 font-xsss instructions ">
-                                        {!! $formatteddecodedHowToUse !!}
-                                    </div>
-                                @endif
+                                        <input type="radio" name="tabs" id="tabone" checked="checked">
+                                        <label for="tabone">How to Redeem</label>
+                                        <div class="tab p-3 font-xsss instructions ">
+                                            {!! $formatteddecodedHowToUse !!}
+                                        </div>
+                                    @endif
 
 
                                     {{-- Description Tab --}}
@@ -231,7 +263,6 @@
                                     {{-- Terms & Conditions Tab --}}
 
                                     @if ($formattedTncData)
-
                                         <input type="radio" name="tabs" id="tabthree">
                                         <label for="tabthree">Terms & Condition</label>
                                         <div class="tab term-condition p-3 font-xsss termsConditions">

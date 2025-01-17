@@ -15,23 +15,30 @@
                 <div class="row justify-content-center">
                     <div class="col-lg-10">
                         <div class="row mt-5 mb-5 justify-content-center mx-0 gx-0 ">
+
                             <div class="all-brand-slick-slider">
-                                @foreach ($allBrands as $singleBrand)
-                                    <div class="col-lg-1 mx-auto col-3">
-                                        <a href="{{ route('brands.show', ['slug' => $singleBrand->slug]) }}">
-                                            <div class="shop-category-circle">
-                                                <img src="{{ Voyager::image($singleBrand->logo}}"
-                                                    alt="{{ $singleBrand->name }}"
-                                                    class="shop-category-circle-image img-fluid">
-                                            </div>
-                                            <p class="text-center text-black mt-2">{{ $singleBrand->name }}</p>
-                                        </a>
-                                    </div>
-                                @endforeach
+                                @if (!empty($allBrands) && $allBrands->isNotEmpty())
+                                    @foreach ($allBrands as $singleBrand)
+                                        <div class="col-lg-1 mx-auto col-3">
+                                            <a href="{{ route('brands.show', ['slug' => $singleBrand->slug ?? '#']) }}">
+                                                <div class="shop-category-circle">
+                                                    <img src="{{ Voyager::image($singleBrand->logo) }}"
+                                                        alt="{{ $singleBrand->name ?? 'No Name' }}"
+                                                        class="shop-category-circle-image img-fluid">
+                                                </div>
+                                                <p class="text-center text-black mt-2">{{ $singleBrand->name ?? 'No Name' }}</p>
+                                            </a>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <p class="text-center text-muted">No brands available at the moment.</p>
+                                @endif
                             </div>
                         </div>
                     </div>
                 </div>
+
+
 
 
 

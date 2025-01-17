@@ -13,23 +13,29 @@
                 <div class="row justify-content-center">
                     <div class="col-lg-10">
                         <div class="row mt-5 mb-5 justify-content-center mx-0 gx-0 ">
+
                             <div class="all-category-slick-slider">
-                                @foreach ($allCategories as $singleCategory)
-                                    <div class="col-lg-1 mx-auto col-3">
-                                        <a href="{{ route('brands.show', ['slug' => $singleCategory->slug]) }}">
-                                            <div class="shop-category-circle">
-                                                <img src="{{ Voyager::image($singleCategory->logo ) }}"
-                                                    alt="{{ $singleCategory->name }}"
-                                                    class="shop-category-circle-image img-fluid">
-                                            </div>
-                                            <p class="text-center text-black mt-2">{{ $singleCategory->name }}</p>
-                                        </a>
-                                    </div>
-                                @endforeach
+                                @if (!empty($allCategories) && $allCategories->isNotEmpty())
+                                    @foreach ($allCategories as $singleCategory)
+                                        <div class="col-lg-1 mx-auto col-3">
+                                            <a href="{{ route('categories.show', ['slug' => $singleCategory->slug]) }}">
+                                                <div class="shop-category-circle">
+                                                    <img src="{{ Voyager::image($singleCategory->logo) }}"
+                                                        alt="{{ $singleCategory->name ?? 'No Name' }}"
+                                                        class="shop-category-circle-image img-fluid">
+                                                </div>
+                                                <p class="text-center text-black mt-2">{{ $singleCategory->name ?? 'No Name' }}</p>
+                                            </a>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <p class="text-center text-muted">No categories available at the moment.</p>
+                                @endif
                             </div>
                         </div>
                     </div>
                 </div>
+
 
 
 

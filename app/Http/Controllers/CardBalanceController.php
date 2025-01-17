@@ -52,16 +52,17 @@ class CardBalanceController extends Controller
             $data["sku"] = $request->input('sku');
         }
 
-
+        $requestBody = json_encode($data);
+        $requestHttpMethod = "post";
         $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/balance';
         $clientSecret = setting("api.qs_clientSecret");
         $bearerToken = setting("api.bearer_token");
-        $requestHttpMethod = "post";
-        $requestBody = json_encode($data);
-
-        // Generate signature
         $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         $dateAtClient = Carbon::now()->toIso8601String();
+
+
+
+
 
 
         Log::info("Sending API Request", [
@@ -96,16 +97,22 @@ class CardBalanceController extends Controller
 
         try {
             // Make API call
-            $response = Http::withHeaders([
+            $response = Http::withHeaders(
+                [
+                "Content-Type" => "application/json",
                 "Authorization" => "Bearer " . $bearerToken,
+                "Accept" => "*/*",
                 "signature" => $signature,
                 "dateAtClient" => $dateAtClient,
-                "Content-Type" => "application/json",
-            ])->post($absApiUrl, $data);
+
+            ])->send("POST", $absApiUrl, ["body" => $requestBody]);
 
             if ($response->successful()) {
                 $responseData = $response->json();
+                Log::info("response data is ", ['response data ' => $responseData]);
+
                 return redirect()->back()->with('response', $responseData);
+
             }
 
             // Handle API errors

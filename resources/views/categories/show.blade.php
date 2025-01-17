@@ -18,7 +18,7 @@
                                     <div class="col-lg-1 mx-auto col-3">
                                         <a href="{{ route('brands.show', ['slug' => $singleCategory->slug]) }}">
                                             <div class="shop-category-circle">
-                                                <img src="{{ Voyager::image($brand->logo ?? 'path/to/default/logo.jpeg') }}"
+                                                <img src="{{ Voyager::image($singleCategory->logo ) }}"
                                                     alt="{{ $singleCategory->name }}"
                                                     class="shop-category-circle-image img-fluid">
                                             </div>

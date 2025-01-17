@@ -152,7 +152,7 @@
             <td style="text-align: left; padding-left: 16px;">Total Amount</td>
             <td style="text-align: left; padding-left: 16px;">Discount %</td>
             <td style="text-align: left; padding-left: 16px;">Discount Amount</td>
-            <td style="text-align: left; padding-left: 16px;"><b>Payable Amount</b></td>
+            <td style="text-align: left; padding-left: 16px;"><b>Net Payable Amount</b></td>
         </tr>
         <tr>
             <td style="text-align: left; padding-left: 16px;">{{ $order_id }}</td>

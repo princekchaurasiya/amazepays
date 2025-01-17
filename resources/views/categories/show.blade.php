@@ -19,8 +19,13 @@
                                     @foreach ($allCategories as $singleCategory)
                                         <div class="col-lg-1 mx-auto col-3">
                                             <a href="{{ route('categories.show', ['slug' => $singleCategory->slug]) }}">
-                                                <div class="shop-category-circle">
+                                                {{-- <div class="shop-category-circle">
                                                     <img src="{{ Voyager::image($singleCategory->logo) }}"
+                                                        alt="{{ $singleCategory->name ?? 'No Name' }}"
+                                                        class="shop-category-circle-image img-fluid">
+                                                </div> --}}
+                                                <div class="shop-category-circle">
+                                                    <img src="{{ Voyager::image($singleCategory->thumbnail) }}"
                                                         alt="{{ $singleCategory->name ?? 'No Name' }}"
                                                         class="shop-category-circle-image img-fluid">
                                                 </div>

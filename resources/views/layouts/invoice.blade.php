@@ -61,7 +61,7 @@
                     style=" border: 0px solid black;">
             </th>
             <th class="bill-of-supply" colspan="5">
-                <h2>Bill of Supply</h2>
+                <h2 style="text-align: center;">Bill of Supply</h2>
             </th>
         </tr>
         <tr class="company-details-row">
@@ -169,7 +169,7 @@
             </td>
             <td colspan="2" style="text-align: left; padding-left: 16px;">Total Discount Amount: {{ $discount }}
             </td>
-            <td colspan="4" style="font-weight: 600; text-align: left; padding-left: 16px;">Gross Amount after
+            <td colspan="4" style="font-weight: 600; text-align: left; padding-left: 16px;">Net Amount after
                 Discount: {{ $amount_payable_after_discount }}</td>
         </tr>
         <tr>

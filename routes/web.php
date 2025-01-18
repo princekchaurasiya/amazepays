@@ -247,7 +247,7 @@ Route::get('/order-failure', function () {
 });
 
 // Wildcard route (should always be last)
-Route::get('/{any}', function ($any) {
-    Log::info("Wildcard route triggered", ['path' => $any]);
-    return "Caught request: $any";
-})->where('any', '.*');
+// Route::get('/{any}', function ($any) {
+//     Log::info("Wildcard route triggered", ['path' => $any]);
+//     return "Caught request: $any";
+// })->where('any', '.*');

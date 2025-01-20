@@ -17822,7 +17822,7 @@ body {
 .about-page-links{
 text-decoration: none;
 color: #212529 !important;
-font-weight: 700;
+font-weight: 500 !important;
 }
 
 .btn-blue-background-color{

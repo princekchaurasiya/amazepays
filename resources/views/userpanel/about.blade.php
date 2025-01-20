@@ -7,10 +7,10 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
-                    <h2 class="font-xss lh-24 fw-500 text-grey-900 mt-4">
+                    <h2 class="font-xsss lh-24 fw-500 text-grey-900 mt-4">
 						Welcome to <a href="{{ config('companyDefaultValues.company_website') }}" target="_blank" class="about-page-links">Amazepays</a>.
-						The website <a href="{{ config('companyDefaultValues.company_website') }}" target="_blank" class="about-page-links">{{ config('companyDefaultValues.company_website') }}</a> is owned and operated by <b>{{ config('companyDefaultValues.company_official_name') }}</b>
-						with its registered office at <b>{{ config('companyDefaultValues.company_address') }}</b>
+						The website <a href="{{ config('companyDefaultValues.company_website') }}" target="_blank" class="about-page-links">{{ config('companyDefaultValues.company_website') }}</a> is owned and operated by {{ config('companyDefaultValues.company_official_name') }}
+						with its registered office at {{ config('companyDefaultValues.company_address') }}
 					</h2>
 
                 </div>

@@ -16,13 +16,13 @@
                     <div class="row">
                         <div class="col-lg-5 align-self-center">
                             <h1 class="text-grey-900 fw-700 display3-size mb-5 lh-1">Contact Us</h1>
-                            <p>Finding the perfect gift can be a challenge, especially when you're unsure of someone's preferences. Whether it’s a birthday, anniversary, or any special occasion, giving a physical gift isn’t always ideal. Why settle for cash when you can offer the freedom of choice with a digital e-gift card?</p>
+                            <p class="text-grey-900 font-xsss lh-24 fw-500">Finding the perfect gift can be a challenge, especially when you're unsure of someone's preferences. Whether it’s a birthday, anniversary, or any special occasion, giving a physical gift isn’t always ideal. Why settle for cash when you can offer the freedom of choice with a digital e-gift card?</p>
 
-                            <p>At {{ env('COMPANY_BRAND') }}, we specialize in digital e-gift cards from leading brands, making gift-giving simple and meaningful. Whether it's for a celebration like Diwali, Christmas, or just because, our e-gift cards are a thoughtful, versatile, and convenient solution.</p>
+                            <p class="text-grey-900 font-xsss lh-24 fw-500">At {{ env('COMPANY_BRAND') }}, we specialize in digital e-gift cards from leading brands, making gift-giving simple and meaningful. Whether it's for a celebration like Diwali, Christmas, or just because, our e-gift cards are a thoughtful, versatile, and convenient solution.</p>
 
-                            <p>From apparel and home decor to electronics, restaurants, and travel, our digital gift cards cover a wide range of categories. Plus, with instant delivery via email, your gift reaches the recipient instantly, no matter where they are.</p>
+                            <p class="text-grey-900 font-xsss lh-24 fw-500">From apparel and home decor to electronics, restaurants, and travel, our digital gift cards cover a wide range of categories. Plus, with instant delivery via email, your gift reaches the recipient instantly, no matter where they are.</p>
 
-                            <p>For the perfect blend of personalization and convenience, choose a digital e-gift card from {{ env('COMPANY_BRAND') }} — the smart, hassle-free way to give the gift of choice!</p>
+                            <p class="text-grey-900 font-xsss lh-24 fw-500">For the perfect blend of personalization and convenience, choose a digital e-gift card from {{ env('COMPANY_BRAND') }} - the smart, hassle-free way to give the gift of choice!</p>
                         </div>
 
                         <div class="col-lg-7 align-self-center">

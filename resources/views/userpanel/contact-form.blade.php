@@ -100,19 +100,19 @@
                         <div class="row">
                             <div class="col-lg-4 col-md-4 md-mb25">
                                 <h4 class="text-grey-900 fw-600 font-xl ls-2">Address</h4>
-                                <h4 class="font-xsss lh-24 fw-500 text-grey-500 mt-4">
+                                <h4 class="font-xsss lh-24 fw-600 text-grey-900 mt-4">
                                     {{ env('COMPANY_ADDRESS') }}
                                 </h4>
                             </div>
                             <div class="col-lg-4 col-md-4 md-mb25">
                                 <h4 class="text-grey-900 fw-600 font-xl ls-2">Email Us</h4>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-4 mb-0">
+                                <h5 class="font-xsss lh-24 fw-600 text-grey-900 mt-4 mb-0">
                                     {{ env('COMPANY_EMAIL') }}
                                 </h5>
                             </div>
                             <div class="col-lg-4 col-md-4 md-mb25">
                                 <h4 class="text-grey-900 fw-600 font-xl ls-2">Contact Us</h4>
-                                <h5 class="font-xsss lh-24 fw-500 text-grey-500 mt-0">
+                                <h5 class="font-xsss lh-24 fw-600 text-grey-900 mt-0">
                                     +91 {{ env('COMPANY_CONTACT_NO') }}
                                 </h5>
                             </div>

@@ -55,7 +55,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-9">
+                                <div class="col-lg-9" id="gifting-details">
                                     <div class="row">
                                         <div class="col-lg-4">
                                             <div class="order-2 mb-3 mb-lg-0 coupon-quantity">
@@ -245,7 +245,7 @@
                                     @if ($formatteddecodedHowToUse)
                                         <input type="radio" name="tabs" id="tabone" checked="checked">
                                         <label for="tabone">How to Redeem</label>
-                                        <div class="tab p-3 font-xsss instructions ">
+                                        <div class="tab p-3 font-xsss instructions text-black">
                                             {!! $formatteddecodedHowToUse !!}
                                         </div>
                                     @endif
@@ -255,7 +255,7 @@
                                     @if ($descriptionData)
                                         <input type="radio" name="tabs" id="tabtwo">
                                         <label for="tabtwo">Description</label>
-                                        <div class="tab p-3 font-xsss">
+                                        <div class="tab p-3 font-xsss text-black">
                                             {!! $descriptionData !!}
                                         </div>
                                     @endif
@@ -265,7 +265,7 @@
                                     @if ($formattedTncData)
                                         <input type="radio" name="tabs" id="tabthree">
                                         <label for="tabthree">Terms & Condition</label>
-                                        <div class="tab term-condition p-3 font-xsss termsConditions">
+                                        <div class="tab term-condition p-3 font-xsss termsConditions text-black">
                                             {!! $formattedTncData !!}
                                         </div>
                                     @endif

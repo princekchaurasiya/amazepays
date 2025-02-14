@@ -52,26 +52,33 @@
                         <div class="row justify-content-center">
                             <div class="col-12 col-lg-10">
                                 <div class="row">
+
                                     @foreach ($priorityProducts as $product)
-                                        @if ($product->slug && $product->images && $product->images->small)
-                                            <div class="col-lg-3 col-6">
-                                                <div class="product-wrapper-image">
-                                                    <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
-                                                        <img src="{{ $product->images->small ?? URL::asset('/images/no-image.png') }}"
-                                                            alt="product-image" class="w-100 mt-4">
-                                                    </a>
-                                                    <hr>
-                                                    <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
-                                                        <p class="text-center fw-600 mt-3 produtName">{{ ucwords($product->name) }}</p>
-                                                    </a>
-                                                    @if ($product->discount_percentage > 0)
-                                                        <div class="ribbon">
-                                                            <span>{{ $product->discount_percentage }}% off</span>
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @endif
+                                    @if ($product->slug)
+    <div class="col-lg-3 col-6">
+        <div class="product-wrapper-image">
+            <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
+                 @if (!empty($product->custom_image))
+                    <img src="{{ Voyager::image($product->custom_image) }}" alt="custom-image" class="w-100 mt-4">
+                @else
+                    <img src="{{ !empty($product->images) && !empty($product->images->small) ? $product->images->small : URL::asset('/images/no-image.png') }}"
+                         alt="product-image" class="w-100 mt-4">
+                @endif
+            </a>
+            <hr>
+            <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
+                <p class="text-center fw-600 mt-3 produtName">{{ ucwords($product->name) }}</p>
+            </a>
+            @if ($product->discount_percentage > 0)
+                <div class="ribbon">
+                    <span>{{ $product->discount_percentage }}% off</span>
+                </div>
+            @endif
+        </div>
+    </div>
+@endif
+
+
                                     @endforeach
                                 </div>
                             </div>
@@ -125,9 +132,18 @@
                                             <div class="col-lg-3 col-6">
                                                 <div class="product-wrapper-image">
                                                     <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
+                                                        @if (!empty($product->custom_image))
+                                                           <img src="{{ Voyager::image($product->custom_image) }}" alt="custom-image" class="w-100 mt-4">
+                                                       @else
+                                                           <img src="{{ !empty($product->images) && !empty($product->images->small) ? $product->images->small : URL::asset('/images/no-image.png') }}"
+                                                                alt="product-image" class="w-100 mt-4">
+                                                       @endif
+                                                   </a>
+
+                                                    {{-- <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
                                                         <img src="{{ $product->images->small ?? URL::asset('/images/no-image.png') }}"
                                                             alt="product-image" class="w-100 mt-4">
-                                                    </a>
+                                                    </a> --}}
                                                     <hr>
                                                     <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
                                                         <p class="text-center fw-600 mt-3 produtName">{{ ucwords($product->name) }}</p>

@@ -17901,3 +17901,284 @@ font-weight: 500 !important;
     padding: 0;
     margin: 0;
 }
+
+@media (min-width: 992px) {
+    /* Reduce placeholder font size */
+    #gifting-details input::placeholder {
+        font-size: 9px;
+    }
+
+
+
+    /* Ensure compatibility for older browsers */
+    #gifting-details input::-webkit-input-placeholder { font-size: 9px; }
+    #gifting-details input::-moz-placeholder { font-size: 9px; }
+    #gifting-details input:-ms-input-placeholder { font-size: 9px; }
+    #gifting-details input::-ms-input-placeholder { font-size: 9px; }
+
+    /* Navbar spacing */
+    .navbar-brand {
+        margin-left: 1rem !important;
+    }
+
+    .amazepay-sidebar-toggle {
+        margin-right: 1rem !important;
+    }
+
+    .amazepay-search-mobile {
+        display: none ;
+    }
+  /* Ensure the search bar and button look merged without background color */
+.amazepay-desktop-search-wrapper {
+    border: 1px solid #ccc; /* Outline to make it visible */
+    border-radius: 25px; /* Curve the edges */
+    overflow: hidden; /* Ensures button and input look as one unit */
+    display: flex;
+}
+
+/* Style the input field */
+.amazepay-desktop-search-input {
+    border: none;
+    border-radius: 25px 0 0 25px; /* Rounded left side */
+    padding: 10px 15px;
+    flex: 1;
+    outline: none;
+    background-color: transparent; /* No background color */
+    transition: border-color 0.3s ease; /* Smooth transition for outline */
+}
+
+/* Style the button to blend in */
+.amazepay-desktop-search-btn {
+    border: none;
+    border-radius: 0 25px 25px 0; /* Rounded right side */
+    color: white;
+    padding: 10px 15px;
+
+    transition: background-color 0.3s ease; /* Smooth transition for hover */
+}
+
+/* Add hover effect to the button */
+.amazepay-desktop-search-btn:hover {
+    background-color: #fff; /* Darker shade on hover */
+}
+
+.amazepay-desktop-search-btn:active {
+    background-color: #fff !important;
+}
+
+
+/* Grayish color for the search icon */
+.amazepay-desktop-search-btn i {
+    color: #888; /* Grayish color for the icon */
+    transition: color 0.3s ease; /* Smooth transition for icon color */
+}
+
+/* Darker color for the icon on hover */
+.amazepay-desktop-search-btn i:hover {
+    color: #555; /* Darker shade when hovering */
+}
+
+/* Focus state for both the input and button to look like a single unit */
+.amazepay-desktop-search-wrapper:focus-within {
+    border: 2px solid rgba(128, 128, 128, 0.7); /* Grayish border on focus */
+
+    box-shadow: 0 0 5px rgba(128, 128, 128, 0.5); /* Soft gray shadow to enhance focus */
+
+}
+
+/* Ensures focus is also applied to the button when input is focused */
+.amazepay-desktop-search-input:focus {
+    border: none; /* No border on the input itself */
+    outline: none; /* Remove default outline */
+}
+
+/* Ensures the button is also highlighted when input is focused */
+.amazepay-desktop-search-btn:focus {
+    outline: none; /* Remove default outline */
+    border: none; /* Remove any default border */
+}
+
+
+
+}
+
+
+  /* Sidebar Styles */
+.amazepay-sidebar {
+    position: fixed;
+    top: 0;
+    left: -250px;
+    width: 250px;
+    height: 100vh;
+    background: #fff;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+    transition: left 0.3s ease-in-out;
+    z-index: 1050;
+    padding-top: 60px;
+}
+
+/* Sidebar Open */
+.amazepay-sidebar.active {
+    left: 0;
+}
+
+/* Sidebar Close Button */
+.amazepay-sidebar-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+/* Sidebar Links */
+.amazepay-sidebar-menu {
+    list-style: none;
+    padding: 0;
+}
+
+.amazepay-sidebar-menu li {
+    padding: 10px 20px;
+}
+
+.amazepay-sidebar-menu li a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Overlay */
+.amazepay-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 1049;
+}
+
+/* Overlay Active */
+.amazepay-overlay.active {
+    display: block;
+}
+
+.amazepay-navbar-mobile {
+    padding: 0rem 1rem !important;
+    background-color: #fff !important; /* Red in hex */
+}
+@media (max-width: 991.98px) {
+    .amazepay-navbar-mobile {
+        padding: 0rem 1rem !important;
+        margin-bottom: 1rem;
+    }
+
+
+    .navbar-brand-mobile{
+        margin-left: 2rem;
+    }
+
+    .amazepay-mobile-search-input-div{
+        width: 100% !important;
+        border-radius: 10px; /* Ensure whole div is curved */
+        overflow: hidden; /* Prevents border inconsistencies */
+        display: flex; /* Aligns input and button in a row */
+        border: 2px solid #ccc; /* Visible border */
+        background: #fff; /* Background color */
+    }
+    /* Curve the search bar */
+    .amazepay-mobile-search-input {
+        border-radius: 5px 0 0 5px; /* Curve only the left side */
+        border: none; /* Remove default border */
+        padding: 8px 15px;
+        flex: 1; /* Let input take full width */
+        outline: none; /* Remove default focus outline */
+    }
+
+    /* Curve the search button */
+    .amazepay-mobile-search-input-div .btn-outline-secondary {
+        border-radius: 0 5px 5px 0; /* Curve only the right side */
+        border: none; /* Remove default border */
+    }
+    /* Add focus effect on input */
+    .amazepay-mobile-search-input:focus {
+        box-shadow: none;
+    }
+    /* Optional: Hover effect to highlight */
+    .amazepay-mobile-search-input-div:hover {
+        border-color: #848a88; /* Change border color on hover */
+    }
+    .amazepay-mobile-header{
+        padding: 1rem 1.5rem;
+    }
+    .navz {
+        box-shadow: none !important;
+    }
+.amazepay-mobile-search-button:hover{
+    background-color: #fff !important;
+
+}
+.amazepay-mobile-search-button:active{
+    background-color: #fff !important;
+
+}
+
+
+.amazepay-mobile-search-button i {
+    color: #888; /* Grayish color for the icon */
+    transition: color 0.3s ease; /* Smooth transition for icon color */
+}
+
+/* Darker color for the icon on hover */
+.amazepay-mobile-search-button i:hover {
+    color: #555; /* Darker shade when hovering */
+}
+
+
+.mobile-nav-user-icon{
+    font-size: 1.5rem;
+    color: #01007f;
+}
+
+}
+
+
+.otp-modal-header{
+    background-color: #ff6601 !important;
+    justify-content: center;
+    padding: 1rem 0 !important;
+
+}
+
+
+.otp-modal-header-text{ color: white !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;}
+
+    .otp-verification-close-button{
+right:30px !important;
+top: 25px !important;
+    }
+.otp-verification-close-button:focus{
+    outline: none !important;
+}
+.otp-modal-body{
+    padding: 2rem !important;
+}
+.otp-modal-body-text-primary{
+    font-size: 0.9rem !important;
+    color: #5c5c5c ! important;
+}
+.otp-modal-body-text-secondary{
+    font-size: 1rem !important;
+    color: #000 ! important;
+}
+.otp-submit-button{
+    background-color:#01007f !important;
+    border-color: #01007f !important;
+    color: white !important;
+}
+

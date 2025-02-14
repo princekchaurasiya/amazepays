@@ -8,7 +8,7 @@
     <div class="dashboard-wrapper bg-greylight">
         <div class="container">
             <div class="row">
-                <div class="col-lg-3">
+                <div class="col-lg-3 d-none d-lg-block">
                     <div class="dashboard-nav bg-white rounded-lg shadow-xs">
                         <ul class="dash-menu-ul">
                             <li class="d-block rounded-lg active"><a href="{{ route('profile') }}"><i

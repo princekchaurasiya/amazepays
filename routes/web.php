@@ -238,8 +238,8 @@ Route::get('/category/{slug}', [AmazepayCategoryController::class, 'show'])->nam
 
 Route::get('/brand/{slug}', [AmazepayBrandController::class, 'show'])->name('brands.show');
 
-Route::get('/check-balance', [CardBalanceController::class, 'showCheckBalanceForm'])->name('showCheckBalanceForm');
-Route::post('/check-balance', [CardBalanceController::class, 'checkBalance'])->name('checkCardBalance');
+// Route::get('/check-balance', [CardBalanceController::class, 'showCheckBalanceForm'])->name('showCheckBalanceForm');
+// Route::post('/check-balance', [CardBalanceController::class, 'checkBalance'])->name('checkCardBalance');
 
 
 Route::get('/order-failure', function () {
@@ -251,3 +251,7 @@ Route::get('/order-failure', function () {
 //     Log::info("Wildcard route triggered", ['path' => $any]);
 //     return "Caught request: $any";
 // })->where('any', '.*');
+
+Route::get('/faq', function () {
+    return view('faq.show');
+})->name('faq');

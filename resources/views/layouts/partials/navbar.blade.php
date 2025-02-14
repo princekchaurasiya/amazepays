@@ -37,7 +37,7 @@
             </div>
             --}}
             <!-- header wrapper desktop view -->
-            <nav class="navbar navbar-expand-md navbar-light bg-light d-none d-md-block navz fixed-top">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light d-none d-md-block navz fixed-top">
                 <div class="container">
                     <a href="/" class="navbar-brand"><img src="{{ asset('images/logo.png') }}" alt="logo"
                             class="custLogo"></a>
@@ -48,6 +48,10 @@
                     </button>
                     <div class="collapse navbar-collapse" id="navbarNavDropdown">
                         <ul class="navbar-nav mr-auto">
+                            {{-- <li class="nav-item">
+                                <a class="nav-link" href="javascript:void(0);" id="openModalLink">Open Modal</a>
+                            </li> --}}
+
                             <li class="nav-item {{ Request::is('/') ? 'active' : '' }}">
                                 <a class="nav-link" href="/">Home</a>
                             </li>
@@ -57,21 +61,22 @@
                             <li class="nav-item {{ Request::is('contact-us') ? 'active' : '' }}">
                                 <a class="nav-link" href="{{ route('contact-us') }}">Contact</a>
                             </li>
-                            <li class="nav-item {{ Request::is('check-balance') ? 'active' : '' }}">
+                            {{-- <li class="nav-item {{ Request::is('check-balance') ? 'active' : '' }}">
                                 <a class="nav-link" href="{{ route('showCheckBalanceForm') }}">Check Balance</a>
-                            </li>
+                            </li> --}}
                         </ul>
 
                         <form class="form-inline my-2 my-lg-0 flex-grow-1 mr-3" action="{{ route('search') }}" method="GET">
-                            <div class="input-group w-100">
-                                <input type="text" class="form-control ml-5" placeholder="Search here..." name="query" required>
+                            <div class="input-group w-100 amazepay-desktop-search-wrapper">
+                                <input type="text" class="form-control amazepay-desktop-search-input" placeholder="Search here..." name="query" required>
                                 <div class="input-group-append">
-                                    <button class="btn btn-outline-secondary" type="submit">
+                                    <button class="btn btn-outline-secondary amazepay-desktop-search-btn" type="submit">
                                         <i class="fas fa-search"></i>
                                     </button>
                                 </div>
                             </div>
                         </form>
+
 
                         <div class="ml-2">
                             @if (Auth::check())
@@ -107,79 +112,78 @@
 
 
 
-            <!-- header wrapper mobile view -->
-            {{-- <div class="container-fluid"> <!-- Use a container to control the width of the content --> --}}
+           <!-- Header Wrapper Mobile View -->
+<!-- Combined Navbar and Search Bar -->
+<div class="amazepay-mobile-header">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light amazepay-nav amazepay-navbar-mobile">
+        <div class="container-fluid d-flex align-items-center">
+            <!-- Hamburger Menu (Sidebar Toggle) -->
+            <button class="navbar-toggler amazepay-sidebar-toggle" type="button">
+                <i class="fas fa-bars"></i>
+            </button>
 
-            <nav class="navbar navbar-expand-lg navbar-light bg-light navz">
-                <div class="container-fluid">
-                    <!-- Logo -->
-                    <a class="navbar-brand mr-auto" href="/">
-                        <img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo">
+            <!-- Logo (Immediately After Hamburger) -->
+            <a class="navbar-brand navbar-brand-mobile" href="/">
+                <img src="{{ asset('images/logo.png') }}" alt="logo" class="custLogo">
+            </a>
+
+            <!-- User Icon (Right Side) -->
+            <div class="amazepay-user-icon ml-auto">
+                @guest
+                    <!-- Guest: Clicking Opens Login Modal -->
+                    <a href="#" data-toggle="modal" data-target="#Modallogin">
+                        <i class="fas fa-user mobile-nav-user-icon"></i>
                     </a>
+                @endguest
 
-                    <!-- Toggle button for collapsed navbar -->
-                    <button class="navbar-toggler ml-2 ml-lg-0" type="button" data-toggle="collapse"
-                        data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-
-                    <!-- Navbar items (hidden by default) -->
-                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                        <ul class="navbar-nav ml-auto">
-                            <li class="nav-item">
-                                <a class="nav-link" href="/">Home</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url('about') }}">About</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url('contact-us') }}">Contact Us</a>
-                            </li>
-
-                            @guest
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#" data-toggle="modal"
-                                        data-target="#ModalregisterD">New Customer?</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#" data-toggle="modal"
-                                        data-target="#Modallogin">Sign In</a>
-                                </li>
-                            @endguest
-
-                            @auth
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('profile') }}">{{ Auth::user()->name }}</a>
-                                </li>
-
-
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('my-order') }}">My Order</a>
-                                </li>
-
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('userLogOut') }}">Logout</a>
-                                </li>
-                            @endauth
-
-                            <!-- Search Bar -->
-                            <form class="form-inline my-2 my-lg-0 ml-lg-3" action="{{ route('search') }}"
-                                method="GET">
-                                <div class="input-group">
-                                    <input type="text"  class="form-control form-control-sm"
-                                        placeholder="Search here..." name="query" required>
-                                    <div class="input-group-append">
-                                        <button class="btn btn-outline-secondary btn-sm" type="submit">
-                                            <i class="fas fa-search"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </ul>
+                @auth
+                    <!-- Logged-in User: Clicking Shows Dropdown -->
+                    <div class="dropdown">
+                        <a href="#" class="dropdown-toggle" id="userDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                            <a class="dropdown-item" href="{{ route('profile') }}">{{ Auth::user()->name }}</a>
+                            <a class="dropdown-item" href="{{ route('my-order') }}">My Order</a>
+                            <a class="dropdown-item" href="{{ route('userLogOut') }}">Logout</a>
+                        </div>
                     </div>
+                @endauth
+            </div>
+        </div>
+    </nav>
+
+    <!-- Search Bar -->
+    <div class="container-fluid amazepay-search amazepay-search-mobile">
+        <form class="form-inline" action="{{ route('search') }}" method="GET">
+            <div class="input-group amazepay-mobile-search-input-div">
+                <input type="text" class="form-control form-control-sm amazepay-mobile-search-input" placeholder="Search here..." name="query" required>
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary btn-sm amazepay-mobile-search-button" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
                 </div>
-            </nav>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Sidebar -->
+<div class="amazepay-sidebar">
+    <button class="amazepay-sidebar-close">&times;</button>
+    <ul class="amazepay-sidebar-menu">
+        <li><a href="/">Home</a></li>
+        <li><a href="{{ url('about') }}">About Us</a></li>
+        <li><a href="{{ url('contact-us') }}">Contact Us</a></li>
+    </ul>
+</div>
+
+<!-- Overlay (When Sidebar is Open) -->
+<div class="amazepay-overlay"></div>
+
+
+
 
 
             {{-- </div> --}}

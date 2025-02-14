@@ -41,6 +41,9 @@
                             <li><a class="font-xsss text-black" href="{{ url('refund-policy') }}">Refund
                                     Policy</a></li>
 
+                                    {{-- <li><a class="font-xsss text-black" href="{{ route('faq') }}">Frequently Asked Questions</a></li> --}}
+
+
                             <li><a class="font-xsss text-black"
                                     href="{{ config('companyDefaultValues.company_new_website_link') }}">Who
                                     we are?</a></li>

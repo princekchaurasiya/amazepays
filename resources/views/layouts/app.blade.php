@@ -46,7 +46,7 @@
                                             <div class="rounded-0 text-left pt-5 pb-2">
                                                 <div class="single-line mb-2">
                                                     <span class="mr-3"><img
-                                                            src="https://www.gyftoo.com/public/assets/images/group1.png"
+                                                            src="{{ asset('images/group1.png') }}"
                                                             alt="Group"></span>
                                                     <span class="text-white">Buy or Send Gift Cards Instantly</span>
                                                 </div>
@@ -54,7 +54,7 @@
                                             <div class="rounded-0 text-left pt-3 pb-2">
                                                 <div class="single-line mb-2">
                                                     <span class="mr-3"><img
-                                                            src="https://www.gyftoo.com/public/assets/images/group1.png"
+                                                            src="{{ asset('images/group2.png') }}"
                                                             alt="Group"></span>
                                                     <span class="text-white">Send Gift Cards to Friends and Family
                                                         Choose from Hundreds of Popular Brands.</span>
@@ -313,32 +313,32 @@
         data-backdrop="true" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content shadow-lg border-0 rounded-lg">
-                <div class="modal-header bg-primary text-white py-4">
-                    <h5 class="modal-title font-weight-bold" id="otpModalLabel">OTP Verification</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"
+                <div class="modal-header otp-modal-header py-4">
+                    <h5 class="modal-title font-weight-bold otp-modal-header-text" id="otpModalLabel">OTP Verification</h5>
+                    <button type="button" class="close text-white otp-verification-close-button" data-dismiss="modal" aria-label="Close"
                         id="closeModalButton">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    <h6 class="text-center text-secondary">Please enter the one-time password<br>to verify your account
+                <div class="modal-body otp-modal-body">
+                    <h6 class="text-center otp-modal-body-text-primary">Please enter the one-time password<br>to verify your account
                     </h6>
-                    <div class="text-center mt-3">
+                    <div class="text-center mt-3 otp-modal-body-text-secondary">
                         <span>A code has been sent to</span>
                         <small class="font-weight-bold">******* <span id="maskedPhone">1234</span></small>
                     </div>
                     <div id="otp" class="inputs d-flex justify-content-center mt-4">
                         <!-- Create input fields for the OTP digits (1 to 6) -->
                         <input class="m-2 text-center form-control rounded otp-input" type="text" id="first"
-                            maxlength="1" oninput="moveToNext(this, 'second')" />
+                            maxlength="1" inputmode="numeric"  oninput="moveToNext(this, 'second')" />
                         <input class="m-2 text-center form-control rounded otp-input" type="text" id="second"
-                            maxlength="1" oninput="moveToNext(this, 'third')" />
+                            maxlength="1" inputmode="numeric"  oninput="moveToNext(this, 'third')" />
                         <input class="m-2 text-center form-control rounded otp-input" type="text" id="third"
-                            maxlength="1" oninput="moveToNext(this, 'fourth')" />
+                            maxlength="1" inputmode="numeric"  oninput="moveToNext(this, 'fourth')" />
                         <input class="m-2 text-center form-control rounded otp-input" type="text" id="fourth"
-                            maxlength="1" oninput="moveToNext(this, 'fifth')" />
+                            maxlength="1" inputmode="numeric"  oninput="moveToNext(this, 'fifth')" />
                         <input class="m-2 text-center form-control rounded otp-input" type="text" id="fifth"
-                            maxlength="1" oninput="moveToNext(this, 'sixth')" />
+                            maxlength="1" inputmode="numeric"  oninput="moveToNext(this, 'sixth')" />
                         <input class="m-2 text-center form-control rounded otp-input" type="text" id="sixth"
                             maxlength="1" />
                     </div>
@@ -347,7 +347,7 @@
                 </div>
                 <div class="modal-footer justify-content-center py-3">
                     <!-- Submit button to validate and verify the OTP -->
-                    <button class="btn btn-danger px-4 py-2 rounded-pill font-weight-bold"
+                    <button class="btn  px-4 py-2 rounded-pill font-weight-bold otp-submit-button"
                         id="otpVerificationButton">Submit</button>
                 </div>
             </div>
@@ -700,35 +700,64 @@
         // end login
 
         //otp modal keyboard button handling code starts here
-        $(document).ready(function() {
-            function OTPInput() {
-                const inputs = $('#otp > *[id]');
+        $(document).ready(function () {
+    function OTPInput() {
+        const inputs = $('#otp > .otp-input');
 
-                inputs.on('keydown', function(event) {
-                    if (event.key === "Backspace") {
-                        $(this).val('');
-                        const index = inputs.index(this);
-                        if (index !== 0) inputs.eq(index - 1).focus();
-                    } else {
-                        const key = event.key;
+        // Restrict input to numbers only
+        inputs.on('input', function () {
+            const value = $(this).val();
+            if (!/^\d$/.test(value)) {
+                $(this).val(''); // Clear if not a digit
+            }
+        });
 
-                        if (event.keyCode > 47 && event.keyCode < 58) {
-                            const index = inputs.index(this);
-                            $(this).val(key);
-                            if (index !== inputs.length - 1) inputs.eq(index + 1).focus();
-                            event.preventDefault();
-                        } else if (event.keyCode > 64 && event.keyCode < 91) {
-                            const index = inputs.index(this);
-                            $(this).val(key);
-                            if (index !== inputs.length - 1) inputs.eq(index + 1).focus();
-                            event.preventDefault();
-                        }
-                    }
-                });
+        // Handle backspace and navigation
+        inputs.on('keydown', function (event) {
+            const index = inputs.index(this);
+
+            if (event.key === "Backspace") {
+                $(this).val('');
+                if (index !== 0) inputs.eq(index - 1).focus();
+            }
+        });
+
+        // Handle pasting OTP (for both desktop & mobile)
+        inputs.on('paste', function (event) {
+            event.preventDefault();
+
+            let pastedData = '';
+
+            if (event.originalEvent.clipboardData) {
+                // Desktop: Get clipboard data
+                pastedData = event.originalEvent.clipboardData.getData('text').trim();
+            } else if (window.clipboardData) {
+                // Mobile fallback
+                pastedData = window.clipboardData.getData('Text').trim();
             }
 
-            OTPInput();
+            if (/^\d{6}$/.test(pastedData)) { // Ensure exactly 6 digits
+                const digits = pastedData.split('');
+                inputs.each(function (i) {
+                    $(this).val(digits[i]);
+                });
+                inputs.last().focus(); // Move to last input
+            }
         });
+
+        // Mobile keyboard support (auto-jump to next field)
+        inputs.on('input', function () {
+            const index = inputs.index(this);
+            if ($(this).val() !== '' && index < inputs.length - 1) {
+                inputs.eq(index + 1).focus();
+            }
+        });
+    }
+
+    OTPInput();
+});
+
+
         //otp modal keyboard button handling code ends here
 
 
@@ -862,7 +891,11 @@
             });
         });
 
-
+//         $(document).ready(function () {
+//     $("#openModalLink").click(function () {
+//         $("#otpVerificationModal").modal("show");
+//     });
+// });
 
         $(document).ready(function() {
             // Toggle the 'collapsed' class and side navigation width when the collapse button is clicked
@@ -877,6 +910,22 @@
                 }
             });
         });
+
+
+        $(document).ready(function () {
+    // Open Sidebar
+    $('.amazepay-sidebar-toggle').click(function () {
+        $('.amazepay-sidebar').addClass('active');
+        $('.amazepay-overlay').addClass('active');
+    });
+
+    // Close Sidebar
+    $('.amazepay-sidebar-close, .amazepay-overlay').click(function () {
+        $('.amazepay-sidebar').removeClass('active');
+        $('.amazepay-overlay').removeClass('active');
+    });
+});
+
 
         function closeNav() {
             // Get the side navigation element

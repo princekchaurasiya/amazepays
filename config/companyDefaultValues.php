@@ -10,7 +10,11 @@ $company_name = 'Frenetic India';
 
 $otp_duration_minutes = $otpExpiration->diffInMinutes($otpGeneratedTime);
 
-$sms_message = 'Dear User,  Your  one  time  password is  ' . $otp . '  and  its  valid  for ' . $otp_duration_minutes . '  minutes  only.  Do  not  share  to  anyone.  Thanks - ' . $company_name;
+// $sms_message = 'Dear User,  Your  one  time  password is  ' . $otp . '  and  its  valid  for ' . $otp_duration_minutes . '  minutes  only.  Do  not  share  to  anyone.  Thanks - ' . $company_name;
+
+
+$sms_message = $otp . ' is your Frenetic India OTP. Valid for ' . $otp_duration_minutes . ' minutes. Do not share. - ' . $company_name;
+
 
 // transaction message setup
 
@@ -40,6 +44,7 @@ return [
     'sms_source' => env('SMS_SOURCE', 'FRNTIC'),
     'sms_entity_id' => env('SMS_ENTITY_ID', '1101633530000071318'),
     'sms_temp_id' => env('SMS_TEMP_ID', '1107169019646710710'),
+    'sms_otp_temp_id' => env('SMS_OTP_TEMP_ID', '1107173936005805498'),
     'sms_tmid' => env('SMS_TMID', '1101633530000071318,1602100000000009244'),
     'sendMailFrom' => env('SEND_MAIL_FROM', 'it@amazepays'),
     'company_website' => env('COMPANY_WEBSITE', 'https://amazepays.in/'),

@@ -18112,7 +18112,9 @@ font-weight: 500 !important;
         border-color: #848a88; /* Change border color on hover */
     }
     .amazepay-mobile-header{
-        padding: 1rem 1.5rem;
+        padding: 0.6rem 0  1rem 0;
+        /* box-shadow: 1px 1px 1px 1px rgba(237, 237, 237, 1); */
+
     }
     .navz {
         box-shadow: none !important;

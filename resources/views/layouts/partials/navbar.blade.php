@@ -114,7 +114,7 @@
 
            <!-- Header Wrapper Mobile View -->
 <!-- Combined Navbar and Search Bar -->
-<div class="amazepay-mobile-header">
+<div class="amazepay-mobile-header sticky-top">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light amazepay-nav amazepay-navbar-mobile">
         <div class="container-fluid d-flex align-items-center">

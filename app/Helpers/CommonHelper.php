@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Helpers;
+use App\Models\QsProduct;
 
 class CommonHelper
 {
@@ -57,64 +58,43 @@ class CommonHelper
 
     // Define other helper functions as needed
 
-
     public static function extractTnc($data)
-    {
-        if (isset($data['content'])) {
-            $content = $data['content'];
-
-            // Convert only the first level bullet points into valid <li> tags wrapped in a single <ul>
-            $content = preg_replace('/^.*?(\n?•\s.*?)(?=\n|$)/', '<li>$1</li>', $content);
-            $content = preg_replace('/•\s*(.*?)\n/', '<li>$1</li>', $content);
-
-            // Wrap only the first-level items with `<ul>` without creating multiple nesting layers.
-            $content = "<ul>" . $content . "</ul>";
-
-            return $content;
-        }
-
-        return 'No terms & conditions available.';
+{
+    // If $data is a string, assume it's already content
+    if (is_string($data)) {
+        return self::formatContent($data);
     }
+
+    // If $data is an array, check if 'content' key exists and is not empty
+    if (is_array($data) && isset($data['content']) && !empty($data['content'])) {
+        return self::formatContent($data['content']);
+    }
+
+    // If no valid content is found, return a default message
+    return 'No terms & conditions available.';
+}
 
 
 
     // Helper to process "How to Redeem" with proper formatting
     public static function extractHowToRedeem($data)
-{
-    if (!isset($data) || empty(trim($data))) {
-        // Return default static instructions
-        // return '<ul>
-        //     <li><div class="">Visit the outlet near you.</div></li>
-        //     <li><div class="">Before making the purchase confirm about the acceptance of Gift Card at the store.</div></li>
-        //     <li><div class="">Choose the products you would like to buy.</div></li>
-        //     <li><div class="">Show your Gift Card details to the cashier at the time of billing &amp; pay any balance amount by cash or card.</div></li>
-        // </ul>';
+    {
+        // If $data is a string, assume it's already content
+        if (is_string($data)) {
+            return self::formatContent($data);
+        }
 
+        // If $data is an array, check if 'content' key exists and is not empty
+        if (is_array($data) && isset($data['content']) && !empty($data['content'])) {
+            return self::formatContent($data['content']);
+        }
+
+        // If no valid content is found, return default instructions
         return '<ul>
-            <li><div class="">How to redeem instructions are not available.</div></li>
+            <li><div style="margin-bottom: 8px; font-size: 14px;">How to redeem instructions are not available.</div></li>
         </ul>';
     }
 
-    // Check if the content contains `•` bullets
-    if (strpos($data, '•') !== false) {
-        // Split the data into individual lines based on the bullet character (•)
-        $lines = preg_split('/•\s*/', $data, -1, PREG_SPLIT_NO_EMPTY);
-    } else {
-        // If no bullets, split by newlines
-        $lines = preg_split('/\r\n|\r|\n/', $data, -1, PREG_SPLIT_NO_EMPTY);
-    }
-
-    // Wrap each line in <li><div></div></li> and handle styling
-    $formattedLines = array_map(function ($line) {
-        // Escape the content and add necessary styling
-        return '<li><div style="margin-bottom: 8px; font-size: 14px;">' . e(trim($line)) . '</div></li>';
-    }, $lines);
-
-    // Combine all lines into a single <ul>
-    $formattedContent = '<ul style="list-style-type: none; padding: 0;">' . implode('', $formattedLines) . '</ul>';
-
-    return $formattedContent;
-}
 
 
 
@@ -122,12 +102,20 @@ class CommonHelper
 
     // Helper to process "Terms & Conditions" with proper formatting
     public static function extractDescription($data)
-    {
-
-        return isset($data)
-            ? nl2br(e($data))
-            : 'No description available.';
+{
+    // If $data is a string, assume it's already content
+    if (is_string($data)) {
+        return self::formatContent($data);
     }
+
+    // If $data is an array, check if 'content' key exists and is not empty
+    if (is_array($data) && isset($data['content']) && !empty($data['content'])) {
+        return self::formatContent($data['content']);
+    }
+
+    // If no valid content is found, return a default message
+    return '<p>No description available.</p>';
+}
 
 
     public static function getFormattedInvoiceTermsAndConditions()
@@ -166,6 +154,40 @@ class CommonHelper
     }
 
 
+    /**
+     * Handles different types of content formatting including raw text, HTML, and structured arrays.
+     */
+    public static function formatContent($data)
+    {
+        if (is_string($data)) {
+            return self::cleanHtmlContent($data);
+        } elseif (is_array($data) && isset($data['content'])) {
+            return self::cleanHtmlContent($data['content']);
+        }
+
+        return 'No terms & conditions available.';
+    }
+
+    /**
+     * Processes HTML content, converting bullet points to lists if necessary.
+     */
+    private static function cleanHtmlContent($content)
+    {
+        // Check if content is plain text with bullet points and convert to list
+        if (strpos($content, '•') !== false) {
+            $lines = preg_split('/•\s*/', $content, -1, PREG_SPLIT_NO_EMPTY);
+            $formattedLines = array_map(fn($line) => '<li>' . trim($line) . '</li>', $lines);
+            return '<ul>' . implode('', $formattedLines) . '</ul>';
+        }
+
+        // Ensure valid HTML output
+        $content = trim($content);
+        if (!preg_match('/<[^>]+>/', $content)) {
+            return '<p>' . htmlspecialchars($content) . '</p>';
+        }
+
+        return $content;
+    }
 
 
 

@@ -187,7 +187,10 @@ Route::get('/all_transaction', function () {
 
 
 Route::post('/send-sms', [SmsController::class, 'loginWithOtp'])->name('send-sms');
-Route::post('/register-otp', [SmsController::class, 'registerWithOtp'])->name('send-regsiter-otp');
+Route::post('/register-otp', [SmsController::class, 'registerWithOtp'])->name('send-register-otp');
+Route::post('/forget-password-send-otp', [SmsController::class, 'forgetPasswordWithMobileOtp'])->name('send-forgot-password-otp');
+Route::post('/user-forgot-password', [UserPanelController::class, 'userForgotPassword'])->name('user-forgot-password');
+
 Route::post('/verify-otp', [OtpVerificationController::class, 'loginVerifyOtp'])->name('verify-otp');
 // Route for OTP verification during registration
 Route::post('/verify-register-otp', [OtpVerificationController::class, 'registerVerifyOtp'])->name('verify-register-otp');
@@ -255,3 +258,5 @@ Route::get('/order-failure', function () {
 Route::get('/faq', function () {
     return view('faq.show');
 })->name('faq');
+
+

@@ -3,6 +3,10 @@
     Amazepay | {{ $productDetails['name'] }}
 @endsection
 @section('content')
+@php
+    use App\Helpers\CommonHelper;
+@endphp
+
     <div class="gift-card-detail-page pt-lg--7 pb-lg--7 pb-5">
         <div class="container-fluid">
             <div class="row">
@@ -36,8 +40,10 @@
                                                 <span>{{ $productDetails['discount_percentage'] }}% off</span>
                                             </div>
                                         @endif
+
+
                                         <img class="img-fluid single-gift-image"
-                                            src="{{ $productDetails['images']->small ?? URL::asset('/images/hamburger.jpg') }}"
+                                            src="{{ CommonHelper::getProductImage($productDetails) }}"
                                             alt="product-detail-image">
                                     </div>
                                     <div class="cardText">
@@ -54,6 +60,7 @@
                                         </p>
                                     </div>
                                 </div>
+
 
                                 <div class="col-lg-9" id="gifting-details">
                                     <div class="row">

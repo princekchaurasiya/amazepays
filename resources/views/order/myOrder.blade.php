@@ -5,6 +5,9 @@
 @endsection
 
 @section('content')
+@php
+    use App\Helpers\CommonHelper;
+@endphp
     <div class="dashboard-wrapper bg-greylight">
         <div class="container">
             <div class="row">
@@ -44,11 +47,11 @@
                                             <div class="card-body my-order-card-body">
                                                 <div class="row">
                                                     <div class="col-lg-4">
-                                                        @if ($images && isset($images['small']))
+
                                                             <img class="my-order-image-div img-fluid mb-3 mb-lg-0"
-                                                                src="{{ $images['small'] }}" alt=""
+                                                                src="{{ CommonHelper::getProductImage($orderItem) }}" alt=""
                                                                 style="width: 244px; height: auto;">
-                                                        @endif
+
                                                     </div>
                                                     <div class="col-lg-4">
                                                         <h2>{{ $orderItem->product_name }}</h2>
@@ -77,12 +80,17 @@
                                                 </div>
                                             </div>
                                         </div>
+
                                     </div>
+
                                     <form action="{{ route('view-card-details') }}" method="post" id="orderForm"
                                         style="display: none;">
                                         @csrf
-                                        <input type="hidden" name="orderId" id="orderIdInput">
-                                        <input type="hidden" name="imageDetail" id="imageDetail">
+
+                                        <input type="hidden" name="imageDetail" id="imageDetailInput"
+       value="{{ $orderItem->custom_image ?? $orderItem->imageDetail ?? '' }}">
+
+
                                     </form>
                                 </a>
                             @endif
@@ -96,21 +104,19 @@
     @push('scripts')
         <script>
             $(document).ready(function() {
-                $('.order-link').on('click', function(e) {
-                    e.preventDefault();
+    $('.order-link').on('click', function(e) {
+        e.preventDefault();
 
-                    // Get the order ID and image detail from data attributes
-                    var orderId = $(this).data('order-id');
-                    var imageDetail = $(this).data('image');
+        var orderId = $(this).data('order-id');
+        var imageDetail = $(this).data('custom-image') || $(this).data('image') || null;
 
-                    // Set the order ID and image detail in the hidden input fields
-                    $('#orderIdInput').val(orderId);
-                    $('#imageDetail').val(imageDetail);
+        $('#orderIdInput').val(orderId);
+        $('#imageDetailInput').val(imageDetail);
 
-                    // Submit the form
-                    $('#orderForm').submit();
-                });
-            });
+        $('#orderForm').submit();
+    });
+});
+
         </script>
     @endpush
 @endsection

@@ -17226,7 +17226,7 @@ body {
 }
 
 .error-color {
-    color: red;
+    color: red !important;
 }
 
 .otp-modal-close-style {
@@ -17852,10 +17852,17 @@ font-weight: 500 !important;
     color: #F44336; /* Red text for error message */
 }
 
-.success-message, .error-message {
+.success-message{
     font-size: 18px;
-    color: #333;
+    color: #155721;
 }
+
+
+ .error-message {
+    font-size: 18px;
+    color: #991c27;
+}
+
 
 .refund-info {
     font-size: 16px;

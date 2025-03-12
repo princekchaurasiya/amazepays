@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    use App\Helpers\CommonHelper;
+@endphp
+
     <div class="container">
         <div class="product-wrapper pt-5 pb-5">
             <div class="container-fluid">
@@ -16,15 +20,21 @@
                     <div class="col-lg-10">
                         <div class="row mt-5 mb-5 justify-content-center mx-0 gx-0 ">
 
+
+
+
+
                             <div class="all-brand-slick-slider">
                                 @if (!empty($allBrands) && $allBrands->isNotEmpty())
                                     @foreach ($allBrands as $singleBrand)
                                         <div class="col-lg-1 mx-auto col-3">
                                             <a href="{{ route('brands.show', ['slug' => $singleBrand->slug ?? '#']) }}">
                                                 <div class="shop-category-circle">
-                                                    <img src="{{ Voyager::image($singleBrand->logo) }}"
-                                                        alt="{{ $singleBrand->name ?? 'No Name' }}"
-                                                        class="shop-category-circle-image img-fluid">
+                                                    @if (!empty($singleBrand->logo))
+                                                        <img src="{{ Voyager::image($singleBrand->logo) }}"
+                                                             alt="{{ $singleBrand->name ?? 'No Name' }}"
+                                                             class="shop-category-circle-image img-fluid">
+                                                    @endif
                                                 </div>
                                                 <p class="text-center text-black mt-2">{{ $singleBrand->name ?? 'No Name' }}</p>
                                             </a>
@@ -34,6 +44,9 @@
                                     <p class="text-center text-muted">No brands available at the moment.</p>
                                 @endif
                             </div>
+
+
+
                         </div>
                     </div>
                 </div>
@@ -52,36 +65,37 @@
                             <div class="row">
 
                                 @foreach ($products as $product)
-                                    @if ($product->slug && isset($product->images) && isset($product->images['small']))
-                                        <div class="col-lg-3 col-6">
-                                            <div class="product-wrapper-image">
-                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}"
-                                                    class="d-block text-center">
-                                                    <p class="single-image-wrapper">
-                                                        <img src="{{ $product->images['small'] ?? URL::asset('/images/no-image.png') }}"
-                                                            alt="product-image" class="w-100 mt-4 d-inline-block">
+                                @php
+                                    $productImage = CommonHelper::getProductImage($product);
+                                @endphp
+
+                                @if ($product->slug && !empty($productImage))
+                                    <div class="col-lg-3 col-6">
+                                        <div class="product-wrapper-image">
+                                            <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
+                                                <p class="single-image-wrapper">
+                                                    <img src="{{ $productImage }}" alt="product-image" class="w-100 mt-4 d-inline-block">
+                                                </p>
+                                            </a>
+
+                                            <hr>
+                                            <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
+                                                <div class="product-image-text-wrapper m-lg-1">
+                                                    <p class="text-center fw-600 text-product-name-color text-product-name-font-size mt-lg-2 mt-3">
+                                                        {{ ucwords($product->name) }}
                                                     </p>
-                                                </a>
+                                                </div>
+                                            </a>
 
-                                                <hr>
-                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
-                                                    <div class="product-image-text-wrapper m-lg-1">
-                                                        <p
-                                                            class="text-center fw-600 text-product-name-color text-product-name-font-size mt-lg-2 mt-3">
-                                                            {{ ucwords($product->name) }}
-                                                        </p>
-                                                    </div>
-                                                </a>
-
-                                                @if ($product->discount_percentage && $product->discount_percentage > 0)
-                                                    <div class="ribbon">
-                                                        <span>{{ $product->discount_percentage }}% off</span>
-                                                    </div>
-                                                @endif
-                                            </div>
+                                            @if ($product->discount_percentage && $product->discount_percentage > 0)
+                                                <div class="ribbon">
+                                                    <span>{{ $product->discount_percentage }}% off</span>
+                                                </div>
+                                            @endif
                                         </div>
-                                    @endif
-                                @endforeach
+                                    </div>
+                                @endif
+                            @endforeach
                             </div> <!-- Closing row for products -->
                         </div> <!-- Closing col for main product wrapper -->
                     </div> <!-- Closing row for product display -->

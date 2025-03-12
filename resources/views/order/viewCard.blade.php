@@ -3,6 +3,9 @@
     Amazepay | View Card
 @endsection
 @section('content')
+@php
+    use App\Helpers\CommonHelper;
+@endphp
     <div class="dashboard-wrapper bg-greylight">
         <div class="container">
             <div class="row">
@@ -31,11 +34,12 @@
                         </div>
 
                         @foreach ($cardArray as $card)
+
                             <div class="col-lg-6 mb-2">
                                 <div class="card product-card">
                                     <div class="card-body my-order-card-body">
                                         <p>
-                                            <img src="{{ $imgDetail }}" alt="" class="img-fluid">
+                                            <img src="{{ CommonHelper::getProductImage($card) }}" alt="" class="img-fluid">
                                         </p>
                                         <p class="mb-0">Card Number: <b>{{ $card->cardNumber }}</b></p>
                                         <p class="mb-0">Card Pin: <b>{{ $card->cardPin }}</b></p>

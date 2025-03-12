@@ -152,6 +152,68 @@ class UserPanelController extends Controller
         }
     }
 
+
+
+
+    public function userForgotPassword(Request $request)
+    {
+        Log::info('userForgotPassword method called prince', ['request' => $request->all()]);
+
+        try {
+            $input = $request->all();
+
+            // Check if all fields are empty
+            if (empty($input['mobile']) && empty($input['otp']) && empty($input['newPassword']) && empty($input['confirm_new_password'])) {
+                return response()->json([
+                    'status' => 400,
+                    'message' => 'All fields are required.'
+                ], 400);
+            }
+
+            // Validate request data
+            $validator = Validator::make($input, [
+                'mobile' => ['required', 'regex:/^(?:(?:\+|0{0,2})91)?[789]\d{9}$/'],
+                'otp' => ['required'],
+                'newPassword' => ['required', 'min:6'],
+                'confirm_new_password' => ['required', 'same:newPassword'],
+            ], [
+                'mobile.required' => 'backend Mobile number is required.',
+                'mobile.regex' => 'Invalid mobile number format.',
+                'otp.required' => 'OTP is required.',
+                'newPassword.required' => 'New password is required.',
+                'newPassword.min' => 'Password must be at least 6 characters.',
+                'confirm_new_password.required' => 'Confirm password is required.',
+                'confirm_new_password.same' => 'Confirm password must match new password.',
+            ]);
+
+            // If validation fails, return errors
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 400,
+                    'errors' => $validator->errors()
+                ], 400);
+            }
+
+            // Proceed with password reset logic
+            return response()->json([
+                'status' => 200,
+               'message' => 'Password changed successfully! You can log in with your new password.'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in userForgotPassword: ' . $e->getMessage());
+            return response()->json([
+                'status' => 500,
+                'message' => 'Something went wrong, please try again.'
+            ], 500);
+        }
+    }
+
+
+
+
+
+
     public function userLogin(Request $request)
     {
         Log::info('userLogin method called');

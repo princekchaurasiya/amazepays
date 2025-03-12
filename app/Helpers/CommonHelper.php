@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 use App\Models\QsProduct;
+use TCG\Voyager\Facades\Voyager;
+
 
 class CommonHelper
 {
@@ -189,7 +191,29 @@ class CommonHelper
         return $content;
     }
 
+    public static function getProductImage($product)
+    {
+        if (is_array($product)) {
+            if (!empty($product['custom_image'])) {
+                return asset('storage/' . $product['custom_image']);
+            } elseif (!empty($product['images']) && !empty($product['images']->small)) {
+                return $product['images']->small;
+            }
+        }
 
+
+        elseif (is_object($product)) {
+            if (!empty($product->custom_image)) {
+                return asset('storage/' . $product->custom_image);
+            } elseif (!empty($product->images) && !empty($product->images->small)) {
+                return $product->images->small;
+            }
+        }
+
+
+        // Return null if no image is available
+        return null;
+    }
 
 
 }

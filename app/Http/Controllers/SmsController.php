@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Response;
 use Config;
 use App\Models\User;
 use Mail;
+use Illuminate\Support\Facades\log;
 
 class SmsController extends Controller
 {
@@ -34,19 +35,66 @@ class SmsController extends Controller
 
     public function registerWithOtp(Request $request)
     {
-        \Log::info('Register with OTP initiated', ['request' => $request->all()]);
+        Log::info('Register with OTP initiated', ['request' => $request->all()]);
 
         $destination = $request->input('destination');
+        if (!$destination) {
+            Log::error('Destination mobile number missing', ['request' => $request->all()]);
+            return response()->json(['status' => 'error', 'message' => 'Mobile number is required.']);
+        }
+
         $user = User::where('mobile', $destination)->first();
 
         if ($user) {
-            \Log::warning('User already exists for mobile number', ['mobile' => $destination]);
-            return response()->json(['status' => 'error', 'message' => 'User Already Exist Please try to log in']);
+            Log::warning('User already exists for mobile number', ['mobile' => $destination]);
+            return response()->json(['status' => 'error', 'message' => 'User Already Exists. Please try to log in.']);
         }
 
-        \Log::info('No user found, proceeding to send SMS');
-        return $this->sendSms($request);
+        Log::info('No user found, proceeding to send SMS', ['mobile' => $destination]);
+
+        try {
+            return $this->sendSms($request);
+        } catch (\Exception $e) {
+            Log::error('Error sending OTP', ['error' => $e->getMessage()]);
+            return response()->json(['status' => 'error', 'message' => 'Failed to send OTP. Please try again.']);
+        }
     }
+
+
+
+    public function forgetPasswordWithMobileOtp(Request $request)
+    {
+        Log::info('Forgot Password OTP initiated', ['request' => $request->all()]);
+
+        $destination = $request->input('destination');
+        if (!$destination) {
+            Log::error('Destination mobile number missing', ['request' => $request->all()]);
+            return response()->json(['status' => 'error', 'message' => 'Mobile number is required to send OTP.']);
+        }
+
+        $user = User::where('mobile', $destination)->first();
+
+        if (!$user) {
+            Log::warning('No user found for the given mobile number', ['mobile' => $destination]);
+            return response()->json(['status' => 'error', 'message' => 'Mobile number not registered. Please sign up.']);
+        }
+
+        Log::info('User found, proceeding to send OTP', ['mobile' => $destination]);
+
+        try {
+            return $this->sendSms($request);
+        } catch (\Exception $e) {
+            Log::error('Error sending OTP', ['error' => $e->getMessage()]);
+            return response()->json(['status' => 'error', 'message' => 'Failed to send OTP. Please try again.']);
+        }
+    }
+
+
+
+
+
+
+
 
     public function profileUpdateSendOtp(Request $request)
     {
@@ -65,7 +113,7 @@ class SmsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            \Log::error('Validation failed', ['errors' => $validator->errors()]);
+            \Log::error('Validation failed for sending sms', ['errors' => $validator->errors()]);
             return response()->json(['status' => 'error', 'message' => 'Please enter a valid 10-digit Indian mobile number.']);
         }
 

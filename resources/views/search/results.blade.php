@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    use App\Helpers\CommonHelper;
+@endphp
+
 <div class="product-wrapper pt-5 pb-5">
     <div class="row justify-content-center">
         <div class="col-12">
@@ -20,24 +24,32 @@
                 <div class="col-12 col-sm-12 col-md-12 col-lg-10 col-xl-10">
                     <div class="row">
                         @foreach ($results as $result)
+
+
                         <div class="col-lg-3 col-6">
                             <div class="product-wrapper-image">
                                 <a href="{{ route('get-product-by-slug', ['slug' => $result->url]) }}" class="d-block text-center">
                                     <p class="single-image-wrapper">
-                                        <img src="{{ optional(json_decode($result->images))->small ?? URL::asset('/images/no-image.png') }}" alt="product-image" class="w-100 mt-4 d-inline-block">
+                                        <img src="{{ CommonHelper::getProductImage($result) }}"
+                                             alt="product-image"
+                                             class="w-100 mt-4 d-inline-block">
                                     </p>
                                 </a>
                                 <hr>
                                 <a href="{{ route('get-product-by-slug', ['slug' => $result->url]) }}">
                                     <div class="product-image-text-wrapper m-lg-1">
-                                        <p class="text-center fw-600 text-product-name-color text-product-name-font-size mt-lg-2 mt-3">{{ ucwords($result->name) }}</p>
+                                        <p class="text-center fw-600 text-product-name-color text-product-name-font-size mt-lg-2 mt-3">
+                                            {{ ucwords($result->name) }}
+                                        </p>
                                     </div>
                                 </a>
                                 @if ($result->discount_percentage && $result->discount_percentage > 0)
-                                <div class="ribbon"><span>{{ $result->discount_percentage }}% off</span></div>
+                                    <div class="ribbon"><span>{{ $result->discount_percentage }}% off</span></div>
                                 @endif
                             </div>
                         </div>
+
+
                         @endforeach
                     </div>
                 </div>

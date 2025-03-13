@@ -199,8 +199,8 @@
                                                     <div class="single-line mb-2">
                                                         <span class="mr-3">
                                                             @if(file_exists(public_path('images/group2.png')))
-    <img src="{{ asset('images/group2.png') }}" alt="Group">
-@endif
+                                                                <img src="{{ asset('images/group2.png') }}" alt="Group">
+                                                            @endif
 
                                                         </span>
                                                         <span class="text-white">Buy or Send Gift Cards Instantly</span>
@@ -210,8 +210,8 @@
                                                     <div class="single-line mb-2">
                                                         <span class="mr-3">
                                                             @if(file_exists(public_path('images/group1.png')))
-    <img src="{{ asset('images/group1.png') }}" alt="Group">
-@endif
+                                                                 <img src="{{ asset('images/group1.png') }}" alt="Group">
+                                                            @endif
 
                                                         </span>
                                                         <span class="text-white">Send Gift Cards to Friends and Family
@@ -593,16 +593,21 @@
                 var name = $('#name').val();
                 var mobile = $('#mobile').val();
                 var email = $('#email').val();
-                var password = $('#password').val();
+                var password = $('#regstPasswordInput').val();
+                console.log("12233 Prince");
+
+
                 // var otp = $('#registerOTP').val();
-                var confmPassword = $('#confmPassword').val();
+                var confmPassword = $('#confmRegstPasswordInput').val();
+
+
                 var regxMobile = /^(?:(?:\+|0{0,2})91)?[789]\d{9}$/;
                 var regxEmail = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]+$/;
-                var registerSendOtp = $('.registerOTP').val();
+                var registerSendOtp = $('#registerOTP').val();
+
                 var status = true;
 
 
-            console.log(name, mobile, email, password, otp, confmPassword, registerSendOtp);
 
 
 
@@ -631,8 +636,9 @@
                     $(".error-mobile").text('Invalid mobile number').addClass('error-color fw-800');
                 }
 
+
                 // OTP validation
-                if (registerSendOTP.length === 0) {
+                if (registerSendOtp.length === 0) {
                     status = false;
                     $(".error-otp-display").text('Please enter the OTP to verify your mobile number').addClass(
                         'error-color');
@@ -658,7 +664,7 @@
                 }
 
                 if (status) {
-                    userRegister(name, mobile, email, password, confmPassword, otp);
+                    userRegister(name, mobile, email, password, confmPassword, registerSendOtp);
                 }
 
                 return status;
@@ -670,7 +676,7 @@
 
 
 
-            function userRegister(name, mobile, email, password, confmPassword, otp) {
+            function userRegister(name, mobile, email, password, confmPassword, registerSendOtp) {
                 $.ajaxSetup({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -683,7 +689,8 @@
                 formData.append('password', password);
                 formData.append('password_confirmation', confmPassword);
 
-                formData.append('otp', otp);
+                formData.append('otp', registerSendOtp);
+
                 var type = 'POST';
                 var ajaxurl = '{{ route('user-registration') }}';
                 $.ajax({
@@ -874,7 +881,10 @@ else if (data.status == 400 && data.errors) {
             $('#loginUser').click(function(e) {
                 e.preventDefault();
                 var mobile = $('#loginMobNumb').val();
-                var password = $('#loginPass').val();
+                console.log(mobile);
+                var password = $('#loginPasswordInput').val();
+                console.log(password);
+
                 var regxMobile = /^(?:(?:\+|0{0,2})91(\s*[\-]\s*)?|[0]?)?[789]\d{9}$/;
                 var status = true;
 
@@ -912,7 +922,7 @@ else if (data.status == 400 && data.errors) {
                 formData.append('password', password);
 
                 var type = "POST";
-                var ajaxurl = "{{ url('/user-login') }}";
+                var ajaxurl = "{{ route('user-login') }}";
 
                 $.ajax({
                     type: type,

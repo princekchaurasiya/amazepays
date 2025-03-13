@@ -161,9 +161,11 @@ class UserPanelController extends Controller
 
         try {
             $input = $request->all();
+            Log::info('Input data received', ['input' => $input]);
 
             // Check if all fields are empty
             if (empty($input['mobile']) && empty($input['otp']) && empty($input['newPassword']) && empty($input['confirm_new_password'])) {
+                Log::warning('All fields are empty');
                 return response()->json([
                     'status' => 400,
                     'message' => 'All fields are required.'
@@ -188,26 +190,58 @@ class UserPanelController extends Controller
 
             // If validation fails, return errors
             if ($validator->fails()) {
+                Log::error('Validation failed', ['errors' => $validator->errors()]);
                 return response()->json([
                     'status' => 400,
                     'errors' => $validator->errors()
                 ], 400);
             }
 
-            // Proceed with password reset logic
+            Log::info('Validation passed', ['mobile' => $request->mobile, 'otp' => $request->otp]);
+
+            // Verify OTP
+            $otpVerificationResponse = $this->otpVerificationController->VerifyOtp($request->mobile, $request->otp);
+            Log::info('OTP verification response', ['response' => $otpVerificationResponse]);
+
+            if ($otpVerificationResponse['status'] === 'error') {
+                Log::warning('OTP verification failed', ['mobile' => $request->mobile, 'message' => $otpVerificationResponse['message']]);
+                return response()->json(['status' => 400, 'errors' => ['registerOTP' => [$otpVerificationResponse['message']]]]);
+            }
+
+            // Log successful OTP verification
+            Log::info('OTP verification successful', ['mobile' => $request->mobile]);
+
+            // Find the user by mobile number
+            $user = User::where('mobile', $request->mobile)->first();
+
+            if (!$user) {
+                Log::error('User not found', ['mobile' => $request->mobile]);
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'User not found.'
+                ], 404);
+            }
+
+            // Update the user's password using bcrypt()
+            $user->password = bcrypt($request->newPassword);
+            $user->save();
+
+            Log::info('Password updated successfully', ['mobile' => $request->mobile]);
+
             return response()->json([
                 'status' => 200,
-               'message' => 'Password changed successfully! You can log in with your new password.'
+                'message' => 'Password changed successfully! You can log in with your new password.'
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error in userForgotPassword: ' . $e->getMessage());
+            Log::error('Error in userForgotPassword: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'status' => 500,
                 'message' => 'Something went wrong, please try again.'
             ], 500);
         }
     }
+
 
 
 

@@ -192,28 +192,57 @@ class CommonHelper
     }
 
     public static function getProductImage($product)
-    {
-        if (is_array($product)) {
-            if (!empty($product['custom_image'])) {
-                return asset('storage/' . $product['custom_image']);
-            } elseif (!empty($product['images']) && !empty($product['images']->small)) {
-                return $product['images']->small;
+{
+    // Case 1: If $product is an array
+    if (is_array($product)) {
+        if (!empty($product['custom_image'])) {
+            return asset('storage/' . $product['custom_image']);
+        } elseif (!empty($product['images'])) {
+            // Decode if images is a JSON string
+            if (is_string($product['images'])) {
+                $images = json_decode($product['images'], true);
+            } else {
+                $images = (array) $product['images']; // 👈 **Ensure it's an array**
+            }
+
+            // Prioritize small_image > small > thumbnail
+            if (!empty($images['small_image'])) {
+                return $images['small_image'];
+            } elseif (!empty($images['small'])) {
+                return $images['small'];
+            } elseif (!empty($images['thumbnail'])) {
+                return $images['thumbnail'];
             }
         }
-
-
-        elseif (is_object($product)) {
-            if (!empty($product->custom_image)) {
-                return asset('storage/' . $product->custom_image);
-            } elseif (!empty($product->images) && !empty($product->images->small)) {
-                return $product->images->small;
-            }
-        }
-
-
-        // Return null if no image is available
-        return null;
     }
+
+    // Case 2: If $product is an object
+    elseif (is_object($product)) {
+        if (!empty($product->custom_image)) {
+            return asset('storage/' . $product->custom_image);
+        } elseif (!empty($product->images)) {
+            // Decode if images is a JSON string
+            if (is_string($product->images)) {
+                $images = json_decode($product->images, true);
+            } else {
+                $images = (array) $product->images; // 👈 **Ensure it's an array**
+            }
+
+            // Prioritize small_image > small > thumbnail
+            if (!empty($images['small_image'])) {
+                return $images['small_image'];
+            } elseif (!empty($images['small'])) {
+                return $images['small'];
+            } elseif (!empty($images['thumbnail'])) {
+                return $images['thumbnail'];
+            }
+        }
+    }
+
+    // Default image if no image is found
+    return null;
+}
+
 
 
 }

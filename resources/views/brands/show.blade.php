@@ -65,37 +65,43 @@
                             <div class="row">
 
                                 @foreach ($products as $product)
-                                @php
-                                    $productImage = CommonHelper::getProductImage($product);
-                                @endphp
+                                    @php
 
-                                @if ($product->slug && !empty($productImage))
-                                    <div class="col-lg-3 col-6">
-                                        <div class="product-wrapper-image">
-                                            <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
-                                                <p class="single-image-wrapper">
-                                                    <img src="{{ $productImage }}" alt="product-image" class="w-100 mt-4 d-inline-block">
-                                                </p>
-                                            </a>
+                                        $productImage = CommonHelper::getProductImage($product);
 
-                                            <hr>
-                                            <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
-                                                <div class="product-image-text-wrapper m-lg-1">
-                                                    <p class="text-center fw-600 text-product-name-color text-product-name-font-size mt-lg-2 mt-3">
-                                                        {{ ucwords($product->name) }}
+                                    @endphp
+
+                                    @if ($product->slug && !empty($productImage))
+                                        <div class="col-lg-3 col-6">
+                                            <div class="product-wrapper-image">
+                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
+                                                    <p class="single-image-wrapper">
+                                                        <img src="{{ $productImage }}" alt="product-image" class="w-100 mt-4 d-inline-block">
                                                     </p>
-                                                </div>
-                                            </a>
+                                                </a>
 
-                                            @if ($product->discount_percentage && $product->discount_percentage > 0)
-                                                <div class="ribbon">
-                                                    <span>{{ $product->discount_percentage }}% off</span>
-                                                </div>
-                                            @endif
+                                                <hr>
+                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
+                                                    <div class="product-image-text-wrapper m-lg-1">
+                                                        <p class="text-center fw-600 text-product-name-color text-product-name-font-size mt-lg-2 mt-3">
+                                                            {{ ucwords($product->name) }}
+                                                        </p>
+                                                    </div>
+                                                </a>
+
+                                                @if ($product->discount_percentage && $product->discount_percentage > 0)
+                                                    <div class="ribbon">
+                                                        <span>{{ $product->discount_percentage }}% off</span>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </div>
-                                    </div>
-                                @endif
+                                    @endif
+
                             @endforeach
+                            @if ($products->isEmpty())
+    <p class="text-center text-muted">No brand available at the moment.</p>
+@endif
                             </div> <!-- Closing row for products -->
                         </div> <!-- Closing col for main product wrapper -->
                     </div> <!-- Closing row for product display -->

@@ -9,6 +9,11 @@
 </head>
 
 <body>
+    <!-- Debug info -->
+    @php
+        Log::info("Email template - Image URL being used: " . ($prepareMailDetails['smallImageUrl'] ?? 'No URL provided'));
+    @endphp
+
     <table
         style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif;">
         {{ logger($cardsArray) }}
@@ -32,7 +37,15 @@
         @foreach ($cardsArray as $card)
             <tr>
                 <td style="width: 50%; font-size: 16px; vertical-align: middle; padding: 10px; padding-left: 10%; ">
-                    <img src="{{ $prepareMailDetails['smallImageUrl'] }}" alt="Logo" style="max-width: 500px; width: 100%; height: auto;" type="image/png">
+                    @if(isset($prepareMailDetails['smallImageUrl']) && $prepareMailDetails['smallImageUrl'])
+                        <!-- Product Image -->
+                        <img src="{{ $prepareMailDetails['smallImageUrl'] }}" alt="Product Image" style="max-width: 500px; width: 100%; height: auto;">
+                    @else
+                        <!-- Image Not Available Text -->
+                        <div style="width: 100%; padding: 20px; text-align: center; background-color: #f5f5f5; border: 1px dashed #ccc;">
+                            <p style="margin: 0; color: #666; font-size: 14px;">Product Image Not Available</p>
+                        </div>
+                    @endif
                     <p style="font-size: 12px;">
                         <span style="font-weight: 600; font-size: 14px;">Gift Card Id</span>
                         <br>

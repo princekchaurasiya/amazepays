@@ -2,6 +2,11 @@
 @section('title')
     Amazepay | Checkout
 @endsection
+
+@php
+    use App\Helpers\CommonHelper;
+@endphp
+
 @section('content')
     <div class="container">
         <div class="faq-wrapper pt-4 pb-0">
@@ -730,7 +735,7 @@
                                             <div class="row cart-item-record">
                                                 <div class="col-md-5 col-sm-4 col-xs-12">
                                                     <img class="cart-coupan-img"
-                                                        src="{{ $qsProd['images']->small ?? URL::asset('/images/hamburger.jpg') }}"
+                                                        src="{{ CommonHelper::getProductImage($qsProd) ?? URL::asset('/images/hamburger.jpg') }}"
                                                         alt="Avatar" style="width:100%;">
                                                 </div>
                                                 <div class="col-md-7 col-sm-4 col-xs-12">

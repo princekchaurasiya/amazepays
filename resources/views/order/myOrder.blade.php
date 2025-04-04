@@ -36,27 +36,29 @@
                             @if ($orderItem->refno)
                                 <?php
                                 $images = json_decode($orderItem->images, true);
-                                $isClickable = $orderItem->order_status == 'COMPLETE';
+                                $isClickable = $orderItem->order_status == 'COMPLETE' && !empty($orderItem->woohoo_order_id);
+                                $linkAttributes = $isClickable ? 'href="' . route('view-card-details', ['orderId' => $orderItem->woohoo_order_id]) . '"' : '';
                                 ?>
 
-                                <a href="#" class="order-link {{ !$isClickable ? 'disabled-link' : '' }}"
-                                    data-order-id="{{ $orderItem->woohoo_order_id }}" data-image="{{ $images['small'] }}"
+                                <a {!! $linkAttributes !!} 
+                                    class="order-link {{ !$isClickable ? 'disabled-link' : '' }}"
                                     style="{{ !$isClickable ? 'pointer-events: none;' : '' }}">
                                     <div class="outer-order-wrapper-div">
                                         <div class="card product-card">
                                             <div class="card-body my-order-card-body">
                                                 <div class="row">
                                                     <div class="col-lg-4">
-
+                                                        @if($orderItem->display_image)
                                                             <img class="my-order-image-div img-fluid mb-3 mb-lg-0"
-                                                                src="{{ CommonHelper::getProductImage($orderItem) }}" alt=""
+                                                                src="{{ $orderItem->display_image }}" 
+                                                                alt="{{ $orderItem->product_name }}"
                                                                 style="width: 244px; height: auto;">
-
+                                                        @endif
                                                     </div>
                                                     <div class="col-lg-4">
                                                         <h2>{{ $orderItem->product_name }}</h2>
                                                         <p class="mb-0">Order ID: <b>{{ $orderItem->refno }}</b></p>
-                                                        <p class="mb-0">Brand: <b>{{ $orderItem->brandName }}</b></p>
+                                                        <p class="mb-0">Brand: <b>{{ $orderItem->brandName ?? $orderItem->brand_name }}</b></p>
                                                         <p class="mb-0">Product SKU: <b>{{ $orderItem->sku }}</b></p>
 
 
@@ -82,16 +84,6 @@
                                         </div>
 
                                     </div>
-
-                                    <form action="{{ route('view-card-details') }}" method="post" id="orderForm"
-                                        style="display: none;">
-                                        @csrf
-
-                                        <input type="hidden" name="imageDetail" id="imageDetailInput"
-       value="{{ $orderItem->custom_image ?? $orderItem->imageDetail ?? '' }}">
-
-
-                                    </form>
                                 </a>
                             @endif
                         @endforeach
@@ -103,20 +95,7 @@
 
     @push('scripts')
         <script>
-            $(document).ready(function() {
-    $('.order-link').on('click', function(e) {
-        e.preventDefault();
-
-        var orderId = $(this).data('order-id');
-        var imageDetail = $(this).data('custom-image') || $(this).data('image') || null;
-
-        $('#orderIdInput').val(orderId);
-        $('#imageDetailInput').val(imageDetail);
-
-        $('#orderForm').submit();
-    });
-});
-
+            // Remove the old script since we're not using forms anymore
         </script>
     @endpush
 @endsection

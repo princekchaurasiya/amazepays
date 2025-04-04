@@ -32,10 +32,14 @@
                                     <div class="col-lg-1 mx-auto col-3">
                                         <a href="{{ route('brands.show', ['slug' => $brand->slug]) }}">
                                             <div class="shop-category-circle">
-                                                @if (!empty($brand->logo))
-    <img src="{{ Voyager::image($brand->logo) }}"
-        alt="{{ $brand->name }}" class="shop-category-circle-image img-fluid">
-@endif
+                                                @if (!empty($brand->logo) && $brand->logo !== 'null' && $brand->logo !== 'undefined')
+                                                    <img src="{{ Voyager::image($brand->logo) }}"
+                                                        alt="{{ $brand->name }}" class="shop-category-circle-image img-fluid">
+                                                @else
+                                                    <div class="no-image-placeholder">
+                                                        <span>{{ substr($brand->name, 0, 1) }}</span>
+                                                    </div>
+                                                @endif
                                             </div>
                                             <p class="text-center text-black mt-2">{{ $brand->name }}</p>
                                         </a>
@@ -67,7 +71,16 @@
                                     <div class="col-lg-3 col-6">
                                         <div class="product-wrapper-image">
                                             <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
-                                                <img src="{{ CommonHelper::getProductImage($product) }}" alt="product-image" class="w-100 mt-4">
+                                                @php
+                                                    $productImage = CommonHelper::getProductImage($product);
+                                                @endphp
+                                                @if (!empty($productImage))
+                                                    <img src="{{ $productImage }}" alt="product-image" class="w-100 mt-4">
+                                                @else
+                                                    <div class="no-product-image">
+                                                        <span>{{ substr($product->name, 0, 1) }}</span>
+                                                    </div>
+                                                @endif
                                             </a>
                                             <hr>
                                             <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
@@ -80,9 +93,7 @@
                                             @endif
                                         </div>
                                     </div>
-@endif
-
-
+                                    @endif
                                     @endforeach
                                 </div>
                             </div>
@@ -106,9 +117,13 @@
                                     <div class="col-lg-1 mx-auto col-3">
                                         <a href="{{ route('categories.show', ['slug' => $category->slug]) }}">
                                             <div class="shop-category-circle">
-                                                @if (!empty($category->thumbnail))  {{-- 🟢 Sirf tabhi image dikhayenge jab thumbnail exist kare --}}
+                                                @if (!empty($category->thumbnail) && $category->thumbnail !== 'null' && $category->thumbnail !== 'undefined')
                                                     <img src="{{ Voyager::image($category->thumbnail) }}"
                                                         alt="{{ $category->name }}" class="shop-category-circle-image img-fluid">
+                                                @else
+                                                    <div class="no-image-placeholder">
+                                                        <span>{{ substr($category->name, 0, 1) }}</span>
+                                                    </div>
                                                 @endif
                                             </div>
                                             <p class="text-center text-black mt-2">{{ $category->name }}</p>
@@ -135,31 +150,52 @@
                             <div class="col-12 col-lg-10">
                                 <div class="row">
                                     @foreach ($noPriorityProducts as $product)
-    @php
-        $productImage = CommonHelper::getProductImage($product);
-    @endphp
+                                    @php
+                                        $productImage = CommonHelper::getProductImage($product);
+                                    @endphp
 
-    @if ($product->slug && !empty($productImage))
-        <div class="col-lg-3 col-6">
-            <div class="product-wrapper-image">
-                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
-                    <img src="{{ $productImage }}" alt="product-image" class="w-100 mt-4">
-                </a>
+                                    @if ($product->slug && !empty($productImage))
+                                        <div class="col-lg-3 col-6">
+                                            <div class="product-wrapper-image">
+                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
+                                                    <img src="{{ $productImage }}" alt="product-image" class="w-100 mt-4">
+                                                </a>
 
-                <hr>
-                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
-                    <p class="text-center fw-600 mt-3 produtName">{{ ucwords($product->name) }}</p>
-                </a>
+                                                <hr>
+                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
+                                                    <p class="text-center fw-600 mt-3 produtName">{{ ucwords($product->name) }}</p>
+                                                </a>
 
-                @if ($product->discount_percentage > 0)
-                    <div class="ribbon">
-                        <span>{{ $product->discount_percentage }}% off</span>
-                    </div>
-                @endif
-            </div>
-        </div>
-    @endif
-@endforeach
+                                                @if ($product->discount_percentage > 0)
+                                                    <div class="ribbon">
+                                                        <span>{{ $product->discount_percentage }}% off</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @elseif ($product->slug)
+                                        <div class="col-lg-3 col-6">
+                                            <div class="product-wrapper-image">
+                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
+                                                    <div class="no-product-image">
+                                                        <span>{{ substr($product->name, 0, 1) }}</span>
+                                                    </div>
+                                                </a>
+
+                                                <hr>
+                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
+                                                    <p class="text-center fw-600 mt-3 produtName">{{ ucwords($product->name) }}</p>
+                                                </a>
+
+                                                @if ($product->discount_percentage > 0)
+                                                    <div class="ribbon">
+                                                        <span>{{ $product->discount_percentage }}% off</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
+                                    @endforeach
 
                                 </div>
                             </div>
@@ -508,4 +544,45 @@
             </div>
         </div>
     </div>
+@endpush
+@push('styles')
+<style>
+    .no-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f0f0f0;
+        border-radius: 50%;
+        color: #666;
+        font-size: 24px;
+        font-weight: bold;
+    }
+    
+    .shop-category-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f0f0f0;
+    }
+    
+    .no-product-image {
+        width: 100%;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f0f0f0;
+        color: #666;
+        font-size: 48px;
+        font-weight: bold;
+        margin-top: 1rem;
+    }
+</style>
 @endpush

@@ -27,15 +27,26 @@ class ProductPageController extends Controller
 
     public function storePayNowData(Request $request, $slug)
     {
-
-
-
         Log::info('storePayNowData initiated with slug: ' . $slug);
 
         // Fetch product by slug
         $product = QsProduct::where('url', $slug)->firstOrFail();
 
-
+        // If sending as a gift, check if recipient is blocked
+        if ($request->gift_send_option === 'send_as_gift' && $request->receiver_mobile) {
+            $recipient = \App\Models\User::where('mobile', $request->receiver_mobile)->first();
+            if ($recipient && !$recipient->can_receive_gifts) {
+                Log::warning('Attempted to send gift to blocked recipient', [
+                    'sender_id' => Auth::id(),
+                    'recipient_mobile' => $request->receiver_mobile
+                ]);
+                return response()->view('errors.user-blocked', [
+                    'blockType' => 'recipient',
+                    'phone' => $request->receiver_mobile,
+                    'reason' => $recipient->restriction_reason
+                ], 403);
+            }
+        }
 
         // Retrieve the checkout session data if available
         $checkoutData = session('checkout_data', []);

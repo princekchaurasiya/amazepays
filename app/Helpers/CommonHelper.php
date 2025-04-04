@@ -192,56 +192,57 @@ class CommonHelper
     }
 
     public static function getProductImage($product)
-{
-    // Case 1: If $product is an array
-    if (is_array($product)) {
-        if (!empty($product['custom_image'])) {
-            return asset('storage/' . $product['custom_image']);
-        } elseif (!empty($product['images'])) {
-            // Decode if images is a JSON string
-            if (is_string($product['images'])) {
-                $images = json_decode($product['images'], true);
-            } else {
-                $images = (array) $product['images']; // 👈 **Ensure it's an array**
-            }
+    {
+        // Log the input for debugging
+        \Log::info('GetProductImage Input:', [
+            'product_type' => is_object($product) ? 'object' : (is_array($product) ? 'array' : 'unknown'),
+            'product_data' => $product
+        ]);
 
-            // Prioritize small_image > small > thumbnail
-            if (!empty($images['small_image'])) {
-                return $images['small_image'];
-            } elseif (!empty($images['small'])) {
-                return $images['small'];
-            } elseif (!empty($images['thumbnail'])) {
-                return $images['thumbnail'];
+        // Case 1: If $product is an array
+        if (is_array($product)) {
+            // Check for custom_image first
+            if (!empty($product['custom_image']) && $product['custom_image'] !== 'null' && $product['custom_image'] !== 'undefined') {
+                \Log::info('Using custom_image from array:', ['image' => $product['custom_image']]);
+                return asset('storage/' . $product['custom_image']);
             }
-        }
-    }
-
-    // Case 2: If $product is an object
-    elseif (is_object($product)) {
-        if (!empty($product->custom_image)) {
-            return asset('storage/' . $product->custom_image);
-        } elseif (!empty($product->images)) {
-            // Decode if images is a JSON string
-            if (is_string($product->images)) {
-                $images = json_decode($product->images, true);
-            } else {
-                $images = (array) $product->images; // 👈 **Ensure it's an array**
-            }
-
-            // Prioritize small_image > small > thumbnail
-            if (!empty($images['small_image'])) {
-                return $images['small_image'];
-            } elseif (!empty($images['small'])) {
-                return $images['small'];
-            } elseif (!empty($images['thumbnail'])) {
-                return $images['thumbnail'];
+            
+            // If no custom_image, try images
+            if (!empty($product['images'])) {
+                $images = is_string($product['images']) ? json_decode($product['images'], true) : $product['images'];
+                \Log::info('Decoded images from array:', ['images' => $images]);
+                
+                if (is_array($images) && !empty($images['small']) && $images['small'] !== 'null' && $images['small'] !== 'undefined') {
+                    return $images['small'];
+                } elseif (is_object($images) && !empty($images->small) && $images->small !== 'null' && $images->small !== 'undefined') {
+                    return $images->small;
+                }
             }
         }
-    }
+        // Case 2: If $product is an object
+        elseif (is_object($product)) {
+            // Check for custom_image first
+            if (!empty($product->custom_image) && $product->custom_image !== 'null' && $product->custom_image !== 'undefined') {
+                \Log::info('Using custom_image from object:', ['image' => $product->custom_image]);
+                return asset('storage/' . $product->custom_image);
+            }
+            
+            // If no custom_image, try images
+            if (!empty($product->images)) {
+                $images = is_string($product->images) ? json_decode($product->images, true) : $product->images;
+                \Log::info('Decoded images from object:', ['images' => $images]);
+                
+                if (is_array($images) && !empty($images['small']) && $images['small'] !== 'null' && $images['small'] !== 'undefined') {
+                    return $images['small'];
+                } elseif (is_object($images) && !empty($images->small) && $images->small !== 'null' && $images->small !== 'undefined') {
+                    return $images->small;
+                }
+            }
+        }
 
-    // Default image if no image is found
-    return null;
-}
+        \Log::info('No valid image found, returning null');
+        return null;
+    }
 
 
 

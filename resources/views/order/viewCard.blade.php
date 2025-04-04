@@ -38,18 +38,19 @@
                             <div class="col-lg-6 mb-2">
                                 <div class="card product-card">
                                     <div class="card-body my-order-card-body">
-                                        <p>
-                                            <img src="{{ CommonHelper::getProductImage($card) }}" alt="" class="img-fluid">
-                                        </p>
+                                        @if($productImage)
+                                            <p>
+                                                <img src="{{ $productImage }}" alt="{{ $order->product->name ?? 'Product Image' }}" class="img-fluid">
+                                            </p>
+                                        @endif
                                         <p class="mb-0">Card Number: <b>{{ $card->cardNumber }}</b></p>
                                         <p class="mb-0">Card Pin: <b>{{ $card->cardPin }}</b></p>
                                         <p class="mb-0">Validity:
                                             <b>{{ \Carbon\Carbon::parse($card->validity)->format('d/m/y') }}</b>
                                         </p>
                                         <p class="mb-0">Activation Code: <b>{{ $card->activationCode }}</b></p>
-                                       </div>
+                                    </div>
                                 </div>
-
                             </div>
                         @endforeach
                     </div>

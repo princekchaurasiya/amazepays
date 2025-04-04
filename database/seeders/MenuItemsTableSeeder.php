@@ -173,5 +173,21 @@ class MenuItemsTableSeeder extends Seeder
                 'order'      => 14,
             ])->save();
         }
+
+        $menuItem = MenuItem::firstOrNew([
+            'menu_id' => $menu->id,
+            'title'   => 'User Blocking',
+            'url'     => '',
+            'route'   => 'admin.user.blocking',
+        ]);
+        if (!$menuItem->exists) {
+            $menuItem->fill([
+                'target'     => '_self',
+                'icon_class' => 'voyager-lock',
+                'color'      => null,
+                'parent_id'  => null,
+                'order'      => 19,
+            ])->save();
+        }
     }
 }

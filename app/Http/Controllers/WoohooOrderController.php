@@ -12,6 +12,7 @@ use Mail;
 use App\Helpers\CommonHelper;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\URL;
 class WoohooOrderController extends Controller
 {
     public function createOrder(Request $request)
@@ -273,18 +274,112 @@ class WoohooOrderController extends Controller
         $isSuccessful = false;
         Log::info("This is card response data: " . json_encode($orderCreatedResponse));
         $orderId = $this->updateQsOrder($orderCreatedResponse);
-        $order = QsOrder::join("cc_avenue_payment", "cc_avenue_payment.order_id", "=", "qs_orders.id")->join("qs_products", "qs_products.sku", "=", "qs_orders.sku")->where("qs_orders.id", $orderId)->select("qs_orders.*", "cc_avenue_payment.*", "qs_products.*")->first();
+        $order = QsOrder::join("cc_avenue_payment", "cc_avenue_payment.order_id", "=", "qs_orders.id")
+            ->join("qs_products", "qs_products.sku", "=", "qs_orders.sku")
+            ->where("qs_orders.id", $orderId)
+            ->select("qs_orders.*", "cc_avenue_payment.*", "qs_products.*")
+            ->first();
+            
+        // Debug logging for product data
+        Log::info("Product data:", [
+            'custom_image' => $order->custom_image ?? 'No custom image',
+            'images' => $order->images ?? 'No images field',
+            'product_id' => $order->id
+        ]);
+
+        // Get raw image URL first
+        $imageUrl = CommonHelper::getProductImage($order);
+        Log::info("Raw image URL from CommonHelper: " . $imageUrl);
+
+        // Convert backslashes to forward slashes in the URL
+        $imageUrl = str_replace('\\', '/', $imageUrl);
+        Log::info("Image URL after slash conversion: " . $imageUrl);
+
+        // Remove any leading 'storage/' as we'll add it back
+        $imageUrl = ltrim($imageUrl, '/');
+        $imageUrl = str_replace('storage/', '', $imageUrl);
+
+        // Create the full URL using the LIVE_URL from env
+        $liveUrl = rtrim(env('LIVE_URL', 'https://amazepays.in'), '/');
+        $smallImageUrl = $liveUrl . '/storage/' . $imageUrl;
+        Log::info("Production URL for email using LIVE_URL: " . $smallImageUrl);
+
+        // Verify if image exists and is accessible
+        try {
+            $ch = curl_init($smallImageUrl);
+            curl_setopt($ch, CURLOPT_NOBODY, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_exec($ch);
+            $responseCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            Log::info("Image accessibility check response code: " . $responseCode);
+
+            if ($responseCode !== 200) {
+                Log::error("Image not accessible at URL: " . $smallImageUrl);
+                
+                // Try using the images field from product data if custom image is not accessible
+                if (!empty($order->images)) {
+                    $images = json_decode($order->images, true);
+                    if (isset($images['small'])) {
+                        $smallImageUrl = $images['small'];
+                        Log::info("Using small image from product images: " . $smallImageUrl);
+                    } else {
+                        $smallImageUrl = null;
+                        Log::info("No small image available in product images");
+                    }
+                } else {
+                    $smallImageUrl = null;
+                    Log::info("No product images available");
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error("Error checking image accessibility: " . $e->getMessage());
+            $smallImageUrl = null;
+        }
+
         $financialYear = $this->getFinancialYear();
         $invoiceNumber = "FRB2C-" . $financialYear . "-" . $orderId;
         $invoiceDate = date("d-m-Y");
         $cardsArray = json_decode(decrypt($order["cards"], env("ENCRYPTION_KEY")), true);
-        $images = json_decode($order["images"], true);
-        if ($images && isset($images["small"])) {
-            $smallImageUrl = $images["small"];
-        }
+        
         log::info(888);
-        QsOrder::where("id", $orderId)->update(["invoice_number" => $invoiceNumber,]);
-        $prepareMailDetails = ["name" => $order["sender_first_name"], "order_id" => $order["woohoo_order_id"], "reference_id" => $order["id"], "order_date" => $order["created_at"], "billing_name" => $order["sender_first_name"], "billing_email" => $order["sender_email"], "billing_tel" => $order["sender_phone_no"], "billing_address" => $order["sender_address_1"] . " " . $order["sender_address_2"] . ", " . $order["sender_city"] . ", " . $order["sender_state"] . " " . $order["sender_post_code"], "payment_mode" => $order["payment_mode"], "bank_ref_no" => $order["bank_ref_no"], "grand_payable_amount" => $order["grand_payable_amount"], "gst_number" => $order["gst_number"] ?: "Unregistered", "discount" => $order["discounted_amount_value"], "amount_payable_after_discount" => $order["amount_payable_after_discount"], "contact_person" => $order["sender_first_name"], "shipping_address" => $order["delivery_mode"] === "email" ? $order["sender_email"] : $order["sender_address_1"] . " " . $order["sender_address_2"] . ", " . $order["sender_city"] . ", " . $order["sender_state"] . " " . $order["sender_post_code"], "invoice_number" => $invoiceNumber, "invoice_date" => $invoiceDate, "cardSku" => $order["sku"], "cardProductName" => $order["name"], "shipToName" => $order["receiver_name"] ?? $order["sender_first_name"], "shipToEmail" => $order["receiver_email"] ?? $order["sender_email"], "shipToContactNo" => $order["receiver_mobile"] ?? $order["sender_phone_no"], "quantity" => $order["quantity"], "smallImageUrl" => $smallImageUrl, "giftSendOption" => $order["gift_send_option"], "denomination" => $order["denomination"], "discount_percentage" => $order["discount_percentage"],];
+        QsOrder::where("id", $orderId)->update(["invoice_number" => $invoiceNumber]);
+        
+        // Add image URL to logging
+        Log::info("Final image URL being used in email: " . ($smallImageUrl ?? 'No image available'));
+
+        $prepareMailDetails = [
+            "name" => $order["sender_first_name"],
+            "order_id" => $order["woohoo_order_id"],
+            "reference_id" => $order["id"],
+            "order_date" => $order["created_at"],
+            "billing_name" => $order["sender_first_name"],
+            "billing_email" => $order["sender_email"],
+            "billing_tel" => $order["sender_phone_no"],
+            "billing_address" => $order["sender_address_1"] . " " . $order["sender_address_2"] . ", " . $order["sender_city"] . ", " . $order["sender_state"] . " " . $order["sender_post_code"],
+            "payment_mode" => $order["payment_mode"],
+            "bank_ref_no" => $order["bank_ref_no"],
+            "grand_payable_amount" => $order["grand_payable_amount"],
+            "gst_number" => $order["gst_number"] ?: "Unregistered",
+            "discount" => $order["discounted_amount_value"],
+            "amount_payable_after_discount" => $order["amount_payable_after_discount"],
+            "contact_person" => $order["sender_first_name"],
+            "shipping_address" => $order["delivery_mode"] === "email" ? $order["sender_email"] : $order["sender_address_1"] . " " . $order["sender_address_2"] . ", " . $order["sender_city"] . ", " . $order["sender_state"] . " " . $order["sender_post_code"],
+            "invoice_number" => $invoiceNumber,
+            "invoice_date" => $invoiceDate,
+            "cardSku" => $order["sku"],
+            "cardProductName" => $order["name"],
+            "shipToName" => $order["receiver_name"] ?? $order["sender_first_name"],
+            "shipToEmail" => $order["receiver_email"] ?? $order["sender_email"],
+            "shipToContactNo" => $order["receiver_mobile"] ?? $order["sender_phone_no"],
+            "quantity" => $order["quantity"],
+            "smallImageUrl" => $smallImageUrl,
+            "giftSendOption" => $order["gift_send_option"],
+            "denomination" => $order["denomination"],
+            "discount_percentage" => $order["discount_percentage"],
+        ];
         $prepareSmsDetails = ["name" => $order["sender_first_name"], "order_id" => $order["woohoo_order_id"], "reference_id" => $order["id"], "order_date" => $order["created_at"], "billing_name" => $order["sender_first_name"], "order_amount" => $order["amount"], "cardSku" => $order["sku"], "cardProductName" => $order["name"], "shipToName" => $order["receiver_name"] ?? $order["sender_first_name"], "shipToContactNo" => $order["receiver_mobile"] ?? $order["sender_phone_no"], 'grand_payable_amount"' => $order['grand_payable_amount"'], "perOrderQuantity" => $order["quantity"], "giftSendOption" => $order["gift_send_option"], "billing_tel" => $order["sender_phone_no"],];
         if ($order["delivery_mode"] == "both") {
             $this->sendTransactionMail($prepareMailDetails);

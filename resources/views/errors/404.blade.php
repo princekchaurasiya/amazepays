@@ -1,56 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amazepay | 503 Error</title>
+@extends('layouts.app')
 
-    <!-- Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Custom CSS for the error page -->
-    <style>
-        body {
-            background-color: #f8f9fa;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .error-container {
-            text-align: center;
-        }
-        .error-container img {
-            max-width: 100%;
-            height: auto;
-        }
-        .error-container h1 {
-            font-size: 3rem;
-            margin-top: 20px;
-        }
-        .error-container p {
-            font-size: 1.2rem;
-            color: #6c757d;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container error-container">
-        <!-- Error Image -->
-        <img src="{{ asset('images/error-503.jpg') }}" alt="503 Error" class="img-fluid mb-4">
-
-        <!-- Error Heading -->
-        <h1 class="display-4">404 - Page Not Found</h1>
-
-        <!-- Maintenance Message -->
-        <p class="lead">Looks like you’ve wandered off the beaten path.</p>
-        {{-- <p class="lead">Please check back later, or contact support if you need immediate assistance.</p> --}}
+@section('content')
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-template">
+                <h1>Oops!</h1>
+                <h2>404 Not Found</h2>
+                <div class="error-details my-4">
+                    Sorry, the page you requested could not be found.
+                </div>
+                <div class="error-actions">
+                    <a href="{{ route('home') }}" class="btn btn-primary">
+                        <i class="fas fa-home"></i> Take Me Home
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <!-- Bootstrap JS (Optional if you need JS components) -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.8/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html>
+<style>
+.error-template {
+    padding: 40px 15px;
+}
+.error-template h1 {
+    font-size: 3.5rem;
+    color: #333;
+}
+.error-template h2 {
+    font-size: 2rem;
+    color: #666;
+}
+.error-details {
+    font-size: 1.2rem;
+    color: #777;
+}
+.error-actions {
+    margin-top: 30px;
+}
+</style>
+@endsection

@@ -25,7 +25,7 @@ return [
 
         'daily' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/laravel-' . date('d-m-Y') . '.log'), // dd-mm-yyyy format
+            'path' => storage_path('logs/laravel.log'), // Removed date from path as daily driver adds it automatically
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14, // Retain logs for 14 days
         ],

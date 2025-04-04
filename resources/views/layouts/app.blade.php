@@ -18,6 +18,16 @@
                 <!-- navigation wrapper ends here -->
             </div>
             <!-- header wrapper -->
+            @if(session('error'))
+                <div class="alert alert-danger">
+                    {{ session('error') }}
+                    @if(session('contact_info'))
+                        <hr class="my-2">
+                        <p class="mb-1"><i class="fa fa-envelope mr-2"></i>{{ session('contact_info.email') }}</p>
+                        <p class="mb-0"><i class="fa fa-phone mr-2"></i>{{ session('contact_info.phone') }}</p>
+                    @endif
+                </div>
+            @endif
             @yield('content')
             <!-- footer wrapper -->
             @include('layouts.partials.footer')
@@ -932,13 +942,33 @@ else if (data.status == 400 && data.errors) {
                     contentType: false,
                     success: function(data) {
                         if (data.status == 200) {
-                            location.reload(true);
+                            // Only redirect on successful login
+                            window.location.href = data.redirect || "{{ route('home') }}";
+                        } else if (data.status == 403) {
+                            // Show error message for blocked user
+                            var errorMessage = data.msg || 'Your account has been restricted. Please contact support.';
+                            var errorHtml = '<div class="alert alert-danger">' + 
+                                errorMessage + 
+                                (data.contact_info ? '<hr class="my-2">' +
+                                '<p class="mb-1"><i class="fa fa-envelope mr-2"></i>' + data.contact_info.email + '</p>' +
+                                '<p class="mb-0"><i class="fa fa-phone mr-2"></i>' + data.contact_info.phone + '</p>' : '') +
+                                '</div>';
+                            
+                            $(".main-error").html(errorHtml).show();
+                            $('#loginPasswordInput').val('');
                         } else {
-                            $(".main-error").text('Invalid credentials').addClass('error-color');
+                            // Show invalid credentials message
+                            $(".main-error").html('<div class="alert alert-danger">Invalid credentials</div>').show();
+                            // Clear only the password field
+                            $('#loginPasswordInput').val('');
                         }
                     },
-                    error: function(jqXHR, textStatus, errorThrown) {
-                        console.log(jqXHR);
+                    error: function(xhr) {
+                        // Show error message from server or default message
+                        var errorMessage = xhr.responseJSON?.message || 'An error occurred. Please try again.';
+                        $(".main-error").html('<div class="alert alert-danger">' + errorMessage + '</div>').show();
+                        // Clear only the password field
+                        $('#loginPasswordInput').val('');
                     }
                 });
 
@@ -1335,5 +1365,25 @@ else if (data.status == 400 && data.errors) {
         </script>
         @stack('scripts')
         </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="errorModalLabel">Account Restricted</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Error content will be inserted here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="mailto:{{ config('app.support_email', 'support@amazepay.com') }}" class="btn btn-primary">Contact Support</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     </body>
 </html>

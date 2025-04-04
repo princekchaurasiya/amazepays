@@ -4,7 +4,7 @@
         @if ($slides->whereNotNull('desktop_image')->count() > 1)
             <ol class="carousel-indicators">
                 @foreach ($slides as $index => $slide)
-                    @if (!is_null($slide->desktop_image))
+                    @if (!is_null($slide->desktop_image) && !empty($slide->desktop_image))
                         <li data-target="#desktopCarousel" data-slide-to="{{ $index }}"
                             class="{{ $index === 0 ? 'active' : '' }}"></li>
                     @endif
@@ -13,7 +13,7 @@
         @endif
         <div class="carousel-inner">
             @foreach ($slides as $index => $slide)
-                @if (!is_null($slide->desktop_image))
+                @if (!is_null($slide->desktop_image) && !empty($slide->desktop_image))
                     <div class="carousel-item {{ $index === 0 ? 'active' : '' }}"
                         style="cursor: {{ $slide->is_linked ? 'pointer' : 'default' }};">
                         @if ($slide->product_id)
@@ -55,7 +55,7 @@
         @if ($slides->whereNotNull('image_mobile')->count() > 1)
             <ol class="carousel-indicators">
                 @foreach ($slides as $index => $slide)
-                    @if (!is_null($slide->image_mobile))
+                    @if (!is_null($slide->image_mobile) && !empty($slide->image_mobile))
                         <li data-target="#mobileCarousel" data-slide-to="{{ $index }}"
                             class="{{ $index === 0 ? 'active' : '' }}"></li>
                     @endif
@@ -64,7 +64,7 @@
         @endif
         <div class="carousel-inner">
             @foreach ($slides as $index => $slide)
-                @if (!is_null($slide->image_mobile))
+                @if (!is_null($slide->image_mobile) && !empty($slide->image_mobile))
                     <div class="carousel-item {{ $index === 0 ? 'active' : '' }}"
                         style="cursor: {{ $slide->is_linked ? 'pointer' : 'default' }};">
                         @if ($slide->product_id)

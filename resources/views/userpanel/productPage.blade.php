@@ -336,7 +336,7 @@
                     // AJAX POST request to save data to the session
                     $.ajax({
                         type: 'POST',
-                        url: '{{ route('saveGiftCardFormValues') }}',
+                        url: '{{ route('save-gift-card-form') }}',
                         data: formData,
                         headers: {
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

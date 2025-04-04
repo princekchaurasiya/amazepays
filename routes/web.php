@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use TCG\Voyager\Events\RoutingAdmin;
 use Illuminate\Support\Facades\Log;
+use TCG\Voyager\Facades\Voyager;
+use Illuminate\Support\Facades\Storage;
 
 use App\Http\Controllers\{
     HomePageController,
@@ -10,7 +12,6 @@ use App\Http\Controllers\{
     AmazepayCategoryController,
     AmazepayBrandController,
     CommonController,
-    PaymentController,
     MyOrderController,
     SmsController,
     WoohooOrderController,
@@ -23,7 +24,6 @@ use App\Http\Controllers\{
     ProfileController,
     ProductSlugController,
     ErrorController,
-    ProductCategoryController,
     CreateOrderController,
     DocumentController,
     ViewCardDetailsController,
@@ -34,9 +34,9 @@ use App\Http\Controllers\{
     Voyager\VoyagerGetCategoryController,
     Voyager\VoyagerFetchProductListController,
     Voyager\VoyagerFetchProductDataController,
-    Voyager\VoyagerProductDiscountImportController,
     Voyager\VoyagerOrderExportController,
     Voyager\ProductDetailsExportController,
+    UserBlockController,
 };
 
 /*
@@ -53,6 +53,19 @@ use App\Http\Controllers\{
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
     $namespacePrefix = '\\' . config('voyager.controllers.namespace') . '\\';
+
+    // User Blocking Routes with proper middleware
+    Route::middleware(['web', 'auth', 'admin.user'])->group(function () {
+        // View route
+        Route::get('/user-blocking', function () {
+            return view('admin.user-blocking');
+        })->name('admin.user.blocking');
+
+        // API routes for user blocking
+        Route::post('/block-user', [UserBlockController::class, 'blockUser'])->name('admin.block.user');
+        Route::post('/unblock-user', [UserBlockController::class, 'unblockUser'])->name('admin.unblock.user');
+        Route::get('/check-user-restrictions', [UserBlockController::class, 'checkUserRestrictions'])->name('admin.check.user.restrictions');
+    });
 
     // Route::resource('/cc-avenue-payment', 'VoyagerCcAvenueController');
     // Route::get('/import-data', [DocumentController::class, 'importDocument']);
@@ -84,8 +97,28 @@ Route::group(['prefix' => 'admin'], function () {
 
 Route::get('logout', [UserPanelController::class, 'userLogOut'])->name('userLogOut');
 
+// Public routes that don't require authentication
 Route::get('/', [HomePageController::class, 'homePage'])->name('home');
-// Route::get('/', [UserPanelController::class, 'homePage'])->name('home');
+Route::get('/product/{slug}', [ProductSlugController::class, 'getProductBySlug'])->name('get-product-by-slug');
+Route::get('/view-all-product', [UserPanelController::class, 'viewAllProduct'])->name('view-all-product');
+Route::get('/about', function () {
+    return view('userpanel/about');
+})->name('about');
+Route::get('/contact-us', function () {
+    return view('userpanel/contact-form');
+})->name('contact-us');
+Route::get('/terms-of-use', function () {
+    return view('userpanel/terms-of-use');
+})->name('terms-of-use');
+Route::get('/privacy-policy', function () {
+    return view('userpanel/privacy-policy');
+})->name('privacy-policy');
+Route::get('/search', [SearchController::class, 'search'])->name('search');
+Route::get('/category/{slug}', [AmazepayCategoryController::class, 'show'])->name('categories.show');
+Route::get('/brand/{slug}', [AmazepayBrandController::class, 'show'])->name('brands.show');
+Route::get('/faq', function () {
+    return view('faq.show');
+})->name('faq');
 
 // Route to handle redirection based on authentication status
 // Route::get('/redirect-based-on-auth', [ProductSlugController::class, 'redirectBasedOnAuth'])->name('redirect-based-on-auth');
@@ -93,8 +126,6 @@ Route::get('/', [HomePageController::class, 'homePage'])->name('home');
 
 // Route to handle redirection based on authentication
 // Route::get('/gift-product/{slug}', [ProductPageController::class, 'handleGiftRedirect'])->name('giftProductBySlug');
-
-Route::get('/product/{slug}', [ProductSlugController::class, 'getProductBySlug'])->name('get-product-by-slug');
 
 // Route::get('/product-category', [ProductCategoryController::class, 'getProductCategory'])->name('get-product-category');
 
@@ -115,76 +146,37 @@ Route::group(['middleware' => 'guest'], function () {
     Route::post('/user-registration', [UserPanelController::class, 'userRegistration'])->name('user-registration');
     Route::post('/user-login', [UserPanelController::class, 'userLogin'])->name('user-login');
 
-    Route::get('/unauthorized', function () {
-        return view('unauthorized');
+    // Add a catch-all route for guests trying to access protected pages
+    Route::get('/login', function () {
+        return view('userpanel/login');
     })->name('login');
 
+    Route::get('/unauthorized', function () {
+        return view('unauthorized');
+    })->name('unauthorized');
 });
 
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/user-logout', [UserPanelController::class, 'userLogOut'])->name('user-logout');
     Route::post('/apply-coupan', [UserPanelController::class, 'applyCoupan'])->name('apply-coupan');
-
-    Route::post('/payment-process', [CCAvenueController::class, 'processPayment'])->name('payment-process');
     Route::get('/my-order', [MyOrderController::class, 'displayOrder'])->name('my-order');
-
+    Route::post('/save-gift-card-form', [UserPanelController::class, 'saveGiftCardFormValues'])->name('save-gift-card-form');
     Route::get('/change-password', function () {
         return view('userpanel/change-password');
     })->name('change-password');
-
-
     Route::post('/check-mobile-number', [ProfileController::class, 'isMobileNumberInUse'])->name('check-mobile-number');
-
-
     Route::post('/payment-cancel', [CCAvenueController::class, 'handlePaymentCancellation'])->name('payment-cancel');
-
-
     Route::post('/update-profile', [ProfileController::class, 'updateProfile'])->name('update-profile');
-    Route::post('/card-details', [ViewCardDetailsController::class, 'index'])->name('view-card-details');
-
-
-
-
+    Route::get('/view-card-details/{orderId}', [ViewCardDetailsController::class, 'index'])->name('view-card-details');
     Route::post('/profile-update-send-otp', [SmsController::class, 'profileUpdateSendOtp'])->name('profile-update-send-otp');
     Route::post('/profile-update-verify-otp', [ProfileController::class, 'profileUpdateVerifyOtp'])->name('profile-update-verify-otp');
-
-    Route::match(['get', 'post'], '/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
-
-    // Route::post('/place-order', [CheckoutController::class, 'placeOrder'])->name('placeOrder');
-
-
-    Route::post('/update-session-data', [ProductPageController::class, 'updateSessionData'])->name('updateSessionData');
-
-
-
-    Route::post('/save-gift-card-form-values', [ProductPageController::class, 'saveGiftCardFormValues'])
-        ->name('saveGiftCardFormValues');
-
-
 });
 
 
 
 Route::post('/check-data', [CommonController::class, 'checkData'])->name('check-data');
-Route::get('/view-all-product', [UserPanelController::class, 'viewAllProduct'])->name('view-all-product');
 
 Route::post('/change-password-update', [ChangePasswordUpdateController::class, 'updatePassword'])->name('password-change');
-Route::get('/about', function () {
-    return view('userpanel/about');
-})->name('about');
-Route::get('/contact-us', function () {
-    return view('userpanel/contact-form');
-})->name('contact-us');
-Route::get('/terms-of-use', function () {
-    return view('userpanel/terms-of-use');
-})->name('terms-of-use');
-Route::get('/privacy-policy', function () {
-    return view('userpanel/privacy-policy');
-})->name('privacy-policy');
-Route::get('/all_transaction', function () {
-    return view('userpanel/all_transaction');
-});
-
 
 Route::post('/send-sms', [SmsController::class, 'loginWithOtp'])->name('send-sms');
 Route::post('/register-otp', [SmsController::class, 'registerWithOtp'])->name('send-register-otp');
@@ -201,13 +193,66 @@ Route::get('/export', [PaymentDetailsExportController::class, 'export']);
 Route::get('/error', [ErrorController::class, 'handleError'])->name('error');
 
 Route::post('/save-contact', [ContactUsController::class, 'saveContact'])->name('save-contact');
-Route::get('/search', [SearchController::class, 'search'])->name('search');
 
 Route::view('/gift', 'layouts.giftmail');
 
-// Route::fallback(function () {
-//     return response()->json(['message' => 'Route not found'], 404);
-// });
+// This fallback route should be the last route in the file
+Route::fallback(function () {
+    $path = request()->path();
+
+    // Check if this is a storage file request
+    if (str_starts_with($path, 'storage/')) {
+        $relativePath = substr($path, 8); // Remove 'storage/' prefix
+        $fullPath = storage_path('app/public/' . str_replace('/', DIRECTORY_SEPARATOR, $relativePath));
+
+        // Check if file exists in public storage
+        if (file_exists($fullPath)) {
+            return response()->file($fullPath);
+        }
+
+        // If file doesn't exist, check if it's a Voyager image
+        if (str_contains($path, 'slides/') || str_contains($path, 'amazepay-available-brands/') || str_contains($path, 'amazepay-categories/')) {
+            // Create directory if it doesn't exist
+            $directory = dirname($fullPath);
+            if (!file_exists($directory)) {
+                mkdir($directory, 0755, true);
+                Log::info('Created directory', ['directory' => $directory]);
+            }
+
+            // Return a 404 response with helpful information
+            $imageType = '';
+            if (str_contains($path, 'slides/')) {
+                $imageType = 'slide';
+            } elseif (str_contains($path, 'amazepay-available-brands/')) {
+                $imageType = 'brand';
+            } elseif (str_contains($path, 'amazepay-categories/')) {
+                $imageType = 'category';
+            }
+
+            return response()->json([
+                'error' => 'Image not found',
+                'message' => "The {$imageType} image has not been uploaded yet. Please upload an image through the admin panel.",
+                'path' => $path,
+                'full_path' => $fullPath,
+                'image_type' => $imageType
+            ], 404);
+        }
+
+        // For other storage files, return 404
+        return response()->json([
+            'error' => 'File not found',
+            'message' => 'The requested file does not exist.',
+            'path' => $path
+        ], 404);
+    }
+
+    // For non-storage routes, return 404
+    return response()->json([
+        'error' => 'Not Found',
+        'message' => 'The requested URL was not found on this server.',
+        'path' => $path
+    ], 404);
+});
 
 Route::get('/404', function () {
     abort(404);
@@ -228,35 +273,23 @@ Route::get('/unauthenticated', function () {
 
 
 
-Route::post(
-    '/response_ccavenue',
-    [CCAvenueController::class, 'responseCcavenue']
-)->name('response_ccavenue');
+Route::post('/response_ccavenue', [CCAvenueController::class, 'responseCcavenue'])->name('response_ccavenue');
 
 
 Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'])->name('woohoo.createOrder');
-
-
-Route::get('/category/{slug}', [AmazepayCategoryController::class, 'show'])->name('categories.show');
-
-Route::get('/brand/{slug}', [AmazepayBrandController::class, 'show'])->name('brands.show');
-
-// Route::get('/check-balance', [CardBalanceController::class, 'showCheckBalanceForm'])->name('showCheckBalanceForm');
-// Route::post('/check-balance', [CardBalanceController::class, 'checkBalance'])->name('checkCardBalance');
 
 
 Route::get('/order-failure', function () {
     return view('order-failure'); // This will render the order-failure.blade.php view
 });
 
-// Wildcard route (should always be last)
-// Route::get('/{any}', function ($any) {
-//     Log::info("Wildcard route triggered", ['path' => $any]);
-//     return "Caught request: $any";
-// })->where('any', '.*');
+// Transaction routes that need protection
+Route::middleware(['auth', 'check.transaction'])->group(function () {
+    Route::post('/update-session-data', [ProductPageController::class, 'updateSessionData'])->name('updateSessionData');
+    Route::match(['get', 'post'], '/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
+    Route::post('/store-pay-now/{slug}', [UserPanelController::class, 'storePayNowData'])->name('store-pay-now');
+    Route::post('/save-gift-card-form', [UserPanelController::class, 'saveGiftCardFormValues'])->name('save-gift-card-form');
+    Route::post('/payment-process', [CCAvenueController::class, 'processPayment'])->name('payment-process');
 
-Route::get('/faq', function () {
-    return view('faq.show');
-})->name('faq');
-
-
+    Route::post('/response_ccavenue', [CCAvenueController::class, 'responseCcavenue'])->name('response_ccavenue');
+});

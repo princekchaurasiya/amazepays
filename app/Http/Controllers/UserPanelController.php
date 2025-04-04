@@ -37,6 +37,57 @@ class UserPanelController extends Controller
         $this->smsController = new SmsController();
         // $this->authenticationController = new AuthenticationController();
         $this->otpVerificationController = new OtpVerificationController();
+
+        // Add middleware to check for blocked users on login only
+        $this->middleware(function ($request, $next) {
+            if (Auth::check()) {
+                $user = Auth::user();
+                
+                // If user is login-blocked, force logout
+                if ($user->is_blocked) {
+                    Auth::logout();
+                    Session::flush();
+                    
+                    if ($request->ajax()) {
+                        return response()->json([
+                            'status' => 403,
+                            'msg' => 'Your account access has been restricted. Please contact:',
+                            'contact_info' => [
+                                'email' => config('companyDefaultValues.company_email'),
+                                'phone' => '+91 ' . config('companyDefaultValues.company_contact_no')
+                            ],
+                            'redirect' => route('home')
+                        ]);
+                    }
+                    
+                    return redirect()->route('home')
+                        ->with('error', 'Your account access has been restricted. Please contact support.')
+                        ->with('contact_info', [
+                            'email' => config('companyDefaultValues.company_email'),
+                            'phone' => '+91 ' . config('companyDefaultValues.company_contact_no')
+                        ]);
+                }
+            }
+            return $next($request);
+        })->only(['userLogin', 'homePage']);
+    }
+
+    /**
+     * Check if the current route is a transaction-related route
+     */
+    private function isTransactionRoute($routeName, $transactionRoutes)
+    {
+        foreach ($transactionRoutes as $route) {
+            if (str_contains($route, '*')) {
+                $pattern = str_replace('*', '.*', $route);
+                if (preg_match('/' . $pattern . '/', $routeName)) {
+                    return true;
+                }
+            } elseif ($route === $routeName) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function homePage()
@@ -107,15 +158,12 @@ class UserPanelController extends Controller
                 return response()->json($data);
             }
 
-
             // Verify OTP
             $otpVerificationResponse = $this->otpVerificationController->VerifyOtp($request->mobile, $request->otp);
 
             if ($otpVerificationResponse['status'] === 'error') {
                 return response()->json(['status' => 400, 'errors' => ['registerOTP' => [$otpVerificationResponse['message']]]]);
             }
-
-
 
             // If OTP is verified, proceed to create the user
             User::create([
@@ -250,22 +298,65 @@ class UserPanelController extends Controller
 
     public function userLogin(Request $request)
     {
-        Log::info('userLogin method called');
+        Log::info('userLogin attempt', ['mobile' => $request->mobile]);
+        
         try {
-            if (Auth::attempt($request->only('mobile', 'password'))) {
-                Log::info('User login successful', ['user' => $request->mobile]);
+            // Find user first to check if they exist
+            $user = User::where('mobile', $request->mobile)->first();
+            
+            if (!$user) {
+                Log::warning('Login failed - user not found', ['mobile' => $request->mobile]);
                 return response()->json([
-                    'status' => 200,
-                ]);
-            } else {
-                Log::warning('User login failed', ['user' => $request->mobile]);
-                return response()->json([
-                    'status' => 401,
+                    'status' => 400,
+                    'msg' => 'Invalid credentials. Please check your mobile number and password.'
                 ]);
             }
+
+            // Attempt authentication with mobile instead of email
+            if (Auth::attempt(['mobile' => $request->mobile, 'password' => $request->password])) {
+                $user = Auth::user();
+                
+                // Check if user is blocked from logging in
+                if ($user->is_blocked) {
+                    Auth::logout();
+                    Log::warning('Blocked user attempted to login', [
+                        'user_id' => $user->id,
+                        'mobile' => $user->mobile
+                    ]);
+                    return response()->json([
+                        'status' => 403,
+                        'msg' => 'Your account has been blocked. For assistance, please contact:',
+                        'contact_info' => [
+                            'email' => config('companyDefaultValues.company_email'),
+                            'phone' => '+91 ' . config('companyDefaultValues.company_contact_no')
+                        ]
+                    ]);
+                }
+
+                Log::info('Login successful', [
+                    'user_id' => $user->id,
+                    'mobile' => $user->mobile
+                ]);
+
+                return response()->json([
+                    'status' => 200,
+                    'msg' => 'Login successful. Welcome back!',
+                    'redirect' => route('home')
+                ]);
+            }
+
+            Log::warning('Login failed - wrong password', ['mobile' => $request->mobile]);
+            return response()->json([
+                'status' => 400,
+                'msg' => 'Invalid credentials. Please check your mobile number and password.'
+            ]);
+
         } catch (Exception $e) {
             Log::error('Error in userLogin method', ['error' => $e->getMessage()]);
-            return $e->getMessage();
+            return response()->json([
+                'status' => 500,
+                'msg' => 'Internal Server Error'
+            ], 500);
         }
     }
 
@@ -292,6 +383,60 @@ class UserPanelController extends Controller
     {
         Log::info('checkOut method called', ['request' => $request->all(), 'sku' => $sku]);
         try {
+            // Check if user is authenticated
+            if (!Auth::check()) {
+                Log::warning('Unauthenticated user attempted checkout');
+                return response()->json([
+                    'status' => 401,
+                    'message' => 'Please login to continue.'
+                ]);
+            }
+
+            $user = Auth::user();
+            
+            // Check if user is blocked from logging in
+            if ($user->is_blocked) {
+                Log::warning('Login-blocked user attempted checkout', [
+                    'user_id' => $user->id,
+                    'mobile' => $user->mobile
+                ]);
+                Auth::logout();
+                Session::flush();
+                return response()->json([
+                    'status' => 403,
+                    'message' => 'Your account access has been restricted. Please contact support.'
+                ]);
+            }
+
+            // Check if user is blocked from transactions
+            if (!$user->can_transact) {
+                Log::warning('Transaction-blocked user attempted checkout', [
+                    'user_id' => $user->id,
+                    'mobile' => $user->mobile
+                ]);
+                return response()->json([
+                    'status' => 403,
+                    'message' => 'Your account is currently restricted from making transactions. Please contact support.'
+                ]);
+            }
+
+            // Check for restricted features
+            if ($user->restricted_features) {
+                $restrictedFeatures = json_decode($user->restricted_features, true);
+                if (in_array('checkout', $restrictedFeatures)) {
+                    Log::warning('Feature-restricted user attempted checkout', [
+                        'user_id' => $user->id,
+                        'mobile' => $user->mobile,
+                        'restricted_features' => $restrictedFeatures
+                    ]);
+                    return response()->json([
+                        'status' => 403,
+                        'message' => 'You are not allowed to make purchases at this time. Please contact support.'
+                    ]);
+                }
+            }
+
+            // If all checks pass, proceed with checkout
             session()->put('denomination', $request->denomination);
             session()->put('quantity', $request->quantity);
             session()->put('gift_send_option', $request->gift_send_option);
@@ -301,26 +446,57 @@ class UserPanelController extends Controller
             session()->put('receiver_msg', $request->receiver_msg);
             session()->put('delivery_mode', $request->delivery_mode);
             Session::put('user_id', Auth::id());
-            Log::info('Session variables set', ['session' => session()->all()]);
-
+            
             $qsProd = QsProduct::where('sku', $sku)->first();
-            Log::info('Fetched product by SKU', ['qsProd' => $qsProd]);
+            if (!$qsProd) {
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'Product not found.'
+                ]);
+            }
 
             $qsProd->currency = json_decode($qsProd->currency);
             $qsProd->images = json_decode($qsProd->images);
             $qsProd->prodData = $request->all();
-            // Log::info('Processed product data', ['qsProd' => $qsProd]);
 
-            if (Auth::check()) {
-                Log::info('User authenticated, proceeding to checkout');
-                return view('userpanel.checkout', compact('qsProd'));
-            } else {
-                Log::warning('User not authenticated, redirecting to home');
-                return redirect('/');
-            }
+            return view('userpanel.checkout', compact('qsProd'));
+
         } catch (Exception $e) {
             Log::error('Error in checkOut method', ['error' => $e->getMessage()]);
-            return $e->getMessage();
+            return response()->json([
+                'status' => 500,
+                'message' => 'An error occurred. Please try again.'
+            ]);
+        }
+    }
+
+    public function saveGiftCardFormValues(Request $request)
+    {
+        try {
+            $validatedData = $request->validate([
+                'gift_send_option' => 'required|string',
+                'receiver_name' => 'nullable|string|max:255',
+                'receiver_email' => 'nullable|email|max:255',
+                'receiver_mobile' => 'nullable|string|max:20',
+                'receiver_msg' => 'nullable|string',
+                'delivery_mode' => 'required|string|in:both,email,sms'
+            ]);
+
+            // Store the validated form data in the session
+            session([
+                'gift_card_form' => $validatedData
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Gift card form data saved successfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error saving gift card form: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to save gift card form data'
+            ], 500);
         }
     }
 }

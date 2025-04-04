@@ -29,9 +29,36 @@ class CCAvenueController extends Controller
     }
     public function processPayment(Request $request)
     {
-
-
         try {
+            // Check if user is blocked from transactions
+            if (Auth::check()) {
+                $user = Auth::user();
+                if (!$user->can_transact) {
+                    Log::warning('User blocked from transactions attempted payment', [
+                        'user_id' => $user->id,
+                        'mobile' => $user->mobile
+                    ]);
+                    return view('errors.user-blocked', [
+                        'reason' => $user->restriction_reason
+                    ]);
+                }
+
+                // Check for restricted features
+                if ($user->restricted_features) {
+                    $restrictedFeatures = json_decode($user->restricted_features, true);
+                    if (in_array('payment', $restrictedFeatures)) {
+                        Log::warning('User with restricted features attempted payment', [
+                            'user_id' => $user->id,
+                            'mobile' => $user->mobile,
+                            'restricted_features' => $restrictedFeatures
+                        ]);
+                        return view('errors.user-blocked', [
+                            'reason' => $user->restriction_reason
+                        ]);
+                    }
+                }
+            }
+
             // Define custom validation messages
             $messages = [
                 'billing_name.required' => 'Please enter a name.',

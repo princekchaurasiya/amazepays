@@ -18,20 +18,33 @@ use Illuminate\Support\Facades\log;
 class SmsController extends Controller
 {
     public function loginWithOtp(Request $request)
-    {
-        \Log::info('Login with OTP initiated', ['request' => $request->all()]);
+{
+    \Log::info('Login with OTP initiated', ['request' => $request->all()]);
 
-        $destination = $request->input('destination');
-        $user = User::where('mobile', $destination)->first();
+    $destination = $request->input('destination');
+    $user = User::where('mobile', $destination)->first();
 
-        if (!$user) {
-            \Log::warning('User not found for mobile number', ['mobile' => $destination]);
-            return response()->json(['status' => 'error', 'message' => 'The provided mobile number does not match any registered user. Please register first and then login.']);
-        }
-
-        \Log::info('User found, proceeding to send SMS', ['user_id' => $user->id]);
-        return $this->sendSms($request);
+    if (!$user) {
+        \Log::warning('User not found for mobile number', ['mobile' => $destination]);
+        return response()->json(['status' => 'error', 'message' => 'The provided mobile number does not match any registered user. Please register first and then login.']);
     }
+
+    // Check if user is blocked
+    if ($user->is_blocked) {
+        \Log::warning('Blocked user attempted OTP login', ['user_id' => $user->id]);
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Your account has been restricted. Please contact support.',
+            'contact_info' => [
+                'email' => config('companyDefaultValues.company_email'),
+                'phone' => '+91 ' . config('companyDefaultValues.company_contact_no')
+            ]
+        ]);
+    }
+
+    \Log::info('User found, proceeding to send SMS', ['user_id' => $user->id]);
+    return $this->sendSms($request);
+}
 
     public function registerWithOtp(Request $request)
     {

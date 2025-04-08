@@ -11,43 +11,61 @@ use Illuminate\Support\Facades\Log;
 
 class OtpVerificationController extends Controller
 {
+
+
     // Verify OTP for login
     public function loginVerifyOtp(Request $request)
-    {
-        try {
-            $otp = $request->input('otp');
-            $mobileNumber = $request->input('destination');
+{
+    try {
+        $otp = $request->input('otp');
+        $mobileNumber = $request->input('destination');
 
-            Log::info('Attempting OTP verification for login', ['mobile' => $mobileNumber, 'otp' => $otp]);
-            $verificationResult = $this->VerifyOtp($mobileNumber, $otp);
+        Log::info('Attempting OTP verification for login', ['mobile' => $mobileNumber, 'otp' => $otp]);
+        $verificationResult = $this->VerifyOtp($mobileNumber, $otp);
 
-            Log::info('OTP verification result', $verificationResult);
+        Log::info('OTP verification result', $verificationResult);
 
-            if ($verificationResult['status'] === 'success') {
-                $user = User::where('mobile', $mobileNumber)->first();
+        if ($verificationResult['status'] === 'success') {
+            $user = User::where('mobile', $mobileNumber)->first();
 
-                if ($user) {
-                    Auth::login($user);
-                    Log::info('Login successful for user', ['user_id' => $user->id]);
-
-                    // Return the intended URL or homepage URL as the redirect URL
+            if ($user) {
+                // Check if user is blocked
+                if ($user->is_blocked) {
+                    Log::warning('Blocked user attempted to verify OTP', ['user_id' => $user->id]);
                     return response()->json([
-                        'status' => 'success',
-                        'message' => 'Login successful',
-                        'redirect_url' => url()->previous() // This will provide the URL the user intended to visit
+                        'status' => 'error',
+                        'message' => 'Your account has been blocked. For assistance, please contact:',
+                        'contact_info' => [
+                            'email' => 'support@amazepays.in',
+                            'phone' => '+91 9324449485'
+                        ]
                     ]);
-                } else {
-                    Log::error('User not found for login', ['mobile' => $mobileNumber]);
-                    return response()->json(['status' => 'error', 'message' => 'User not found.']);
                 }
-            }
 
-            return response()->json($verificationResult);
-        } catch (\Exception $e) {
-            Log::error('Error during login OTP verification', ['error' => $e->getMessage()]);
-            return response()->json(['status' => 'error', 'message' => 'An error occurred during verification.']);
+
+
+
+
+                Auth::login($user);
+                Log::info('Login successful for user', ['user_id' => $user->id]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Login successful',
+                    'redirect_url' => url()->previous()
+                ]);
+            } else {
+                Log::error('User not found for login', ['mobile' => $mobileNumber]);
+                return response()->json(['status' => 'error', 'message' => 'User not found.']);
+            }
         }
+
+        return response()->json($verificationResult);
+    } catch (\Exception $e) {
+        Log::error('Error during login OTP verification', ['error' => $e->getMessage()]);
+        return response()->json(['status' => 'error', 'message' => 'An error occurred during verification.']);
     }
+}
 
     // Verify OTP for registration
     public function registerVerifyOtp(Request $request)

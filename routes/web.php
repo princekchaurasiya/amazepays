@@ -90,6 +90,9 @@ Route::group(['prefix' => 'admin'], function () {
 
         Route::post('/resend-order', [WoohooOrderController::class, 'createOrder'])->name('resend.order');
 
+        // In routes/web.php
+Route::get('/export-blocked-users', [UserBlockController::class, 'exportBlockedUsers'])->name('admin.export.blocked.users');
+
 
     });
 });

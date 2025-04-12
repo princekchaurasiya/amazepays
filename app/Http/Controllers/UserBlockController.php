@@ -50,7 +50,7 @@ class UserBlockController extends Controller
             $user->save();
 
             Log::info('User restriction applied', [
-                'user_id' => $user->id, 
+                'user_id' => $user->id,
                 'mobile' => $user->mobile,
                 'restriction_type' => $request->restriction_type,
                 'features' => $request->restriction_type === 'feature' ? $features : null
@@ -107,7 +107,7 @@ class UserBlockController extends Controller
             $user->save();
 
             Log::info('User restriction removed', [
-                'user_id' => $user->id, 
+                'user_id' => $user->id,
                 'mobile' => $user->mobile,
                 'restriction_type' => $request->restriction_type
             ]);
@@ -125,6 +125,7 @@ class UserBlockController extends Controller
         }
     }
 
+
     public function checkUserRestrictions(Request $request)
     {
         try {
@@ -137,7 +138,7 @@ class UserBlockController extends Controller
                         'message' => 'User not found'
                     ], 404);
                 }
-                
+
                 return response()->json([
                     'status' => 'success',
                     'user' => [
@@ -150,14 +151,14 @@ class UserBlockController extends Controller
                         'updated_at' => $user->updated_at
                     ]
                 ]);
-            } 
+            }
             // If feature is provided, check users with that feature restriction
             else if ($request->has('feature')) {
                 $users = User::whereNotNull('restricted_features')
                     ->where('restricted_features', 'like', '%' . $request->feature . '%')
                     ->select('name', 'mobile', 'restricted_features', 'restriction_reason', 'updated_at')
                     ->get();
-                
+
                 return response()->json([
                     'status' => 'success',
                     'users' => $users
@@ -172,7 +173,7 @@ class UserBlockController extends Controller
                 })
                 ->select('name', 'mobile', 'is_blocked', 'can_transact', 'restricted_features', 'restriction_reason', 'updated_at')
                 ->get();
-                
+
                 return response()->json([
                     'status' => 'success',
                     'users' => $users
@@ -186,4 +187,27 @@ class UserBlockController extends Controller
             ], 500);
         }
     }
+
+    public function exportBlockedUsers()
+{
+    try {
+        $users = User::where('is_blocked', true)->get(['name', 'mobile', 'restriction_reason', 'updated_at']);
+        $csvData = "Name,Mobile,Reason,Updated At\n";
+
+        foreach ($users as $user) {
+            $csvData .= "{$user->name},{$user->mobile},{$user->restriction_reason},{$user->updated_at}\n";
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $csvData
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Error exporting blocked users', ['error' => $e->getMessage()]);
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to export blocked users'
+        ], 500);
+    }
+}
 }

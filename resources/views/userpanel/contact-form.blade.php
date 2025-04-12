@@ -1,8 +1,10 @@
 @extends('layouts.app')
 
 @section('title')
-    {{ env('APP_NAME') }} | Contact
+    {{ env('APP_NAME') ?? 'Amazepays' }} | Contact
 @endsection
+
+
 
 @section('content')
     <div class="section">

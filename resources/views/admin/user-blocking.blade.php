@@ -13,10 +13,12 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="panel panel-bordered">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Restrict User</h3>
+                    <div class="panel-heading d-flex justify-content-between align-items-center">
+                        <h3 class="panel-title mb-0">Restricted Users</h3>
+                        <button id="export-blocked-users" class="btn btn-success">Export Blocked Users</button>
                     </div>
                     <div class="panel-body">
+
                         <form id="restrict-form" class="form-edit-add">
                             <div class="form-group">
                                 <label for="mobile">Mobile Number</label>
@@ -130,8 +132,8 @@
                                 if (!user.can_transact) restrictions.push('Transaction Blocked');
                                 if (user.restricted_features) {
                                     try {
-                                        let features = typeof user.restricted_features === 'string' 
-                                            ? JSON.parse(user.restricted_features) 
+                                        let features = typeof user.restricted_features === 'string'
+                                            ? JSON.parse(user.restricted_features)
                                             : user.restricted_features;
                                         if (Array.isArray(features) && features.length > 0) {
                                             restrictions.push('Features: ' + features.join(', '));
@@ -140,7 +142,7 @@
                                         console.error('Error parsing restricted features:', e);
                                     }
                                 }
-                                
+
                                 html += `
                                     <tr>
                                         <td>${user.name || 'N/A'}</td>
@@ -212,8 +214,41 @@
                 });
             });
 
+            $('#export-blocked-users').click(function() {
+    $.get('{{ route("admin.export.blocked.users") }}', function(response) {
+        if (response.status === 'success') {
+            const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            // Get current date and time
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            const timestamp = `${day}-${month}-${year}_${hours}-${minutes}-${seconds}`;
+            const filename = `blocked_users_${timestamp}.csv`;
+
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } else {
+            toastr.error('Failed to export blocked users');
+        }
+    }).fail(function(error) {
+        console.error('Error:', error);
+        toastr.error('Failed to export blocked users');
+    });
+});
+
             // Initial load of restricted users
             loadRestrictedUsers();
         });
     </script>
-@stop 
+@stop

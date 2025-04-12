@@ -174,8 +174,8 @@
                                                         <p
                                                             class="fw-500 font-xssss text-grey-600 mt-2 pt-3 d-inline-block">
                                                             By continuing, you agree to Amazepay's <a
-                                                                href="blog-single.html" class="text-current">Term and
-                                                            Condition</a> and <a href="blog-single.html"
+                                                                href="{{ route('terms-of-use') }}" class="text-current">Term and
+                                                            Condition</a> and <a href="{{ route('privacy-policy') }}"
                                                                 class="text-current">Privacy Policy </a>.
                                                         </p>
                                                     </div>
@@ -491,8 +491,8 @@
 
                                                         <p class="fw-500 font-xssss text-grey-600 mt-2 pt-3 d-inline-block">
                                                             By continuing, you agree to Amazepay's
-                                                            <a href="blog-single.html" class="text-current">Terms and Conditions</a> and
-                                                            <a href="blog-single.html" class="text-current">Privacy Policy</a>.
+                                                            <a href="{{ route('terms-of-use') }}" class="text-current">Terms and Conditions</a> and
+                                                            <a href="{{ route('privacy-policy') }}" class="text-current">Privacy Policy</a>.
                                                         </p>
                                                     </div>
                                                 </div>
@@ -947,13 +947,13 @@ else if (data.status == 400 && data.errors) {
                         } else if (data.status == 403) {
                             // Show error message for blocked user
                             var errorMessage = data.msg || 'Your account has been restricted. Please contact support.';
-                            var errorHtml = '<div class="alert alert-danger">' + 
-                                errorMessage + 
+                            var errorHtml = '<div class="alert alert-danger">' +
+                                errorMessage +
                                 (data.contact_info ? '<hr class="my-2">' +
                                 '<p class="mb-1"><i class="fa fa-envelope mr-2"></i>' + data.contact_info.email + '</p>' +
                                 '<p class="mb-0"><i class="fa fa-phone mr-2"></i>' + data.contact_info.phone + '</p>' : '') +
                                 '</div>';
-                            
+
                             $(".main-error").html(errorHtml).show();
                             $('#loginPasswordInput').val('');
                         } else {

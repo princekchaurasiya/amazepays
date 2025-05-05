@@ -138,7 +138,7 @@ class UserPanelController extends Controller
                 'name' => ['required', 'regex:/^[a-zA-Z\s]+$/'],
                 'mobile' => ['required', 'regex:/^(?:(?:\+|0{0,2})91)?[789]\d{9}$/', 'unique:users,mobile'],
                 'email' => 'required|email|unique:users,email',
-                'password' => 'required|confirmed|min:8',
+                'password' => 'required|confirmed|min:8|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).+$/',
             ], [
                 'name.regex' => 'Name should only contain letters and spaces',
                 'mobile.regex' => 'Invalid mobile number',
@@ -146,7 +146,7 @@ class UserPanelController extends Controller
                 'email.email' => 'Invalid email address',
                 'email.unique' => 'Email already exists',
                 'password.confirmed' => 'Password confirmation does not match',
-                'password.min' => 'Password must be at least 8 characters long',
+                'password.min' => 'Password must be at least 8 characters long,at least 1 lowercase,1 uppercase,1 number and 1 special character',
             ]);
 
             if ($validator->fails()) {
@@ -224,26 +224,30 @@ class UserPanelController extends Controller
             $validator = Validator::make($input, [
                 'mobile' => ['required', 'regex:/^(?:(?:\+|0{0,2})91)?[789]\d{9}$/'],
                 'otp' => ['required'],
-                'newPassword' => ['required', 'min:6'],
+                'newPassword' => ['required', 'min:8','regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).+$/'],
                 'confirm_new_password' => ['required', 'same:newPassword'],
             ], [
                 'mobile.required' => 'backend Mobile number is required.',
                 'mobile.regex' => 'Invalid mobile number format.',
                 'otp.required' => 'OTP is required.',
                 'newPassword.required' => 'New password is required.',
-                'newPassword.min' => 'Password must be at least 6 characters.',
+                'newPassword.min' => 'Password must be at least 8 characters,at least 1 lowercase, 1 uppercase,1 number and 1 special character.',
                 'confirm_new_password.required' => 'Confirm password is required.',
                 'confirm_new_password.same' => 'Confirm password must match new password.',
             ]);
+            
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
 
             // If validation fails, return errors
-            if ($validator->fails()) {
+            /*if ($validator->fails()) {
                 Log::error('Validation failed', ['errors' => $validator->errors()]);
                 return response()->json([
                     'status' => 400,
                     'errors' => $validator->errors()
                 ], 400);
-            }
+            }*/
 
             Log::info('Validation passed', ['mobile' => $request->mobile, 'otp' => $request->otp]);
 

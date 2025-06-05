@@ -31,6 +31,6 @@ class SendToCardPay extends AbstractAction
 
     public function shouldActionDisplayOnRow($row)
     {
-        return true; // Always show the button
+        return $this->dataType->slug === 'transaction-reports'; // Always show the button
     }
 }

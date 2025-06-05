@@ -14,5 +14,6 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         'response_ccavenue',
         'payment-cancel',
+        '/payment/notify',
     ];
 }

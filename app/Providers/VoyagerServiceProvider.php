@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Actions\SendToCardPay;
+use App\Actions\CreateInvoiceAction;
 use TCG\Voyager\Facades\Voyager;
 
 class VoyagerServiceProvider extends ServiceProvider
@@ -13,5 +14,6 @@ class VoyagerServiceProvider extends ServiceProvider
     //parent::boot();
 
     Voyager::addAction(SendToCardPay::class);
+    Voyager::addAction(CreateInvoiceAction::class);
     }
 }

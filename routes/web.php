@@ -357,5 +357,15 @@ Route::post('/payment/upi', [UPIPaymentController::class, 'store'])->name('payme
 use App\Http\Controllers\NetBankPaymentController;
 Route::post('/payment/netbnk', [NetBankPaymentController::class, 'store'])->name('payment.netbnk');
 
+//For Voyager Invoice method
+use App\Http\Controllers\InvoiceController;
+
+//Route::post('/create-invoice', [InvoiceController::class, 'storeAndSendInvoice'])->name('invoice.create');
+
+use App\Invoice;
+Route::get('/admin/invoices/{id}/create-invoice', [\App\Http\Controllers\InvoiceController::class, 'storeAndSendInvoice'])->name('create_invoice');
+
+
+
 
 

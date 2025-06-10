@@ -19,12 +19,12 @@ class UnlimitPaymentController extends Controller
     {
         $response = Http::asForm()
             ->withHeaders([
-                'Authorization' => 'Basic ' . base64_encode('1047:E568gIjYr2aS'),
+                'Authorization' => 'Basic ' . base64_encode(env('UNLIMIT_CODE')),
             ])
             ->post('https://sandbox.in.unlimit.com/api/auth/token', [
                 'grant_type' => 'password',
-                'password' => 'E568gIjYr2aS',
-                'terminal_code' => '1047',
+                'password' => env('UNLIMIT_SECRET_KEY'),
+                'terminal_code' => env('UNLIMIT_PUBLIC_KEY'),
             ]);
 
         $data = $response->json();
@@ -86,10 +86,10 @@ class UnlimitPaymentController extends Controller
             'currency' => 'INR',
         ],
 
-        'return_urls' => [
-        'success_url' => 'http://127.0.0.1:8000/payment/success',
-        'decline_url' => 'http://127.0.0.1:8000/payment/failed',
-        ],
+        /*'return_urls' => [
+        'success_url' => route('payment.success'),
+        'decline_url' => route('payment.failed'),
+        ],*/
         // Note: card_account.card was removed based on your earlier error for Payment Page mode
     ];
 

@@ -19,12 +19,12 @@ class NetBankPaymentController extends Controller
     {
         $response = Http::asForm()
             ->withHeaders([
-                'Authorization' => 'Basic ' . base64_encode('1047:E568gIjYr2aS'),
+                'Authorization' => 'Basic ' . base64_encode(env('UNLIMIT_CODE')),
             ])
             ->post('https://sandbox.in.unlimit.com/api/auth/token', [
                 'grant_type' => 'password',
-                'password' => 'E568gIjYr2aS',
-                'terminal_code' => '1047',
+                'password' => env('UNLIMIT_SECRET_KEY'),
+                'terminal_code' => env('UNLIMIT_PUBLIC_KEY'),
             ]);
 
         $data = $response->json();
@@ -86,10 +86,10 @@ class NetBankPaymentController extends Controller
             'currency' => 'INR',
         ],
 
-        'return_urls' => [
+        /*'return_urls' => [
         'success_url' => route('unlimit.return'),
         'decline_url' => route('unlimit.return'),
-        ],
+        ],*/
         // Note: card_account.card was removed based on your earlier error for Payment Page mode
     ];
 

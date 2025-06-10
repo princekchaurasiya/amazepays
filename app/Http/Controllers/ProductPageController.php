@@ -45,11 +45,11 @@ class ProductPageController extends Controller
         if ($request->gift_send_option === 'send_as_gift' && $request->receiver_mobile) {
             $recipient = \App\Models\User::where('mobile', $request->receiver_mobile)->first();
             if ($recipient && !$recipient->can_receive_gifts) {
-                Log::warning('Attempted to send gift to blocked recipient', [
+                Log::warning('Attempted to send gift to self', [
                     'sender_id' => Auth::id(),
                     'recipient_mobile' => $request->receiver_mobile
                 ]);
-                return response()->view('errors.user-blocked', [
+                return response()->view('errors.self-gift', [
                     'blockType' => 'recipient',
                     'phone' => $request->receiver_mobile,
                     'reason' => $recipient->restriction_reason

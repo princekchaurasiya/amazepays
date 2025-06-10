@@ -336,6 +336,10 @@ Route::get('/payment/failed', function () {
     return view('payment.failed');
 })->name('payment.failed');
 
+Route::get('/payment/processed', function () {
+    return view('payment.processed');
+})->name('payment.processed');
+
 Route::post('/unlimit-payment', [UnlimitPaymentController::class, 'process'])->name('unlimit.payment');
 
 //For Voyager SendtoCardPay method

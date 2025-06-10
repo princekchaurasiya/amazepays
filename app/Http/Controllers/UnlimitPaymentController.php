@@ -129,7 +129,9 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
 
     public function handleReturnSuccess(Request $request)
 {
-    return redirect()->route('payment.success')->with('success', 'Payment completed successfully.');
+    //return redirect()->route('payment.success')->with('success', 'Payment completed successfully.');
+    
+        return redirect()->route('payment.processed')->with('success', 'Payment processed.');
 }
 
 public function process(Request $request)

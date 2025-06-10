@@ -87,8 +87,8 @@ class UnlimitPaymentController extends Controller
         ],
 
         'return_urls' => [
-        'success_url' => route('unlimit.return'),
-        'decline_url' => route('unlimit.return'),
+        'success_url' => 'http://127.0.0.1:8000/payment/success',
+        'decline_url' => 'http://127.0.0.1:8000/payment/failed',
         ],
         // Note: card_account.card was removed based on your earlier error for Payment Page mode
     ];

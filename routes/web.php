@@ -315,7 +315,7 @@ Route::post('/unlimit-payment', [UnlimitPaymentController::class, 'showPaymentFo
 
 // Route to handle form submission
 //Route::post('/unlimit/checkout', [UnlimitPaymentController::class, 'store'])->name('unlimit.checkout');
-Route::post('/unlimit/store', [UnlimitPaymentController::class, 'store'])->name('unlimit.store');
+//Route::post('/unlimit/store', [UnlimitPaymentController::class, 'store'])->name('unlimit.store');
 
 Route::get('/payment/return', function () {
     return view('payment.return'); // or handle logic in a controller

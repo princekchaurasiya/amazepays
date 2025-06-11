@@ -781,6 +781,8 @@
                                                     <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font">
                                                         <span>₹{{ $qsOrder->amount_payable_after_discount }}</span>
                                                     </div>
+                                                    <!-- Add hidden field for Payable Amount -->
+                                                    <input type="hidden" name="payable_amount" value="{{ $qsOrder->amount_payable_after_discount }}">
                                                 </div>
                                             </div>
                                         </div>
@@ -789,17 +791,28 @@
                             </div>
                         </div>
 
-                        <div class="card shadow-none border-0">
-                            <input
-                                class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-600 ls-3"
-                                type="submit" value="Place Order" id="placeOrder">
-                        </div>
+                        
                     </div>
                 </div>
+                <div class="card shadow-none border-0">
+                            <input
+                                class="mont-font p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-600 ls-3"
+                                type="submit" value="Card Payment" id="placeOrder">
+                        </div>
             </form>
+<form method="POST" action="{{ route('payment.upi') }}">
+    @csrf
+    <input type="hidden" name="payable_amount" value="{{ $qsOrder->amount_payable_after_discount }}">
+    <button type="submit" class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-300 ls-3">Pay with UPI</button>
+</form>
+<form method="POST" action="{{ route('payment.netbnk') }}">
+    @csrf
+    <input type="hidden" name="payable_amount" value="{{ $qsOrder->amount_payable_after_discount }}">
+    <button type="submit" class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-300 ls-3">Net Banking</button>
+</form>
         </div>
-    </div>
 
+    </div>
     @push('scripts')
         <script type="text/javascript">
             $(document).ready(function() {

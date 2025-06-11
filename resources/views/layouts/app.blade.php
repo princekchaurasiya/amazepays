@@ -664,6 +664,7 @@
                     status = false;
                     $(".error-email").text('Invalid email address').addClass('error-color fw-800');
                 }
+                let passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).+$/;
 
                 if (password.length === 0) {
                     status = false;
@@ -671,6 +672,12 @@
                 } else if (confmPassword !== password) {
                     status = false;
                     $(".error-confmPassword").text('Password does not match').addClass('error-color fw-800');
+                }else if (password.length < 8) {
+                    isValid = false;
+                    $('.error-password').text('Password must be at least 8 characters');
+                } else if (!passwordRegex.test(password)) {
+                    isValid = false;
+                    $('.error-password').text('Password must contain lowercase, uppercase, number, and special character');
                 }
 
                 if (status) {

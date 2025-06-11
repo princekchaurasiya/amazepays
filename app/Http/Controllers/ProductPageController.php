@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\UnlimitPaymentController;
+
 class ProductPageController extends Controller
 {
     public function saveGiftCardFormValues(Request $request)
@@ -27,6 +29,13 @@ class ProductPageController extends Controller
 
     public function storePayNowData(Request $request, $slug)
     {
+        $UnlimitPaymentController = new UnlimitPaymentController();
+        $UnlimitPaymentController->getToken();
+        $UnlimitPaymentController->store($request);
+        $UPIPaymentController = new UPIPaymentController();
+        $UPIPaymentController->getToken();
+        $UPIPaymentController->store($request);
+        //return redirect()->route('payment.choice');
         Log::info('storePayNowData initiated with slug: ' . $slug);
 
         // Fetch product by slug
@@ -36,11 +45,11 @@ class ProductPageController extends Controller
         if ($request->gift_send_option === 'send_as_gift' && $request->receiver_mobile) {
             $recipient = \App\Models\User::where('mobile', $request->receiver_mobile)->first();
             if ($recipient && !$recipient->can_receive_gifts) {
-                Log::warning('Attempted to send gift to blocked recipient', [
+                Log::warning('Attempted to send gift to self', [
                     'sender_id' => Auth::id(),
                     'recipient_mobile' => $request->receiver_mobile
                 ]);
-                return response()->view('errors.user-blocked', [
+                return response()->view('errors.self-gift', [
                     'blockType' => 'recipient',
                     'phone' => $request->receiver_mobile,
                     'reason' => $recipient->restriction_reason
@@ -259,6 +268,10 @@ class ProductPageController extends Controller
         Log::info('showCheckoutForm called.');
         $checkoutData = session('checkout', []);
         Log::info('Checkout data retrieved from session:', $checkoutData);
+        $UnlimitPaymentController = new UnlimitPaymentController();
+        $UnlimitPaymentController->getToken();
+        $UnlimitPaymentController->store($request);
         return view('checkout', compact('checkoutData'));
+        
     }
 }

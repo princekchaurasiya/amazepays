@@ -5,6 +5,7 @@ use TCG\Voyager\Events\RoutingAdmin;
 use Illuminate\Support\Facades\Log;
 use TCG\Voyager\Facades\Voyager;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\UnlimitPaymentController;
 
 use App\Http\Controllers\{
     HomePageController,
@@ -168,7 +169,7 @@ Route::group(['middleware' => 'auth'], function () {
         return view('userpanel/change-password');
     })->name('change-password');
     Route::post('/check-mobile-number', [ProfileController::class, 'isMobileNumberInUse'])->name('check-mobile-number');
-    Route::post('/payment-cancel', [CCAvenueController::class, 'handlePaymentCancellation'])->name('payment-cancel');
+   // Route::post('/payment-cancel', [CCAvenueController::class, 'handlePaymentCancellation'])->name('payment-cancel');
     Route::post('/update-profile', [ProfileController::class, 'updateProfile'])->name('update-profile');
     Route::get('/view-card-details/{orderId}', [ViewCardDetailsController::class, 'index'])->name('view-card-details');
     Route::post('/profile-update-send-otp', [SmsController::class, 'profileUpdateSendOtp'])->name('profile-update-send-otp');
@@ -276,7 +277,7 @@ Route::get('/unauthenticated', function () {
 
 
 
-Route::post('/response_ccavenue', [CCAvenueController::class, 'responseCcavenue'])->name('response_ccavenue');
+//Route::post('/response_ccavenue', [CCAvenueController::class, 'responseCcavenue'])->name('response_ccavenue');
 
 
 Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'])->name('woohoo.createOrder');
@@ -289,12 +290,86 @@ Route::get('/order-failure', function () {
 // Transaction routes that need protection
 Route::middleware(['auth', 'check.transaction'])->group(function () {
     Route::post('/update-session-data', [ProductPageController::class, 'updateSessionData'])->name('updateSessionData');
-    Route::match(['get', 'post'], '/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
-    Route::post('/store-pay-now/{slug}', [UserPanelController::class, 'storePayNowData'])->name('store-pay-now');
+   Route::match(['get', 'post'], '/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
+   //Route::match(['get', 'post'], '/checkout/{slug}',[UnlimitPaymentController::class, 'store'])->name('unlimit.store');
+   // Route::post('/store-pay-now/{slug}', [UserPanelController::class, 'storePayNowData'])->name('store-pay-now');
     Route::post('/save-gift-card-form', [UserPanelController::class, 'saveGiftCardFormValues'])->name('save-gift-card-form');
-    Route::post('/payment-process', [CCAvenueController::class, 'processPayment'])->name('payment-process');
-
-    Route::post('/response_ccavenue', [CCAvenueController::class, 'responseCcavenue'])->name('response_ccavenue');
+   // Route::post('/payment-process', [CCAvenueController::class, 'processPayment'])->name('payment-process');
+    Route::post('/payment-process',[UnlimitPaymentController::class, 'store'])->name('unlimit.store');
+    //Route::post('/response_ccavenue', [CCAvenueController::class, 'responseCcavenue'])->name('response_ccavenue');
 });
 
 //test
+
+//Route for Auth
+//Route::get('/cardpay/token', [UnlimitPaymentController::class, 'getToken']);
+//Route::post('/unlimit/get-token', [UnlimitPaymentController::class, 'getToken'])->name('unlimit.getToken');
+
+//Route for passing amount
+Route::post('/unlimit-payment', [UnlimitPaymentController::class, 'showPaymentForm'])->name('unlimit.form');
+
+// Route to show the form
+/*Route::get('/unlimit/form', function () {
+    return view('paymentFolder.unlimitpayment');
+});*/
+
+// Route to handle form submission
+//Route::post('/unlimit/checkout', [UnlimitPaymentController::class, 'store'])->name('unlimit.checkout');
+//Route::post('/unlimit/store', [UnlimitPaymentController::class, 'store'])->name('unlimit.store');
+
+Route::get('/payment/return', function () {
+    return view('payment.return'); // or handle logic in a controller
+});
+
+Route::get('/payment', function () {
+    return view('payment'); // This assumes the file is at resources/views/payment.blade.php
+});
+
+Route::get('/payment/return', [UnlimitPaymentController::class, 'handleReturnSuccess'])->name('unlimit.return');
+
+Route::get('/payment/success', function () {
+    return view('payment.success');
+})->name('payment.success');
+
+// For failure page
+Route::get('/payment/failed', function () {
+    return view('payment.failed');
+})->name('payment.failed');
+
+Route::get('/payment/processed', function () {
+    return view('payment.processed');
+})->name('payment.processed');
+
+Route::post('/unlimit-payment', [UnlimitPaymentController::class, 'process'])->name('unlimit.payment');
+
+//For Voyager SendtoCardPay method
+use Illuminate\Support\Facades\Http;
+use App\TransactionReport;
+use App\Http\Controllers\TransactionReportController;
+
+Route::get('/admin/send-transaction-report/{id}', [TransactionReportController::class, 'sendToCardPay'])
+    ->name('send.transaction.report');
+
+//UPI payment route
+//Route::post('/unlimit/upi_payment', [UPIPaymentController::class, 'store'])->name('payment.upi');
+
+//routes to UPI Payment
+use App\Http\Controllers\UPIPaymentController;
+Route::post('/payment/upi', [UPIPaymentController::class, 'store'])->name('payment.upi');
+
+//routes to Net Banking Payment
+use App\Http\Controllers\NetBankPaymentController;
+Route::post('/payment/netbnk', [NetBankPaymentController::class, 'store'])->name('payment.netbnk');
+
+//For Voyager Invoice method
+use App\Http\Controllers\InvoiceController;
+
+//Route::post('/create-invoice', [InvoiceController::class, 'storeAndSendInvoice'])->name('invoice.create');
+
+use App\Invoice;
+Route::get('/admin/invoices/{id}/create-invoice', [\App\Http\Controllers\InvoiceController::class, 'storeAndSendInvoice'])->name('create_invoice');
+
+
+
+
+

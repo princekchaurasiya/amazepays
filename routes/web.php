@@ -369,6 +369,9 @@ use App\Http\Controllers\InvoiceController;
 use App\Invoice;
 Route::get('/admin/invoices/{id}/create-invoice', [\App\Http\Controllers\InvoiceController::class, 'storeAndSendInvoice'])->name('create_invoice');
 
+/*Route::get('/about', function () {
+    return view('userpanel/about');
+})->middleware('block.vpn');*/
 
 
 

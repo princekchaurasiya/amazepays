@@ -370,6 +370,22 @@ use App\Invoice;
 Route::get('/admin/invoices/{id}/create-invoice', [\App\Http\Controllers\InvoiceController::class, 'storeAndSendInvoice'])->name('create_invoice');
 
 
+use App\Exports\UsersExport;
+use Maatwebsite\Excel\Facades\Excel;
+
+Route::get('/export-users', function () {
+    return Excel::download(new UsersExport, 'users_report.xlsx');
+})->name('export.users');
 
 
+use App\Http\Controllers\ExcelMergeController2;
 
+Route::get('/admin/excel-merge', [ExcelMergeController2::class, 'showForm'])->name('excel.form')->middleware('admin.user');
+Route::post('/admin/excel-merge', [ExcelMergeController2::class, 'merge'])->name('excel.merge')->middleware('admin.user');
+
+use App\Http\Controllers\UnlimitExportController;
+Route::get('/export-unlimit-payments', [UnlimitExportController::class, 'exportPayments']);
+
+use App\Http\Controllers\PaymentExportController;
+
+Route::get('/export-payments', [PaymentExportController::class, 'export'])->name('payments.export');

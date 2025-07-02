@@ -318,12 +318,16 @@ public function buildPayloadFromDB($recordId)
 
     public function getEvcStatus(Request $request, VDWebApiService $vdWebApiService)
     {
+        $latestRequest = GetEvcRequest::latest()->first();
+        $orderId = $latestRequest->order_id;
+        $receiptNo = $latestRequest->receipt_no;
+        
         $request->validate([
             'order_id' => 'required|string',
             'request_ref_no' => 'required|string',
         ]);
 
-        $tokenResponse = $vdWebApiService->generateToken();
+        $tokenResponse = $vdWebApiService->getToken();
         $token = $tokenResponse['token'] ?? null;
 
         if (!$token) {

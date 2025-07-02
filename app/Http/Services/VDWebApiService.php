@@ -281,6 +281,4 @@ public function getEvcStatus(string $token, string $orderId, string $requestRefN
 
     return $response->successful() ? $response->json() : null;
 }
-
-
 }

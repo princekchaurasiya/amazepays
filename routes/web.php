@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 use TCG\Voyager\Facades\Voyager;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\UnlimitPaymentController;
+use App\Http\Services\VDWebApiService;
 
 use App\Http\Controllers\{
     HomePageController,
@@ -38,6 +39,9 @@ use App\Http\Controllers\{
     Voyager\VoyagerOrderExportController,
     Voyager\ProductDetailsExportController,
     UserBlockController,
+    VDWebController,
+    VDAESdecrptController2,
+    StoreBrandsController,
 };
 
 /*
@@ -389,3 +393,38 @@ Route::get('/export-unlimit-payments', [UnlimitExportController::class, 'exportP
 use App\Http\Controllers\PaymentExportController;
 
 Route::get('/export-payments', [PaymentExportController::class, 'export'])->name('payments.export');
+
+//Value design APIs
+Route::get('/vdweb/token', [VDWebController::class, 'getToken']);
+Route::get('/vdweb/brands', [VDWebController::class, 'getBrandsFromToken']);
+Route::get('/fetchbrands', function () {
+    return view('fetchbrands'); // or any basic page/form
+});
+Route::post('/fetchbrands', [StoreBrandsController::class, 'getAndStoreBrands']);
+use App\Http\Controllers\BrandExportController;
+
+Route::get('/admin/brands/export', [BrandExportController::class, 'export'])->name('brands.export');
+
+//Route::get('/brands/decrypt-sync', [VDAESdecrptController2::class, 'handleEncryptedPayload']);
+
+use App\Http\Controllers\StoreController;
+
+Route::get('/brands/select', [StoreController::class, 'showBrandSelection'])->name('brands.select');
+Route::post('/stores/fetch', [StoreController::class, 'fetchStoresForBrand'])->name('stores.fetch');
+
+Route::get('/stores/select', [StoreController::class, 'showForm'])->name('stores.form');
+Route::post('/stores/sync', [StoreController::class, 'syncAndShow'])->name('stores.sync');
+Route::get('/stores/filter', [StoreController::class, 'filterStores'])->name('stores.filter');
+Route::get('/stores/export', [StoreController::class, 'exportStores'])->name('stores.export');
+
+Route::post('/evc/store-request', [VDWebController::class, 'storeGetEvcRequest']);
+Route::get('/evc/request', [VDWebController::class, 'requestEvc'])->name('evc.request');
+Route::post('/evc/decrypt-filter', [VDWebController::class, 'decryptEvcAndFilter'])->name('evc.decrypt.filter');
+Route::post('/evc/decrypt-store', [VDWebController::class, 'decryptAndStoreEvc']);
+
+Route::post('/evc/status', [VDWebController::class, 'getEvcStatus'])->name('evc.status');
+
+Route::post('/evc/status', [VDWebController::class, 'VDgetEvcStatus'])->name('evc.status');
+Route::get('/evc/status/{id}', [VDWebController::class, 'viewEvcStatus'])->name('evc.status.view');
+
+Route::view('/evc/form', 'evc.form');

@@ -30,4 +30,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'vdweb' => [
+    'username' => env('VDWEB_USERNAME'),
+    'password' => env('VDWEB_PASSWORD'),
+    'distributor_id' => env('VDWEB_DISTRIBUTOR_ID'),
+    ],
+
 ];

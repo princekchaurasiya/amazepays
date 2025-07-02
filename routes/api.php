@@ -3,7 +3,6 @@
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\APIs\AuthenticationController;
 use Illuminate\Support\Facades\Route;
-
 // Route::get('signature-validation', [ApiController::class, 'signatureValidation']);
 
 // Route::middleware('auth:sanctum')->group(function () {

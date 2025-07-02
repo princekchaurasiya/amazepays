@@ -321,7 +321,7 @@ public function buildPayloadFromDB($recordId)
         $latestRequest = GetEvcRequest::latest()->first();
         $orderId = $latestRequest->order_id;
         $receiptNo = $latestRequest->receipt_no;
-        
+
         $request->validate([
             'order_id' => 'required|string',
             'request_ref_no' => 'required|string',
@@ -355,7 +355,7 @@ public function buildPayloadFromDB($recordId)
         'order_id' => 'required|string',
         'request_ref_no' => 'required|string',
         ]);
-        $tokenResponse = $vdWebApiService->generateToken();
+        $tokenResponse = $vdWebApiService->getToken();
         $token = $tokenResponse['token'] ?? null;
 
         if (!$token) {

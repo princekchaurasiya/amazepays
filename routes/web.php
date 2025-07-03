@@ -7,6 +7,7 @@ use TCG\Voyager\Facades\Voyager;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\UnlimitPaymentController;
 use App\Http\Services\VDWebApiService;
+use App\Http\Services\AthenaGiftCardService;
 
 use App\Http\Controllers\{
     HomePageController,
@@ -42,6 +43,7 @@ use App\Http\Controllers\{
     VDWebController,
     VDAESdecrptController2,
     StoreBrandsController,
+    AthenaGiftCardController,
 };
 
 /*
@@ -428,3 +430,15 @@ Route::post('/evc/status', [VDWebController::class, 'VDgetEvcStatus'])->name('ev
 Route::get('/evc/status/{id}', [VDWebController::class, 'viewEvcStatus'])->name('evc.status.view');
 
 Route::view('/evc/form', 'evc.form');
+
+Route::get('/giftcards', [AthenaGiftCardController::class, 'index']);
+Route::get('/giftcards/{giftcard_id}/skus', [AthenaGiftCardController::class, 'getSkus']);
+
+Route::view('/purchase-form', 'giftcard-purchase');
+Route::post('/giftcard/purchase', [AthenaGiftCardController::class, 'purchase']);
+
+Route::get('/orders/{orderId}', [AthenaGiftCardController::class, 'getOrder']);
+
+Route::get('/wallet-balance', [AthenaGiftCardController::class, 'getWalletBalance']);
+
+Route::view('/dashboard', 'giftcard-dashboard');

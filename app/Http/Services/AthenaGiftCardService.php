@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Http;
 
 class AthenaGiftCardService
 {
-    protected $baseUrl = 'https://apiv3.lysto.io/api/v1';
+    protected $baseUrl = 'https://stagedistapi.lysto.io/api/v1';
     protected $apiKey;
     protected $partnerId;
 
@@ -52,21 +52,31 @@ class AthenaGiftCardService
     }
 
     public function purchaseGiftCard(array $data)
-    {
-        $url = "{$this->baseUrl}/giftcard/purchase";
+{
+    $url = "{$this->baseUrl}/giftcard/purchase";
 
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->apiKey,
-            'partnerid' => $this->partnerId,
-            'Content-Type' => 'application/json',
-        ])->post($url, $data);
+    // Map payload to expected API body format
+    $body = [
+        'merchant_order_request_id' => $data['merchant_order_request_id'],
+        'giftcard_id' => $data['giftcard_id'], // or use 'giftcard_id' if that's your original key
+        'sku_id'      => $data['sku_id'],
+        'quantity'    => $data['quantity'],
+        'currency'    => $data['currency'],
+    ];
 
-        if ($response->successful()) {
-            return $response->json();
-        }
+    $response = Http::withHeaders([
+        'Authorization' => 'Bearer ' . $this->apiKey,
+        'partnerid'     => $this->partnerId,
+        'Content-Type'  => 'application/json',
+    ])->post($url, $body); // Send body as JSON
 
-        throw new \Exception("Gift card purchase failed: " . $response->body());
+    if ($response->successful()) {
+        return $response->json();
     }
+
+    throw new \Exception("Gift card purchase failed: " . $response->body());
+}
+
 
     public function getOrderDetails($orderId)
     {

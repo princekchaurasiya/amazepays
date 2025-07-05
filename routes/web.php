@@ -432,13 +432,18 @@ Route::get('/evc/status/{id}', [VDWebController::class, 'viewEvcStatus'])->name(
 Route::view('/evc/form', 'evc.form');
 
 Route::get('/giftcards', [AthenaGiftCardController::class, 'index']);
-Route::get('/giftcards/{giftcard_id}/skus', [AthenaGiftCardController::class, 'getSkus']);
+Route::get('/giftcards/{giftcard_id}/skus', [AthenaGiftCardController::class, 'getSkus'])->name('giftcards.show');
 
-Route::view('/purchase-form', 'giftcard-purchase');
-Route::post('/giftcard/purchase', [AthenaGiftCardController::class, 'purchase']);
+//Route::view('/purchase-form', 'giftcard-purchase');
 
 Route::get('/orders/{orderId}', [AthenaGiftCardController::class, 'getOrder']);
 
 Route::get('/wallet-balance', [AthenaGiftCardController::class, 'getWalletBalance']);
 
 Route::view('/dashboard', 'giftcard-dashboard');
+
+Route::get('/giftcards2', [AthenaGiftcardController::class, 'showGiftcards'])->name('giftcards.index');
+//Route::get('/giftcards2/{id}', [AthenaGiftcardController::class, 'showGiftcards2'])->name('giftcards.show');
+
+Route::get('/giftcard/purchase/view', [AthenaGiftCardController::class, 'purchaseView'])->name('giftcard.purchase.view');
+Route::post('/giftcard/purchase', [AthenaGiftCardController::class, 'purchase'])->name('giftcard.purchase');

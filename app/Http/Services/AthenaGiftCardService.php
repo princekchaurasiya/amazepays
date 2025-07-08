@@ -103,7 +103,7 @@ class AthenaGiftCardService
         'tag'        => $responseData['tag'],
     ];
 
-    $secret = config('services.giftcard.secret'); // or hardcode if needed
+    $secret = config('services.giftcard.secret'); 
 
     $giftCodes = $this->decryptGiftCardResponse($encryptedData, $secret);
 
@@ -137,8 +137,19 @@ class AthenaGiftCardService
         'partnerid' => $this->partnerId,
     ])->get($url);
 
+    $responseData = $response->json();
+    $encryptedData = [
+        'ciphertext' => $responseData['encryptedgiftcodes'],
+        'iv'         => $responseData['iv'],
+        'tag'        => $responseData['tag'],
+    ];
+
+    $secret = config('services.giftcard.secret'); 
+
+    $giftCodes = $this->decryptGiftCardResponse($encryptedData, $secret);
+
     if ($response->successful()) {
-        return $response->json();
+        return $giftCodes . $responseData['merchant_order_request_id'];
     }
 
     throw new \Exception("Failed to fetch order: " . $response->body());

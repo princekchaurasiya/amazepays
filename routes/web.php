@@ -439,7 +439,7 @@ Route::get('/giftcards/{giftcard_id}/skus', [AthenaGiftCardController::class, 'g
 
 //Route::view('/purchase-form', 'giftcard-purchase');
 
-Route::get('/orders/{orderId}', [AthenaGiftCardController::class, 'getOrder']);
+Route::get('/orders', [AthenaGiftCardController::class, 'getOrder']);
 
 Route::get('/wallet-balance', [AthenaGiftCardController::class, 'getWalletBalance']);
 

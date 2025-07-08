@@ -89,7 +89,7 @@
     }
 }
 
-        async function checkOrder() {
+    async function checkOrder() {
     const orderId = document.getElementById('orderId').value.trim();
     const merchantId = document.getElementById('merchantId').value.trim();
 

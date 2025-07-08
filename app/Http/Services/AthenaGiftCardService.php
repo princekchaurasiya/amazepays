@@ -3,6 +3,8 @@
 namespace App\Http\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
 
 class AthenaGiftCardService
 {
@@ -51,6 +53,30 @@ class AthenaGiftCardService
     throw new \Exception("Failed to fetch SKUs: " . $response->body());
     }
 
+    protected function decryptGiftCardResponse(array $data, string $secret): string
+{
+    $ciphertext = hex2bin($data['ciphertext']);
+    $iv = hex2bin($data['iv']);
+    $tag = hex2bin($data['tag']);
+
+    $key = hash('sha256', $secret, true); // 32-byte key
+
+    $decrypted = openssl_decrypt(
+        $ciphertext,
+        'aes-256-gcm',
+        $key,
+        OPENSSL_RAW_DATA,
+        $iv,
+        $tag
+    );
+
+    if ($decrypted === false) {
+        throw new \Exception('Failed to decrypt gift codes.');
+    }
+
+    return $decrypted;
+}
+
     public function purchaseGiftCard(array $data)
 {
     $url = "{$this->baseUrl}/giftcard/purchase";
@@ -70,11 +96,30 @@ class AthenaGiftCardService
         'Content-Type'  => 'application/json',
     ])->post($url, $body); // Send body as JSON
 
-    if ($response->successful()) {
+    //dd($response->json());    
+    $responseData = $response->json();
+    $encryptedData = [
+        'ciphertext' => $responseData['encryptedgiftcodes'],
+        'iv'         => $responseData['iv'],
+        'tag'        => $responseData['tag'],
+    ];
+
+    $secret = config('services.giftcard.secret'); // or hardcode if needed
+
+    $giftCodes = $this->decryptGiftCardResponse($encryptedData, $secret);
+
+
+   /* if ($response->successful()) {
         return $response->json();
     }
 
-    throw new \Exception("Gift card purchase failed: " . $response->body());
+    throw new \Exception("Gift card purchase failed: " . $response->body());*/
+   return [
+        'merchant_order_request_id' => $responseData['merchant_order_request_id'],
+        'order_id' => $responseData['order_id'],
+        'status' => $responseData['status'],
+        'decrypted_codes' => $giftCodes,
+    ];
 }
 
 

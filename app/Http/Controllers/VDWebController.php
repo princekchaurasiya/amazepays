@@ -94,6 +94,23 @@ class VDWebController extends Controller
         return response()->json(['error' => 'Failed to fetch brands'], 500);
     }
 
+
+    public function displayBrands()
+    {
+        $token = $this->getToken();
+
+        if (!$token) {
+            return response()->json(['error' => 'Failed to generate token'], 500);
+        }
+
+        $brands = $this->vdWebApiService->displayBrands($token);
+
+        if ($brands) {
+            return response()->json(['brands' => $brands]);
+        }
+        return response()->json(['error' => 'Failed to fetch brands'], 500);
+    }
+
     public function fetchStores(VDWebApiService $service)
     {
         $token = $this->testToken();

@@ -48,7 +48,7 @@
 
     <script>
         async function getGiftCards() {
-            const res = await fetch('/api/giftcards');
+            const res = await fetch('/giftcards');
             const data = await res.json();
 
             let giftcardSelect = document.getElementById('giftcardSelect');
@@ -59,6 +59,7 @@
                 opt.value = card.id;
                 opt.innerText = `${card.name} (${card.brand})`;
                 giftcardSelect.appendChild(opt);
+                console.log('Gift cards:', data.giftcards);
             });
 
             document.getElementById('giftcardResult').innerText = JSON.stringify(data, null, 2);
@@ -68,7 +69,18 @@
             const id = document.getElementById('giftcardSelect').value;
             if (!id) return;
 
-            const res = await fetch(`/api/giftcards/${id}/skus`);
+            try 
+            {
+            const res = await fetch(`/giftcards/${id}/skus`);
+            if (!res.ok) {
+            const errorText = await res.text(); // read once
+            console.error('Error response:', errorText);
+            document.getElementById('skuList').innerHTML = `Error: ${res.status}`;
+            return;
+                }
+            const contentType = res.headers.get("content-type") || "";
+
+        if (res.ok && contentType.includes("application/json")) {
             const data = await res.json();
 
             let output = "<strong>SKUs:</strong><br>";
@@ -78,19 +90,30 @@
 
             document.getElementById('skuList').innerHTML = output;
         }
+        else {
+            // Treat as HTML (probably an error page)
+            const html = await res.text();
+            document.getElementById('skuList').innerHTML = html;
+        }
+    }
+        catch (err) {
+        console.error('Request failed:', err);
+        document.getElementById('skuList').innerHTML = 'An unexpected error occurred.';
+    }
+}
 
         async function checkOrder() {
             const orderId = document.getElementById('orderId').value;
             if (!orderId) return;
 
-            const res = await fetch(`/api/orders/${orderId}`);
+            const res = await fetch(`/orders/${orderId}`);
             const data = await res.json();
 
             document.getElementById('orderResult').innerText = JSON.stringify(data, null, 2);
         }
 
         async function getWalletBalance() {
-            const res = await fetch('/api/wallet-balance');
+            const res = await fetch('/wallet-balance');
             const data = await res.json();
 
             document.getElementById('walletResult').innerText = `Wallet Balance: ₹${data.balance}`;

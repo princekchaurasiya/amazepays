@@ -36,4 +36,8 @@ return [
     'distributor_id' => env('VDWEB_DISTRIBUTOR_ID'),
     ],
 
+    'giftcard' => [
+    'secret' => env('LYSTO_API_KEY'),
+    ],
+
 ];

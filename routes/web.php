@@ -399,6 +399,7 @@ Route::get('/export-payments', [PaymentExportController::class, 'export'])->name
 //Value design APIs
 Route::get('/vdweb/token', [VDWebController::class, 'getToken']);
 Route::get('/vdweb/brands', [VDWebController::class, 'getBrandsFromToken']);
+Route::get('value-design/brands',[VDWebController::class,'displayBrands']);
 Route::get('/fetchbrands', function () {
     return view('fetchbrands'); // or any basic page/form
 });
@@ -430,6 +431,8 @@ Route::post('/evc/status', [VDWebController::class, 'VDgetEvcStatus'])->name('ev
 Route::get('/evc/status/{id}', [VDWebController::class, 'viewEvcStatus'])->name('evc.status.view');
 
 Route::view('/evc/form', 'evc.form');
+
+//Lysto API Integration
 
 Route::get('/giftcards', [AthenaGiftCardController::class, 'index']);
 Route::get('/giftcards/{giftcard_id}/skus', [AthenaGiftCardController::class, 'getSkus'])->name('giftcards.show');

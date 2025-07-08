@@ -245,6 +245,41 @@ class VDWebApiService
     return true;
 }
 
+public function displayBrands(string $token, string $brandCode = '')
+    {
+        try {
+            $response = Http::withHeaders([
+                'token' => $token,
+            ])->post($this->baseUrl . 'api-getbrand/', [
+                'BrandCode' => $brandCode, // leave empty string for all brands
+            ]);
+
+            if ($response->successful()) {
+                $brands = $response->json();
+
+                $encryptedBrandData = $brands['data'] ?? null;
+
+                if ($encryptedBrandData) {
+                    $decryptedBrandData = $this->decryptAES($encryptedBrandData);
+                    
+                } else {
+                    $decryptedBrandData = 'No data field in response.';
+                }
+
+                return view('brands.index', [
+                    'brands' => json_decode($decryptedBrandData, true)
+                    ]);
+                //return $response->json(); // Will return array of brands or brand details
+            }
+
+            Log::error('Get brands failed', ['response' => $response->body()]);
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Get brands exception', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
 public function getEvc(string $token, string $payload)
     {
         $key = env('AES_KEY');

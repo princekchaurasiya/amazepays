@@ -129,15 +129,18 @@ public function showGiftcards2($id)
     }
     }
 
-    public function getOrder(Request $request, $orderId)
-    {
-        try {
-            $order = $this->giftCardService->getOrderDetails($orderId);
-            return response()->json($order);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+    public function getOrder(Request $request)
+{
+    $orderId = $request->query('order_id');
+    $merchantOrderRequestId = $request->query('merchant_order_request_id');
+
+    try {
+        $order = $this->giftCardService->getOrderDetails($orderId, $merchantOrderRequestId);
+        return response()->json($order);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
 
     public function getWalletBalance()
     {

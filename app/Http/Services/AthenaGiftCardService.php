@@ -119,21 +119,32 @@ class AthenaGiftCardService
 }
 
 
-    public function getOrderDetails($orderId)
-    {
-        $url = "{$this->baseUrl}/orders/{$orderId}";
+    public function getOrderDetails($orderId = null, $merchantOrderRequestId = null)
+{
+    $url = "{$this->baseUrl}/api/v1/orders";
 
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->apiKey,
-            'partnerid' => $this->partnerId,
-        ])->get($url);
+    $queryParams = [];
 
-        if ($response->successful()) {
-            return $response->json();
-        }
-
-        throw new \Exception("Failed to fetch order: " . $response->body());
+    if ($orderId !== null) {
+        $queryParams['order_id'] = $orderId;
     }
+
+    if ($merchantOrderRequestId !== null) {
+        $queryParams['merchant_order_request_id'] = $merchantOrderRequestId;
+    }
+
+    $response = Http::withHeaders([
+        'Authorization' => 'Bearer ' . $this->apiKey,
+        'partnerid' => $this->partnerId,
+    ])->get($url, $queryParams);
+
+    if ($response->successful()) {
+        return $response->json();
+    }
+
+    throw new \Exception("Failed to fetch order: " . $response->body());
+}
+
 
     public function getWalletBalance()
     {

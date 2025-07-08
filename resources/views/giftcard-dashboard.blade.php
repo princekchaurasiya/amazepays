@@ -15,27 +15,14 @@
     <!-- Button to fetch available gift cards -->
     <button onclick="getGiftCards()">List Available Gift Cards</button><br>
 
-    <!-- Dropdown to select gift card -->
-    <label>Select Gift Card:</label>
-    <select id="giftcardSelect" onchange="getSkusByGiftCard()">
-        <option value="">-- Select --</option>
-    </select><br>
-
-    <!-- SKUs will be shown here -->
-    <div id="skuList" class="result-box"></div>
-
-    <!-- Navigate to purchase form -->
-    <a href="{{ url('/purchase-form') }}">
-        <button>Purchase a Gift Card</button>
-    </a>
-
     <!-- Check Order Status -->
     <div>
-        <label>Check Order Status:</label><br>
-        <input type="text" id="orderId" placeholder="Enter order_id">
-        <button onclick="checkOrder()">Check Order</button>
-    </div>
-    <div id="orderResult" class="result-box"></div>
+    <label>Check Order Status:</label><br>
+    <input type="text" id="orderId" placeholder="Enter order_id (optional)">
+    <input type="text" id="merchantId" placeholder="Enter merchant_order_request_id (optional)">
+    <button onclick="checkOrder()">Check Order</button>
+</div>
+<div id="orderResult" class="result-box"></div>
 
     <!-- Wallet Balance -->
     <div>
@@ -103,14 +90,33 @@
 }
 
         async function checkOrder() {
-            const orderId = document.getElementById('orderId').value;
-            if (!orderId) return;
+    const orderId = document.getElementById('orderId').value.trim();
+    const merchantId = document.getElementById('merchantId').value.trim();
 
-            const res = await fetch(`/orders/${orderId}`);
-            const data = await res.json();
+    if (!orderId && !merchantId) {
+        document.getElementById('orderResult').innerText = 'Please enter at least one ID.';
+        return;
+    }
 
+    const params = new URLSearchParams();
+    if (orderId) params.append('order_id', orderId);
+    if (merchantId) params.append('merchant_order_request_id', merchantId);
+
+    try {
+        const res = await fetch(`/orders?${params.toString()}`);
+        const data = await res.json();
+
+        if (res.ok) {
             document.getElementById('orderResult').innerText = JSON.stringify(data, null, 2);
+        } else {
+            document.getElementById('orderResult').innerText = `Error: ${data.error || 'Something went wrong'}`;
         }
+    } catch (err) {
+        document.getElementById('orderResult').innerText = 'Failed to fetch order status.';
+        console.error(err);
+    }
+}
+
 
         async function getWalletBalance() {
             const res = await fetch('/wallet-balance');

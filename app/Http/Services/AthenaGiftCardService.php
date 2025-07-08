@@ -121,22 +121,22 @@ class AthenaGiftCardService
 
     public function getOrderDetails($orderId = null, $merchantOrderRequestId = null)
 {
-    $url = "{$this->baseUrl}/api/v1/orders";
-
     $queryParams = [];
 
-    if ($orderId !== null) {
+    if ($orderId) {
         $queryParams['order_id'] = $orderId;
     }
 
-    if ($merchantOrderRequestId !== null) {
+    if ($merchantOrderRequestId) {
         $queryParams['merchant_order_request_id'] = $merchantOrderRequestId;
     }
+
+    $url = $this->baseUrl . '/api/v1/orders?' . http_build_query($queryParams);
 
     $response = Http::withHeaders([
         'Authorization' => 'Bearer ' . $this->apiKey,
         'partnerid' => $this->partnerId,
-    ])->get($url, $queryParams);
+    ])->get($url);
 
     if ($response->successful()) {
         return $response->json();

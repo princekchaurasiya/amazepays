@@ -286,6 +286,7 @@ public function getEvc(string $token, string $payload)
         $iv = env('AES_IV');
 
        $encryptedPayload = \App\Helpers\AesHelper::encrypt($payload, $key, $iv);
+       dd($encryptedPayload);
         $response = Http::withHeaders([
             'token' => $token,
              'Content-Type' => 'application/json', // or text/plain if required by API

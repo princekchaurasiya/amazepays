@@ -107,7 +107,7 @@ class AthenaGiftCardService
     $secret = config('services.giftcard.secret'); // or hardcode if needed
 
     $giftCodes = $this->decryptGiftCardResponse($encryptedData, $secret);
-
+    dd($giftCodes);
 
    /* if ($response->successful()) {
         return $response->json();

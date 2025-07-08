@@ -133,7 +133,7 @@ public function showGiftcards2($id)
 {
     $orderId = $request->query('order_id');
     $merchantOrderRequestId = $request->query('merchant_order_request_id');
-
+    dd($orderId,$merchantOrderRequestId);
     try {
         $order = $this->giftCardService->getOrderDetails($orderId, $merchantOrderRequestId);
         dd($order);

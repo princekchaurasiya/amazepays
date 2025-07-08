@@ -103,7 +103,7 @@ public function showGiftcards2($id)
             return back()->withErrors(['Your wallet balance is insufficient to complete the purchase.']);
         }
     } catch (\Exception $e) {
-        return back()->withErrors(['Failed to retrieve wallet balance: ' . $e->getMessage()]);
+        return back()->withErrors(['Failed to retrieve wallet balance: ']);
     }
 
     try {
@@ -120,12 +120,13 @@ public function showGiftcards2($id)
             'gift_code' => $response['gift_code'],
             'order_id'  => $response['order_id'],
         ]);
-        // Encrypt the response before returning it to the frontend
-        /*$encryptedResponse = encrypt($response);
-        return response()->json(['data' => $encryptedResponse]);*/
 
     } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
+        return response()->json([
+        'error' => 'PurchaseError',
+        'message' => 'Gift card purchase failed',
+        'description' => $e->getMessage(),
+        ], 500);
     }
     }
 

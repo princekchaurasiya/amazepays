@@ -149,7 +149,7 @@ class AthenaGiftCardService
     $giftCodes = $this->decryptGiftCardResponse($encryptedData, $secret);
 
     if ($response->successful()) {
-        return $giftCodes . " " . $responseData['merchant_order_request_id'];
+        return "Gift Code: " . $giftCodes . " " . "Merchant Order Id: " . $responseData['merchant_order_request_id'];
     }
 
     throw new \Exception("Failed to fetch order: " . $response->body());

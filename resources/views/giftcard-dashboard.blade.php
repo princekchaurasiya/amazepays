@@ -38,18 +38,7 @@
             const res = await fetch('/giftcards');
             const data = await res.json();
 
-            let giftcardSelect = document.getElementById('giftcardSelect');
-            giftcardSelect.innerHTML = '<option value="">-- Select --</option>';
-
-            data.giftcards?.forEach(card => {
-                let opt = document.createElement('option');
-                opt.value = card.id;
-                opt.innerText = `${card.name} (${card.brand})`;
-                giftcardSelect.appendChild(opt);
-                console.log('Gift cards:', data.giftcards);
-            });
-
-            document.getElementById('giftcardResult').innerText = JSON.stringify(data, null, 2);
+            document.getElementById('giftcardResult').innerText = JSON.stringify(data);
         }
 
         async function getSkusByGiftCard() {

@@ -285,22 +285,13 @@ public function getEvc(string $token, string $payload)
         $key = env('AES_KEY');
         $iv = env('AES_IV');
 
-       /*$encryptedPayload = \App\Helpers\AesHelper::encrypt($payload, $key, $iv);
-       $jsonPayload = json_encode($payload);
-       dd($jsonPayload);
+       $encryptedPayload = \App\Helpers\AesHelper::encrypt($payload, $key, $iv);
         $response = Http::withHeaders([
             'token' => $token,
              'Content-Type' => 'application/json', // or text/plain if required by API
-])->withBody($payload, 'application/json')
+])->withBody($encryptedPayload, 'application/json')
        // ->post($this->baseUrl . 'getevc/', $encryptedPayload);
-       ->post('http://cards.vdwebapi.com/distributor/getevc');*/
-        $payload="bgtjBywIFw/PSlbjRtg9bsAuqEkdfzQIQIire2c8axrlgrjBFS/oRY+9v5Np6yeHu5JQo71NUMEqYXM0jbfgadfZyt6sJWrM40EnvwnJwhaQD1eifDTY+ekswcoCW70dHjtFxzEQVeiVhgENRgEOenihzC6TE6pF1T7hjeOzhF/tJDP8kGNzHHNyKKof5dtKmmkELKTPr4ugRuj78q1osZQh559nxlI2D4nVL/hnhm7DuGv5s4qy26SUlP1IwWc/9epIU3e3HBfQP1lYYK1b4auueO9L2o3nRsJTZxmAEtNeMP8JadyL+7Np12XQ5T59qFfom8RrC9b87iHkvif1AXdnDODe25qh/r22Zg59z105FeJB/wmwywVHbWna9SjjmTZ5vCUvHs2IYoKUTaztd7bbyx+yxAjbT+AGxtchx/He/VjX+Do5mzx2r+rbjKK8bmH4/16gsD3BNBtJWKfAIc3r49xp4k3uuorCvTF52P562Y32LXZw+cwXU2+IWqjMGRB/BdUtsicKOHZ86c0Ky4DzDID7xtnFZ1wYDhpMZ0c=";
-       $response = Http::withHeaders([
-    'token' => $token,
-    'Content-Type' => 'text/plain',
-])->withBody($payload, 'text/plain')
-  ->post('http://cards.vdwebapi.com/distributor/getevc');
-        
+       ->post('http://cards.vdwebapi.com/distributor/getevc');  
        dd($response);
         return $response->successful() ? $response->json() : null;
     }

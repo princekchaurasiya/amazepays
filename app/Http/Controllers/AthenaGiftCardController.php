@@ -136,6 +136,7 @@ public function showGiftcards2($id)
 
     try {
         $order = $this->giftCardService->getOrderDetails($orderId, $merchantOrderRequestId);
+        dd($order);
         return response()->json($order);
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);

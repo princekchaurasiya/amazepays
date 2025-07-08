@@ -131,8 +131,7 @@ class AthenaGiftCardService
         $queryParams['merchant_order_request_id'] = $merchantOrderRequestId;
     }
 
-    $url = $this->baseUrl . '/api/v1/orders?' . http_build_query($queryParams);
-
+    $url = $this->baseUrl . '/orders?' . http_build_query($queryParams);
     $response = Http::withHeaders([
         'Authorization' => 'Bearer ' . $this->apiKey,
         'partnerid' => $this->partnerId,

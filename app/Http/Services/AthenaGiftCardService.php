@@ -107,11 +107,15 @@ class AthenaGiftCardService
 
     $giftCodes = $this->decryptGiftCardResponse($encryptedData, $secret);
 
-   if ($response->successful()) {
+   /*if ($response->successful()) {
         return ("Please find your gift code: " . $giftCodes . " Your order id: " . $responseData['order_id'] );
     }
 
-    throw new \Exception("Gift card purchase failed: " . $response->body());
+    throw new \Exception("Gift card purchase failed: " . $response->body());*/
+    return [
+        'gift_code' => $giftCodes,
+        'order_id'  => $responseData['order_id'],
+    ];
 }
 
 

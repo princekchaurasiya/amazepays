@@ -117,8 +117,8 @@ public function showGiftcards2($id)
 
         $response = $this->giftCardService->purchaseGiftCard($payload);
         return view('giftcard.success', [
-            'gift_code' => $result['gift_code'],
-            'order_id'  => $result['order_id'],
+            'gift_code' => $response['gift_code'],
+            'order_id'  => $response['order_id'],
         ]);
         // Encrypt the response before returning it to the frontend
         /*$encryptedResponse = encrypt($response);

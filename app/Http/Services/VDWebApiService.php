@@ -286,15 +286,23 @@ public function getEvc(string $token, string $payload)
         $iv = env('AES_IV');
 
        $encryptedPayload = \App\Helpers\AesHelper::encrypt($payload, $key, $iv);
-       dd($encryptedPayload);
+        $payload = [
+                    'payload' => $encryptedPayload, // encryptedPayload is the full string you showed
+                    ];
+
         $response = Http::withHeaders([
             'token' => $token,
-             'Content-Type' => 'application/json', // or text/plain if required by API
-])->withBody($encryptedPayload, 'application/json')
-       // ->post($this->baseUrl . 'getevc/', $encryptedPayload);
-       ->post('http://cards.vdwebapi.com/distributor/getevc');  
-       dd($response);
-        return $response->successful() ? $response->json() : null;
+        ])->post('http://cards.vdwebapi.com/distributor/getevc', $payload);
+
+        // Debug response
+        if ($response->failed()) {
+            Log::error('API Error', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+                }
+
+        return $response->json();
     }
 
 public function getEvcStatus(string $token, string $orderId, string $requestRefNo)

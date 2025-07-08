@@ -95,8 +95,7 @@ class AthenaGiftCardService
         'partnerid'     => $this->partnerId,
         'Content-Type'  => 'application/json',
     ])->post($url, $body); // Send body as JSON
-
-    //dd($response->json());    
+   
     $responseData = $response->json();
     $encryptedData = [
         'ciphertext' => $responseData['encryptedgiftcodes'],
@@ -107,19 +106,12 @@ class AthenaGiftCardService
     $secret = config('services.giftcard.secret'); // or hardcode if needed
 
     $giftCodes = $this->decryptGiftCardResponse($encryptedData, $secret);
-    dd($giftCodes);
 
-   /* if ($response->successful()) {
-        return $response->json();
+   if ($response->successful()) {
+        return ("Please find your gift code: " . $giftCodes . " Your order id: " . $responseData['order_id'] );
     }
 
-    throw new \Exception("Gift card purchase failed: " . $response->body());*/
-   return [
-        'merchant_order_request_id' => $responseData['merchant_order_request_id'],
-        'order_id' => $responseData['order_id'],
-        'status' => $responseData['status'],
-        'decrypted_codes' => $giftCodes,
-    ];
+    throw new \Exception("Gift card purchase failed: " . $response->body());
 }
 
 

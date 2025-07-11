@@ -420,6 +420,10 @@ Route::post('/stores/sync', [StoreController::class, 'syncAndShow'])->name('stor
 Route::get('/stores/filter', [StoreController::class, 'filterStores'])->name('stores.filter');
 Route::get('/stores/export', [StoreController::class, 'exportStores'])->name('stores.export');
 
+Route::get('/vddashboard', function () {
+    return view('value_design.dashboard');
+});
+
 Route::post('/evc/store-request', [VDWebController::class, 'storeGetEvcRequest']);
 Route::get('/evc/request', [VDWebController::class, 'requestEvc'])->name('evc.request');
 Route::post('/evc/decrypt-filter', [VDWebController::class, 'decryptEvcAndFilter'])->name('evc.decrypt.filter');

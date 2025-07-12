@@ -18,12 +18,5 @@
     </pre>
     </div>
 
-    @foreach($evcData as $key => $value)
-        <li>
-            <span class="font-medium capitalize">{{ ucwords(str_replace('_', ' ', $key)) }}:</span>
-            <span>{{ $value }}</span>
-        </li>
-    @endforeach
-
 </div>
 @endsection

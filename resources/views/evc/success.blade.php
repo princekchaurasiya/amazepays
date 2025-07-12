@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+<br/>
 <div class="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-xl mt-8">
 
     <h2 class="text-2xl font-bold mb-4 text-green-600"> EVC Request Approved</h2>
@@ -16,6 +17,13 @@
         {{ $evcData }}
     </pre>
     </div>
+
+    @foreach($evcData as $key => $value)
+        <li>
+            <span class="font-medium capitalize">{{ ucwords(str_replace('_', ' ', $key)) }}:</span>
+            <span>{{ $value }}</span>
+        </li>
+    @endforeach
 
 </div>
 @endsection

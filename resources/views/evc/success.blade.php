@@ -12,14 +12,9 @@
 
     <h3 class="text-xl font-semibold mt-6 mb-2">🔐 Decrypted EVC Data:</h3>
     <div class="bg-gray-100 p-4 rounded">
-        <ul class="space-y-1">
-            @foreach($evcData as $key => $value)
-                <li>
-                    <span class="font-medium capitalize">{{ ucwords(str_replace('_', ' ', $key)) }}:</span>
-                    <span>{{ $value }}</span>
-                </li>
-            @endforeach
-        </ul>
+       <pre class="whitespace-pre-wrap break-words text-sm text-gray-800">
+        {{ $evcData }}
+    </pre>
     </div>
 
 </div>

@@ -295,7 +295,7 @@ public function getEvc(string $token, string $payload)
             'token' => $token,
              'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-        ])->throw(false)->post('http://cards.vdwebapi.com/distributor/getevc', $payload);
+        ])->throw()->post('http://cards.vdwebapi.com/distributor/getevc', $payload);
 
         // Debug response
         if ($response->failed()) {

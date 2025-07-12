@@ -229,14 +229,16 @@ public function buildPayloadFromDB($recordId)
 
         // Step 3: Call API
         $response = $vdWebApiService->getEvc($token, $jsonPayload);
-        dd($response);
         if (!$response) {
             return response()->json(['error' => 'Failed to get EVC']);
         }
 
-        return response()->json([
-            'request_payload' => $payload,
-            'api_response' => $response,
+        $decryptedData = decryptAES($response['data']);
+
+        return view('evc.success', [
+        'orderId' => $response['order_id'],
+        'requestRefNo' => $response['request_ref_no'],
+        'evcData' => $decryptedData,
         ]);
     }
 

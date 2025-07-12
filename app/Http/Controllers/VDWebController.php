@@ -233,7 +233,8 @@ public function buildPayloadFromDB($recordId)
             return response()->json(['error' => 'Failed to get EVC']);
         }
 
-        $decryptedData = decryptAES($response['data']);
+        //This is tp decrypt Data
+        $decryptedData = $this->decryptAES($response['data']);
 
         return view('evc.success', [
         'orderId' => $response['order_id'],

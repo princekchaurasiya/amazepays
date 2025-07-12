@@ -287,7 +287,7 @@ public function getEvc(string $token, string $payload)
 
        //$encryptedPayload = \App\Helpers\AesHelper::encrypt($payload);
        $rawEncrypted = openssl_encrypt(
-        json_encode($payload),
+        $payload,
         'AES-256-CBC',
         $key,
         OPENSSL_RAW_DATA,

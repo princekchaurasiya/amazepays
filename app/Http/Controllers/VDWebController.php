@@ -223,11 +223,11 @@ public function buildPayloadFromDB($recordId)
         // Step 2: Create Payload with Unique IDs
         $payload = $this->buildPayloadFromDB(1);
         $jsonPayload = json_encode($payload);
-        $encryptedPayload = AesHelper::encrypt($jsonPayload);
+        //$encryptedPayload = AesHelper::encrypt($jsonPayload);
         //dd($encryptedPayload);
 
         // Step 3: Call API
-        $response = $vdWebApiService->getEvc($token, $encryptedPayload);
+        $response = $vdWebApiService->getEvc($token, $jsonPayload);
         dd($response);
         if (!$response) {
             return response()->json(['error' => 'Failed to get EVC']);

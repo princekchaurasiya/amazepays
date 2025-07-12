@@ -222,6 +222,7 @@ public function buildPayloadFromDB($recordId)
 
         // Step 2: Create Payload with Unique IDs
         $payload = $this->buildPayloadFromDB(1);
+        $payload['amount'] = (float) $payload['amount'];
         $jsonPayload = json_encode($payload);
         //$encryptedPayload = AesHelper::encrypt($jsonPayload);
         //dd($encryptedPayload);

@@ -380,7 +380,7 @@ public function buildPayloadFromDB($recordId)
     public function showBrands()
     {
         $brands = $this->getBrandsFromToken();
-        $json = json_decode($brands,true);
+        dd($brands);
         return view('vdbrands.brands', ['brands' => $json['brands']]);
     }
 }

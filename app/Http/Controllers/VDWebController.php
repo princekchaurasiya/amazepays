@@ -376,4 +376,11 @@ public function buildPayloadFromDB($recordId)
         return redirect()->route('evc.status.view', $record->id);*/
     }
 
+
+    public function showBrands()
+    {
+        $brands = $this->getBrandsFromToken();
+        $json = json_decode($brands,true);
+        return view('vdbrands.brands', ['brands' => $json['brands']]);
+    }
 }

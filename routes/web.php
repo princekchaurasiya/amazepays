@@ -424,6 +424,7 @@ Route::get('/vddashboard', function () {
     return view('value_design.dashboard');
 });
 
+Route::get('/vdbrands', [VDWebController::class, 'showBrands'])->name('brands.index');
 Route::post('/evc/store-request', [VDWebController::class, 'storeGetEvcRequest']);
 Route::get('/evc/request', [VDWebController::class, 'requestEvc'])->name('evc.request');
 Route::post('/evc/decrypt-store', [VDWebController::class, 'decryptAndStoreEvc']);

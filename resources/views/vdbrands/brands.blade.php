@@ -40,7 +40,7 @@
             <li class="list-group-item">{{ $instruction }}</li>
         @endforeach
     </ul>
-
+<img src="{{ $step['image'] }}" class="card-img-top" alt="Redeem Step">
     <h4>How to Redeem</h4>
     <div class="row">
         @foreach($redeemSteps as $step)

@@ -16,6 +16,8 @@
             <a href="{{ url('/stores/filter') }}" class="btn btn-info btn-lg text-white">3. Filter Stores</a>
             <a href="{{ url('/evc/request') }}" class="btn btn-info btn-lg text-white">4. Get EVC Request</a>
             <a href="{{ url('/evc/form') }}" class="btn btn-info btn-lg text-white">5. Get EVC Status</a>
+            <a href="{{ url('/vdwalletbalance') }}" class="btn btn-info btn-lg text-white">6. Get Wallet Balance</a>
+            
         </div>
     </div>
 </body>

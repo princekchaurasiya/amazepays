@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="container">
+    <br/>
     <h2>Wallet Balance</h2>
 
         <p><strong>Client Name:</strong> {{ $data['walletdetails']['clientName'] }}</p>

@@ -28,7 +28,7 @@
             </div>
         </div>
     </div>
-
+<p> <a href="{{ url('/stores/filter') }}" class="btn btn-info btn-lg text-white">See Stores</a>
     <h4>Terms & Conditions</h4>
     <div class="mb-4">
         <p>{!! nl2br(strip_tags($brand['TnC'])) !!}</p>

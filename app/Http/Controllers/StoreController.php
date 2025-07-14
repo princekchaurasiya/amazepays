@@ -38,7 +38,7 @@ class StoreController extends Controller
             return back()->with('error', 'Unable to get access token');
         }
 
-        $stores = $service->getStores($token, $request->brand_code);
+        $stores = $service->getStores($token, $brandcodes);
 
         if (!$stores) {
             return back()->with('error', 'No stores found or failed to fetch stores');
@@ -46,7 +46,7 @@ class StoreController extends Controller
 
         return view('stores.list', [
             'stores' => $stores,
-            'brandCode' => $request->brand_code
+            'brandCode' => $brandcodes,
         ]);
     }
 

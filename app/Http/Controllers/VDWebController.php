@@ -356,8 +356,9 @@ public function buildPayloadFromDB($recordId)
             return back()->with('error', 'Failed to fetch EVC status.');
         }
 
+        dd($status);
         // Save to DB
-        $record = EvcStatus::updateOrCreate(
+       /* $record = EvcStatus::updateOrCreate(
             [
                 'order_id' => $request->order_id,
                 'request_ref_no' => $request->request_ref_no,
@@ -368,7 +369,7 @@ public function buildPayloadFromDB($recordId)
             ]
         );
 
-        return redirect()->route('evc.status.view', $record->id);
+        return redirect()->route('evc.status.view', $record->id);*/
     }
 
     public function viewEvcStatus($id)

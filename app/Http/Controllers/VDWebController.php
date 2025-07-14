@@ -391,8 +391,14 @@ public function buildPayloadFromDB($recordId)
     {
         $token = $this->getToken(); // assuming getToken() exists in the same controller
 
+        if (!$token) {
+        return "Token is null or invalid";
+        }
+
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $token,
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json'
         ])->post('http://cards.vdwebapi.com/distributor/getwalletbalance/', [
             'distributor_id' => 'VDIDAmazepay'
         ]);

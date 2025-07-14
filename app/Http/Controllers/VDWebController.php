@@ -243,44 +243,6 @@ public function buildPayloadFromDB($recordId)
         ]);
     }
 
-    public function decryptEvcAndFilter(Request $request)
-    {
-        $request->validate([
-            'encrypted_payload' => 'required|string',
-            'brand_code' => 'required|string',
-        ]);
-
-        $encryptedPayload = $request->input('encrypted_payload');
-        $selectedBrandCode = $request->input('brand_code');
-
-        $key = env('AES_KEY');
-        $iv = env('AES_IV');
-
-        $decryptedJson = AesHelper::decryptPayload($encryptedPayload, $key, $iv);
-
-        if (!$decryptedJson) {
-            return response()->json(['error' => 'Failed to decrypt EVC payload'], 400);
-        }
-
-        $data = json_decode($decryptedJson, true);
-
-        if (!is_array($data)) {
-            return response()->json(['error' => 'Decrypted payload is not valid JSON'], 422);
-        }
-
-        // Match brand_code with SkuCode (case-insensitive if needed)
-        $filtered = collect($data)->filter(function ($row) use ($selectedBrandCode) {
-            return isset($row['SkuCode']) && strtoupper($row['SkuCode']) === strtoupper($selectedBrandCode);
-        })->values();
-
-        if ($filtered->isEmpty()) {
-            return response()->json(['message' => 'No matching SKU code found'], 404);
-        }
-
-        return response()->json([
-            'matched_data' => $filtered,
-        ]);
-    }
     public function storeEvcData(array $data)
     {
         if (!isset($data['brand_details'])) {
@@ -377,11 +339,11 @@ public function buildPayloadFromDB($recordId)
         'request_ref_no' => 'required|string',
         ]);
         $tokenResponse = $vdWebApiService->getToken();
-        $token = $tokenResponse['token'] ?? null;
+        /*$token = $tokenResponse['token'] ?? null;
 
         if (!$token) {
             return back()->with('error', 'Token generation failed.');
-        }
+        }*/
 
         $status = $vdWebApiService->getEvcStatus(
             $token,

@@ -426,7 +426,6 @@ Route::get('/vddashboard', function () {
 
 Route::post('/evc/store-request', [VDWebController::class, 'storeGetEvcRequest']);
 Route::get('/evc/request', [VDWebController::class, 'requestEvc'])->name('evc.request');
-Route::post('/evc/decrypt-filter', [VDWebController::class, 'decryptEvcAndFilter'])->name('evc.decrypt.filter');
 Route::post('/evc/decrypt-store', [VDWebController::class, 'decryptAndStoreEvc']);
 
 Route::post('/evc/status', [VDWebController::class, 'getEvcStatus'])->name('evc.status');

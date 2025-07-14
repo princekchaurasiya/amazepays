@@ -15,7 +15,7 @@
         </tr>
         <tr>
             <th>Status</th>
-            <td>{{ $status }}</td>
+            <td>{{ $status['orderStatus']}}</td>
         </tr>
     </table>
 </div>

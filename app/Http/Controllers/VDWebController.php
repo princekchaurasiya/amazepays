@@ -389,22 +389,24 @@ public function buildPayloadFromDB($recordId)
 
     public function getWalletBalance()
     {
-        $token = $this->getToken(); // assuming getToken() exists in the same controller
-
-        if (!$token) {
-        return "Token is null or invalid";
-        }
+        $token = $this->getToken(); // Returns string like '1D2IZ6A7V2MQ...'
 
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $token,
+            'token' => $token, 
+            'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-            'Content-Type' => 'application/json'
         ])->post('http://cards.vdwebapi.com/distributor/getwalletbalance/', [
-            'distributor_id' => "VDIDAmazepay"
+            'distributor_id' => 'VDIDAmazepay',
         ]);
 
-        dd($response);
+        // Debug if it fails
+        if (!$response->successful()) {
+            dd('Request failed:', $response->status(), $response->body());
+        }
+
         $data = $response->json();
+
         return view('wallet.balance', compact('data'));
     }
+
 }

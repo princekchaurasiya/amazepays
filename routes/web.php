@@ -435,7 +435,7 @@ Route::post('/evc/status', [VDWebController::class, 'VDgetEvcStatus'])->name('ev
 
 Route::view('/evc/form', 'evc.form');
 
-Route::get('/wallet-balance', [VDWebController::class, 'getWalletBalance']);
+Route::get('/vdwalletbalance', [VDWebController::class, 'getWalletBalance']);
 
 //Lysto API Integration
 

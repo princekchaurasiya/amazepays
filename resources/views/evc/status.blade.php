@@ -7,15 +7,15 @@
     <table class="table table-bordered">
         <tr>
             <th>Order ID</th>
-            <td>{{ $status->order_id }}</td>
+            <td>{{ $order_id }}</td>
         </tr>
         <tr>
             <th>Request Ref No</th>
-            <td>{{ $status->request_ref_no }}</td>
+            <td>{{ $request_ref_no }}</td>
         </tr>
         <tr>
             <th>Status</th>
-            <td>{{ $status->status }}</td>
+            <td>{{ $status }}</td>
         </tr>
     </table>
 </div>

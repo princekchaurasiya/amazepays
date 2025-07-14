@@ -380,7 +380,7 @@ public function buildPayloadFromDB($recordId)
     public function showBrands()
     {
         $brands = $this->getBrandsFromToken();
-        $data = $response->json(); // Returns an associative array
+        $data = $brands->json(); // Returns an associative array
 
         return view('vdbrands.brands', [
         'brands' => $data['brands'] ?? []

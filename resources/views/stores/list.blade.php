@@ -11,8 +11,6 @@
         <label>Search Store</label>
         <input type="text" name="search" class="form-control" value="{{ $filters['search'] ?? '' }}" placeholder="e.g. Amazon">
         </div>
-        <input type="hidden" name="brand_code" value="{{ $filters['brand_code'] ?? '' }}">
-        <form method="GET" action="{{ route('stores.filter') }}" class="mb-4">
 
     <div class="row">
     <div class="col-md-3">

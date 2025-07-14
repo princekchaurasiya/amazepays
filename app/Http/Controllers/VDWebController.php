@@ -398,7 +398,7 @@ public function buildPayloadFromDB($recordId)
         ]);
 
         $data = $response->json();
-
+        dd($data);
         return view('wallet.balance', compact('data'));
     }
 }

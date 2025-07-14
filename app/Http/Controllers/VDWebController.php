@@ -356,7 +356,7 @@ public function buildPayloadFromDB($recordId)
             return back()->with('error', 'Failed to fetch EVC status.');
         }
 
-        return view('status', [
+        return view('evc.status', [
         'status' => $status,
         'order_id' => $request->order_id,
         'request_ref_no' => $request->request_ref_no,

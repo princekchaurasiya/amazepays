@@ -403,8 +403,8 @@ public function buildPayloadFromDB($recordId)
             'distributor_id' => 'VDIDAmazepay'
         ]);
 
+        dd($response);
         $data = $response->json();
-        dd($data);
         return view('wallet.balance', compact('data'));
     }
 }

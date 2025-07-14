@@ -400,7 +400,7 @@ public function buildPayloadFromDB($recordId)
             'Accept' => 'application/json',
             'Content-Type' => 'application/json'
         ])->post('http://cards.vdwebapi.com/distributor/getwalletbalance/', [
-            'distributor_id' => 'VDIDAmazepay'
+            'distributor_id' => "VDIDAmazepay"
         ]);
 
         dd($response);

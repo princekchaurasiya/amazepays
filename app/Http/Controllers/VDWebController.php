@@ -386,4 +386,19 @@ public function buildPayloadFromDB($recordId)
         'brands' => $data['brands'] ?? []
         ]);
     }
+
+    public function getWalletBalance()
+    {
+        $token = $this->getToken(); // assuming getToken() exists in the same controller
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->post('http://cards.vdwebapi.com/distributor/getwalletbalance/', [
+            'distributor_id' => 'VDIDAmazepay'
+        ]);
+
+        $data = $response->json();
+
+        return view('wallet.balance', compact('data'));
+    }
 }

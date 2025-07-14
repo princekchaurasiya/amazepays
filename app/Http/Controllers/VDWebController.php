@@ -346,7 +346,7 @@ public function buildPayloadFromDB($recordId)
         }*/
 
         $status = $vdWebApiService->getEvcStatus(
-            $token,
+            $tokenResponse,
             $request->order_id,
             $request->request_ref_no
         );

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+<br/>
 <div class="container">
     <h2>EVC Status Details</h2>
 
@@ -15,7 +16,7 @@
         </tr>
         <tr>
             <th>Status</th>
-            <td>{{ $status['orderStatus']}}</td>
+            <td>{{ $status['orderStatus'] }}</td>
         </tr>
     </table>
 </div>

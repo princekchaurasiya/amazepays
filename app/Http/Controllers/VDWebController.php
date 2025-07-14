@@ -326,6 +326,7 @@ public function buildPayloadFromDB($recordId)
         if (!$status) {
             return response()->json(['error' => 'Failed to fetch EVC status'], 500);
         }
+        dd($status);
 
         return response()->json([
             'status_response' => $status

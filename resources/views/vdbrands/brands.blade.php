@@ -19,7 +19,12 @@
                     <p class="text-muted">{{ $brand['Category'] }}</p>
                     <p><strong>Discount:</strong> {{ $brand['Discount'] }}%</p>
                     <p><strong>Price Range:</strong> ₹{{ $brand['minPrice'] }} - ₹{{ $brand['maxPrice'] }}</p>
-                    <p><strong>Available Denominations:</strong> {{ $brand['DenominationList'] }}</p>
+                    <p><strong>Available Denominations:</strong> {{ implode(', ', $brand['DenominationList']) }}</p>
+                    @foreach($brand['DenominationList'] as $denomination)
+                    <button type="button" class="btn btn-outline-primary m-1">
+                        ₹{{ $denomination }}
+                    </button>
+                    @endforeach
                     <p><strong>Stock Available:</strong> {{ $brand['StockAvailable'] ? 'Yes' : 'No' }}</p>
 
                     <h5 class="mt-4">Description</h5>

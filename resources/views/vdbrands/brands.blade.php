@@ -44,8 +44,6 @@
     <p>{{ $brand['ImportantInstruction'] }}</p>
 @endif
 
-<p>test</p>
-
     <h4>How to Redeem</h4>
     <div class="row">
         @foreach($redeemSteps as $step)

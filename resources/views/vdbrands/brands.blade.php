@@ -34,12 +34,22 @@
         <p>{!! nl2br(strip_tags($brand['TnC'])) !!}</p>
     </div>
 
-    <h4>Important Instructions</h4>
+    <@php
+    $instructions = is_string($brand['ImportantInstruction']) 
+        ? json_decode($brand['ImportantInstruction'], true) 
+        : $brand['ImportantInstruction'];
+@endphp
+
+@if(is_array($instructions))
     <ul class="list-group mb-4">
-        @foreach($brand['ImportantInstruction'] as $instruction)
+        @foreach($instructions as $instruction)
             <li class="list-group-item">{{ $instruction }}</li>
         @endforeach
     </ul>
+@else
+    <p>{{ $brand['ImportantInstruction'] }}</p>
+@endif
+
     <h4>How to Redeem</h4>
     <div class="row">
         @foreach($redeemSteps as $step)

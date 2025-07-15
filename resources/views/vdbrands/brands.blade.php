@@ -85,7 +85,7 @@
                                         <p><strong>Price Range:</strong> ₹{{ $brand['minPrice'] }} - ₹{{ $brand['maxPrice'] }}</p>
 
                                         <p><strong>Available Denominations:</strong></p>
-                                        <!--@foreach($brand['DenominationList'] as $denomination)
+                                        @foreach($brand['DenominationList'] as $denomination)
                                             <button type="button" class="btn btn-outline-primary m-1">
                                                 ₹{{ $denomination }}
                                             </button>
@@ -131,7 +131,7 @@
                                     </div>
                                     <div class="row justify-content-center mt-4 gifting-details" style="display: block;">
                                         <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
-                                        <div class="row"> <!-- Added .row to group the .col-lg-* elements 
+                                        <div class="row">  Added .row to group the .col-lg-* elements 
                                             <div class="col-12 col-lg-3 receiver-name">
 
                                                 <input type="text" class="form-control mb-3 credentails-field"

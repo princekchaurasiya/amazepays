@@ -54,7 +54,7 @@
         @endforeach
     </div>
 </div>
-<div class="justify-content-center row">
+<!--<div class="justify-content-center row">
                         <div class="col-12 col-xl-10">
                             <h6 class="text-ornage fw-600 font-xs mt-4">E-Gift Card</h6>
                         </div>
@@ -83,7 +83,7 @@
                                             <button type="button" class="btn btn-outline-primary m-1">
                                                 ₹{{ $denomination }}
                                             </button>
-                                        @endforeach-->
+                                        @endforeach
                                     </div>
                                 <div class="col-lg-4">
                                             <div class="row">
@@ -125,7 +125,7 @@
                                     </div>
                                     <div class="row justify-content-center mt-4 gifting-details" style="display: block;">
                                         <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
-                                        <div class="row"> <!-- Added .row to group the .col-lg-* elements -->
+                                        <div class="row"> <!-- Added .row to group the .col-lg-* elements 
                                             <div class="col-12 col-lg-3 receiver-name">
 
                                                 <input type="text" class="form-control mb-3 credentails-field"
@@ -184,6 +184,4 @@
                                                         </div>
                                                     </div>
                                                 @endforeach -->
-                                            </div>
-                                        </div>
 @endsection

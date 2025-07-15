@@ -81,11 +81,11 @@
                                         <p><strong>Price Range:</strong> ₹{{ $brand['minPrice'] }} - ₹{{ $brand['maxPrice'] }}</p>
 
                                         <p><strong>Available Denominations:</strong></p>
-                                        @foreach($brand['DenominationList'] as $denomination)
+                                        <!--@foreach($brand['DenominationList'] as $denomination)
                                             <button type="button" class="btn btn-outline-primary m-1">
                                                 ₹{{ $denomination }}
                                             </button>
-                                        @endforeach
+                                        @endforeach-->
                                     </div>
                                 <div class="col-lg-4">
                                             <div class="row">

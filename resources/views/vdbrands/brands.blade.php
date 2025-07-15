@@ -35,6 +35,7 @@
     </div>
 
     <h4>Important Instructions</h4>
+@if(!empty($instructions))
     <ul class="list-group mb-4">
         @foreach($instructions as $instruction)
             <li class="list-group-item">{{ $instruction }}</li>

@@ -176,7 +176,7 @@
                                         <label for="tabone">How to Redeem</label>
                                         <div class="tab p-3 font-xsss instructions text-black">
                                             <div class="row">
-                                                @foreach($redeemSteps as $step)
+                                               <!-- @foreach($redeemSteps as $step)
                                                     <div class="col-md-4 mb-3">
                                                         <div class="card h-100">
                                                             <img src="{{ $step['image'] }}" class="card-img-top" alt="Redeem Step">
@@ -185,7 +185,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                @endforeach
+                                                @endforeach -->
                                             </div>
                                         </div>
 @endsection

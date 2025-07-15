@@ -63,16 +63,14 @@
                         <div class="col-lg-10">
                             <div class="row justify-content-center">
                                 <div class="col-lg-3">
-                                    <div class="cardImage">
-                                        @if (!empty($brand['Discount']) && $brand['Discount'] > 0)
-                                            <div class="ribbon ribbon-product-page">
-                                                <span>{{ $brand['Discount'] }}% off</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                           <div class="col-md-4">
-                                            <img src="{{ $images['featured'] }}" class="img-fluid rounded-start" alt="{{ $brand['BrandName'] }}">
-                                            </div>
+                                 <div class="cardImage position-relative">
+                                    @if (!empty($brand['Discount']) && $brand['Discount'] > 0)
+                                        <div class="ribbon ribbon-product-page">
+                                            <span>{{ $brand['Discount'] }}% off</span>
+                                        </div>
+                                    @endif
+                                    <img src="{{ $images['featured'] }}" class="img-fluid rounded-start" alt="{{ $brand['BrandName'] }}">
+                                </div>
                                         <div class="cardText">
                                             <h6 class="fw-600 font-md mt-2" name="brand_name">
                                             {{ $brand['BrandName'] }}

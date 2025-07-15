@@ -33,7 +33,7 @@
     <div class="mb-4">
         <p>{!! nl2br(strip_tags($brand['TnC'])) !!}</p>
     </div>
-
+<p>test</p>
     <h4>Important Instructions</h4>
     <ul class="list-group mb-4">
         @foreach($brand['ImportantInstruction'] as $instruction)

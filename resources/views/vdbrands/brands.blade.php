@@ -40,9 +40,45 @@
                     <a href="#" class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color" data-toggle="modal" data-target="#Modallogin">
                                                     Go to Checkout Page
                                                 </a>
+<div class="tabs">
 
+                                    
+                                                                            <input type="radio" name="tabs" id="tabone" checked="checked">
+                                        <label for="tabone">How to Redeem</label>
+                                        <div class="tab p-3 font-xsss instructions text-black">
+                                            <div class="row">
+                                            @foreach($redeemSteps as $step)
+                                                <div class="col-md-4 mb-3">
+                                                    <div class="card h-100">
+                                                        <img src="{{ $step['image'] }}" class="card-img-top" alt="Redeem Step">
+                                                        <div class="card-body">
+                                                            <p class="card-text">{!! nl2br($step['title']) !!}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    
+
+                                    
+                                                                            <input type="radio" name="tabs" id="tabtwo">
+                                        <label for="tabtwo">Description</label>
+                                        <div class="tab p-3 font-xsss text-black">
+                                            <p>{!! nl2br(strip_tags($brand['Description'])) !!}</p>
+                                        </div>
+                                    
+                                    
+
+                                                                            <input type="radio" name="tabs" id="tabthree">
+                                        <label for="tabthree">Terms &amp; Condition</label>
+                                        <div class="tab term-condition p-3 font-xsss termsConditions text-black">
+                                            <p>{!! nl2br(strip_tags($brand['TnC'])) !!}</p>
+                                        </div>
+                                    
+                                </div>
                     <h5 class="mt-4">Description</h5>
-                    <p>{!! nl2br(strip_tags($brand['Description'])) !!}</p>
+                    
                 </div>
             </div>
         </div>
@@ -50,7 +86,7 @@
 <p> <a href="{{ url('/stores/filter') }}" class="btn btn-info btn-lg text-white">See Stores</a>
     <h4>Terms & Conditions</h4>
     <div class="mb-4">
-        <p>{!! nl2br(strip_tags($brand['TnC'])) !!}</p>
+        
     </div>
 
     <h4>Important Instructions</h4>
@@ -60,17 +96,6 @@
         @endforeach
     </ul>
     <h4>How to Redeem</h4>
-    <div class="row">
-        @foreach($redeemSteps as $step)
-            <div class="col-md-4 mb-3">
-                <div class="card h-100">
-                    <img src="{{ $step['image'] }}" class="card-img-top" alt="Redeem Step">
-                    <div class="card-body">
-                        <p class="card-text">{!! nl2br($step['title']) !!}</p>
-                    </div>
-                </div>
-            </div>
-        @endforeach
-    </div>
+    
 </div>
 @endsection

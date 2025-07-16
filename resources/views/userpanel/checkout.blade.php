@@ -794,11 +794,11 @@
                         
                     </div>
                 </div>
-                <div class="card shadow-none border-0">
+               <!-- <div class="card shadow-none border-0">
                             <input
                                 class="mont-font p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-600 ls-3"
                                 type="submit" value="Card Payment" id="placeOrder">
-                        </div>
+                        </div> -->
             </form>
 <form method="POST" action="{{ route('payment.upi') }}">
     @csrf

@@ -37,9 +37,11 @@
                     <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number" name="receiver_mobile" id="receiver-mobile" value="">
                     <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver" name="receiver_msg" id="receiver-msg" value="">
 
+                    <div class="row g-0">
                     <a href="#" class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color" data-toggle="modal" data-target="#Modallogin">
                                                     Go to Checkout Page
                                                 </a>
+                    </div>
 <div class="tabs">
 
                                     
@@ -77,17 +79,12 @@
                                         </div>
                                     
                                 </div>
-                    <h5 class="mt-4">Description</h5>
                     
                 </div>
             </div>
         </div>
     </div>
 <p> <a href="{{ url('/stores/filter') }}" class="btn btn-info btn-lg text-white">See Stores</a>
-    <h4>Terms & Conditions</h4>
-    <div class="mb-4">
-        
-    </div>
 
     <h4>Important Instructions</h4>
     <ul class="list-group mb-4">
@@ -95,7 +92,5 @@
             <li class="list-group-item">{{ $instruction }}</li>
         @endforeach
     </ul>
-    <h4>How to Redeem</h4>
-    
 </div>
 @endsection

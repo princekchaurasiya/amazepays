@@ -16,11 +16,30 @@
             <div class="col-md-8">
                 <div class="card-body">
                     <h2 class="card-title">{{ $brand['BrandName'] }}</h2>
-                    <p class="text-muted">{{ $brand['Category'] }}</p>
                     <p><strong>Discount:</strong> {{ $brand['Discount'] }}%</p>
+                    <p class="text-muted">{{ $brand['Category'] }}</p>
                     <p><strong>Price Range:</strong> ₹{{ $brand['minPrice'] }} - ₹{{ $brand['maxPrice'] }}</p>
+                    <label>Enter Denomination</label>
+                    <input type="number" name="denomination" min="100" max="10000">
                     <p><strong>Available Denominations:</strong> {{ $brand['DenominationList'] }}</p>
                     <p><strong>Stock Available:</strong> {{ $brand['StockAvailable'] ? 'Yes' : 'No' }}</p>
+
+                    <label>Quantity</label>
+                    <input type="number" name="quantity" min="1" max="10">
+
+                    <select name="gift_send_option">
+                    <option>Send as Gift</option>
+                    <option>Buy for Self</option>
+                    </select>
+
+                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Name" name="receiver_name" id="receiver-name" value="">
+                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Email" name="receiver_email" id="receiver-email" value="">
+                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number" name="receiver_mobile" id="receiver-mobile" value="">
+                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver" name="receiver_msg" id="receiver-msg" value="">
+
+                    <a href="#" class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color" data-toggle="modal" data-target="#Modallogin">
+                                                    Go to Checkout Page
+                                                </a>
 
                     <h5 class="mt-4">Description</h5>
                     <p>{!! nl2br(strip_tags($brand['Description'])) !!}</p>

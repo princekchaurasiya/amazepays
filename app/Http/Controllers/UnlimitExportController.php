@@ -19,7 +19,7 @@ class UnlimitExportController extends Controller
             ->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode(env('UNLIMIT_CODE')),
             ])
-            ->post('https://sandbox.in.unlimit.com/api/auth/token', [
+            ->post('https://psp.in.unlimit.com/api/auth/token', [
                 'grant_type' => 'password',
                 'password' => env('UNLIMIT_SECRET_KEY'),
                 'terminal_code' => env('UNLIMIT_PUBLIC_KEY'),
@@ -65,7 +65,7 @@ class UnlimitExportController extends Controller
         $response = Http::withHeaders([
             'Accept' => 'application/json',
             'Authorization' => 'Bearer ' . $token,
-        ])->get('https://sandbox.in.unlimit.com/api/payments', [
+        ])->get('https://psp.in.unlimit.com/api/payments', [
             'start_time' => $start,
             'end_time' => $end,
             'request_id' => $requestId,

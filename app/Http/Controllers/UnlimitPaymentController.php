@@ -86,10 +86,10 @@ class UnlimitPaymentController extends Controller
             'currency' => 'INR',
         ],
 
-        /*'return_urls' => [
-        'success_url' => route('payment.success'),
-        'decline_url' => route('payment.failed'),
-        ],*/
+        'return_urls' => [
+        'success_url' => route('order.order-status'),
+        'decline_url' => route('order.order-status'),
+        ],
         // Note: card_account.card was removed based on your earlier error for Payment Page mode
     ];
 
@@ -119,6 +119,17 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
 
 
 } catch (RequestException $e) {
+
+    if (str_contains($e->getMessage(), 'cURL error 35')) {
+        Log::error('cURL error 35: Send failure: Connection was aborted');
+
+        return response()->json([
+            'error' => 'Connection aborted',
+            'message' => 'The connection to the payment provider was unexpectedly closed. Please try again shortly.',
+            'code' => 35
+        ], 503);
+    }
+
     return response()->json([
         'error' => 'HTTP request failed',
         'message' => $e->getMessage(),
@@ -131,7 +142,8 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
 {
     //return redirect()->route('payment.success')->with('success', 'Payment completed successfully.');
     
-        return redirect()->route('payment.processed')->with('success', 'Payment processed.');
+        //return redirect()->route('payment.processed')->with('success', 'Payment processed.');
+        return view('woohoo.redirect-to-woohoo');
 }
 
 public function process(Request $request)

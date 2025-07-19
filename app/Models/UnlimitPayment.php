@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CcAvenuePayment extends Model
+class UnlimitPayment extends Model
 {
     use HasFactory;
 
-    protected $table = 'cc_avenue_payment';
+    protected $table = 'unlimit_payment';
 
     protected $fillable = [
         'user_id',

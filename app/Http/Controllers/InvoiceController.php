@@ -15,12 +15,12 @@ class InvoiceController extends Controller
     {
         $response = Http::asForm()
             ->withHeaders([
-                'Authorization' => 'Basic ' . base64_encode('1047:E568gIjYr2aS'),
+                'Authorization' => 'Basic ' . base64_encode('1887:1zXIo78Jtw5U'),
             ])
-            ->post('https://sandbox.in.unlimit.com/api/auth/token', [
+            ->post('https://psp.in.unlimit.com/api/auth/token', [
                 'grant_type' => 'password',
-                'password' => 'E568gIjYr2aS',
-                'terminal_code' => '1047',
+                'password' => '1zXIo78Jtw5U',
+                'terminal_code' => '1887',
             ]);
 
         $data = $response->json();
@@ -81,7 +81,7 @@ class InvoiceController extends Controller
         'Authorization' => 'Bearer ' . $token,
         'Accept' => 'application/json',
         'Content-Type' => 'application/json',
-    ])->post('https://sandbox.in.unlimit.com/api/invoices', $payload);
+    ])->post('https://psp.in.unlimit.com/api/invoices', $payload);
 
     $invoice->update(['api_response' => $response->json()]);
 

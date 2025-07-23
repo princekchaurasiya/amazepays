@@ -17,11 +17,9 @@ class WoohooOrderController extends Controller
 {
     public function createOrder(Request $request)
     {
-        $request->validate(['order_id' => 'nullable|integer|exists:qs_orders,id',]);
+        /*$request->validate(['order_id' => 'nullable|integer|exists:qs_orders,id',]);
         if ($request->order_id) {
             $qsOrderDetails = QsOrder::where('id', $request->order_id)->first();
-            dd($request->all());            
-            // dd($qsOrderDetails);
             if (!$qsOrderDetails) {
                 Log::error("No order details found for ID: " . $request->order_id);
                 return view("order.order-status", ['transactionStatusMessage' => __("errors.order_not_found"), 'isSuccessful' => false,]);
@@ -31,11 +29,11 @@ class WoohooOrderController extends Controller
             $qsOrderDetails->save();
         } else {
             $qsOrderDetails = Session::get("payment_data", null);
-        }
-        dd($qsOrderDetails);
-        Log::info("Payment data collected from session and stored in \$qsOrderDetails variable is: " . json_encode($qsOrderDetails));
+        }*/
+       // Log::info("Payment data collected from session and stored in \$qsOrderDetails variable is: " . json_encode($qsOrderDetails));
         $isSuccessful = false;
         $transactionStatusMessage = __("errors.default");
+        $qsOrderDetails = QsOrder::latest('id')->value('id');
         if ($qsOrderDetails) {
             $orderCreatedResponse = $this->createWoohooOrderRequest($qsOrderDetails);
             if ($orderCreatedResponse) {
@@ -277,10 +275,10 @@ class WoohooOrderController extends Controller
         $isSuccessful = false;
         Log::info("This is card response data: " . json_encode($orderCreatedResponse));
         $orderId = $this->updateQsOrder($orderCreatedResponse);
-        $order = QsOrder::join("cc_avenue_payment", "cc_avenue_payment.order_id", "=", "qs_orders.id")
+        $order = QsOrder::join("unlimit_payment", "unlimit_payment.order_id", "=", "qs_orders.id")
             ->join("qs_products", "qs_products.sku", "=", "qs_orders.sku")
             ->where("qs_orders.id", $orderId)
-            ->select("qs_orders.*", "cc_avenue_payment.*", "qs_products.*")
+            ->select("qs_orders.*", "unlimit_payment.*", "qs_products.*")
             ->first();
             
         // Debug logging for product data

@@ -33,7 +33,7 @@ class WoohooOrderController extends Controller
        // Log::info("Payment data collected from session and stored in \$qsOrderDetails variable is: " . json_encode($qsOrderDetails));
         $isSuccessful = false;
         $transactionStatusMessage = __("errors.default");
-        $qsOrderDetails = QsOrder::latest('id')->value('id');
+        $qsOrderDetails = QsOrder::latest('id')->first();
         if ($qsOrderDetails) {
             $orderCreatedResponse = $this->createWoohooOrderRequest($qsOrderDetails);
             if ($orderCreatedResponse) {

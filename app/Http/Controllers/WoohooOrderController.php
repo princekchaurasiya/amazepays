@@ -31,6 +31,7 @@ class WoohooOrderController extends Controller
         } else {
             $qsOrderDetails = Session::get("payment_data", null);
         }
+        dd($qsOrderDetails);
         Log::info("Payment data collected from session and stored in \$qsOrderDetails variable is: " . json_encode($qsOrderDetails));
         $isSuccessful = false;
         $transactionStatusMessage = __("errors.default");

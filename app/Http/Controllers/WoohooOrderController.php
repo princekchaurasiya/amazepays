@@ -20,7 +20,8 @@ class WoohooOrderController extends Controller
         $request->validate(['order_id' => 'nullable|integer|exists:qs_orders,id',]);
         if ($request->order_id) {
             $qsOrderDetails = QsOrder::where('id', $request->order_id)->first();
-            dd($qsOrderDetails);
+            dd($request->all());            
+            // dd($qsOrderDetails);
             if (!$qsOrderDetails) {
                 Log::error("No order details found for ID: " . $request->order_id);
                 return view("order.order-status", ['transactionStatusMessage' => __("errors.order_not_found"), 'isSuccessful' => false,]);

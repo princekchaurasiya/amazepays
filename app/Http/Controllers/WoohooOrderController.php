@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 use App\Models\QsOrder;
 use App\Models\OrderSummary;
+use App\Models\Billing;
 use Carbon\Carbon;
 use PDF;
 use Mail;
@@ -80,8 +81,10 @@ class WoohooOrderController extends Controller
     public function createWoohooOrderRequest($qsOrderDetails)
     {
         Log::info("******* you are in create Woohoo Order function ***********");
+        $billinginfo = Billing::latest()->first();
+        $parts = explode(' ', $billinginfo->billing_name, 2);
         $refno = $qsOrderDetails->refno;
-        $create_order_request_body_data = ["address" => ["firstname" => $qsOrderDetails->sender_first_name, "lastname" => "test", "email" => $qsOrderDetails->sender_email, "telephone" => "+91" . $qsOrderDetails->sender_phone_no, "line1" => $qsOrderDetails->sender_address_1, "line2" => $qsOrderDetails->sender_address_2, "city" => $qsOrderDetails->sender_city, "region" => $qsOrderDetails->sender_state, "country" => "IN", "postcode" => $qsOrderDetails->sender_post_code, "languages" => "Hindi", "billToThis" => true,], "billing" => ["firstname" => $qsOrderDetails->sender_first_name, "lastname" => "test", "email" => $qsOrderDetails->sender_email, "telephone" => "+91" . $qsOrderDetails->sender_phone_no, "line1" => $qsOrderDetails->sender_address_1, "line2" => $qsOrderDetails->sender_address_2, "city" => $qsOrderDetails->sender_city, "region" => $qsOrderDetails->sender_state, "country" => "IN", "postcode" => $qsOrderDetails->sender_post_code, "languages" => "Hindi", "billToThis" => true,], "payments" => [["code" => "svc", "amount" => $qsOrderDetails->grand_payable_amount],], "refno" => $refno, "products" => [["sku" => $qsOrderDetails->sku, "price" => $qsOrderDetails->denomination, "qty" => $qsOrderDetails->quantity, "currency" => "356"],], "syncOnly" => $qsOrderDetails->quantity > (int) env("SYNC_ONLY_THRESHOLD") ? false : true, "delivery_mode" => "API",];
+        $create_order_request_body_data = ["address" => ["firstname" => $parts[0], "lastname" => $parts[1], "email" => $billinginfo->billing_email, "telephone" => "+91" . $billinginfo->billing_tel, "line1" => $billinginfo->billing_address, "line2" => $billinginfo->billing_address_two, "city" => $billinginfo->billing_city, "region" => $billinginfo->billing_state, "country" => "IN", "postcode" => $billinginfo->billing_zip, "languages" => "Hindi", "billToThis" => true,], "billing" => ["firstname" => $parts[0], "lastname" => $parts[1], "email" => $billinginfo->billing_email, "telephone" => "+91" . $billinginfo->billing_tel, "line1" => $billinginfo->billing_address, "line2" => $billinginfo->billing_address_two, "city" => $billinginfo->billing_city, "region" => $billinginfo->billing_state, "country" => "IN", "postcode" => $billinginfo->billing_zip, "languages" => "Hindi", "billToThis" => true,], "payments" => [["code" => "svc", "amount" => $qsOrderDetails->grand_payable_amount],], "refno" => $refno, "products" => [["sku" => $qsOrderDetails->sku, "price" => $qsOrderDetails->denomination, "qty" => $qsOrderDetails->quantity, "currency" => "356"],], "syncOnly" => $qsOrderDetails->quantity > (int) env("SYNC_ONLY_THRESHOLD") ? false : true, "delivery_mode" => "API",];
         Log::info("########\nWoohoo create order request body data is:\n" . print_r($create_order_request_body_data, true) . "\n#######");
         $requestBody = json_encode($create_order_request_body_data);
         $requestHttpMethod = "post";

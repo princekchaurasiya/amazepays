@@ -861,6 +861,37 @@
                     });
                 }
 
+                function storeBillingInDatabase() {
+                    var formData = {
+                        billing_name: $('input[name="billing_name"]').val(),
+                        billing_email: $('input[name="billing_email"]').val(),
+                        billing_tel: $('input[name="billing_tel"]').val(),
+                        billing_zip: $('input[name="billing_zip"]').val(),
+                        billing_address: $('input[name="billing_address"]').val(),
+                        billing_address_two: $('input[name="billing_address_two"]').val(),
+                        billing_city: $('input[name="billing_city"]').val(),
+                        billing_state: $('input[name="billing_state"]').val(),
+                        billing_country: $('input[name="billing_country"]').val(),
+                        billing_gst_number: $('input[name="billing_gst_number"]').val()
+                    };
+
+                    $.ajax({
+                        url: '{{ route("storeBillingData") }}',
+                        method: 'POST',
+                        data: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            alert('Billing data stored in database.');
+                        },
+                        error: function(xhr) {
+                            console.error('DB storage failed:', xhr.responseText);
+                        }
+                    });
+                }
+
+
                 // Debounced function
                 function debouncedUpdateSessionData() {
                     clearTimeout(debounceTimeout);
@@ -877,6 +908,7 @@
                 // Optionally bind updateSessionData function to form submit event
                 $('form').submit(function(event) {
                     updateSessionData();
+                    storeBillingInDatabase();
                 });
 
 

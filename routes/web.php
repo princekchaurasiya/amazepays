@@ -455,3 +455,8 @@ Route::get('/giftcards2', [AthenaGiftcardController::class, 'showGiftcards'])->n
 
 Route::get('/giftcard/purchase/view', [AthenaGiftCardController::class, 'purchaseView'])->name('giftcard.purchase.view');
 Route::post('/giftcard/purchase', [AthenaGiftCardController::class, 'purchase'])->name('giftcard.purchase');
+
+//Unlimit redirect
+Route::get('/redirect-to-woohoo', function () {
+    return view('woohoo.redirect-to-woohoo'); 
+});

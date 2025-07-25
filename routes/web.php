@@ -306,6 +306,7 @@ Route::middleware(['auth', 'check.transaction'])->group(function () {
 });
 
 //Storing formData in database
+use App\Http\Controllers\BillingController;
 Route::post('/store-billing-data', [BillingController::class, 'store'])->name('storeBillingData');
 
 //test

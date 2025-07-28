@@ -136,6 +136,13 @@
                     clearTimeout(debounceTimeout);
                     debounceTimeout = setTimeout(func, delay);
                 }
+
+                 window.isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
+    if (!window.isAuthenticated) {
+        setTimeout(function () {
+            $('#Modallogin').modal('show');
+        }, 1000);
+    }
                 
     function updateSessionData() {
 
@@ -187,32 +194,12 @@
                     });
                 }
 
-                function handleLoginSuccess() {
-                     let isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
-                    // Set the global variable to true when login is successful
-                    window.isAuthenticated = true;
-                    // Close the login modal
-                    $('#Modallogin').modal('hide');
-                }
-
 
                       // Event listener for changes in form fields to auto-save data
                 $('input[name="denomination"], input[name="quantity"], input[name="gift_send_option"], input[name="receiver_name"], input[name="receiver_email"], input[name="receiver_mobile"], input[name="receiver_msg"]')
                     .on('input change', function() {
                         debounce(saveGiftCardFormData, 500); // Save data with a 500ms debounce
                     });
-
-                $('[data-target="#Modallogin"]').click(function() {
-                    saveGiftCardFormData(function() {
-                         let isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
-                        // After saving the data, check if the user is authenticated
-                        if (isAuthenticated) {
-                            $('#giftCardPageForm').submit(); // Submit the form if authenticated
-                        } else {
-                            $('#Modallogin').modal('show'); // Show the login modal if not authenticated
-                        }
-                    });
-                });
 
                 // Custom method to validate Indian mobile numbers
                 $.validator.addMethod("indianMobile", function(value, element) {
@@ -303,13 +290,6 @@
                         $(element).removeClass('is-invalid');
                     }
                 });
-
-        @if (!auth()->check())
-                // Show login modal if user is not authenticated
-                setTimeout(function() {
-                    $('#Modallogin').modal('show');
-                }, 1000);
-            @endif
  });
 </script>
 @endpush

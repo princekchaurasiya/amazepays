@@ -186,7 +186,7 @@
                 $('[data-target="#Modallogin"]').click(function() {
                     saveGiftCardFormData(function() {
                         // After saving the data, check if the user is authenticated
-                        if (isAuthenticated) {
+                        if (auth()->check()) {
                             $('#giftCardPageForm').submit(); // Submit the form if authenticated
                         } else {
                             $('#Modallogin').modal('show'); // Show the login modal if not authenticated
@@ -283,5 +283,12 @@
                         $(element).removeClass('is-invalid');
                     }
                 });
+
+        @if (!auth()->check())
+                // Show login modal if user is not authenticated
+                setTimeout(function() {
+                    $('#Modallogin').modal('show');
+                }, 1000);
+            @endif
 
 </script>

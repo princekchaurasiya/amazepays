@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="container py-5">
     @php
         $brand = json_decode($brands['original']['decrypted_data'], true)[0];
@@ -119,7 +120,8 @@
                     } else {
                         // Hide gifting details if "Buy for Self" is selected
                         $('.gifting-details').hide();
-
+                        $('.gifting-details input').val('');
+                        $('.credentails-field input').val('');
                         // Clear receiver-related form fields when "Buy for Self" is selected
 
                     }
@@ -128,20 +130,12 @@
  $(".credentails-field").hide();
 
     // Listen for changes in the dropdown selection
-    $("#sendAsGiftRadio").change(function() {
-        // Get the selected option value
-        var selectedOption = $(this).val();
-
-        // Show or hide fields based on the selected option
-        if (selectedOption === "Send as Gift") {
-            $(".credentails-field").show(); // Show fields if "Send as Gift" is selected
-        } else {
-            $(".credentails-field").hide(); // Hide fields if "Buy for Self" is selected
-        }
+   $('input[name="gift_send_option"]').change(function() {
+    toggleReceiverFields();
+});
         
   let debounceTimeout;
-  let isAuthenticated = false; // Assume the user is not authenticated by default
-
+ let isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
                 // Debounce function to limit the rate of AJAX requests
                 function debounce(func, delay) {
                     clearTimeout(debounceTimeout);
@@ -154,7 +148,7 @@
                         vd_discount: {{ $brand['Discount'] }},
                         vd_denomination: $('input[name="denomination"]').val(),
                         vd_quantity: $('input[name="quantity"]').val(),
-                        vd_gift_send_option: $('select[name="gift_send_option"]').val(),
+                        vd_gift_send_option: $('input[name="gift_send_option"]:checked').val(),
                         vd_receiver_name: $('input[name="receiver_name"]').val(),
                         vd_receiver_email: $('input[name="receiver_email"]').val(),
                         vd_receiver_mobile: $('input[name="receiver_mobile"]').val(),

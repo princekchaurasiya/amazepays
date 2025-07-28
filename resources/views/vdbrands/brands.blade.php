@@ -29,8 +29,8 @@
                     <input type="number" name="quantity" min="1" max="10">
 
                     <select name="gift_send_option" id="sendAsGiftRadio">
-                    <option>Send as Gift</option>
-                    <option>Buy for Self</option>
+                    <option value="Send as Gift">Send as Gift</option>
+                    <option value="Buy for Self">Buy for Self</option>
                     </select>
 
                     <div class="row justify-content-center mt-4 gifting-details" style="display: block;">
@@ -108,19 +108,19 @@
     // Initial state setup
     toggleReceiverFields();
 
-    // Listen for radio button change
-    $('input[name="gift_send_option"]').change(function () {
+    // Bind change event to the dropdown
+    $('#sendAsGiftRadio').on('change', function () {
         toggleReceiverFields();
     });
 
     function toggleReceiverFields() {
-        const selectedOption = $('input[name="gift_send_option"]:checked').val();
+        const selectedOption = $('#sendAsGiftRadio').val();
 
-        if (selectedOption === 'send_as_gift') {
-            $('.gifting-details, .credentials-field').show();
+        if (selectedOption === 'Send as Gift') {
+            $('.gifting-details, .credentails-field').show();
         } else {
-            $('.gifting-details, .credentials-field').hide();
-            $('.gifting-details input, .credentials-field input').val('');
+            $('.gifting-details, .credentails-field').hide();
+            $('.gifting-details input, .credentails-field').val('');
         }
     }
         

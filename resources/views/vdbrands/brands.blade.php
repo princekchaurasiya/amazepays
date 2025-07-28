@@ -103,6 +103,12 @@
 </form>
 @endsection
  @push('scripts')
+     @if (auth()->check())
+    <script>console.log('✅ User is authenticated');</script>
+@else
+    <script>console.log('❌ User is NOT authenticated');</script>
+@endif
+        
     <script type="text/javascript">
        $(document).ready(function () {
     // Initial state setup
@@ -124,12 +130,6 @@
         }
     }
 
-    @if (auth()->check())
-    <script>console.log('✅ User is authenticated');</script>
-@else
-    <script>console.log('❌ User is NOT authenticated');</script>
-@endif
-        
   let debounceTimeout;
                 // Debounce function to limit the rate of AJAX requests
                 function debounce(func, delay) {

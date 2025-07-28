@@ -118,14 +118,6 @@
   // Listen for changes
   select.addEventListener("change", toggleFields);
 
-  @if (auth()->check())
-    <!-- The user is authenticated -->
-    $('#giftCardPageForm').submit();
-@else
-    <!-- The user is not authenticated -->
-    <p>Please log in.</p>
-@endif
-
 
   let debounceTimeout;
                 let isAuthenticated = false; // Assume the user is not authenticated by default
@@ -185,6 +177,14 @@
                         }
                     });
                 }
+
+                function handleLoginSuccess() {
+                    // Set the global variable to true when login is successful
+                    window.isAuthenticated = true;
+                    // Close the login modal
+                    $('#Modallogin').modal('hide');
+                }
+
 
                       // Event listener for changes in form fields to auto-save data
                 $('input[name="denomination"], input[name="quantity"], input[name="gift_send_option"], input[name="receiver_name"], input[name="receiver_email"], input[name="receiver_mobile"], input[name="receiver_msg"]')

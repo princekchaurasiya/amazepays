@@ -138,15 +138,30 @@
     function updateSessionData() {
 
                     var formData = {
-                        vd_discount = {{ $brand['Discount'] }},
-                        vd_denomination = $('input[name="denomination"]').val(),
-                        vd_quantity = $('input[name="quantity"]').val(),
-                        vd_gift_send_option = $('select[name="gift_send_option"]').val(),
-                        vd_receiver_name = $('input[name="receiver_name"]').val(),
-                        vd_receiver_email = $('input[name="receiver_email]').val(),
-                        vd_receiver_mobile = $('input[name="receiver_msg]').val(),
+                        vd_discount: {{ $brand['Discount'] }},
+                        vd_denomination: $('input[name="denomination"]').val(),
+                        vd_quantity: $('input[name="quantity"]').val(),
+                        vd_gift_send_option: $('select[name="gift_send_option"]').val(),
+                        vd_receiver_name: $('input[name="receiver_name"]').val(),
+                        vd_receiver_email: $('input[name="receiver_email"]').val(),
+                        vd_receiver_mobile: $('input[name="receiver_mobile"]').val(),
+                        vd_receiver_msg: $('input[name="receiver_msg"]').val()
                     }
-        Log::info('Form data stored', [formData]);
+                
+                $.ajax({
+                        url: '{{ route('updateSessionData') }}', // Replace with your Laravel route
+                        method: 'POST',
+                        data: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            console.log('Session data updated successfully', formData);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error updating session data:', error);
+                        }
+                    });
                 }
     
     function saveGiftCardFormData(callback) {

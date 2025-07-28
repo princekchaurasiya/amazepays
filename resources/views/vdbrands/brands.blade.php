@@ -135,7 +135,6 @@
 });
         
   let debounceTimeout;
- let isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
                 // Debounce function to limit the rate of AJAX requests
                 function debounce(func, delay) {
                     clearTimeout(debounceTimeout);
@@ -193,6 +192,7 @@
                 }
 
                 function handleLoginSuccess() {
+                     let isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
                     // Set the global variable to true when login is successful
                     window.isAuthenticated = true;
                     // Close the login modal
@@ -208,6 +208,7 @@
 
                 $('[data-target="#Modallogin"]').click(function() {
                     saveGiftCardFormData(function() {
+                         let isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
                         // After saving the data, check if the user is authenticated
                         if (isAuthenticated) {
                             $('#giftCardPageForm').submit(); // Submit the form if authenticated

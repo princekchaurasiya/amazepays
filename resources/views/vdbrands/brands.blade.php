@@ -104,23 +104,6 @@
  @push('scripts')
     <script type="text/javascript">
         $(document).ready(function() {
-    // Initially hide the fields
-    $(".credentails-field").hide();
-
-    // Listen for changes in the dropdown selection
-    $("#sendAsGiftRadio").change(function() {
-        // Get the selected option value
-        var selectedOption = $(this).val();
-
-        // Show or hide fields based on the selected option
-        if (selectedOption === "Send as Gift") {
-            $(".credentails-field").show(); // Show fields if "Send as Gift" is selected
-        } else {
-            $(".credentails-field").hide(); // Hide fields if "Buy for Self" is selected
-        }
-    });
-});
-        $(document).ready(function() {
 
         toggleReceiverFields();
 
@@ -142,7 +125,20 @@
                     }
                 }
 
+ $(".credentails-field").hide();
 
+    // Listen for changes in the dropdown selection
+    $("#sendAsGiftRadio").change(function() {
+        // Get the selected option value
+        var selectedOption = $(this).val();
+
+        // Show or hide fields based on the selected option
+        if (selectedOption === "Send as Gift") {
+            $(".credentails-field").show(); // Show fields if "Send as Gift" is selected
+        } else {
+            $(".credentails-field").hide(); // Hide fields if "Buy for Self" is selected
+        }
+        
   let debounceTimeout;
   let isAuthenticated = false; // Assume the user is not authenticated by default
 
@@ -323,5 +319,6 @@
                     $('#Modallogin').modal('show');
                 }, 1000);
             @endif
-
+ });
 </script>
+@endpush

@@ -138,6 +138,7 @@
     function updateSessionData() {
 
                     var formData = {
+                        vd_discount = {{ $brand['Discount'] }},
                         vd_denomination = $('input[name="denomination"]').val(),
                         vd_quantity = $('input[name="quantity"]').val(),
                         vd_gift_send_option = $('select[name="gift_send_option"]').val(),
@@ -145,6 +146,7 @@
                         vd_receiver_email = $('input[name="receiver_email]').val(),
                         vd_receiver_mobile = $('input[name="receiver_msg]').val(),
                     }
+        Log::info('Form data stored', [formData]);
                 }
     
     function saveGiftCardFormData(callback) {

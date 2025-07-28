@@ -27,16 +27,22 @@
                     <label>Quantity</label>
                     <input type="number" name="quantity" min="1" max="10">
 
-                    <select name="gift_send_option" id="gift-send-option">
+                    <select name="gift_send_option" id="sendAsGiftRadio">
                     <option>Send as Gift</option>
                     <option>Buy for Self</option>
                     </select>
 
-                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Name" name="receiver_name" id="receiver-name" value="" disabled>
-                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Email" name="receiver_email" id="receiver-email" value="" disabled>
-                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number" name="receiver_mobile" id="receiver-mobile" value="" disabled>
-                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver" name="receiver_msg" id="receiver-msg" value="" disabled>
-
+                    <div class="row justify-content-center mt-4 gifting-details" style="display: block;">
+                                        <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
+                                        <div class="row"> <!-- Added .row to group the .col-lg-* elements -->
+                                            <div class="col-12 col-lg-3">
+                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Name" name="receiver_name" id="receiver-name" value="" >
+                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Email" name="receiver_email" id="receiver-email" value="" >
+                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number" name="receiver_mobile" id="receiver-mobile" value="" >
+                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver" name="receiver_msg" id="receiver-msg" value="" >
+                                            </div>
+                                        </div>
+                    </div>
                     <div class="row g-0">
                     <a href="#" class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color" data-toggle="modal" data-target="#Modallogin">
                                                     Go to Checkout Page
@@ -99,28 +105,29 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
-    const select = document.getElementById("gift-send-option");
-    const inputs = [
-        document.getElementById("receiver-name"),
-        document.getElementById("receiver-email"),
-        document.getElementById("receiver-mobile"),
-        document.getElementById("receiver-msg")
-    ];
+        toggleReceiverFields();
 
-    function toggleFields() {
-    const isGift = select.value === "Send as Gift";
-    inputs.forEach(input => input.disabled = !isGift);
-  }
+                $('input[name="gift_send_option"]').change(function() {
+                    toggleReceiverFields();
+                });
 
-    // Initial state
-  toggleFields();
+                function toggleReceiverFields() {
+                    // Check which radio option is selected
+                    if ($('#sendAsGiftRadio').is(':checked')) {
+                        // Show gifting details if "Send as Gift" is selected
+                        $('.gifting-details').show();
+                    } else {
+                        // Hide gifting details if "Buy for Self" is selected
+                        $('.gifting-details').hide();
 
-  // Listen for changes
-  select.addEventListener("change", toggleFields);
+                        // Clear receiver-related form fields when "Buy for Self" is selected
+
+                    }
+                }
 
 
   let debounceTimeout;
-                let isAuthenticated = false; // Assume the user is not authenticated by default
+  let isAuthenticated = false; // Assume the user is not authenticated by default
 
                 // Debounce function to limit the rate of AJAX requests
                 function debounce(func, delay) {

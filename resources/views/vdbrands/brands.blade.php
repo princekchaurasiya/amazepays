@@ -104,35 +104,25 @@
 @endsection
  @push('scripts')
     <script type="text/javascript">
-        $(document).ready(function() {
-
-        toggleReceiverFields();
-
-                $('input[name="gift_send_option"]').change(function() {
-                    toggleReceiverFields();
-                });
-
-                function toggleReceiverFields() {
-                    // Check which radio option is selected
-                    if ($('#sendAsGiftRadio').is(':checked')) {
-                        // Show gifting details if "Send as Gift" is selected
-                        $('.gifting-details').show();
-                    } else {
-                        // Hide gifting details if "Buy for Self" is selected
-                        $('.gifting-details').hide();
-                        $('.gifting-details input').val('');
-                        $('.credentails-field input').val('');
-                        // Clear receiver-related form fields when "Buy for Self" is selected
-
-                    }
-                }
-
- $(".credentails-field").hide();
-
-    // Listen for changes in the dropdown selection
-   $('input[name="gift_send_option"]').change(function() {
+       $(document).ready(function () {
+    // Initial state setup
     toggleReceiverFields();
-});
+
+    // Listen for radio button change
+    $('input[name="gift_send_option"]').change(function () {
+        toggleReceiverFields();
+    });
+
+    function toggleReceiverFields() {
+        const selectedOption = $('input[name="gift_send_option"]:checked').val();
+
+        if (selectedOption === 'send_as_gift') {
+            $('.gifting-details, .credentials-field').show();
+        } else {
+            $('.gifting-details, .credentials-field').hide();
+            $('.gifting-details input, .credentials-field input').val('');
+        }
+    }
         
   let debounceTimeout;
                 // Debounce function to limit the rate of AJAX requests

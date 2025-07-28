@@ -123,6 +123,12 @@
             $('.gifting-details input, .credentails-field').val('');
         }
     }
+
+    @if (auth()->check())
+    <script>console.log('✅ User is authenticated');</script>
+@else
+    <script>console.log('❌ User is NOT authenticated');</script>
+@endif
         
   let debounceTimeout;
                 // Debounce function to limit the rate of AJAX requests

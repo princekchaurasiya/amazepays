@@ -118,6 +118,15 @@
   // Listen for changes
   select.addEventListener("change", toggleFields);
 
+  @if (auth()->check())
+    <!-- The user is authenticated -->
+    $('#giftCardPageForm').submit();
+@else
+    <!-- The user is not authenticated -->
+    <p>Please log in.</p>
+@endif
+
+
   let debounceTimeout;
                 let isAuthenticated = false; // Assume the user is not authenticated by default
 
@@ -186,7 +195,7 @@
                 $('[data-target="#Modallogin"]').click(function() {
                     saveGiftCardFormData(function() {
                         // After saving the data, check if the user is authenticated
-                        if (auth()->check()) {
+                        if (isAuthenticated) {
                             $('#giftCardPageForm').submit(); // Submit the form if authenticated
                         } else {
                             $('#Modallogin').modal('show'); // Show the login modal if not authenticated

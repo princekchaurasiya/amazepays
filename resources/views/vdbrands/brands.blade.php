@@ -99,14 +99,6 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
-
-                @if (!auth()->check())
-                    // Show login modal if user is not authenticated
-                    setTimeout(function() {
-                        $('#Modallogin').modal('show');
-                    }, 1000);
-                @endif
-
     const select = document.getElementById("gift-send-option");
     const inputs = [
         document.getElementById("receiver-name"),
@@ -291,5 +283,12 @@
                         $(element).removeClass('is-invalid');
                     }
                 });
+
+        @if (!auth()->check())
+                // Show login modal if user is not authenticated
+                setTimeout(function() {
+                    $('#Modallogin').modal('show');
+                }, 1000);
+            @endif
 
 </script>

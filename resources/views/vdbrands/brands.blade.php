@@ -7,7 +7,7 @@
         $images = json_decode(str_replace("'", '"', $brand['Images']), true);
         $redeemSteps = $brand['RedeemSteps'];
     @endphp
-
+<form action="{{ route('checkoutPage') }}" method="POST" id="giftCardPageForm">
     <div class="card mb-4 shadow">
         <div class="row g-0">
             <div class="col-md-4">
@@ -27,15 +27,15 @@
                     <label>Quantity</label>
                     <input type="number" name="quantity" min="1" max="10">
 
-                    <select name="gift_send_option">
+                    <select name="gift_send_option" id="gift-send-option">
                     <option>Send as Gift</option>
                     <option>Buy for Self</option>
                     </select>
 
-                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Name" name="receiver_name" id="receiver-name" value="">
-                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Email" name="receiver_email" id="receiver-email" value="">
-                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number" name="receiver_mobile" id="receiver-mobile" value="">
-                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver" name="receiver_msg" id="receiver-msg" value="">
+                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Name" name="receiver_name" id="receiver-name" value="" disabled>
+                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Email" name="receiver_email" id="receiver-email" value="" disabled>
+                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Receiver Mobile Number" name="receiver_mobile" id="receiver-mobile" value="" disabled>
+                    <input type="text" class="form-control mb-3 credentails-field" placeholder="Message for Receiver" name="receiver_msg" id="receiver-msg" value="" disabled>
 
                     <div class="row g-0">
                     <a href="#" class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color" data-toggle="modal" data-target="#Modallogin">
@@ -93,4 +93,186 @@
         @endforeach
     </ul>
 </div>
+</form>
 @endsection
+ @push('scripts')
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+
+                @if (!auth()->check())
+                    // Show login modal if user is not authenticated
+                    setTimeout(function() {
+                        $('#Modallogin').modal('show');
+                    }, 1000);
+                @endif
+
+    const select = document.getElementById("gift-send-option");
+    const inputs = [
+        document.getElementById("receiver-name"),
+        document.getElementById("receiver-email"),
+        document.getElementById("receiver-mobile"),
+        document.getElementById("receiver-msg")
+    ];
+
+    function toggleFields() {
+    const isGift = select.value === "Send as Gift";
+    inputs.forEach(input => input.disabled = !isGift);
+  }
+
+    // Initial state
+  toggleFields();
+
+  // Listen for changes
+  select.addEventListener("change", toggleFields);
+
+  let debounceTimeout;
+                let isAuthenticated = false; // Assume the user is not authenticated by default
+
+                // Debounce function to limit the rate of AJAX requests
+                function debounce(func, delay) {
+                    clearTimeout(debounceTimeout);
+                    debounceTimeout = setTimeout(func, delay);
+                }
+                
+    function updateSessionData() {
+
+                    var formData = {
+                        vd_denomination = $('input[name="denomination"]').val(),
+                        vd_quantity = $('input[name="quantity"]').val(),
+                        vd_gift_send_option = $('select[name="gift_send_option"]').val(),
+                        vd_receiver_name = $('input[name="receiver_name"]').val(),
+                        vd_receiver_email = $('input[name="receiver_email]').val(),
+                        vd_receiver_mobile = $('input[name="receiver_msg]').val(),
+                    }
+                }
+    
+    function saveGiftCardFormData(callback) {
+                    var formData = $('#giftCardPageForm').serialize(); // Serialize the form data
+
+                    // AJAX POST request to save data to the session
+                    $.ajax({
+                        type: 'POST',
+                        url: '{{ route('save-gift-card-form') }}',
+                        data: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+
+                            if (callback) callback(); // Call the callback if provided
+                        },
+                        error: function(response) {
+                            console.error('Error saving form data:', response);
+                        }
+                    });
+                }
+
+                      // Event listener for changes in form fields to auto-save data
+                $('input[name="denomination"], input[name="quantity"], input[name="gift_send_option"], input[name="receiver_name"], input[name="receiver_email"], input[name="receiver_mobile"], input[name="receiver_msg"]')
+                    .on('input change', function() {
+                        debounce(saveGiftCardFormData, 500); // Save data with a 500ms debounce
+                    });
+
+                $('[data-target="#Modallogin"]').click(function() {
+                    saveGiftCardFormData(function() {
+                        // After saving the data, check if the user is authenticated
+                        if (isAuthenticated) {
+                            $('#giftCardPageForm').submit(); // Submit the form if authenticated
+                        } else {
+                            $('#Modallogin').modal('show'); // Show the login modal if not authenticated
+                        }
+                    });
+                });
+
+                // Custom method to validate Indian mobile numbers
+                $.validator.addMethod("indianMobile", function(value, element) {
+                    return this.optional(element) || /^[6-9]\d{9}$/.test(value);
+                }, "Please enter a valid mobile number.");
+
+                // Custom method to validate denomination as a reasonable integer
+                $.validator.addMethod("reasonableDenomination", function(value, element) {
+                    return this.optional(element) || (/^\d{1,6}$/).test(value); // Allow only up to 6 digits
+                }, "Please enter a valid denomination.");
+
+                // Custom method to validate receiver name
+                $.validator.addMethod("validReceiverName", function(value, element) {
+                    return this.optional(element) || /^[a-zA-Z\s]+$/.test(value);
+                }, "Please enter a valid name.");
+
+                // Custom method to validate quantity as a reasonable integer without leading zeros
+                $.validator.addMethod("validQuantity", function(value, element) {
+                    return this.optional(element) || (/^[1-9]\d{0,2}$/).test(value); // Allow only 1 to 999
+                }, "Please enter a valid quantity.");
+
+                // Initialize the form validation
+                $("#giftCardPageForm").validate({
+                    rules: {
+                        denomination: {
+                            required: true,
+                            number: true,
+                            reasonableDenomination: true
+                        },
+                         quantity: {
+                            required: true,
+                            digits: true,
+                            min: 1,
+                            max: 10,
+                            validQuantity: true
+
+                        },
+                        receiver_name: {
+                            required: function(element) {
+                                return $('input[name="gift_send_option"]:checked').val() === 'send_as_gift';
+                            },
+                            validReceiverName: true
+                        },
+                        receiver_email: {
+                            required: function(element) {
+                                return $('input[name="gift_send_option"]:checked').val() === 'send_as_gift';
+                            },
+                            email: true
+                        },
+                        receiver_mobile: {
+                            required: function(element) {
+                                return $('input[name="gift_send_option"]:checked').val() === 'send_as_gift';
+                            },
+                            indianMobile: true
+                        }
+                    },
+                    messages: {
+                        denomination: {
+                            required: "Please enter a denomination.",
+                            number: "Please enter a valid denomination.",
+                            reasonableDenomination: "Please enter a reasonable denomination."
+                        },
+                        quantity: {
+                            required: "Please enter a quantity.",
+                            digits: "Please enter a valid quantity.",
+                            min: "Quantity must be at least 1.",
+                            max: "Quantity cannot exceed 10."
+                        },
+                        receiver_name: {
+                            required: "Please enter the receiver's name.",
+                            validReceiverName: "Please enter a valid name."
+                        },
+                        receiver_email: {
+                            required: "Please enter the receiver's email address.",
+                            email: "Please enter a valid email address."
+                        },
+                        receiver_mobile: {
+                            required: "Please enter the receiver's mobile number.",
+                            indianMobile: "Please enter a valid mobile number."
+                        }
+                    },
+                    errorElement: 'span',
+                    errorClass: 'text-danger',
+                    highlight: function(element) {
+                        $(element).addClass('is-invalid');
+                    },
+                    unhighlight: function(element) {
+                        $(element).removeClass('is-invalid');
+                    }
+                });
+
+</script>

@@ -45,27 +45,27 @@ class WoohooOrderController extends Controller
                     $this->handleSuccessFullOrder($orderCreatedResponse);
                     log::info(333);
                 } elseif (isset($orderCreatedResponse["status_code"]) && $orderCreatedResponse["status_code"] == "400") {
-                    $this->sendOrderFailureMail($qsOrderDetails);
+                    //$this->sendOrderFailureMail($qsOrderDetails);
                     $errorCode = $orderCreatedResponse["errorCode"] ?? "default";
                     $transactionStatusMessage = __("errors." . $errorCode);
                     Log::error("Order creation failed with status 400 and error code: " . $errorCode);
                 } elseif (isset($orderCreatedResponse["status_code"]) && $orderCreatedResponse["status_code"] == "500") {
-                    $this->sendOrderFailureMail($qsOrderDetails);
+                    //$this->sendOrderFailureMail($qsOrderDetails);
                     $errorCode = $orderCreatedResponse["errorCode"] ?? "default";
                     $transactionStatusMessage = __("errors." . $errorCode);
                     Log::error("Order creation failed with status 500 and error code: " . $errorCode);
                 } else {
-                    $this->sendOrderFailureMail($qsOrderDetails);
+                    //$this->sendOrderFailureMail($qsOrderDetails);
                     $transactionStatusMessage = __("errors.default");
                     Log::error("Unexpected response from order creation: " . json_encode($orderCreatedResponse));
                 }
             } else {
                 $transactionStatusMessage = __("errors.default");
-                $this->sendOrderFailureMail($qsOrderDetails);
+                //$this->sendOrderFailureMail($qsOrderDetails);
                 Log::error("Order creation request failed. No response received.");
             }
         } else {
-            $this->sendOrderFailureMail($qsOrderDetails);
+            //$this->sendOrderFailureMail($qsOrderDetails);
             $transactionStatusMessage = __("errors.default");
             Log::error("No payment data found in session.");
         }
@@ -127,7 +127,7 @@ class WoohooOrderController extends Controller
                     return ["transactionStatusMessage" => __("errors.7002"), "status_code" => 500, "status" => null, "errorCode" => "7002", "errorMessage" => __("errors.7002"), "defaultErrorMessage" => __("errors.default"), "isSuccessful" => false];
                 }
             } else {
-                $this->sendOrderFailureMail($qsOrderDetails);
+                //$this->sendOrderFailureMail($qsOrderDetails);
                 $statusCode = $createOrderResponse->status();
                 $response = json_decode($createOrderResponse->body(), true);
                 $errorResponse = $this->handleErrorResponse($statusCode, $response, $qsOrderDetails, $createOrderResponse);
@@ -140,12 +140,12 @@ class WoohooOrderController extends Controller
                 Log::info("Status function response is complete. Returning response.");
                 return $statusFunctionResponse;
             } else {
-                $this->sendOrderFailureMail($qsOrderDetails);
+                //$this->sendOrderFailureMail($qsOrderDetails);
                 Log::info("Status function response is not complete. Returning failure.");
                 return ["transactionStatusMessage" => __("errors.7002"), "status_code" => 500, "errorCode" => "7002", "errorMessage" => __("errors.7002"), "defaultErrorMessage" => __("errors.default"), "isSuccessful" => false];
             }
         } catch (\Exception $e) {
-            $this->sendOrderFailureMail($qsOrderDetails);
+            //$this->sendOrderFailureMail($qsOrderDetails);
             Log::error("Unexpected exception: " . $e->getMessage());
             return $this->handleUnexpectedErrorResponse($e);
         }

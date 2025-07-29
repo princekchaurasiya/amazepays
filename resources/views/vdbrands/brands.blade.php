@@ -157,6 +157,7 @@
 
                     var formData = {
                         vd_discount: {{ $brand['Discount'] }},
+                        vd_brand_code: '{{ $brand['BrandCode'] }}',
                         vd_denomination: $('input[name="denomination"]').val(),
                         vd_quantity: $('input[name="quantity"]').val(),
                         vd_gift_send_option: $('input[name="gift_send_option"]:checked').val(),

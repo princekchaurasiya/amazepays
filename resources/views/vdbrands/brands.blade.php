@@ -143,6 +143,14 @@
             $('#Modallogin').modal('show');
         }, 1000);
     }
+    elseif (window.isAuthenticated) {
+        setTimeout(function () {
+            $('#Modallogin').modal('hide');
+        }, 1000);
+        
+    }
+
+                // Function to update session data
                 
     function updateSessionData() {
 

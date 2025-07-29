@@ -8,7 +8,7 @@
         $images = json_decode(str_replace("'", '"', $brand['Images']), true);
         $redeemSteps = $brand['RedeemSteps'];
     @endphp
-<form method="POST" id="giftCardPageForm">
+<form action="{{ url('vdcheckoutPage') }}" method="POST" id="giftCardPageForm">
     <div class="card mb-4 shadow">
         <div class="row g-0">
             <div class="col-md-4">
@@ -143,11 +143,21 @@
             $('#Modallogin').modal('show');
         }, 1000);
     }
+    else
+        {
+        setTimeout(function () {
+            $('#Modallogin').modal('hide');
+        }, 1000);
+        
+    }
+
+                // Function to update session data
                 
     function updateSessionData() {
 
                     var formData = {
                         vd_discount: {{ $brand['Discount'] }},
+                        vd_brand_code: '{{ $brand['BrandCode'] }}',
                         vd_denomination: $('input[name="denomination"]').val(),
                         vd_quantity: $('input[name="quantity"]').val(),
                         vd_gift_send_option: $('input[name="gift_send_option"]:checked').val(),

@@ -22,6 +22,7 @@ use App\Http\Controllers\{
     SearchController,
     OtpVerificationController,
     ProductPageController,
+    VDPageController,
     CCAvenueController,
     PaymentDetailsExportController,
     ProfileController,
@@ -460,7 +461,11 @@ Route::get('/giftcards2', [AthenaGiftcardController::class, 'showGiftcards'])->n
 Route::get('/giftcard/purchase/view', [AthenaGiftCardController::class, 'purchaseView'])->name('giftcard.purchase.view');
 Route::post('/giftcard/purchase', [AthenaGiftCardController::class, 'purchase'])->name('giftcard.purchase');
 
+
 //Unlimit redirect
 Route::get('/redirect-to-woohoo', function () {
     return view('woohoo.redirect-to-woohoo'); 
 });
+
+Route::post('/vd-update-session-data', [VDPageController::class, 'updateSessionData'])->name('vdupdateSessionData');
+   Route::match(['get', 'post'], '/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckoutPage');

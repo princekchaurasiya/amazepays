@@ -461,5 +461,5 @@ Route::get('/giftcards2', [AthenaGiftcardController::class, 'showGiftcards'])->n
 Route::get('/giftcard/purchase/view', [AthenaGiftCardController::class, 'purchaseView'])->name('giftcard.purchase.view');
 Route::post('/giftcard/purchase', [AthenaGiftCardController::class, 'purchase'])->name('giftcard.purchase');
 
-Route::post('/vd-update-session-data', [VDPageController::class, 'updateSessionData'])->name('updateSessionData');
-   Route::match(['get', 'post'], '/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('checkoutPage');
+Route::post('/vd-update-session-data', [VDPageController::class, 'updateSessionData'])->name('vdupdateSessionData');
+   Route::match(['get', 'post'], '/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckoutPage');

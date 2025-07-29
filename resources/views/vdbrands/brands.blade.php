@@ -143,7 +143,8 @@
             $('#Modallogin').modal('show');
         }, 1000);
     }
-    elseif (window.isAuthenticated) {
+    else
+        {
         setTimeout(function () {
             $('#Modallogin').modal('hide');
         }, 1000);

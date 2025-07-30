@@ -399,6 +399,8 @@ class WoohooOrderController extends Controller
             "denomination" => $order["denomination"],
             "discount_percentage" => $order["discount_percentage"],
         ];
+        try
+        {
         $prepareSmsDetails = ["name" => $order["sender_first_name"], "order_id" => $order["woohoo_order_id"], "reference_id" => $order["id"], "order_date" => $order["created_at"], "billing_name" => $order["sender_first_name"], "order_amount" => $order["amount"], "cardSku" => $order["sku"], "cardProductName" => $order["name"], "shipToName" => $order["receiver_name"] ?? $order["sender_first_name"], "shipToContactNo" => $order["receiver_mobile"] ?? $order["sender_phone_no"], 'grand_payable_amount"' => $order['grand_payable_amount"'], "perOrderQuantity" => $order["quantity"], "giftSendOption" => $order["gift_send_option"], "billing_tel" => $order["sender_phone_no"],];
         if ($order["delivery_mode"] == "both") {
             $this->sendTransactionMail($prepareMailDetails);
@@ -415,6 +417,10 @@ class WoohooOrderController extends Controller
             $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
         }
         log::info("zzzz");
+        }
+        catch (\Exception $e) {
+                        return ErrorHandler::handleOrderError($e);
+                    }
     }
     public function updateQsOrder($orderCreatedResponse)
     {

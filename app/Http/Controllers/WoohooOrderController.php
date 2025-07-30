@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\ErrorHandler;
 use App\Models\QsOrder;
 use App\Models\OrderSummary;
 use App\Models\Billing;
@@ -46,15 +47,25 @@ class WoohooOrderController extends Controller
                     $this->handleSuccessFullOrder($orderCreatedResponse);
                     log::info(333);
                 } elseif (isset($orderCreatedResponse["status_code"]) && $orderCreatedResponse["status_code"] == "400") {
-                    //$this->sendOrderFailureMail($qsOrderDetails);
+                    try
+                    {
+                    $this->sendOrderFailureMail($qsOrderDetails);
                     $errorCode = $orderCreatedResponse["errorCode"] ?? "default";
                     $transactionStatusMessage = __("errors." . $errorCode);
                     Log::error("Order creation failed with status 400 and error code: " . $errorCode);
+                } catch (\Exception $e) {
+                        return ErrorHandler::handleOrderError($e);
+                    }
                 } elseif (isset($orderCreatedResponse["status_code"]) && $orderCreatedResponse["status_code"] == "500") {
-                    //$this->sendOrderFailureMail($qsOrderDetails);
+                    try
+                    {
+                    $this->sendOrderFailureMail($qsOrderDetails);
                     $errorCode = $orderCreatedResponse["errorCode"] ?? "default";
                     $transactionStatusMessage = __("errors." . $errorCode);
                     Log::error("Order creation failed with status 500 and error code: " . $errorCode);
+                    } catch (\Exception $e) {
+                                    return ErrorHandler::handleOrderError($e);
+                                }
                 } else {
                     //$this->sendOrderFailureMail($qsOrderDetails);
                     $transactionStatusMessage = __("errors.default");

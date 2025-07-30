@@ -58,6 +58,7 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $exception)
     {
+        $message = $exception->getMessage();
         // Check if it's an authentication or validation exception
         if ($exception instanceof AuthenticationException || $exception instanceof ValidationException) {
             return parent::render($request, $exception);
@@ -67,6 +68,16 @@ class Handler extends ExceptionHandler
         if (!($exception instanceof \Symfony\Component\HttpKernel\Exception\HttpException)) {
             $errorMessage = $exception->getMessage();
             return response()->view('userpanel.wentWrong', ['errorMessage' => $errorMessage], 500);
+        }
+
+        if (str_contains($message, 'Address in mailbox given [] does not comply with RFC 2822, 3.6.2.') || 
+        str_contains($message, 'Error code : 5313') || 
+        str_contains($message, 'Order failed: Duplicate reference number provided') || 
+        str_contains($message, 'Error code: 400')) {
+
+        return response()->json([
+            'message' => 'Please place a fresh new order'
+        ], 400);
         }
 
         return parent::render($request, $exception);

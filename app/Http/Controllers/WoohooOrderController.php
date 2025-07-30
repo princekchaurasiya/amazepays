@@ -24,11 +24,11 @@ class WoohooOrderController extends Controller
             if (!$qsOrderDetails) {
                 Log::error("No order details found for ID: " . $request->order_id);
                 return view("order.order-status", ['transactionStatusMessage' => __("errors.order_not_found"), 'isSuccessful' => false,]);
-            }
+            }*/
             $newRefNo = 'Amzr' . $qsOrderDetails->id;
             $qsOrderDetails->refno = $newRefNo;
             $qsOrderDetails->save();
-        } else {
+       /* } else {
             $qsOrderDetails = Session::get("payment_data", null);
         }*/
        // Log::info("Payment data collected from session and stored in \$qsOrderDetails variable is: " . json_encode($qsOrderDetails));

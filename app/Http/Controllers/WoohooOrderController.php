@@ -161,6 +161,9 @@ class WoohooOrderController extends Controller
             Log::error("Unexpected exception: " . $e->getMessage());
             return $this->handleUnexpectedErrorResponse($e);
         }
+        catch (\Exception $e) {
+                        return ErrorHandler::handleOrderError($e);
+                    }
     }
     private function handleErrorResponse($statusCode, $response, $qsOrderDetails, $createOrderResponse)
     {

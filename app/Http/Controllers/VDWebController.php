@@ -189,7 +189,7 @@ public function buildPayloadFromDB($recordId)
     $payload = [
         'order_id'        => 'ORD-' . strtoupper(Str::random(10)),
         //'request_ref_no'  => 'REF-' . strtoupper(Str::random(12)),
-        'request_ref_no'  => VDIDAmazepay20250731190229,
+        'request_ref_no'  => 'VDIDAmazepay20250731190229',
         'distributor_id'  => $evcRequest->distributor_id,
         'sku_code'        => $evcRequest->sku_code,
         'no_of_card'      => $evcRequest->no_of_card,

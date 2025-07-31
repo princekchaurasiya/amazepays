@@ -188,8 +188,7 @@ public function buildPayloadFromDB($recordId)
     // Build payload using database values + dynamic IDs
     $payload = [
         'order_id'        => 'ORD-' . strtoupper(Str::random(10)),
-        //'request_ref_no'  => 'REF-' . strtoupper(Str::random(12)),
-        'request_ref_no'  => 'VDIDAmazepay20250731190229',
+        'request_ref_no'  => 'REF-' . strtoupper(Str::random(12)),
         'distributor_id'  => $evcRequest->distributor_id,
         'sku_code'        => $evcRequest->sku_code,
         'no_of_card'      => $evcRequest->no_of_card,
@@ -321,7 +320,7 @@ public function buildPayloadFromDB($recordId)
         $status = $vdWebApiService->getEvcStatus(
             $token,
             $request->order_id,
-            $request->request_ref_no
+            $request->VDIDAmazepay20250731191047,
         );
 
         if (!$status) {

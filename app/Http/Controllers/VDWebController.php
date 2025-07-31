@@ -320,7 +320,7 @@ public function buildPayloadFromDB($recordId)
         $status = $vdWebApiService->getEvcStatus(
             $token,
             $request->order_id,
-            $request->VDIDAmazepay20250731191047,
+            $request->request_ref_no
         );
 
         if (!$status) {

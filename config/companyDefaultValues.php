@@ -46,7 +46,7 @@ return [
     'sms_temp_id' => env('SMS_TEMP_ID', '1107169019646710710'),
     'sms_otp_temp_id' => env('SMS_OTP_TEMP_ID', '1107173936005805498'),
     'sms_tmid' => env('SMS_TMID', '1101633530000071318,1602100000000009244'),
-    'sendMailFrom' => env('SEND_MAIL_FROM', 'it@amazepays'),
+    'sendMailFrom' => env('SEND_MAIL_FROM', 'it@amazepays.in'),
     'company_website' => env('COMPANY_WEBSITE', 'https://amazepays.in/'),
     'company_contact_no' => env('COMPANY_CONTACT_NO', '8208893951'),
     'company_new_website_link' => env('COMPANY_NEW_WEBSITE_LINK', 'https://freneticindia.com/'),

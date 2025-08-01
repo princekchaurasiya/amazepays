@@ -385,7 +385,7 @@ class WoohooOrderController extends Controller
             "discount" => $order["discounted_amount_value"],
             "amount_payable_after_discount" => $order["amount_payable_after_discount"],
             "contact_person" => $order["sender_first_name"],
-            "shipping_address" => $order["delivery_mode"] === "email" ? $order["sender_email"] : $order["sender_address_1"] . " " . $order["sender_address_2"] . ", " . $order["sender_city"] . ", " . $order["sender_state"] . " " . $order["sender_post_code"],
+            "shipping_address" => $order["sender_address_1"] . " " . $order["sender_address_2"] . ", " . $order["sender_city"] . ", " . $order["sender_state"] . " " . $order["sender_post_code"],
             "invoice_number" => $invoiceNumber,
             "invoice_date" => $invoiceDate,
             "cardSku" => $order["sku"],
@@ -505,7 +505,7 @@ class WoohooOrderController extends Controller
     //     $pdf = PDF::loadView("layouts.invoice2");
 
     //     // Use static email and subject
-    //     $recipientEmail = "prince.toutle@gmail.com";
+     //   $recipientEmail = "prince.toutle@gmail.com";
     //     $recipientName = "Prince";
 
     //     // Send the email
@@ -617,8 +617,10 @@ class WoohooOrderController extends Controller
 
     public function sendGiftMail($prepareMailDetails, $cardsArray)
     {
-        $recipientEmail = $prepareMailDetails["shipToEmail"] ?? null;
-        $recipientName = $prepareMailDetails["shipToName"] ?? null;
+        $recipientEmail = $prepareMailDetails["billing_email"] ?? null;
+        $recipientName = $prepareMailDetails["billing_name"] ?? null;
+        Log::info("This is prepare mail details: " . json_encode($prepareMailDetails));
+        Log::info($recipientEmail, $recipientName);
 
         // Validate recipient email before sending
         if (empty($recipientEmail) || !filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
@@ -643,7 +645,7 @@ class WoohooOrderController extends Controller
 
             Mail::send(["html" => "layouts.giftmail"], compact("prepareMailDetails", "cardsArray"), function ($message) use ($prepareMailDetails) {
                 $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))
-                    ->to($prepareMailDetails["shipToEmail"], $prepareMailDetails["shipToName"])
+                    ->to($prepareMailDetails["billing_email"], $prepareMailDetails["billing_name"])
                     ->subject(config("companyDefaultValues.gift_subject"));
             });
 

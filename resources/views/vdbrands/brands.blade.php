@@ -45,9 +45,15 @@
                                         </div>
                     </div>
                     <div class="row g-0">
-                    <a href="#" class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color" data-toggle="modal" data-target="#Modallogin">
-                                                    Go to Checkout Page
-                                                </a>
+                        @if(auth()->check())
+                            <button type="submit" class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color">
+                                Go to Checkout Page
+                            </button>
+                        @else
+                            <a href="#" class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color" data-toggle="modal" data-target="#Modallogin">
+                                Go to Checkout Page
+                            </a>
+                        @endif
                     </div>
 <div class="tabs">
 

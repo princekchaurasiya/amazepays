@@ -139,16 +139,19 @@
 
                  window.isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
     if (!window.isAuthenticated) {
+        // Only show login modal if user is not authenticated
         setTimeout(function () {
-            $('#Modallogin').modal('show');
+            if (!$('#Modallogin').hasClass('show')) {
+                $('#Modallogin').modal('show');
+            }
         }, 1000);
-    }
-    else
-        {
+    } else {
+        // Hide login modal if user is authenticated and modal is visible
         setTimeout(function () {
-            $('#Modallogin').modal('hide');
+            if ($('#Modallogin').hasClass('show')) {
+                $('#Modallogin').modal('hide');
+            }
         }, 1000);
-        
     }
 
                 // Function to update session data

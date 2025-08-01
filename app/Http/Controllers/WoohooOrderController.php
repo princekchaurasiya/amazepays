@@ -440,11 +440,25 @@ class WoohooOrderController extends Controller
     }
     public function sendTransactionMail($prepareMailDetails)
     {
+        $recipientEmail = $prepareMailDetails["billing_email"] ?? null;
+        $recipientName = $prepareMailDetails["billing_name"] ?? null;
+
+        // Validate recipient email before sending
+        if (empty($recipientEmail) || !filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+            Log::error("Transaction mail not sent: invalid or empty recipient email", [
+                'recipient_email' => $recipientEmail,
+                'recipient_name' => $recipientName,
+                'order_id' => $prepareMailDetails["order_id"] ?? 'N/A',
+                'prepare_mail_details' => $prepareMailDetails
+            ]);
+            return;
+        }
+
         try {
             // Log attempt to send transaction mail
             Log::info("Attempting to send transaction mail", [
-                'recipient_email' => $prepareMailDetails["billing_email"],
-                'recipient_name' => $prepareMailDetails["billing_name"],
+                'recipient_email' => $recipientEmail,
+                'recipient_name' => $recipientName,
                 'order_id' => $prepareMailDetails["order_id"] ?? 'N/A'
             ]);
 
@@ -459,8 +473,8 @@ class WoohooOrderController extends Controller
 
             // Log successful mail sent
             Log::info("Transaction mail sent successfully", [
-                'recipient_email' => $prepareMailDetails["billing_email"],
-                'recipient_name' => $prepareMailDetails["billing_name"],
+                'recipient_email' => $recipientEmail,
+                'recipient_name' => $recipientName,
                 'order_id' => $prepareMailDetails["order_id"] ?? 'N/A'
             ]);
 
@@ -473,8 +487,8 @@ class WoohooOrderController extends Controller
                 'error_message' => $e->getMessage(),
                 'error_file' => $e->getFile(),
                 'error_line' => $e->getLine(),
-                'recipient_email' => $prepareMailDetails["billing_email"] ?? 'N/A',
-                'recipient_name' => $prepareMailDetails["billing_name"] ?? 'N/A',
+                'recipient_email' => $recipientEmail,
+                'recipient_name' => $recipientName,
                 'order_id' => $prepareMailDetails["order_id"] ?? 'N/A',
                 'stack_trace' => $e->getTraceAsString()
             ]);
@@ -525,24 +539,41 @@ class WoohooOrderController extends Controller
         $orderFailureAdminEmail = env('ORDER_FAILURE_ADMIN_EMAIL');
         $orderFailureITAdminEmail = env('ORDER_FAILURE_IT_ADMIN_EMAIL');
 
-        // Log email configuration
-        Log::info("Order failure mail configuration", [
-            'admin_email' => $orderFailureAdminEmail,
-            'it_admin_email' => $orderFailureITAdminEmail,
-            'from_email' => config("companyDefaultValues.sendMailFrom"),
-            'company_name' => config("companyDefaultValues.company_name"),
-            'order_id' => $qsOrderDetails['order_id'] ?? 'N/A'
-        ]);
-
         // Validate email configuration
-        if (empty($orderFailureAdminEmail) || empty($orderFailureITAdminEmail)) {
-            Log::error("Order failure mail configuration error", [
-                'admin_email_empty' => empty($orderFailureAdminEmail),
-                'it_admin_email_empty' => empty($orderFailureITAdminEmail),
+        if (empty($orderFailureAdminEmail) || !filter_var($orderFailureAdminEmail, FILTER_VALIDATE_EMAIL)) {
+            Log::error("Order failure mail not sent: invalid or empty admin email", [
+                'admin_email' => $orderFailureAdminEmail,
                 'order_id' => $qsOrderDetails['order_id'] ?? 'N/A'
             ]);
             return;
         }
+
+        if (empty($orderFailureITAdminEmail) || !filter_var($orderFailureITAdminEmail, FILTER_VALIDATE_EMAIL)) {
+            Log::error("Order failure mail not sent: invalid or empty IT admin email", [
+                'it_admin_email' => $orderFailureITAdminEmail,
+                'order_id' => $qsOrderDetails['order_id'] ?? 'N/A'
+            ]);
+            return;
+        }
+
+        // Validate from email configuration
+        $fromEmail = config("companyDefaultValues.sendMailFrom");
+        if (empty($fromEmail) || !filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+            Log::error("Order failure mail not sent: invalid or empty from email", [
+                'from_email' => $fromEmail,
+                'order_id' => $qsOrderDetails['order_id'] ?? 'N/A'
+            ]);
+            return;
+        }
+
+        // Log email configuration
+        Log::info("Order failure mail configuration", [
+            'admin_email' => $orderFailureAdminEmail,
+            'it_admin_email' => $orderFailureITAdminEmail,
+            'from_email' => $fromEmail,
+            'company_name' => config("companyDefaultValues.company_name"),
+            'order_id' => $qsOrderDetails['order_id'] ?? 'N/A'
+        ]);
 
         try {
             // Log attempt to send order failure mail
@@ -586,11 +617,26 @@ class WoohooOrderController extends Controller
 
     public function sendGiftMail($prepareMailDetails, $cardsArray)
     {
+        $recipientEmail = $prepareMailDetails["shipToEmail"] ?? null;
+        $recipientName = $prepareMailDetails["shipToName"] ?? null;
+
+        // Validate recipient email before sending
+        if (empty($recipientEmail) || !filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+            Log::error("Gift mail not sent: invalid or empty recipient email", [
+                'recipient_email' => $recipientEmail,
+                'recipient_name' => $recipientName,
+                'order_id' => $prepareMailDetails["order_id"] ?? 'N/A',
+                'cards_count' => count($cardsArray),
+                'prepare_mail_details' => $prepareMailDetails
+            ]);
+            return;
+        }
+
         try {
             // Log attempt to send gift mail
             Log::info("Attempting to send gift mail", [
-                'recipient_email' => $prepareMailDetails["shipToEmail"],
-                'recipient_name' => $prepareMailDetails["shipToName"],
+                'recipient_email' => $recipientEmail,
+                'recipient_name' => $recipientName,
                 'order_id' => $prepareMailDetails["order_id"] ?? 'N/A',
                 'cards_count' => count($cardsArray)
             ]);
@@ -603,8 +649,8 @@ class WoohooOrderController extends Controller
 
             // Log successful gift mail sent
             Log::info("Gift mail sent successfully", [
-                'recipient_email' => $prepareMailDetails["shipToEmail"],
-                'recipient_name' => $prepareMailDetails["shipToName"],
+                'recipient_email' => $recipientEmail,
+                'recipient_name' => $recipientName,
                 'order_id' => $prepareMailDetails["order_id"] ?? 'N/A',
                 'cards_count' => count($cardsArray)
             ]);
@@ -618,8 +664,8 @@ class WoohooOrderController extends Controller
                 'error_message' => $e->getMessage(),
                 'error_file' => $e->getFile(),
                 'error_line' => $e->getLine(),
-                'recipient_email' => $prepareMailDetails["shipToEmail"] ?? 'N/A',
-                'recipient_name' => $prepareMailDetails["shipToName"] ?? 'N/A',
+                'recipient_email' => $recipientEmail,
+                'recipient_name' => $recipientName,
                 'order_id' => $prepareMailDetails["order_id"] ?? 'N/A',
                 'cards_count' => count($cardsArray),
                 'stack_trace' => $e->getTraceAsString()
@@ -637,6 +683,17 @@ class WoohooOrderController extends Controller
             $orderNumber = $prepareSmsDetails["order_id"];
             $productName = $prepareSmsDetails["cardProductName"];
             $destination = $prepareSmsDetails["billing_tel"];
+            
+            // Validate phone number before sending SMS
+            if (empty($destination) || !preg_match('/^[6-9]\d{9}$/', $destination)) {
+                Log::error("Transactional SMS not sent: invalid or empty phone number", [
+                    'destination_number' => $destination,
+                    'recipient_name' => $name,
+                    'order_number' => $orderNumber,
+                    'prepare_sms_details' => $prepareSmsDetails
+                ]);
+                return;
+            }
             
             // Log SMS configuration and attempt
             Log::info("Attempting to send transactional SMS", [
@@ -707,6 +764,18 @@ class WoohooOrderController extends Controller
             $orderNumber = $prepareSmsDetails["order_id"];
             $orderAmount = $prepareSmsDetails["order_amount"];
             $destination = $prepareSmsDetails["shipToContactNo"];
+            
+            // Validate phone number before sending SMS
+            if (empty($destination) || !preg_match('/^[6-9]\d{9}$/', $destination)) {
+                Log::error("Gift SMS not sent: invalid or empty phone number", [
+                    'destination_number' => $destination,
+                    'recipient_name' => $name,
+                    'order_number' => $orderNumber,
+                    'cards_count' => count($cardsArray),
+                    'prepare_sms_details' => $prepareSmsDetails
+                ]);
+                return;
+            }
             
             // Log SMS configuration and attempt
             Log::info("Attempting to send gift SMS", [

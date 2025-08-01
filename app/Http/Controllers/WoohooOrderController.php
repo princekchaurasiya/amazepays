@@ -440,12 +440,48 @@ class WoohooOrderController extends Controller
     }
     public function sendTransactionMail($prepareMailDetails)
     {
-        $pdf = PDF::loadView("layouts.invoice", $prepareMailDetails);
-        Mail::send(["html" => "layouts.mail"], compact("prepareMailDetails", "pdf"), function ($message) use ($prepareMailDetails, $pdf) {
-            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))->to($prepareMailDetails["billing_email"], $prepareMailDetails["billing_name"])->subject(config("companyDefaultValues.default_subject"))->attachData($pdf->output(), "invoice.pdf");
-        });
-        $msg = "Trasnaction Mail created successfully!";
-        $status = "success";
+        try {
+            // Log attempt to send transaction mail
+            Log::info("Attempting to send transaction mail", [
+                'recipient_email' => $prepareMailDetails["billing_email"],
+                'recipient_name' => $prepareMailDetails["billing_name"],
+                'order_id' => $prepareMailDetails["order_id"] ?? 'N/A'
+            ]);
+
+            $pdf = PDF::loadView("layouts.invoice", $prepareMailDetails);
+            
+            Mail::send(["html" => "layouts.mail"], compact("prepareMailDetails", "pdf"), function ($message) use ($prepareMailDetails, $pdf) {
+                $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))
+                    ->to($prepareMailDetails["billing_email"], $prepareMailDetails["billing_name"])
+                    ->subject(config("companyDefaultValues.default_subject"))
+                    ->attachData($pdf->output(), "invoice.pdf");
+            });
+
+            // Log successful mail sent
+            Log::info("Transaction mail sent successfully", [
+                'recipient_email' => $prepareMailDetails["billing_email"],
+                'recipient_name' => $prepareMailDetails["billing_name"],
+                'order_id' => $prepareMailDetails["order_id"] ?? 'N/A'
+            ]);
+
+            $msg = "Transaction Mail created successfully!";
+            $status = "success";
+
+        } catch (\Exception $e) {
+            // Log detailed error information
+            Log::error("Failed to send transaction mail", [
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'recipient_email' => $prepareMailDetails["billing_email"] ?? 'N/A',
+                'recipient_name' => $prepareMailDetails["billing_name"] ?? 'N/A',
+                'order_id' => $prepareMailDetails["order_id"] ?? 'N/A',
+                'stack_trace' => $e->getTraceAsString()
+            ]);
+
+            $msg = "Failed to send transaction mail: " . $e->getMessage();
+            $status = "error";
+        }
     }
 
 
@@ -489,7 +525,33 @@ class WoohooOrderController extends Controller
         $orderFailureAdminEmail = env('ORDER_FAILURE_ADMIN_EMAIL');
         $orderFailureITAdminEmail = env('ORDER_FAILURE_IT_ADMIN_EMAIL');
 
+        // Log email configuration
+        Log::info("Order failure mail configuration", [
+            'admin_email' => $orderFailureAdminEmail,
+            'it_admin_email' => $orderFailureITAdminEmail,
+            'from_email' => config("companyDefaultValues.sendMailFrom"),
+            'company_name' => config("companyDefaultValues.company_name"),
+            'order_id' => $qsOrderDetails['order_id'] ?? 'N/A'
+        ]);
+
+        // Validate email configuration
+        if (empty($orderFailureAdminEmail) || empty($orderFailureITAdminEmail)) {
+            Log::error("Order failure mail configuration error", [
+                'admin_email_empty' => empty($orderFailureAdminEmail),
+                'it_admin_email_empty' => empty($orderFailureITAdminEmail),
+                'order_id' => $qsOrderDetails['order_id'] ?? 'N/A'
+            ]);
+            return;
+        }
+
         try {
+            // Log attempt to send order failure mail
+            Log::info("Attempting to send order failure mail", [
+                'admin_email' => $orderFailureAdminEmail,
+                'it_admin_email' => $orderFailureITAdminEmail,
+                'order_id' => $qsOrderDetails['order_id'] ?? 'N/A'
+            ]);
+
             // Send the email using Blade template
             Mail::send('email.order-failure', [
                 'orderDetails' => $qsOrderDetails  // Pass order details to the view
@@ -501,44 +563,137 @@ class WoohooOrderController extends Controller
             });
 
             // Log the email sent information
-            Log::info("Order Failure email sent to admin: " . $orderFailureAdminEmail . " and IT admin: " . $orderFailureITAdminEmail);
+            Log::info("Order Failure email sent successfully", [
+                'admin_email' => $orderFailureAdminEmail,
+                'it_admin_email' => $orderFailureITAdminEmail,
+                'order_id' => $qsOrderDetails['order_id'] ?? 'N/A'
+            ]);
 
         } catch (\Exception $e) {
             // Log any errors during the email sending process
-            Log::error("Failed to send Order Failure email: " . $e->getMessage());
+            Log::error("Failed to send Order Failure email", [
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'admin_email' => $orderFailureAdminEmail,
+                'it_admin_email' => $orderFailureITAdminEmail,
+                'order_id' => $qsOrderDetails['order_id'] ?? 'N/A',
+                'stack_trace' => $e->getTraceAsString()
+            ]);
         }
     }
 
 
     public function sendGiftMail($prepareMailDetails, $cardsArray)
     {
-        Mail::send(["html" => "layouts.giftmail"], compact("prepareMailDetails", "cardsArray"), function ($message) use ($prepareMailDetails) {
-            $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))->to($prepareMailDetails["shipToEmail"], $prepareMailDetails["shipToName"])->subject(config("companyDefaultValues.gift_subject"));
-        });
-        $msg = "Gift Mail created successfully!";
-        $status = "success";
+        try {
+            // Log attempt to send gift mail
+            Log::info("Attempting to send gift mail", [
+                'recipient_email' => $prepareMailDetails["shipToEmail"],
+                'recipient_name' => $prepareMailDetails["shipToName"],
+                'order_id' => $prepareMailDetails["order_id"] ?? 'N/A',
+                'cards_count' => count($cardsArray)
+            ]);
+
+            Mail::send(["html" => "layouts.giftmail"], compact("prepareMailDetails", "cardsArray"), function ($message) use ($prepareMailDetails) {
+                $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))
+                    ->to($prepareMailDetails["shipToEmail"], $prepareMailDetails["shipToName"])
+                    ->subject(config("companyDefaultValues.gift_subject"));
+            });
+
+            // Log successful gift mail sent
+            Log::info("Gift mail sent successfully", [
+                'recipient_email' => $prepareMailDetails["shipToEmail"],
+                'recipient_name' => $prepareMailDetails["shipToName"],
+                'order_id' => $prepareMailDetails["order_id"] ?? 'N/A',
+                'cards_count' => count($cardsArray)
+            ]);
+
+            $msg = "Gift Mail created successfully!";
+            $status = "success";
+
+        } catch (\Exception $e) {
+            // Log detailed error information
+            Log::error("Failed to send gift mail", [
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'recipient_email' => $prepareMailDetails["shipToEmail"] ?? 'N/A',
+                'recipient_name' => $prepareMailDetails["shipToName"] ?? 'N/A',
+                'order_id' => $prepareMailDetails["order_id"] ?? 'N/A',
+                'cards_count' => count($cardsArray),
+                'stack_trace' => $e->getTraceAsString()
+            ]);
+
+            $msg = "Failed to send gift mail: " . $e->getMessage();
+            $status = "error";
+        }
     }
     public function sendTransactionalMessage($prepareSmsDetails)
     {
-        $name = $prepareSmsDetails["name"];
-        $orderAmount = $prepareSmsDetails["order_amount"];
-        $orderNumber = $prepareSmsDetails["order_id"];
-        $productName = $prepareSmsDetails["cardProductName"];
-        $destination = $prepareSmsDetails["billing_tel"];
-        $sms_api_url = config("transactionSms.sms_api_url");
-        $sms_user_name = config("transactionSms.sms_user_name");
-        $sms_user_password = config("transactionSms.sms_user_password");
-        $sms_source = config("transactionSms.sms_source");
-        $sms_message = "Hello " . $name . ", Your order no " . $orderNumber . " of " . $orderAmount . " is generated successfully. Please check out respected Email for that. Thanks - FRENETIC INDIA.";
-        $sms_entity_id = config("transactionSms.sms_entity_id");
-        $sms_temp_id = config("transactionSms.sms_temp_id");
-        $sms_tmid = config("transactionSms.sms_tmid");
+        try {
+            $name = $prepareSmsDetails["name"];
+            $orderAmount = $prepareSmsDetails["order_amount"];
+            $orderNumber = $prepareSmsDetails["order_id"];
+            $productName = $prepareSmsDetails["cardProductName"];
+            $destination = $prepareSmsDetails["billing_tel"];
+            
+            // Log SMS configuration and attempt
+            Log::info("Attempting to send transactional SMS", [
+                'recipient_name' => $name,
+                'order_amount' => $orderAmount,
+                'order_number' => $orderNumber,
+                'product_name' => $productName,
+                'destination_number' => $destination
+            ]);
 
-        $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id&tmid=$sms_tmid";
-        $response = Http::get($apiUrl);
-        \Log::info("API Response:", ["response" => $response]);
-        \Log::info("response status:", ["response status" => $response->status(),]);
-        \Log::info("API URL IS:", ["API URL" => $apiUrl]);
+            $sms_api_url = config("transactionSms.sms_api_url");
+            $sms_user_name = config("transactionSms.sms_user_name");
+            $sms_user_password = config("transactionSms.sms_user_password");
+            $sms_source = config("transactionSms.sms_source");
+            $sms_message = "Hello " . $name . ", Your order no " . $orderNumber . " of " . $orderAmount . " is generated successfully. Please check out respected Email for that. Thanks - FRENETIC INDIA.";
+            $sms_entity_id = config("transactionSms.sms_entity_id");
+            $sms_temp_id = config("transactionSms.sms_temp_id");
+            $sms_tmid = config("transactionSms.sms_tmid");
+
+            $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id&tmid=$sms_tmid";
+            
+            $response = Http::get($apiUrl);
+            
+            // Log SMS API response
+            Log::info("Transactional SMS API response", [
+                'response_status' => $response->status(),
+                'response_body' => $response->body(),
+                'api_url' => $apiUrl,
+                'order_number' => $orderNumber,
+                'destination_number' => $destination
+            ]);
+
+            if ($response->successful()) {
+                Log::info("Transactional SMS sent successfully", [
+                    'order_number' => $orderNumber,
+                    'destination_number' => $destination,
+                    'response_status' => $response->status()
+                ]);
+            } else {
+                Log::error("Transactional SMS failed", [
+                    'order_number' => $orderNumber,
+                    'destination_number' => $destination,
+                    'response_status' => $response->status(),
+                    'response_body' => $response->body()
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error("Exception occurred while sending transactional SMS", [
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'order_number' => $prepareSmsDetails["order_id"] ?? 'N/A',
+                'destination_number' => $prepareSmsDetails["billing_tel"] ?? 'N/A',
+                'stack_trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 
 
@@ -547,30 +702,104 @@ class WoohooOrderController extends Controller
 
     public function sendGiftMessage($prepareSmsDetails, $cardsArray)
     {
-        $name = $prepareSmsDetails["shipToName"];
-        $orderNumber = $prepareSmsDetails["order_id"];
-        $orderAmount = $prepareSmsDetails["order_amount"];
-        $destination = $prepareSmsDetails["shipToContactNo"];
-        $sms_api_url = config("giftSms.sms_api_url");
-        $sms_user_name = config("giftSms.sms_user_name");
-        $sms_user_password = config("giftSms.sms_user_password");
-        $sms_source = config("giftSms.sms_source");
-        $sms_entity_id = config("giftSms.sms_entity_id");
-        $sms_temp_id = config("giftSms.sms_temp_id");
-        $sms_tmid = config("giftSms.sms_tmid");
-        foreach ($cardsArray as $card) {
-            $cardId = $card["cardNumber"];
-            $cardPin = $card["cardPin"];
-            $cardAmount = $card["amount"];
-            $cardActivationCode = $card["activationCode"];
-            $cardActivationURL = $card["activationUrl"];
-            $cardValidity = date("d-M-Y", strtotime($card["validity"]));
-            $sms_message = "Hello " . $name . " You received a gift card and your Card details: " . "Card ID: " . $cardId . " Card Pin: " . $cardPin . " Amount " . $cardAmount . " Activation Code " . $cardActivationCode . " Activation URL " . $cardActivationURL . " Validity " . $cardValidity . " Please check your respected Email for more information. Thanks - FRENETIC INDIA";
-            $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id&tmid=$sms_tmid";
-            $response = Http::get($apiUrl);
-            \Log::info("API Response:", ["response" => $response]);
-            \Log::info("response status:", ["response status" => $response->status(),]);
-            \Log::info("API URL IS:", ["API URL" => $apiUrl]);
+        try {
+            $name = $prepareSmsDetails["shipToName"];
+            $orderNumber = $prepareSmsDetails["order_id"];
+            $orderAmount = $prepareSmsDetails["order_amount"];
+            $destination = $prepareSmsDetails["shipToContactNo"];
+            
+            // Log SMS configuration and attempt
+            Log::info("Attempting to send gift SMS", [
+                'recipient_name' => $name,
+                'order_amount' => $orderAmount,
+                'order_number' => $orderNumber,
+                'destination_number' => $destination,
+                'cards_count' => count($cardsArray)
+            ]);
+
+            $sms_api_url = config("giftSms.sms_api_url");
+            $sms_user_name = config("giftSms.sms_user_name");
+            $sms_user_password = config("giftSms.sms_user_password");
+            $sms_source = config("giftSms.sms_source");
+            $sms_entity_id = config("giftSms.sms_entity_id");
+            $sms_temp_id = config("giftSms.sms_temp_id");
+            $sms_tmid = config("giftSms.sms_tmid");
+            
+            foreach ($cardsArray as $index => $card) {
+                try {
+                    $cardId = $card["cardNumber"];
+                    $cardPin = $card["cardPin"];
+                    $cardAmount = $card["amount"];
+                    $cardActivationCode = $card["activationCode"];
+                    $cardActivationURL = $card["activationUrl"];
+                    $cardValidity = date("d-M-Y", strtotime($card["validity"]));
+                    $sms_message = "Hello " . $name . " You received a gift card and your Card details: " . "Card ID: " . $cardId . " Card Pin: " . $cardPin . " Amount " . $cardAmount . " Activation Code " . $cardActivationCode . " Activation URL " . $cardActivationURL . " Validity " . $cardValidity . " Please check your respected Email for more information. Thanks - FRENETIC INDIA";
+                    $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_temp_id&tmid=$sms_tmid";
+                    
+                    // Log individual card SMS attempt
+                    Log::info("Sending gift SMS for card", [
+                        'card_index' => $index + 1,
+                        'card_id' => $cardId,
+                        'order_number' => $orderNumber,
+                        'destination_number' => $destination
+                    ]);
+                    
+                    $response = Http::get($apiUrl);
+                    
+                    // Log SMS API response for each card
+                    Log::info("Gift SMS API response for card", [
+                        'card_index' => $index + 1,
+                        'card_id' => $cardId,
+                        'response_status' => $response->status(),
+                        'response_body' => $response->body(),
+                        'api_url' => $apiUrl,
+                        'order_number' => $orderNumber,
+                        'destination_number' => $destination
+                    ]);
+
+                    if ($response->successful()) {
+                        Log::info("Gift SMS sent successfully for card", [
+                            'card_index' => $index + 1,
+                            'card_id' => $cardId,
+                            'order_number' => $orderNumber,
+                            'destination_number' => $destination,
+                            'response_status' => $response->status()
+                        ]);
+                    } else {
+                        Log::error("Gift SMS failed for card", [
+                            'card_index' => $index + 1,
+                            'card_id' => $cardId,
+                            'order_number' => $orderNumber,
+                            'destination_number' => $destination,
+                            'response_status' => $response->status(),
+                            'response_body' => $response->body()
+                        ]);
+                    }
+                    
+                } catch (\Exception $e) {
+                    Log::error("Exception occurred while sending gift SMS for card", [
+                        'card_index' => $index + 1,
+                        'card_id' => $card["cardNumber"] ?? 'N/A',
+                        'error_message' => $e->getMessage(),
+                        'error_file' => $e->getFile(),
+                        'error_line' => $e->getLine(),
+                        'order_number' => $orderNumber,
+                        'destination_number' => $destination,
+                        'stack_trace' => $e->getTraceAsString()
+                    ]);
+                }
+            }
+
+        } catch (\Exception $e) {
+            Log::error("Exception occurred while sending gift SMS", [
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'order_number' => $prepareSmsDetails["order_id"] ?? 'N/A',
+                'destination_number' => $prepareSmsDetails["shipToContactNo"] ?? 'N/A',
+                'cards_count' => count($cardsArray),
+                'stack_trace' => $e->getTraceAsString()
+            ]);
         }
     }
 }

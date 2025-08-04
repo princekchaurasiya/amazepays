@@ -154,7 +154,7 @@
     } else {
         // Hide login modal if user is authenticated and modal is visible
         setTimeout(function () {
-            if ($('#Modallogin').hasClass('show')) {
+            if (window.isAuthenticated) {
                 $('#Modallogin').modal('hide');
             }
         }, 1000);

@@ -8,7 +8,7 @@
         $images = json_decode(str_replace("'", '"', $brand['Images']), true);
         $redeemSteps = $brand['RedeemSteps'];
     @endphp
-<form action="{{ route('evc.details', ['orderId' => $orderId, 'requestRefNo' => $requestRefNo]) }}" method="GET" id="giftCardPageForm">
+<form action="{{ route('request.evc') }}" method="POST" id="giftCardPageForm">
     <div class="card mb-4 shadow">
         <div class="row g-0">
             <div class="col-md-4">
@@ -307,7 +307,14 @@
                     },
                     unhighlight: function(element) {
                         $(element).removeClass('is-invalid');
-                    }
+                    },
+                     submitHandler: function (form) {
+                    // ✅ Save session before submitting
+                    saveGiftCardFormData(function () {
+                    form.submit(); // Submit to requestEvc (POST)
+                    });
+                }
+
                 });
  });
 </script>

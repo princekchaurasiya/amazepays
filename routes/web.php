@@ -468,4 +468,7 @@ Route::get('/redirect-to-woohoo', function () {
 });
 
 Route::post('/vd-update-session-data', [VDPageController::class, 'updateSessionData'])->name('vdupdateSessionData');
-   Route::match(['get', 'post'], '/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckoutPage');
+ Route::match(['get', 'post'], '/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckoutPage');
+
+ Route::post('/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckout.store');
+

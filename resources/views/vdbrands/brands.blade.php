@@ -8,7 +8,7 @@
         $images = json_decode(str_replace("'", '"', $brand['Images']), true);
         $redeemSteps = $brand['RedeemSteps'];
     @endphp
-<form action="{{ url('evc.details') }}" method="GET" id="giftCardPageForm">
+<form action="{{ url('https://amazepay.toutle.in/evc-details/VDORD-UYFOKA0BUY/VDIDAmazepay20250804161447') }}" method="GET" id="giftCardPageForm">
     <div class="card mb-4 shadow">
         <div class="row g-0">
             <div class="col-md-4">

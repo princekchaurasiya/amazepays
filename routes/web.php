@@ -433,7 +433,7 @@ Route::get('/vdbrands', [VDWebController::class, 'showBrands'])->name('brands.in
 Route::post('/evc/store-request', [VDWebController::class, 'storeGetEvcRequest']);
 Route::get('/evc/request', [VDWebController::class, 'requestEvc'])->name('evc.request');
 Route::post('/evc/decrypt-store', [VDWebController::class, 'decryptAndStoreEvc']);
-Route::post('/evc-req', [VDWebController::class, 'showEvcDetails'])->name('evc.req');
+Route::post('/evc-req', [VDWebController::class, 'showEvcDetails'])->name('request.evc');
 Route::get('/evc-details/{orderId}/{requestRefNo}', [VDWebController::class,'evcDetails'])->name('evc.details');
 
 

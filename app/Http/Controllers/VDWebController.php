@@ -244,7 +244,7 @@ public function buildPayloadFromDB($recordId)
     }
 
     // Controller Example
-public function showEvcData()
+public function showEvcData($orderId, $requestRefNo)
 {
     $evcData = '{
         "brand_details": [{
@@ -269,7 +269,7 @@ public function showEvcData()
     $evcArray = json_decode($evcData, true);
     $items = $evcArray['brand_details'][0]['items'] ?? [];
 
-    return view('evc.details', compact('items'));
+    return view('evc.details', compact('items', 'orderId', 'requestRefNo'));
 }
 
 

@@ -269,7 +269,7 @@ public function showEvcData()
     $evcArray = json_decode($evcData, true);
     $items = $evcArray['brand_details'][0]['items'] ?? [];
 
-    return view('evc-details', compact('items'));
+    return view('evc.details', compact('items'));
 }
 
 

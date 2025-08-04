@@ -243,6 +243,36 @@ public function buildPayloadFromDB($recordId)
         ]);
     }
 
+    // Controller Example
+public function showEvcData()
+{
+    $evcData = '{
+        "brand_details": [{
+            "product_name": "APOLLO",
+            "voucher_name": "Amzp-APL",
+            "items": [{
+                "getCardNo": "0802010556820546",
+                "getCardPin": "226153",
+                "getCardStatus": "A",
+                "getExpiryDate": "2026-02-04",
+                "balanceBasic": "100.00",
+                "balanceBonus": "0.00",
+                "balanceTotal": "100.00",
+                "bonusGiven": "0.00",
+                "dealNo": "0000149934",
+                "receiptNo": "MLMPJKKI77GGU3KIY"
+            }]
+        }],
+        "wallet_balance": "16640.00"
+    }';
+
+    $evcArray = json_decode($evcData, true);
+    $items = $evcArray['brand_details'][0]['items'] ?? [];
+
+    return view('evc-details', compact('items'));
+}
+
+
     public function storeEvcData(array $data)
     {
         if (!isset($data['brand_details'])) {

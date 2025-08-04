@@ -244,32 +244,41 @@ public function buildPayloadFromDB($recordId)
     }
 
     // Controller Example
-public function showEvcData($orderId, $requestRefNo)
+public function showEvcDetails(VDWebApiService $vdWebApiService, $orderId, $requestRefNo)
 {
-    $evcData = '{
-        "brand_details": [{
-            "product_name": "APOLLO",
-            "voucher_name": "Amzp-APL",
-            "items": [{
-                "getCardNo": "0802010556820546",
-                "getCardPin": "226153",
-                "getCardStatus": "A",
-                "getExpiryDate": "2026-02-04",
-                "balanceBasic": "100.00",
-                "balanceBonus": "0.00",
-                "balanceTotal": "100.00",
-                "bonusGiven": "0.00",
-                "dealNo": "0000149934",
-                "receiptNo": "MLMPJKKI77GGU3KIY"
-            }]
-        }],
-        "wallet_balance": "16640.00"
-    }';
+    // Step 1: Get Token
+    $tokenResponse = $vdWebApiService->getToken();
+    $token = $tokenResponse;
 
-    $evcArray = json_decode($evcData, true);
+    if (!$token) {
+        return response()->json(['error' => 'Failed to get token'], 500);
+    }
+
+    // Step 2: Build Payload for EVC Details
+    $payload = [
+        'order_id' => $orderId,
+        'request_ref_no' => $requestRefNo,
+    ];
+
+    $jsonPayload = json_encode($payload);
+
+    // Step 3: Call API to fetch EVC details
+    $response = $vdWebApiService->getEvc($token, $jsonPayload);
+    if (!$response) {
+        return response()->json(['error' => 'Failed to get EVC details']);
+    }
+
+    // Step 4: Decrypt EVC Data
+    $decryptedData = $this->decryptAES($response['data']);
+    $evcArray = json_decode($decryptedData, true);
     $items = $evcArray['brand_details'][0]['items'] ?? [];
 
-    return view('evc.details', compact('items', 'orderId', 'requestRefNo'));
+    // Step 5: Return to details view
+    return view('evc.details', [
+        'orderId' => $orderId,
+        'requestRefNo' => $requestRefNo,
+        'items' => $items,
+    ]);
 }
 
 

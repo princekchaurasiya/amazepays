@@ -399,35 +399,6 @@ class WoohooOrderController extends Controller
             "denomination" => $order["denomination"],
             "discount_percentage" => $order["discount_percentage"],
         ];
-        // Fill null/empty fields from Billing table
-        $fieldsToCheck = [
-            'billing_name' => 'billing_name',
-            'billing_email' => 'billing_email',
-            'billing_tel' => 'billing_tel',
-            'billing_address' => 'billing_address',
-            'gst_number' => 'billing_gst_number',
-        ];
-        $billing = \App\Models\Billing::latest()->first();
-        if ($billing) {
-            if (empty($prepareMailDetails['billing_name'])) {
-                $prepareMailDetails['billing_name'] = $billing->billing_name;
-            }
-            if (empty($prepareMailDetails['billing_email'])) {
-                $prepareMailDetails['billing_email'] = $billing->billing_email;
-            }
-            if (empty($prepareMailDetails['billing_tel'])) {
-                $prepareMailDetails['billing_tel'] = $billing->billing_tel;
-            }
-            if (empty($prepareMailDetails['billing_address'])) {
-                $prepareMailDetails['billing_address'] = trim($billing->billing_address . ' ' . $billing->billing_address_two . ', ' . $billing->billing_city . ', ' . $billing->billing_state . ' ' . $billing->billing_zip);
-            }
-            if (empty($prepareMailDetails['gst_number']) || $prepareMailDetails['gst_number'] === 'Unregistered') {
-                $prepareMailDetails['gst_number'] = $billing->billing_gst_number ?: 'Unregistered';
-            }
-            // After filling from Billing, set shipToEmail and shipToName to billing_email and billing_name
-            $prepareMailDetails['shipToEmail'] = $prepareMailDetails['billing_email'];
-            $prepareMailDetails['shipToName'] = $prepareMailDetails['billing_name'];
-        }
         try
         {
         $prepareSmsDetails = ["name" => $order["sender_first_name"], "order_id" => $order["woohoo_order_id"], "reference_id" => $order["id"], "order_date" => $order["created_at"], "billing_name" => $order["sender_first_name"], "order_amount" => $order["amount"], "cardSku" => $order["sku"], "cardProductName" => $order["name"], "shipToName" => $order["receiver_name"] ?? $order["sender_first_name"], "shipToContactNo" => $order["receiver_mobile"] ?? $order["sender_phone_no"], 'grand_payable_amount"' => $order['grand_payable_amount"'], "perOrderQuantity" => $order["quantity"], "giftSendOption" => $order["gift_send_option"], "billing_tel" => $order["sender_phone_no"],];
@@ -469,6 +440,34 @@ class WoohooOrderController extends Controller
     }
     public function sendTransactionMail($prepareMailDetails)
     {
+        // Patch: Fill null/empty billing fields from Billing table if needed
+        $fieldsToCheck = [
+            'billing_name', 'billing_email', 'billing_tel', 'billing_address'
+        ];
+        $needBilling = false;
+        foreach ($fieldsToCheck as $field) {
+            if (empty($prepareMailDetails[$field]) || ($field === 'billing_email' && !filter_var($prepareMailDetails[$field], FILTER_VALIDATE_EMAIL))) {
+                $needBilling = true;
+                break;
+            }
+        }
+        if ($needBilling) {
+            $billing = \App\Models\Billing::latest()->first();
+            if ($billing) {
+                if (empty($prepareMailDetails['billing_name'])) {
+                    $prepareMailDetails['billing_name'] = $billing->billing_name;
+                }
+                if (empty($prepareMailDetails['billing_email']) || !filter_var($prepareMailDetails['billing_email'], FILTER_VALIDATE_EMAIL)) {
+                    $prepareMailDetails['billing_email'] = $billing->billing_email;
+                }
+                if (empty($prepareMailDetails['billing_tel'])) {
+                    $prepareMailDetails['billing_tel'] = $billing->billing_tel;
+                }
+                if (empty($prepareMailDetails['billing_address'])) {
+                    $prepareMailDetails['billing_address'] = $billing->billing_address;
+                }
+            }
+        }
         $recipientEmail = $prepareMailDetails["billing_email"] ?? null;
         $recipientName = $prepareMailDetails["billing_name"] ?? null;
 

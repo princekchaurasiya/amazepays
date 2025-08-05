@@ -9,6 +9,7 @@
         $redeemSteps = $brand['RedeemSteps'];
     @endphp
 <form action="{{ route('request.evc') }}" method="POST" id="giftCardPageForm">
+    @csrf
     <div class="card mb-4 shadow">
         <div class="row g-0">
             <div class="col-md-4">

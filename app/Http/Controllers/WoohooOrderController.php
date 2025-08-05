@@ -645,6 +645,35 @@ class WoohooOrderController extends Controller
 
     public function sendGiftMail($prepareMailDetails, $cardsArray)
     {
+        // Patch: Fill null/empty billing fields from Billing table if needed
+        $fieldsToCheck = [
+            'billing_name', 'billing_email', 'billing_tel', 'billing_address'
+        ];
+        $needBilling = false;
+        foreach ($fieldsToCheck as $field) {
+            if (empty($prepareMailDetails[$field]) || ($field === 'billing_email' && !filter_var($prepareMailDetails[$field], FILTER_VALIDATE_EMAIL))) {
+                $needBilling = true;
+                break;
+            }
+        }
+        if ($needBilling) {
+            $billing = \App\Models\Billing::latest()->first();
+            if ($billing) {
+                if (empty($prepareMailDetails['billing_name'])) {
+                    $prepareMailDetails['billing_name'] = $billing->billing_name;
+                }
+                if (empty($prepareMailDetails['billing_email']) || !filter_var($prepareMailDetails['billing_email'], FILTER_VALIDATE_EMAIL)) {
+                    $prepareMailDetails['billing_email'] = $billing->billing_email;
+                }
+                if (empty($prepareMailDetails['billing_tel'])) {
+                    $prepareMailDetails['billing_tel'] = $billing->billing_tel;
+                }
+                if (empty($prepareMailDetails['billing_address'])) {
+                    $prepareMailDetails['billing_address'] = $billing->billing_address;
+                }
+            }
+        }
+        
         $recipientEmail = $prepareMailDetails["billing_email"] ?? null;
         $recipientName = $prepareMailDetails["billing_name"] ?? null;
         Log::info("This is prepare mail details: " . json_encode($prepareMailDetails));
@@ -710,6 +739,32 @@ class WoohooOrderController extends Controller
     }
     public function sendTransactionalMessage($prepareSmsDetails)
     {
+        // Patch: Fill null/empty SMS fields from Billing table if needed
+        $fieldsToCheck = [
+            'name', 'billing_tel', 'billing_name'
+        ];
+        $needBilling = false;
+        foreach ($fieldsToCheck as $field) {
+            if (empty($prepareSmsDetails[$field])) {
+                $needBilling = true;
+                break;
+            }
+        }
+        if ($needBilling) {
+            $billing = \App\Models\Billing::latest()->first();
+            if ($billing) {
+                if (empty($prepareSmsDetails['name'])) {
+                    $prepareSmsDetails['name'] = $billing->billing_name;
+                }
+                if (empty($prepareSmsDetails['billing_tel'])) {
+                    $prepareSmsDetails['billing_tel'] = $billing->billing_tel;
+                }
+                if (empty($prepareSmsDetails['billing_name'])) {
+                    $prepareSmsDetails['billing_name'] = $billing->billing_name;
+                }
+            }
+        }
+        
         try {
             $name = $prepareSmsDetails["name"];
             $orderAmount = $prepareSmsDetails["order_amount"];
@@ -792,6 +847,32 @@ class WoohooOrderController extends Controller
 
     public function sendGiftMessage($prepareSmsDetails, $cardsArray)
     {
+        // Patch: Fill null/empty SMS fields from Billing table if needed
+        $fieldsToCheck = [
+            'shipToName', 'shipToContactNo', 'billing_tel'
+        ];
+        $needBilling = false;
+        foreach ($fieldsToCheck as $field) {
+            if (empty($prepareSmsDetails[$field])) {
+                $needBilling = true;
+                break;
+            }
+        }
+        if ($needBilling) {
+            $billing = \App\Models\Billing::latest()->first();
+            if ($billing) {
+                if (empty($prepareSmsDetails['shipToName'])) {
+                    $prepareSmsDetails['shipToName'] = $billing->billing_name;
+                }
+                if (empty($prepareSmsDetails['shipToContactNo'])) {
+                    $prepareSmsDetails['shipToContactNo'] = $billing->billing_tel;
+                }
+                if (empty($prepareSmsDetails['billing_tel'])) {
+                    $prepareSmsDetails['billing_tel'] = $billing->billing_tel;
+                }
+            }
+        }
+        
         try {
             $name = $prepareSmsDetails["shipToName"];
             $orderNumber = $prepareSmsDetails["order_id"];

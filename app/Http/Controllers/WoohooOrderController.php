@@ -440,6 +440,34 @@ class WoohooOrderController extends Controller
     }
     public function sendTransactionMail($prepareMailDetails)
     {
+        // Patch: Fill null/empty billing fields from Billing table if needed
+        $fieldsToCheck = [
+            'billing_name', 'billing_email', 'billing_tel', 'billing_address'
+        ];
+        $needBilling = false;
+        foreach ($fieldsToCheck as $field) {
+            if (empty($prepareMailDetails[$field]) || ($field === 'billing_email' && !filter_var($prepareMailDetails[$field], FILTER_VALIDATE_EMAIL))) {
+                $needBilling = true;
+                break;
+            }
+        }
+        if ($needBilling) {
+            $billing = \App\Models\Billing::latest()->first();
+            if ($billing) {
+                if (empty($prepareMailDetails['billing_name'])) {
+                    $prepareMailDetails['billing_name'] = $billing->billing_name;
+                }
+                if (empty($prepareMailDetails['billing_email']) || !filter_var($prepareMailDetails['billing_email'], FILTER_VALIDATE_EMAIL)) {
+                    $prepareMailDetails['billing_email'] = $billing->billing_email;
+                }
+                if (empty($prepareMailDetails['billing_tel'])) {
+                    $prepareMailDetails['billing_tel'] = $billing->billing_tel;
+                }
+                if (empty($prepareMailDetails['billing_address'])) {
+                    $prepareMailDetails['billing_address'] = $billing->billing_address;
+                }
+            }
+        }
         $recipientEmail = $prepareMailDetails["billing_email"] ?? null;
         $recipientName = $prepareMailDetails["billing_name"] ?? null;
 

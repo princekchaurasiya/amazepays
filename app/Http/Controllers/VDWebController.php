@@ -292,13 +292,21 @@ public function showEvcDetails(Request $request, VDWebApiService $vdWebApiServic
         return response()->json(['error' => 'Failed to get EVC']);
     }
 
-    //This is tp decrypt Data
+    //This is to decrypt Data
     $decryptedData = $this->decryptAES($response['data']);
+    
+    // Parse the decrypted data to extract specific fields
+    $evcArray = json_decode($decryptedData, true);
+    $items = [];
+    
+    if (isset($evcArray['brand_details'][0]['items'])) {
+        $items = $evcArray['brand_details'][0]['items'];
+    }
 
     return view('evc.success', [
-    'orderId' => $response['order_id'],
-    'requestRefNo' => $response['request_ref_no'],
-    'evcData' => $decryptedData,
+        'orderId' => $response['order_id'],
+        'requestRefNo' => $response['request_ref_no'],
+        'items' => $items,
     ]);
 }
 

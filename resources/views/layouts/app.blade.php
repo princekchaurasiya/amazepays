@@ -1371,6 +1371,12 @@ else if (data.status == 400 && data.errors) {
 
         </script>
         @stack('scripts')
+        
+        <!-- Value Design Brands Loader - Only load on home page -->
+        @if(request()->routeIs('home') || request()->is('/'))
+            <link rel="stylesheet" href="{{ asset('css/vd-brands.css') }}">
+            <script src="{{ asset('js/vd-brands-loader.js') }}"></script>
+        @endif
         </div>
 
     <!-- Error Modal -->

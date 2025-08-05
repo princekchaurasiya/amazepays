@@ -467,3 +467,9 @@ Route::post('/giftcard/purchase', [AthenaGiftCardController::class, 'purchase'])
 Route::post('/vd-update-session-data', [VDPageController::class, 'updateSessionData'])->name('vdupdateSessionData');
    Route::match(['get', 'post'], '/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckoutPage');
    Route::post('/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckout.store');
+
+// VD Home API routes
+use App\Http\Controllers\VDHomeController;
+Route::get('/api/vd-brands/home', [VDHomeController::class, 'getVDBrandsForHome'])->name('vd.brands.home');
+Route::post('/api/vd-brands/clear-cache', [VDHomeController::class, 'clearVDBrandsCache'])->name('vd.brands.clear-cache');
+Route::get('/api/vd-brands/test-connection', [VDHomeController::class, 'testVDConnection'])->name('vd.brands.test-connection');

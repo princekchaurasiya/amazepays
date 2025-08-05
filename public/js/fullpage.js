@@ -2103,7 +2103,13 @@
         * Plays a youtube video
         */
         function playYoutube(element){
-            element.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+            try {
+                if (element && element.contentWindow && element.contentWindow.postMessage) {
+                    element.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                }
+            } catch (error) {
+                console.warn('Could not send message to YouTube iframe:', error);
+            }
         }
 
         /**
@@ -2122,7 +2128,13 @@
             //youtube videos
             $('iframe[src*="youtube.com/embed/"]', panel).forEach(function(element){
                 if( /youtube\.com\/embed\//.test(element.getAttribute('src')) && !element.hasAttribute('data-keepplaying')){
-                    element.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}','*');
+                    try {
+                        if (element && element.contentWindow && element.contentWindow.postMessage) {
+                            element.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}','*');
+                        }
+                    } catch (error) {
+                        console.warn('Could not send message to YouTube iframe:', error);
+                    }
                 }
             });
         }

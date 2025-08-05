@@ -620,7 +620,10 @@ class WoohooOrderController extends Controller
         $recipientEmail = $prepareMailDetails["billing_email"] ?? null;
         $recipientName = $prepareMailDetails["billing_name"] ?? null;
         Log::info("This is prepare mail details: " . json_encode($prepareMailDetails));
-        Log::info($recipientEmail, $recipientName);
+        Log::info('Recipient details', [
+                'email' => $recipientEmail,
+                'name'  => $recipientName,
+            ]);
 
         // Validate recipient email before sending
         if (empty($recipientEmail) || !filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {

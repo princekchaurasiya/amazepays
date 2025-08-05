@@ -33,6 +33,8 @@
                     <option value="Buy for Self">Buy for Self</option>
                     </select>
 
+                    <input type="hidden" name="delivery_mode" value="both">
+
                     <div class="row justify-content-center mt-4 gifting-details" style="display: block;">
                                         <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
                                         <div class="row"> <!-- Added .row to group the .col-lg-* elements -->
@@ -194,6 +196,7 @@
     
     function saveGiftCardFormData(callback) {
                     var formData = $('#giftCardPageForm').serialize(); // Serialize the form data
+                    console.log('Saving form data:', formData);
 
                     // AJAX POST request to save data to the session
                     $.ajax({
@@ -207,8 +210,12 @@
 
                             if (callback) callback(); // Call the callback if provided
                         },
-                        error: function(response) {
-                            console.error('Error saving form data:', response);
+                        error: function(xhr, status, error) {
+                            console.error('Error saving form data:', {
+                                status: status,
+                                error: error,
+                                response: xhr.responseText
+                            });
                         }
                     });
                 }
@@ -258,19 +265,19 @@
                         },
                         receiver_name: {
                             required: function(element) {
-                                return $('input[name="gift_send_option"]:checked').val() === 'send_as_gift';
+                                return $('#sendAsGiftRadio').val() === 'Send as Gift';
                             },
                             validReceiverName: true
                         },
                         receiver_email: {
                             required: function(element) {
-                                return $('input[name="gift_send_option"]:checked').val() === 'send_as_gift';
+                                return $('#sendAsGiftRadio').val() === 'Send as Gift';
                             },
                             email: true
                         },
                         receiver_mobile: {
                             required: function(element) {
-                                return $('input[name="gift_send_option"]:checked').val() === 'send_as_gift';
+                                return $('#sendAsGiftRadio').val() === 'Send as Gift';
                             },
                             indianMobile: true
                         }

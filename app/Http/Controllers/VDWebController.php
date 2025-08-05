@@ -244,8 +244,32 @@ public function buildPayloadFromDB($recordId)
     }
 
     // Controller Example
-public function showEvcDetails(VDWebApiService $vdWebApiService)
+public function showEvcDetails(Request $request, VDWebApiService $vdWebApiService)
 {
+    // Validate the form data
+    $request->validate([
+        'denomination' => 'required|numeric|min:100|max:10000',
+        'quantity' => 'required|integer|min:1|max:10',
+        'gift_send_option' => 'required|in:Send as Gift,Buy for Self',
+        'delivery_mode' => 'required|in:both,email,sms',
+        'receiver_name' => 'nullable|string|max:255',
+        'receiver_email' => 'nullable|email|max:255',
+        'receiver_mobile' => 'nullable|string|max:20',
+        'receiver_msg' => 'nullable|string',
+    ]);
+
+    // Store form data in session for later use
+    session([
+        'denomination' => $request->denomination,
+        'quantity' => $request->quantity,
+        'gift_send_option' => $request->gift_send_option,
+        'delivery_mode' => $request->delivery_mode,
+        'receiver_name' => $request->receiver_name,
+        'receiver_email' => $request->receiver_email,
+        'receiver_mobile' => $request->receiver_mobile,
+        'receiver_msg' => $request->receiver_msg,
+    ]);
+
     // Step 1: Get Token
     $tokenResponse = $vdWebApiService->getToken();
     //dd($tokenResponse);
@@ -257,7 +281,7 @@ public function showEvcDetails(VDWebApiService $vdWebApiService)
 
     // Step 2: Create Payload with Unique IDs
     $payload = $this->buildPayloadFromDB(1);
-    $payload['amount'] = (float) $payload['amount'];
+    $payload['amount'] = (float) $request->denomination; // Use form denomination instead of DB
     $jsonPayload = json_encode($payload);
     //$encryptedPayload = AesHelper::encrypt($jsonPayload);
     //dd($encryptedPayload);

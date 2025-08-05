@@ -244,59 +244,71 @@ public function buildPayloadFromDB($recordId)
     }
 
     // Controller Example
-public function showEvcDetails(Request $request, VDWebApiService $vdWebApiService)
+public function showEvcDetails(VDWebApiService $vdWebApiService)
 {
     // Step 1: Get Token
     $tokenResponse = $vdWebApiService->getToken();
+    //dd($tokenResponse);
     $token = $tokenResponse;
 
     if (!$token) {
         return response()->json(['error' => 'Failed to get token'], 500);
     }
 
-    // Step 2: Build Payload for EVC Details
+    // Step 2: Create Payload with Unique IDs
     $payload = $this->buildPayloadFromDB(1);
     $payload['amount'] = (float) $payload['amount'];
     $jsonPayload = json_encode($payload);
+    //$encryptedPayload = AesHelper::encrypt($jsonPayload);
+    //dd($encryptedPayload);
 
-    // Step 3: Call API to fetch EVC details
+    // Step 3: Call API
     $response = $vdWebApiService->getEvc($token, $jsonPayload);
     if (!$response) {
-        return response()->json(['error' => 'Failed to get EVC details']);
+        return response()->json(['error' => 'Failed to get EVC']);
     }
 
-    // Step 4: Decrypt EVC Data
+    //This is tp decrypt Data
     $decryptedData = $this->decryptAES($response['data']);
-    $evcArray = json_decode($decryptedData, true);
-    $items = $evcArray['brand_details'][0]['items'] ?? [];
 
-    // Step 5: Return to details view
-    return redirect()->route('evc.details', [
-        'orderId' => $response['order_id'],
-        'requestRefNo' => $response['request_ref_no'],
+    return view('evc.success', [
+    'orderId' => $response['order_id'],
+    'requestRefNo' => $response['request_ref_no'],
+    'evcData' => $decryptedData,
     ]);
 }
 
-public function evcDetails($orderId, $requestRefNo, VDWebApiService $vdWebApiService)
+public function evcDetails(VDWebApiService $vdWebApiService)
 {
-    $token = $vdWebApiService->getToken();
+    // Step 1: Get Token
+    $tokenResponse = $vdWebApiService->getToken();
+    //dd($tokenResponse);
+    $token = $tokenResponse;
+
     if (!$token) {
         return response()->json(['error' => 'Failed to get token'], 500);
     }
 
-    // Fetch EVC details
-    $response = $vdWebApiService->getEvcDetails($token, $orderId, $requestRefNo);
+    // Step 2: Create Payload with Unique IDs
+    $payload = $this->buildPayloadFromDB(1);
+    $payload['amount'] = (float) $payload['amount'];
+    $jsonPayload = json_encode($payload);
+    //$encryptedPayload = AesHelper::encrypt($jsonPayload);
+    //dd($encryptedPayload);
 
+    // Step 3: Call API
+    $response = $vdWebApiService->getEvc($token, $jsonPayload);
     if (!$response) {
-        return response()->json(['error' => 'Failed to fetch EVC details']);
+        return response()->json(['error' => 'Failed to get EVC']);
     }
 
+    //This is tp decrypt Data
     $decryptedData = $this->decryptAES($response['data']);
 
-    return view('evc.details', [
-        'orderId' => $orderId,
-        'requestRefNo' => $requestRefNo,
-        'evcData' => $decryptedData,
+    return view('evc.success', [
+    'orderId' => $response['order_id'],
+    'requestRefNo' => $response['request_ref_no'],
+    'evcData' => $decryptedData,
     ]);
 }
 

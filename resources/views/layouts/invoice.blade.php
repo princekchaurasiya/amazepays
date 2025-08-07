@@ -135,7 +135,9 @@
         <tr>
             <td class="company-details-column" colspan="8">
                 <p class="company-details">{{ $billing_name }}</p>
-                <p class="company-details">{{ $billing_address }}</p>
+                <p class="company-details">{{ $billing_address }}{{ !empty($billing_address_two) ? ', ' . $billing_address_two : '' }}</p>
+                <p class="company-details">{{ $billing_city }}, {{ $billing_state }} {{ $billing_zip }}</p>
+                <p class="company-details">{{ $billing_country }}</p>
                 <p class="company-details">Email: {{ $billing_email }}</p>
                 <p class="company-details">Contact: {{ $billing_tel }}</p>
                 <p class="company-details">GST No: {{ $gst_number }}</p>

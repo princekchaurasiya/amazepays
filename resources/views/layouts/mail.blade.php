@@ -52,7 +52,7 @@
                 <h3>Billing Details</h3>
                 <p>Customer: {{ $prepareMailDetails['billing_name'] }} | {{ $prepareMailDetails['billing_email'] }} |
                     {{ $prepareMailDetails['billing_tel'] }}</p>
-                <p>Address: {{ $prepareMailDetails['billing_address'] }}</p>
+                <p>Address: {{ $prepareMailDetails['billing_address'] }}{{ !empty($prepareMailDetails['billing_address_two']) ? ', ' . $prepareMailDetails['billing_address_two'] : '' }}, {{ $prepareMailDetails['billing_city'] }}, {{ $prepareMailDetails['billing_state'] }} {{ $prepareMailDetails['billing_zip'] }}, {{ $prepareMailDetails['billing_country'] }}</p>
                 <p>Pay Mode: {{ $prepareMailDetails['payment_mode'] }}</p>
                 <p>Order Amount: {{ $prepareMailDetails['amount_payable_after_discount'] }}</p>
             </td>

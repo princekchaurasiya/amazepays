@@ -110,15 +110,15 @@ class VDBrandsLoader {
 
             const data = await response.json();
             
-            if (data.success && data.brands && data.brands.length > 0) {
+            /*if (data.success && data.brands && data.brands.length > 0) {
                 this.renderBrands(data.brands);
             } else {
                 this.showError('No Value Design brands available at this time.');
-            }
+            }*/
             
         } catch (error) {
-            console.error('Error loading VD brands:', error);
-            this.showError('Failed to load Value Design brands. Please try again later.');
+            /*console.error('Error loading VD brands:', error);
+            this.showError('Failed to load Value Design brands. Please try again later.');*/
         }
     }
 

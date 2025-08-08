@@ -805,11 +805,11 @@
     <input type="hidden" name="payable_amount" value="{{ $qsOrder->amount_payable_after_discount }}">
     <button type="submit" class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-300 ls-3">Pay with UPI</button>
 </form>
-<form method="POST" action="{{ route('payment.netbnk') }}">
+<!--<form method="POST" action="{{ route('payment.netbnk') }}">
     @csrf
     <input type="hidden" name="payable_amount" value="{{ $qsOrder->amount_payable_after_discount }}">
     <button type="submit" class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-300 ls-3">Net Banking</button>
-</form>
+</form>-->
         </div>
 
     </div>

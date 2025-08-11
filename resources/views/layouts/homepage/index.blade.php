@@ -208,7 +208,7 @@
     </div>
 
 {{-- Lysto Gift Cards Button --}}
-<div class="row justify-content-center mt-4 mb-4">
+<!--<div class="row justify-content-center mt-4 mb-4">
     <div class="col-lg-4 text-center">
         <a href="{{ url('/giftcards2') }}" class="btn btn-primary btn-lg px-4">
             Lysto Gift Cards
@@ -222,7 +222,7 @@
             Value Design Gift Cards
         </a>
     </div>
-</div>
+</div>-->
 @endsection
 @push('scripts')
     <script>

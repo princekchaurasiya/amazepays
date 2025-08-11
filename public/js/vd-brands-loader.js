@@ -36,7 +36,7 @@ class VDBrandsLoader {
             container.id = this.containerId;
             container.className = 'vd-brands-dynamic-container';
             
-            // Create loading element
+            /* Create loading element
             const loading = document.createElement('div');
             loading.id = this.loadingId;
             loading.className = 'vd-brands-loading text-center py-4';
@@ -45,7 +45,7 @@ class VDBrandsLoader {
                     <span class="visually-hidden">Loading Value Design brands...</span>
                 </div>
                 <p class="mt-2 text-muted">Loading Value Design Gift Cards...</p>
-            `;
+            `;*/
             
             // Create error element (hidden by default)
             const error = document.createElement('div');

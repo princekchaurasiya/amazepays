@@ -547,6 +547,20 @@ class WoohooOrderController extends Controller
         $orderFailureAdminEmail = env('ORDER_FAILURE_ADMIN_EMAIL');
         $orderFailureITAdminEmail = env('ORDER_FAILURE_IT_ADMIN_EMAIL');
 
+        // Fallback: Try config if env is missing/invalid
+        if (empty($orderFailureAdminEmail) || !filter_var($orderFailureAdminEmail, FILTER_VALIDATE_EMAIL)) {
+            $orderFailureAdminEmail = config('companyDefaultValues.company_email');
+        }
+        if (empty($orderFailureAdminEmail) || !filter_var($orderFailureAdminEmail, FILTER_VALIDATE_EMAIL)) {
+            $orderFailureAdminEmail = 'itsupport@amazepays.in'; // last-resort fallback
+        }
+        if (empty($orderFailureITAdminEmail) || !filter_var($orderFailureITAdminEmail, FILTER_VALIDATE_EMAIL)) {
+            $orderFailureITAdminEmail = config('companyDefaultValues.company_email');
+        }
+        if (empty($orderFailureITAdminEmail) || !filter_var($orderFailureITAdminEmail, FILTER_VALIDATE_EMAIL)) {
+            $orderFailureITAdminEmail = 'itsupport@amazepays.in'; // last-resort fallback
+        }
+
         // Validate email configuration
         if (empty($orderFailureAdminEmail) || !filter_var($orderFailureAdminEmail, FILTER_VALIDATE_EMAIL)) {
             Log::error("Order failure mail not sent: invalid or empty admin email", [
@@ -555,7 +569,6 @@ class WoohooOrderController extends Controller
             ]);
             return;
         }
-
         if (empty($orderFailureITAdminEmail) || !filter_var($orderFailureITAdminEmail, FILTER_VALIDATE_EMAIL)) {
             Log::error("Order failure mail not sent: invalid or empty IT admin email", [
                 'it_admin_email' => $orderFailureITAdminEmail,

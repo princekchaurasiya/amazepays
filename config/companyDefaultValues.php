@@ -35,7 +35,7 @@ return [
     'company_bank_ifsc_code' => env('COMPANY_BANK_IFSC_CODE', 'KKBK0001413'),
     'company_bank_branch' => env('COMPANY_BANK_BRANCH', 'Goregaon West'),
     'company_bank_name' => env('COMPANY_BANK_NAME', 'KOTAK BANK'),
-    'company_email' => env('COMPANY_EMAIL', 'support@amazepay.in'),
+    'company_email' => env('COMPANY_EMAIL', 'itsupport@amazepay.in'),
     'default_subject' => env('DEFAULT_SUBJECT', 'Amazepays - Order Confirmation'),
     'gift_subject' => env('GIFT_SUBJECT', 'Amazepays - You Received A Gift Card'),
     'sms_api_url' => env('SMS_API_URL', 'http://route.digimiles.in/bulksms/bulksms'),

@@ -883,7 +883,7 @@
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
                         success: function(response) {
-                            alert('Billing data stored in database.');
+                            //alert('Billing data stored in database.');
                         },
                         error: function(xhr) {
                             console.error('DB storage failed:', xhr.responseText);

@@ -11,6 +11,7 @@ use App\Models\EvcStatus;
 use Illuminate\Support\Facades\Http;
 use App\Models\Brand;
 use App\Models\GetEvcRequest;
+use Illuminate\Support\Facades\Crypt;
 
 class VDWebController extends Controller
 {
@@ -506,11 +507,19 @@ public function evcDetails(VDWebApiService $vdWebApiService)
         return back()->with('error', 'Failed to fetch activated EVC.');
     }
 
+    // 🔹 Decrypt data here (replace with actual decryption method)
+    $decryptedData = null;
+    if (!empty($activatedEvc['data'])) {
+        $decryptedData = $this->decryptAES($activatedEvc['data']);
+    }
+
+
     // Return the result to a view
     return view('evc.activated', [
         'evc' => $activatedEvc,
         'order_id' => $request->order_id,
         'request_ref_no' => $request->request_ref_no,
+        'decryptedData' => $decryptedData
     ]);
 }
 

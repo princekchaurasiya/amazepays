@@ -445,6 +445,9 @@ Route::view('/evc/form', 'evc.form');
 
 Route::get('/vdwalletbalance', [VDWebController::class, 'getWalletBalance']);
 
+Route::post('/evc/get-activated', [VDWebController::class, 'VDgetActivatedEvc'])
+     ->name('evc.getActivated');
+
 //Lysto API Integration
 
 Route::get('/giftcards', [AthenaGiftCardController::class, 'index']);
@@ -485,4 +488,23 @@ use App\Http\Controllers\VDHomeController;
 Route::get('/api/vd-brands/home', [VDHomeController::class, 'getVDBrandsForHome'])->name('vd.brands.home');
 Route::post('/api/vd-brands/clear-cache', [VDHomeController::class, 'clearVDBrandsCache'])->name('vd.brands.clear-cache');
 Route::get('/api/vd-brands/test-connection', [VDHomeController::class, 'testVDConnection'])->name('vd.brands.test-connection');
+
+
+// KGEN API
+use App\Http\Controllers\DeliveryPartnerController;
+
+Route::get('/products', [DeliveryPartnerController::class, 'getProducts'])->name('products');
+Route::get('/authenticate', [DeliveryPartnerController::class, 'authenticate'])->name('authenticate');
+
+use App\Http\Controllers\KGenOrderController;
+
+Route::get('/place-order', [KGenOrderController::class, 'showForm'])->name('place-order.form');
+Route::post('/place-order', [KGenOrderController::class, 'placeOrder'])->name('place-order.submit');
+
+Route::get('/kgen-orders', [KGenOrderController::class, 'listOrders'])->name('orders.list');
+Route::get('/get-kgenorders', [KGenOrderController::class, 'getOrders'])->name('orders.get');
+
+use App\Http\Controllers\KGenWalletController;
+
+Route::get('/wallet', [KGenWalletController::class, 'wallet'])->name('wallet');
 

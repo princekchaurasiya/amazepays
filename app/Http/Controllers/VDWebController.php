@@ -479,6 +479,42 @@ public function evcDetails(VDWebApiService $vdWebApiService)
         return redirect()->route('evc.status.view', $record->id);*/
     }
 
+    public function VDgetActivatedEvc(Request $request, VDWebApiService $vdWebApiService)
+{
+    // Validate incoming request
+    $request->validate([
+        'order_id' => 'required|string',
+        'request_ref_no' => 'required|string',
+    ]);
+
+    // Get token from VD API service
+    $tokenResponse = $vdWebApiService->getToken();
+    $token = $tokenResponse['token'] ?? null;
+
+    if (!$token) {
+        return back()->with('error', 'Token generation failed.');
+    }
+
+    // Call the getactivatedevc endpoint
+    $activatedEvc = $vdWebApiService->getActivatedEvc(
+        $token,
+        $request->order_id,
+        $request->request_ref_no
+    );
+
+    if (!$activatedEvc) {
+        return back()->with('error', 'Failed to fetch activated EVC.');
+    }
+
+    // Return the result to a view
+    return view('evc.activated', [
+        'evc' => $activatedEvc,
+        'order_id' => $request->order_id,
+        'request_ref_no' => $request->request_ref_no,
+    ]);
+}
+
+
 
     public function showBrands()
     {

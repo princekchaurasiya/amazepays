@@ -489,11 +489,11 @@ public function evcDetails(VDWebApiService $vdWebApiService)
 
     // Get token from VD API service
     $tokenResponse = $vdWebApiService->getToken();
-    $token = $tokenResponse['token'] ?? null;
+    /*$token = $tokenResponse['token'] ?? null;
 
     if (!$token) {
         return back()->with('error', 'Token generation failed.');
-    }
+    }*/
 
     // Call the getactivatedevc endpoint
     $activatedEvc = $vdWebApiService->getActivatedEvc(

@@ -329,4 +329,24 @@ public function getEvcStatus(string $token, string $orderId, string $requestRefN
 
     return $response->successful() ? $response->json() : null;
 }
+
+public function getActivatedEvc($token, $orderId, $requestRefNo)
+{
+    $url = 'http://cards.vdwebapi.com/distributor/getactivatedevc/';
+
+    $response = Http::withHeaders([
+        'Authorization' => 'Bearer ' . $token,
+        'Accept' => 'application/json',
+    ])->post($url, [
+        'order_id' => $orderId,
+        'request_ref_no' => $requestRefNo,
+    ]);
+
+    if ($response->successful()) {
+        return $response->json();
+    }
+
+    return null;
+}
+
 }

@@ -511,6 +511,7 @@ public function evcDetails(VDWebApiService $vdWebApiService)
     $decryptedData = null;
     if (!empty($activatedEvc['data'])) {
         $decryptedData = $this->decryptAES($activatedEvc['data']);
+        dd($decryptedData);
     }
 
 

@@ -497,7 +497,7 @@ public function evcDetails(VDWebApiService $vdWebApiService)
 
     // Call the getactivatedevc endpoint
     $activatedEvc = $vdWebApiService->getActivatedEvc(
-        $token,
+        $tokenResponse,
         $request->order_id,
         $request->request_ref_no
     );

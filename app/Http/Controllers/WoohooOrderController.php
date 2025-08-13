@@ -555,7 +555,7 @@ class WoohooOrderController extends Controller
             $orderFailureAdminEmail = 'itsupport@amazepays.in'; // last-resort fallback
         }
         if (empty($orderFailureITAdminEmail) || !filter_var($orderFailureITAdminEmail, FILTER_VALIDATE_EMAIL)) {
-            $orderFailureITAdminEmail = config('companyDefaultValues.company_email');
+            $orderFailureITAdminEmail = 'itsupport@amazepays.in';
         }
         if (empty($orderFailureITAdminEmail) || !filter_var($orderFailureITAdminEmail, FILTER_VALIDATE_EMAIL)) {
             $orderFailureITAdminEmail = 'itsupport@amazepays.in'; // last-resort fallback

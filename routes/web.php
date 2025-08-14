@@ -448,6 +448,11 @@ Route::get('/vdwalletbalance', [VDWebController::class, 'getWalletBalance']);
 Route::post('/evc/get-activated', [VDWebController::class, 'VDgetActivatedEvc'])
      ->name('evc.activated');
 
+use App\Http\Controllers\GetEvcRequestController;
+
+Route::get('/get-evc-request/create', [GetEvcRequestController::class, 'create'])->name('getevc.request');
+Route::post('/get-evc-request', [GetEvcRequestController::class, 'store']);
+
 //Lysto API Integration
 
 Route::get('/giftcards', [AthenaGiftCardController::class, 'index']);

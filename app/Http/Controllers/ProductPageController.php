@@ -13,8 +13,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\UnlimitPaymentController;
 
-use App\Http\Controllers\UnlimitPaymentController;
-
 class ProductPageController extends Controller
 {
     public function saveGiftCardFormValues(Request $request)
@@ -43,11 +41,9 @@ class ProductPageController extends Controller
             $recipient = \App\Models\User::where('mobile', $request->receiver_mobile)->first();
             if ($recipient && !$recipient->can_receive_gifts) {
                 Log::warning('Attempted to send gift to self', [
-                Log::warning('Attempted to send gift to self', [
                     'sender_id' => Auth::id(),
                     'recipient_mobile' => $request->receiver_mobile
                 ]);
-                return response()->view('errors.self-gift', [
                 return response()->view('errors.self-gift', [
                     'blockType' => 'recipient',
                     'phone' => $request->receiver_mobile,

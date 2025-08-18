@@ -6,8 +6,11 @@ use Illuminate\Support\Facades\Log;
 use TCG\Voyager\Facades\Voyager;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\UnlimitPaymentController;
+<<<<<<< HEAD
 use App\Http\Services\VDWebApiService;
 use App\Http\Services\AthenaGiftCardService;
+=======
+>>>>>>> 4374c925e7cc3bf7e3d173d46a3980baba929bd5
 
 use App\Http\Controllers\{
     HomePageController,
@@ -380,6 +383,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Invoice;
 Route::get('/admin/invoices/{id}/create-invoice', [\App\Http\Controllers\InvoiceController::class, 'storeAndSendInvoice'])->name('create_invoice');
 
+<<<<<<< HEAD
 /*Route::get('/about', function () {
     return view('userpanel/about');
 })->middleware('block.vpn');*/
@@ -502,3 +506,9 @@ Route::get('/get-kgenorders', [KGenOrderController::class, 'getOrders'])->name('
 use App\Http\Controllers\KGenWalletController;
 
 Route::get('/wallet', [KGenWalletController::class, 'wallet'])->name('wallet');
+=======
+
+
+
+
+>>>>>>> 4374c925e7cc3bf7e3d173d46a3980baba929bd5

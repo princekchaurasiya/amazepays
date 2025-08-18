@@ -794,22 +794,38 @@
                         
                     </div>
                 </div>
+<<<<<<< HEAD
                <!-- <div class="card shadow-none border-0">
                             <input
                                 class="mont-font p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-600 ls-3"
                                 type="submit" value="Card Payment" id="placeOrder">
                         </div> -->
+=======
+                <div class="card shadow-none border-0">
+                            <input
+                                class="mont-font p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-600 ls-3"
+                                type="submit" value="Card Payment" id="placeOrder">
+                        </div>
+>>>>>>> 4374c925e7cc3bf7e3d173d46a3980baba929bd5
             </form>
 <form method="POST" action="{{ route('payment.upi') }}">
     @csrf
     <input type="hidden" name="payable_amount" value="{{ $qsOrder->amount_payable_after_discount }}">
     <button type="submit" class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-300 ls-3">Pay with UPI</button>
 </form>
+<<<<<<< HEAD
 <!--<form method="POST" action="{{ route('payment.netbnk') }}">
     @csrf
     <input type="hidden" name="payable_amount" value="{{ $qsOrder->amount_payable_after_discount }}">
     <button type="submit" class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-300 ls-3">Net Banking</button>
 </form>-->
+=======
+<form method="POST" action="{{ route('payment.netbnk') }}">
+    @csrf
+    <input type="hidden" name="payable_amount" value="{{ $qsOrder->amount_payable_after_discount }}">
+    <button type="submit" class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-300 ls-3">Net Banking</button>
+</form>
+>>>>>>> 4374c925e7cc3bf7e3d173d46a3980baba929bd5
         </div>
 
     </div>

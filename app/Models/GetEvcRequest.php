@@ -26,5 +26,13 @@ class GetEvcRequest extends Model
         'country',
         'pincode',
         'curr',
+        'gift_send_option',
+        'delivery_mode',
+        'receiver_name',
+        'receiver_email',
+        'receiver_mobile',
+        'receiver_msg',
+        'vd_discount',
+        'vd_brand_code',
     ];
 }

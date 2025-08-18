@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Log;
 use TCG\Voyager\Facades\Voyager;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\UnlimitPaymentController;
+use App\Http\Services\VDWebApiService;
+use App\Http\Services\AthenaGiftCardService;
 
 use App\Http\Controllers\{
     HomePageController,
@@ -20,6 +22,7 @@ use App\Http\Controllers\{
     SearchController,
     OtpVerificationController,
     ProductPageController,
+    VDPageController,
     CCAvenueController,
     PaymentDetailsExportController,
     ProfileController,
@@ -38,6 +41,10 @@ use App\Http\Controllers\{
     Voyager\VoyagerOrderExportController,
     Voyager\ProductDetailsExportController,
     UserBlockController,
+    VDWebController,
+    VDAESdecrptController2,
+    StoreBrandsController,
+    AthenaGiftCardController,
 };
 
 /*
@@ -299,6 +306,10 @@ Route::middleware(['auth', 'check.transaction'])->group(function () {
     //Route::post('/response_ccavenue', [CCAvenueController::class, 'responseCcavenue'])->name('response_ccavenue');
 });
 
+//Storing formData in database
+use App\Http\Controllers\BillingController;
+Route::post('/store-billing-data', [BillingController::class, 'store'])->name('storeBillingData');
+
 //test
 
 //Route for Auth
@@ -373,6 +384,121 @@ Route::get('/admin/invoices/{id}/create-invoice', [\App\Http\Controllers\Invoice
     return view('userpanel/about');
 })->middleware('block.vpn');*/
 
+use App\Exports\UsersExport;
+use Maatwebsite\Excel\Facades\Excel;
+
+Route::get('/export-users', function () {
+    return Excel::download(new UsersExport, 'users_report.xlsx');
+})->name('export.users');
 
 
+use App\Http\Controllers\ExcelMergeController2;
 
+Route::get('/admin/excel-merge', [ExcelMergeController2::class, 'showForm'])->name('excel.form')->middleware('admin.user');
+Route::post('/admin/excel-merge', [ExcelMergeController2::class, 'merge'])->name('excel.merge')->middleware('admin.user');
+
+use App\Http\Controllers\UnlimitExportController;
+Route::get('/export-unlimit-payments', [UnlimitExportController::class, 'exportPayments']);
+
+use App\Http\Controllers\PaymentExportController;
+
+Route::get('/export-payments', [PaymentExportController::class, 'export'])->name('payments.export');
+
+//Value design APIs
+Route::get('/vdweb/token', [VDWebController::class, 'getToken']);
+Route::get('/vdweb/brands', [VDWebController::class, 'getBrandsFromToken']);
+Route::get('value-design/brands',[VDWebController::class,'displayBrands']);
+Route::get('/fetchbrands', function () {
+    return view('fetchbrands'); // or any basic page/form
+});
+Route::post('/fetchbrands', [StoreBrandsController::class, 'getAndStoreBrands']);
+use App\Http\Controllers\BrandExportController;
+
+Route::get('/admin/brands/export', [BrandExportController::class, 'export'])->name('brands.export');
+
+//Route::get('/brands/decrypt-sync', [VDAESdecrptController2::class, 'handleEncryptedPayload']);
+
+use App\Http\Controllers\StoreController;
+
+Route::get('/brands/select', [StoreController::class, 'showBrandSelection'])->name('brands.select');
+Route::post('/stores/fetch', [StoreController::class, 'fetchStoresForBrand'])->name('stores.fetch');
+
+Route::get('/stores/select', [StoreController::class, 'showForm'])->name('stores.form');
+Route::post('/stores/sync', [StoreController::class, 'syncAndShow'])->name('stores.sync');
+Route::get('/stores/filter', [StoreController::class, 'filterStores'])->name('stores.filter');
+Route::get('/stores/export', [StoreController::class, 'exportStores'])->name('stores.export');
+
+Route::get('/vddashboard', function () {
+    return view('value_design.dashboard');
+});
+
+Route::get('/vdbrands', [VDWebController::class, 'showBrands'])->name('brands.index');
+Route::post('/evc/store-request', [VDWebController::class, 'storeGetEvcRequest']);
+Route::get('/evc/request', [VDWebController::class, 'requestEvc'])->name('evc.request');
+Route::post('/evc/decrypt-store', [VDWebController::class, 'decryptAndStoreEvc']);
+Route::post('/evc-req', [VDWebController::class, 'showEvcDetails'])->name('request.evc');
+Route::get('/evc-details/{orderId}/{requestRefNo}', [VDWebController::class,'evcDetails'])->name('evc.details');
+
+
+//Route::post('/evc/status', [VDWebController::class, 'getEvcStatus'])->name('evc.status');
+
+Route::post('/evc/status', [VDWebController::class, 'VDgetEvcStatus'])->name('evc.status');
+
+Route::view('/evc/form', 'evc.form');
+
+Route::get('/vdwalletbalance', [VDWebController::class, 'getWalletBalance']);
+
+Route::post('/evc/get-activated', [VDWebController::class, 'VDgetActivatedEvc'])
+     ->name('evc.activated');
+
+use App\Http\Controllers\GetEvcRequestController;
+
+Route::get('/get-evc-request/create', [GetEvcRequestController::class, 'create'])->name('getevc.request');
+Route::post('/get-evc-request', [GetEvcRequestController::class, 'store']);
+
+//Lysto API Integration
+
+Route::get('/giftcards', [AthenaGiftCardController::class, 'index']);
+Route::get('/giftcards/{giftcard_id}/skus', [AthenaGiftCardController::class, 'getSkus'])->name('giftcards.show');
+
+//Route::view('/purchase-form', 'giftcard-purchase');
+
+Route::get('/orders', [AthenaGiftCardController::class, 'getOrder']);
+
+Route::get('/wallet-balance', [AthenaGiftCardController::class, 'getWalletBalance']);
+
+Route::view('/dashboard', 'giftcard-dashboard');
+
+Route::get('/giftcards2', [AthenaGiftcardController::class, 'showGiftcards'])->name('giftcards.index');
+//Route::get('/giftcards2/{id}', [AthenaGiftcardController::class, 'showGiftcards2'])->name('giftcards.show');
+
+Route::get('/giftcard/purchase/view', [AthenaGiftCardController::class, 'purchaseView'])->name('giftcard.purchase.view');
+Route::post('/giftcard/purchase', [AthenaGiftCardController::class, 'purchase'])->name('giftcard.purchase');
+
+Route::post('/vd-update-session-data', [VDPageController::class, 'updateSessionData'])->name('vdupdateSessionData');
+   Route::match(['get', 'post'], '/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckoutPage');
+   Route::post('/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckout.store');
+
+// VD Home API routes
+use App\Http\Controllers\VDHomeController;
+Route::get('/api/vd-brands/home', [VDHomeController::class, 'getVDBrandsForHome'])->name('vd.brands.home');
+Route::post('/api/vd-brands/clear-cache', [VDHomeController::class, 'clearVDBrandsCache'])->name('vd.brands.clear-cache');
+Route::get('/api/vd-brands/test-connection', [VDHomeController::class, 'testVDConnection'])->name('vd.brands.test-connection');
+
+// KGEN API
+use App\Http\Controllers\DeliveryPartnerController;
+
+Route::get('/products', [DeliveryPartnerController::class, 'getProducts'])->name('products');
+Route::get('/authenticate', [DeliveryPartnerController::class, 'authenticate'])->name('authenticate');
+
+use App\Http\Controllers\KGenOrderController;
+
+Route::get('/place-order', [KGenOrderController::class, 'showForm'])->name('place-order.form');
+Route::post('/place-order', [KGenOrderController::class, 'placeOrder'])->name('place-order.submit');
+
+Route::get('/kgen-orders', [KGenOrderController::class, 'listOrders'])->name('orders.list');
+Route::get('/get-kgenorders', [KGenOrderController::class, 'getOrders'])->name('orders.get');
+
+use App\Http\Controllers\KGenWalletController;
+
+Route::get('/wallet', [KGenWalletController::class, 'wallet'])->name('wallet');

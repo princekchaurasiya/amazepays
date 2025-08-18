@@ -3,7 +3,7 @@
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\APIs\AuthenticationController;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\AthenaGiftCardController;
 // Route::get('signature-validation', [ApiController::class, 'signatureValidation']);
 
 // Route::middleware('auth:sanctum')->group(function () {
@@ -24,5 +24,6 @@ Route::middleware('api')->group(function () {
         Route::get('single', [AuthenticationController::class, 'singleProductDetails']);
     });
 
+    Route::get('/orders', [AthenaGiftCardController::class, 'getOrder']);
     // Add more API routes as needed within the 'api' middleware group
 });

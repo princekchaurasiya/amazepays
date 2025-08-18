@@ -20,8 +20,9 @@ class UnlimitPaymentController extends Controller
         $response = Http::asForm()
             ->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode(env('UNLIMIT_CODE')),
+                'Authorization' => 'Basic ' . base64_encode(env('UNLIMIT_CODE')),
             ])
-            ->post('https://sandbox.in.unlimit.com/api/auth/token', [
+            ->post('https://psp.in.unlimit.com/api/auth/token', [
                 'grant_type' => 'password',
                 'password' => env('UNLIMIT_SECRET_KEY'),
                 'terminal_code' => env('UNLIMIT_PUBLIC_KEY'),
@@ -105,7 +106,7 @@ class UnlimitPaymentController extends Controller
    //'Accept' => 'application/json',
     'Content-Type' => 'application/json',
 ])
-->post('https://sandbox.in.unlimit.com/api/payments', $data);
+->post('https://psp.in.unlimit.com/api/payments', $data);
 
 Log::info('Payment Request', $data);
 Log::info('Payment Response', ['body' => $response->body(), 'status' => $response->status()]);
@@ -119,6 +120,17 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
 
 
 } catch (RequestException $e) {
+
+    if (str_contains($e->getMessage(), 'cURL error 35')) {
+        Log::error('cURL error 35: Send failure: Connection was aborted');
+
+        return response()->json([
+            'error' => 'Connection aborted',
+            'message' => 'The connection to the payment provider was unexpectedly closed. Please try again shortly.',
+            'code' => 35
+        ], 503);
+    }
+
     return response()->json([
         'error' => 'HTTP request failed',
         'message' => $e->getMessage(),
@@ -131,7 +143,8 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
 {
     //return redirect()->route('payment.success')->with('success', 'Payment completed successfully.');
     
-        return redirect()->route('payment.processed')->with('success', 'Payment processed.');
+        //return redirect()->route('payment.processed')->with('success', 'Payment processed.');
+        return view('woohoo.redirect-to-woohoo');
 }
 
 public function process(Request $request)

@@ -21,7 +21,7 @@ class NetBankPaymentController extends Controller
             ->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode(env('UNLIMIT_CODE')),
             ])
-            ->post('https://sandbox.in.unlimit.com/api/auth/token', [
+            ->post('https://psp.in.unlimit.com/api/auth/token', [
                 'grant_type' => 'password',
                 'password' => env('UNLIMIT_SECRET_KEY'),
                 'terminal_code' => env('UNLIMIT_PUBLIC_KEY'),
@@ -105,7 +105,7 @@ class NetBankPaymentController extends Controller
    //'Accept' => 'application/json',
     'Content-Type' => 'application/json',
 ])
-->post('https://sandbox.in.unlimit.com/api/payments', $data);
+->post('https://psp.in.unlimit.com/api/payments', $data);
 
 Log::info('Payment Request', $data);
 Log::info('Payment Response', ['body' => $response->body(), 'status' => $response->status()]);

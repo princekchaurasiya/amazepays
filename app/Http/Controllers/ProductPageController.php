@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\QsOrder;
 use App\Models\QsProduct;
 use App\Models\OrderSummary;
-use App\Models\CcAvenuePayment;
+use App\Models\UnlimitPayment;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
@@ -29,12 +29,7 @@ class ProductPageController extends Controller
 
     public function storePayNowData(Request $request, $slug)
     {
-        $UnlimitPaymentController = new UnlimitPaymentController();
-        $UnlimitPaymentController->getToken();
-        $UnlimitPaymentController->store($request);
-        $UPIPaymentController = new UPIPaymentController();
-        $UPIPaymentController->getToken();
-        $UPIPaymentController->store($request);
+  
         //return redirect()->route('payment.choice');
         Log::info('storePayNowData initiated with slug: ' . $slug);
 
@@ -219,7 +214,7 @@ class ProductPageController extends Controller
         $qsOrder->refno = 'Amz' . $qsOrder->id;
         $qsOrder->save();
 
-        $payment = new CcAvenuePayment();
+        $payment = new UnlimitPayment();
         $payment->order_id = $qsOrder->id;
         $payment->user_id = Auth::id();
         $payment->mer_amount = $qsOrder->grand_payable_amount;
@@ -248,6 +243,13 @@ class ProductPageController extends Controller
         $qsProd['prodData'] = $request->all();
         $qsProd['currency'] = json_decode($qsProd['currency']);
         $qsProd['images'] = json_decode($qsProd->images);
+
+        $UnlimitPaymentController = new UnlimitPaymentController();
+        $UnlimitPaymentController->getToken();
+        //$UnlimitPaymentController->store($request);
+        $UPIPaymentController = new UPIPaymentController();
+        $UPIPaymentController->getToken();
+        $UPIPaymentController->store($request);
 
         return view('userpanel.checkout', compact('qsProd', 'checkoutData', 'qsOrder'));
     }

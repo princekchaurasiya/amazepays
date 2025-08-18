@@ -34,6 +34,8 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('fetch:productData')->monthlyOn(4, '02:40');
         // $schedule->command('fetch:productData')->everyMinute();
+
+        $schedule->command('sync:stores')->dailyAt('01:00'); // adjust time as needed
     }
 
     /**

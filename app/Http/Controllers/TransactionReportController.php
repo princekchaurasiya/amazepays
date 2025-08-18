@@ -15,12 +15,12 @@ class TransactionReportController extends Controller
     {
         $response = Http::asForm()
             ->withHeaders([
-                'Authorization' => 'Basic ' . base64_encode('1047:E568gIjYr2aS'),
+                'Authorization' => 'Basic ' . base64_encode('1887:1zXIo78Jtw5U'),
             ])
-            ->post('https://sandbox.in.unlimit.com/api/auth/token', [
+            ->post('https://psp.in.unlimit.com/api/auth/token', [
                 'grant_type' => 'password',
-                'password' => 'E568gIjYr2aS',
-                'terminal_code' => '1047',
+                'password' => '1zXIo78Jtw5U',
+                'terminal_code' => '1887',
             ]);
 
         $data = $response->json();
@@ -89,7 +89,7 @@ class TransactionReportController extends Controller
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $token, // replace with real token
             'Accept' => 'application/json',
-        ])->post('https://sandbox.in.unlimit.com/api/reports', $payload);
+        ])->post('https://psp.in.unlimit.com/api/reports', $payload);
 
         if ($response->successful()) {
             return redirect()->back()->with([

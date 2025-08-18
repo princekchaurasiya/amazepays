@@ -15,6 +15,7 @@
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
         "maatwebsite/excel": "^3.1",
+        "phpoffice/phpspreadsheet": "^1.29",
         "rap2hpoutre/laravel-log-viewer": "^2.4",
         "tcg/voyager": "^1.6"
     },

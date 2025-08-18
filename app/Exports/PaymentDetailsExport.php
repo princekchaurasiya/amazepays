@@ -4,7 +4,7 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use App\Models\CcAvenuePayment;
+use App\Models\UnlimitPayment;
 
 class PaymentDetailsExport implements FromCollection, WithHeadings
 {
@@ -13,7 +13,7 @@ class PaymentDetailsExport implements FromCollection, WithHeadings
     */
     public function collection()
     {
-        $payments = CcAvenuePayment::select("order_id", "tracking_id", "bank_ref_no", "billing_details", "price", "qty", "delivery_details")->get();
+        $payments = UnlimitPayment::select("order_id", "tracking_id", "bank_ref_no", "billing_details", "price", "qty", "delivery_details")->get();
 
 
          // Transform the billing_details and delivery_details JSON data and create a new collection

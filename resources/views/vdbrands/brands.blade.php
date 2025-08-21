@@ -49,7 +49,7 @@
                     </div>
                     <div class="row g-0">
                         @if(auth()->check())
-                            <button type="submit" class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color">
+                            <button type="button" class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color" onclick="redirectToEvcForm()">
                                 Go to Checkout Page
                             </button>
                         @else
@@ -138,6 +138,32 @@
             $('.gifting-details input, .credentails-field').val('');
         }
     }
+
+    // Function to redirect to EVC form with data
+    window.redirectToEvcForm = function() {
+        // Get form data
+        var formData = {
+            denomination: $('input[name="denomination"]').val(),
+            quantity: $('input[name="quantity"]').val(),
+            gift_send_option: $('#sendAsGiftRadio').val(),
+            delivery_mode: $('input[name="delivery_mode"]').val(),
+            receiver_name: $('input[name="receiver_name"]').val(),
+            receiver_email: $('input[name="receiver_email"]').val(),
+            receiver_mobile: $('input[name="receiver_mobile"]').val(),
+            receiver_msg: $('input[name="receiver_msg"]').val(),
+            vd_discount: {{ $brand['Discount'] }},
+            vd_brand_code: '{{ $brand['BrandCode'] }}'
+        };
+
+        // Build query string
+        var queryString = Object.keys(formData)
+            .filter(key => formData[key] !== '' && formData[key] !== null)
+            .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(formData[key]))
+            .join('&');
+
+        // Redirect to EVC form with data
+        window.location.href = '{{ route("getevc.request") }}?' + queryString;
+    };
 
   let debounceTimeout;
                 // Debounce function to limit the rate of AJAX requests

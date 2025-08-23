@@ -328,15 +328,16 @@ Route::post('/unlimit-payment', [UnlimitPaymentController::class, 'showPaymentFo
 //Route::post('/unlimit/checkout', [UnlimitPaymentController::class, 'store'])->name('unlimit.checkout');
 //Route::post('/unlimit/store', [UnlimitPaymentController::class, 'store'])->name('unlimit.store');
 
-Route::get('/payment/return', function () {
-    return view('payment.return'); // or handle logic in a controller
-});
+
 
 Route::get('/payment', function () {
     return view('payment'); // This assumes the file is at resources/views/payment.blade.php
 });
 
 Route::get('/payment/return', [UnlimitPaymentController::class, 'handleReturnSuccess'])->name('unlimit.return');
+
+// Unlimit webhook endpoint
+Route::post('/unlimit/webhook', [UnlimitPaymentController::class, 'webhook'])->name('unlimit.webhook');
 
 Route::get('/payment/success', function () {
     return view('payment.success');

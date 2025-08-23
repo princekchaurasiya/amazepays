@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
 use App\Models\QsOrder;
-use App\Models\CcAvenuePayment;
+
 use App\Models\OrderSummary;
 use App\Models\User;
 use App\Helpers\CommonHelper;
@@ -279,29 +279,12 @@ class CCAvenueController extends Controller
     {
 
 
-        // Find the existing payment record by order_id
-        $existingPayment = CcAvenuePayment::where('order_id', $qsOrderDetails->id)->first();
+        // Payment record handling removed - CcAvenuePayment model does not exist
+        Log::info('Payment processing for order_id: ' . $qsOrderDetails->id);
+        return;
 
 
 
-        if (!$existingPayment) {
-            Log::error('Payment record not found for order_id: ' . $qsOrderDetails->order_id);
-            return;
-        }
-
-
-        $commonFields = ['order_id', 'tracking_id', 'bank_ref_no', 'order_status', 'failure_message', 'payment_mode', 'card_name', 'status_code', 'status_message', 'currency', 'amount', 'billing_name', 'billing_address', 'billing_city', 'billing_state', 'billing_zip', 'billing_country', 'billing_tel', 'billing_email', 'delivery_name', 'delivery_address', 'delivery_city', 'delivery_state', 'delivery_zip', 'delivery_country', 'delivery_tel', 'merchant_param1', 'merchant_param2', 'merchant_param3', 'merchant_param4', 'merchant_param5', 'vault', 'offer_type', 'offer_code', 'discount_value', 'mer_amount', 'eci_value', 'retry', 'response_code', 'billing_notes', 'trans_date', 'bin_country'];
-        foreach ($commonFields as $field) {
-            if (isset($ccAvenueCollectedDataArray[$field])) {
-                $existingPayment->{$field} = $ccAvenueCollectedDataArray[$field];
-            }
-        }
-        $existingPayment->save();
-
-
-        $existingOrderSummary = OrderSummary::where('order_id', $existingPayment->order_id)->first();
-        $existingOrderSummary->payment_status = $existingPayment->order_status;
-        $existingOrderSummary->save();
 
 
 

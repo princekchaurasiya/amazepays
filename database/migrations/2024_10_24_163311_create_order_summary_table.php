@@ -13,7 +13,7 @@ class CreateOrderSummaryTable extends Migration
 
             // Use integer instead of foreignId for compatibility
             $table->integer('order_id')->unsigned(); // Match with qs_orders.id
-            $table->integer('payment_id')->unsigned(); // Match with cc_avenue_payment.id
+            $table->integer('payment_id')->unsigned()->nullable(); // Payment reference (nullable since cc_avenue_payment table doesn't exist)
 
             $table->string('product_name')->nullable();
             $table->string('sender_name')->nullable();
@@ -25,7 +25,7 @@ class CreateOrderSummaryTable extends Migration
 
             // Foreign key constraints
             $table->foreign('order_id')->references('id')->on('qs_orders')->onDelete('cascade');
-            $table->foreign('payment_id')->references('id')->on('cc_avenue_payment')->onDelete('cascade');
+            // Payment foreign key removed - cc_avenue_payment table doesn't exist
         });
     }
 

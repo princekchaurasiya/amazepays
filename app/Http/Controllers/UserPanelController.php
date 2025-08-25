@@ -477,6 +477,8 @@ class UserPanelController extends Controller
     public function saveGiftCardFormValues(Request $request)
     {
         try {
+            // Log the incoming request data for debugging
+            \Log::info('Gift card form data received:', $request->all());
             $validatedData = $request->validate([
                 'gift_send_option' => 'required|string',
                 'receiver_name' => 'nullable|string|max:255',
@@ -484,6 +486,19 @@ class UserPanelController extends Controller
                 'receiver_mobile' => 'nullable|string|max:20',
                 'receiver_msg' => 'nullable|string',
                 'delivery_mode' => 'required|string|in:both,email,sms'
+                ], [
+                'gift_send_option.required' => 'Gift send option is required.',
+                'gift_send_option.string' => 'Gift send option must be a string.',
+                'receiver_name.string' => 'Receiver name must be a string.',
+                'receiver_name.max' => 'Receiver name cannot exceed 255 characters.',
+                'receiver_email.email' => 'Receiver email must be a valid email address.',
+                'receiver_email.max' => 'Receiver email cannot exceed 255 characters.',
+                'receiver_mobile.string' => 'Receiver mobile must be a string.',
+                'receiver_mobile.max' => 'Receiver mobile cannot exceed 20 characters.',
+                'receiver_msg.string' => 'Receiver message must be a string.',
+                'delivery_mode.required' => 'Delivery mode is required.',
+                'delivery_mode.string' => 'Delivery mode must be a string.',
+                'delivery_mode.in' => 'Delivery mode must be one of: both, email, or sms.'
             ]);
 
             // Store the validated form data in the session
@@ -491,15 +506,32 @@ class UserPanelController extends Controller
                 'gift_card_form' => $validatedData
             ]);
 
+            \Log::info('Gift card form data validated and saved successfully');
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Gift card form data saved successfully'
             ]);
-        } catch (\Exception $e) {
-            \Log::error('Error saving gift card form: ' . $e->getMessage());
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors specifically
+            \Log::error('Gift card form validation failed:', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to save gift card form data'
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error saving gift card form: ' . $e->getMessage(), [
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to save gift card form data: ' . $e->getMessage()
             ], 500);
         }
     }

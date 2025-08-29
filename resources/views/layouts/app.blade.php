@@ -8,6 +8,44 @@
         <title> @yield('title')</title>
         @yield('css')
         @include('layouts.partials.css-links')
+        
+        <style>
+            .verify-email {
+                margin-top: 10px;
+                width: 100%;
+                border-radius: 8px;
+                font-weight: 500;
+                transition: all 0.3s ease;
+            }
+            
+            .verify-email:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+            }
+            
+            .alert {
+                border-radius: 10px;
+                border: none;
+            }
+            
+            .alert-success {
+                background-color: #d4edda;
+                color: #155724;
+                border-left: 4px solid #28a745;
+            }
+            
+            .alert-info {
+                background-color: #d1ecf1;
+                color: #0c5460;
+                border-left: 4px solid #17a2b8;
+            }
+            
+            .alert-danger {
+                background-color: #f8d7da;
+                color: #721c24;
+                border-left: 4px solid #dc3545;
+            }
+        </style>
     </head>
     <body class="color-theme-blue open-font">
         <div class="cotainer-fluid">
@@ -120,6 +158,7 @@
                                                                 class="form-control h60 border-2 bg-color-none text-grey-700 credentails-field"
                                                                 placeholder="Email" id="email" autocomplete="off"
                                                                 id="registerEmail" name="registerEmail">
+
                                                             <span
                                                                 class="font-xssss fw-400 error-message error-email"></span>
                                                         </div>
@@ -513,6 +552,35 @@
         @include('layouts.partials.script-links')
         <!-- Script links ends here -->
         <script>
+            function verifyemail()
+            {
+                var email = $('#email').val();
+                if(email=='')
+                {
+                    alert('Please enter email');
+                    return false;
+                }
+                $.ajax({
+                    url: "{{ route('verify.email') }}",
+                    type: "POST",
+                    data: {
+                        email: email,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            alert(response.message);
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error: ", status, error);
+                        alert('An error occurred while verifying the email. Please try again.');
+                    }
+                });
+            }
+
             function moveToNext(currentInput, nextInputId) {
                 if (currentInput.value.length >= currentInput.maxLength) {
                     document.getElementById(nextInputId).focus();
@@ -719,7 +787,8 @@
                     dataType: 'json', // Corrected: 'json' instead of 'Json'
                     success: function(data) {
                         if (data.status == 200) {
-                            location.reload(true);
+                            // Redirect to verify email page after successful registration
+                            window.location.href = '{{ route("verify.email") }}';
                         } else if (data.status == 400 && data.errors) {
                             // Display duplicate entry errors within the modal
                             $.each(data.errors, function(key, value) {

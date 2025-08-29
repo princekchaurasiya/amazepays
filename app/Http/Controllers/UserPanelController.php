@@ -22,6 +22,10 @@ use App\Http\Controllers\OtpVerificationController;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
+use App\Models\EmailVerificationCode;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use Carbon\Carbon;
 
 class UserPanelController extends Controller
 {
@@ -173,6 +177,18 @@ class UserPanelController extends Controller
                 'role_id' => 2,
                 'mobile' => $request->mobile,
             ]);
+
+            $code = rand(100000, 999999); // 6-digit OTP
+
+            EmailVerificationCode::create([
+                'email' => $request->email,
+                'code' => $code,
+                'expires_at' => Carbon::now()->addMinutes(10), // valid for 10 min
+            ]);
+
+            // Send email
+            Mail::to($request->email)->send(new \App\Mail\SendVerificationCode($code));
+
             Log::info('User created', ['user' => $request->only(['name', 'email', 'mobile'])]);
 
             // Attempt login

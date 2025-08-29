@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Response;
 use Config;
 use App\Models\User;
 use Mail;
-use Illuminate\Support\Facades\log;
+use Illuminate\Support\Facades\Log;
 
 class SmsController extends Controller
 {
@@ -48,7 +48,7 @@ class SmsController extends Controller
 
     public function registerWithOtp(Request $request)
     {
-        Log::info('Register with OTP initiated', ['request' => $request->all()]);
+        \Log::info('Register with OTP initiated', ['request' => $request->all()]);
 
         $destination = $request->input('destination');
         if (!$destination) {

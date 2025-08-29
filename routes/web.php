@@ -521,7 +521,5 @@ Route::get('/get-kgenorders', [KGenOrderController::class, 'getOrders'])->name('
 use App\Http\Controllers\KGenWalletController;
 
 Route::get('/wallet', [KGenWalletController::class, 'wallet'])->name('wallet');
-<<<<<<< HEAD
 
-=======
->>>>>>> eee69e9303a612fc5468ff8db9b661de79faf059
+

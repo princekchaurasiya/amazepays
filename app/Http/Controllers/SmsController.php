@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Response;
 use Config;
 use App\Models\User;
 use Mail;
-use Illuminate\Support\Facades\log;
+use Illuminate\Support\Facades\Log;
 
 class SmsController extends Controller
 {
@@ -48,7 +48,7 @@ class SmsController extends Controller
 
     public function registerWithOtp(Request $request)
     {
-        Log::info('Register with OTP initiated', ['request' => $request->all()]);
+        \Log::info('Register with OTP initiated', ['request' => $request->all()]);
 
         $destination = $request->input('destination');
         if (!$destination) {
@@ -120,6 +120,21 @@ class SmsController extends Controller
     public function sendSms(Request $request)
     {
         \Log::info('Sending SMS initiated', ['request' => $request->all()]);
+
+        // Normalize destination to a 10-digit Indian mobile number
+        $rawDestination = $request->input('destination', '');
+        $normalized = preg_replace('/\D+/', '', $rawDestination);
+        if (strlen($normalized) > 10) {
+            if (substr($normalized, 0, 2) === '91' && strlen($normalized) >= 12) {
+                $normalized = substr($normalized, -10);
+            } elseif (substr($normalized, 0, 1) === '0' && strlen($normalized) >= 11) {
+                $normalized = substr($normalized, -10);
+            } else {
+                // Fallback: take the last 10 digits
+                $normalized = substr($normalized, -10);
+            }
+        }
+        $request->merge(['destination' => $normalized]);
 
         $validator = Validator::make($request->all(), [
             'destination' => 'required|regex:/^[6-9]\d{9}$/',

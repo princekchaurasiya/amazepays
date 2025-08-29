@@ -45,6 +45,7 @@ use App\Http\Controllers\{
     VDAESdecrptController2,
     StoreBrandsController,
     AthenaGiftCardController,
+    AuthController,
 };
 
 /*
@@ -166,6 +167,10 @@ Route::group(['middleware' => 'guest'], function () {
         return view('unauthorized');
     })->name('unauthorized');
 });
+
+Route::get('/verify-email', [AuthController::class, 'showVerifyForm'])->name('verify.email');
+Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
+Route::post('/resend-verification', [AuthController::class, 'resendVerification'])->name('resend.verification');
 
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/user-logout', [UserPanelController::class, 'userLogOut'])->name('user-logout');

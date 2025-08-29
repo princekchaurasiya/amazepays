@@ -45,6 +45,7 @@ use App\Http\Controllers\{
     VDAESdecrptController2,
     StoreBrandsController,
     AthenaGiftCardController,
+    AuthController,
 };
 
 /*
@@ -166,6 +167,10 @@ Route::group(['middleware' => 'guest'], function () {
         return view('unauthorized');
     })->name('unauthorized');
 });
+
+Route::get('/verify-email', [AuthController::class, 'showVerifyForm'])->name('verify.email');
+Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
+Route::post('/resend-verification', [AuthController::class, 'resendVerification'])->name('resend.verification');
 
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/user-logout', [UserPanelController::class, 'userLogOut'])->name('user-logout');
@@ -328,15 +333,16 @@ Route::post('/unlimit-payment', [UnlimitPaymentController::class, 'showPaymentFo
 //Route::post('/unlimit/checkout', [UnlimitPaymentController::class, 'store'])->name('unlimit.checkout');
 //Route::post('/unlimit/store', [UnlimitPaymentController::class, 'store'])->name('unlimit.store');
 
-Route::get('/payment/return', function () {
-    return view('payment.return'); // or handle logic in a controller
-});
+
 
 Route::get('/payment', function () {
     return view('payment'); // This assumes the file is at resources/views/payment.blade.php
 });
 
 Route::get('/payment/return', [UnlimitPaymentController::class, 'handleReturnSuccess'])->name('unlimit.return');
+
+// Unlimit webhook endpoint
+Route::post('/unlimit/webhook', [UnlimitPaymentController::class, 'webhook'])->name('unlimit.webhook');
 
 Route::get('/payment/success', function () {
     return view('payment.success');
@@ -380,6 +386,9 @@ use App\Http\Controllers\InvoiceController;
 use App\Invoice;
 Route::get('/admin/invoices/{id}/create-invoice', [\App\Http\Controllers\InvoiceController::class, 'storeAndSendInvoice'])->name('create_invoice');
 
+/*Route::get('/about', function () {
+    return view('userpanel/about');
+})->middleware('block.vpn');*/
 
 use App\Exports\UsersExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -512,4 +521,7 @@ Route::get('/get-kgenorders', [KGenOrderController::class, 'getOrders'])->name('
 use App\Http\Controllers\KGenWalletController;
 
 Route::get('/wallet', [KGenWalletController::class, 'wallet'])->name('wallet');
+<<<<<<< HEAD
 
+=======
+>>>>>>> eee69e9303a612fc5468ff8db9b661de79faf059

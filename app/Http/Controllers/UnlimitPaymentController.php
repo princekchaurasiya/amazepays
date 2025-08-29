@@ -20,6 +20,7 @@ class UnlimitPaymentController extends Controller
         $response = Http::asForm()
             ->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode(env('UNLIMIT_CODE')),
+                'Authorization' => 'Basic ' . base64_encode(env('UNLIMIT_CODE')),
             ])
             ->post('https://psp.in.unlimit.com/api/auth/token', [
                 'grant_type' => 'password',
@@ -70,6 +71,9 @@ class UnlimitPaymentController extends Controller
     $milliseconds = $now->format('v'); // milliseconds
     $time = $now->format("Y-m-d\TH:i:s.") . $milliseconds . "Z";
     $payableAmount = $request->input('payable_amount');
+    
+    // Generate unique order ID
+    $orderId = (string) Str::uuid();
 
     $data = [
         'request' => [
@@ -77,8 +81,8 @@ class UnlimitPaymentController extends Controller
             'time' => $time,
         ],
         'merchant_order' => [
-            'id' => 'ad466842-4b74-4c18-9314-e3f8f15ed183',
-            'description' => "test",
+            'id' => $orderId,
+            'description' => "Gift Card Payment - " . $orderId,
         ],
         'payment_method' => 'bankcard',
         'payment_data' => [ 
@@ -87,8 +91,8 @@ class UnlimitPaymentController extends Controller
         ],
 
         'return_urls' => [
-        'success_url' => route('order.order-status'),
-        'decline_url' => route('order.order-status'),
+            'success_url' => route('unlimit.return'),
+            'decline_url' => route('unlimit.return'),
         ],
         // Note: card_account.card was removed based on your earlier error for Payment Page mode
     ];
@@ -114,9 +118,14 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
     $responseData = $response->json();
 
     if (isset($responseData['redirect_url'])) {
-    return redirect()->away($responseData['redirect_url']);
-        }
+        // Store payment information before redirecting
+        $this->storePaymentInfo($request, $orderId, $responseData);
+        return redirect()->away($responseData['redirect_url']);
+    }
 
+    // If no redirect URL, handle the response accordingly
+    Log::error('No redirect URL in response', $responseData);
+    return response()->json(['error' => 'No redirect URL received', 'response' => $responseData], 400);
 
 } catch (RequestException $e) {
 
@@ -139,12 +148,73 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
     }
 
     public function handleReturnSuccess(Request $request)
-{
-    //return redirect()->route('payment.success')->with('success', 'Payment completed successfully.');
-    
-        //return redirect()->route('payment.processed')->with('success', 'Payment processed.');
-        return view('woohoo.redirect-to-woohoo');
-}
+    {
+        // Log the return request for debugging
+        Log::info('Payment return received', [
+            'request_data' => $request->all(),
+            'headers' => $request->headers->all()
+        ]);
+
+        // Get payment information from the request parameters
+        $paymentId = $request->input('payment_id');
+        $orderId = $request->input('merchant_order_id');
+        $status = $request->input('status');
+
+        // Update payment status if we have payment information
+        if ($paymentId && $orderId) {
+            $this->updatePaymentStatus($paymentId, $orderId, $status);
+        }
+
+        // Store return data in session for the redirect-to-woohoo blade
+        session([
+            'payment_return_data' => [
+                'payment_id' => $paymentId,
+                'order_id' => $orderId,
+                'status' => $status,
+                'return_time' => now()
+            ]
+        ]);
+
+        // Return the redirect-to-woohoo view
+        return view('woohoo.redirect-to-woohoo', [
+            'payment_id' => $paymentId,
+            'order_id' => $orderId,
+            'status' => $status
+        ]);
+    }
+
+    /**
+     * Handle webhook notifications from Unlimit
+     */
+    public function webhook(Request $request)
+    {
+        Log::info('Unlimit webhook received', [
+            'request_data' => $request->all(),
+            'headers' => $request->headers->all()
+        ]);
+
+        // Verify webhook signature if Unlimit provides one
+        // For now, we'll process the webhook data
+        
+        $paymentId = $request->input('payment_id');
+        $orderId = $request->input('merchant_order_id');
+        $status = $request->input('status');
+        $amount = $request->input('amount');
+
+        if ($paymentId && $orderId) {
+            $this->updatePaymentStatus($paymentId, $orderId, $status);
+            
+            // If payment is successful, you might want to trigger order creation
+            if ($status === 'success' || $status === 'approved') {
+                Log::info('Payment successful, ready for order creation', [
+                    'order_id' => $orderId,
+                    'payment_id' => $paymentId
+                ]);
+            }
+        }
+
+        return response()->json(['status' => 'success'], 200);
+    }
 
 public function process(Request $request)
     {
@@ -159,5 +229,64 @@ public function process(Request $request)
         return view('payment.success', ['amount' => $payableAmount]);
     }
 
+    /**
+     * Store payment information in the database
+     */
+    private function storePaymentInfo(Request $request, $orderId, $responseData)
+    {
+        try {
+            $payment = new UnlimitPayment();
+            $payment->order_id = $orderId;
+            $payment->amount = $request->input('payable_amount');
+            $payment->currency = 'INR';
+            $payment->payment_method = 'bankcard';
+            $payment->status = 'pending';
+            $payment->unlimit_response = json_encode($responseData);
+            $payment->created_at = now();
+            $payment->save();
+
+            Log::info('Payment information stored', [
+                'order_id' => $orderId,
+                'amount' => $request->input('payable_amount'),
+                'payment_id' => $payment->id
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to store payment information', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Update payment status when return is received
+     */
+    private function updatePaymentStatus($paymentId, $orderId, $status)
+    {
+        try {
+            $payment = UnlimitPayment::where('order_id', $orderId)->first();
+            
+            if ($payment) {
+                $payment->status = $status;
+                $payment->updated_at = now();
+                $payment->save();
+
+                Log::info('Payment status updated', [
+                    'order_id' => $orderId,
+                    'status' => $status,
+                    'payment_id' => $payment->id
+                ]);
+            } else {
+                Log::warning('Payment not found for order', ['order_id' => $orderId]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Failed to update payment status', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 }
 

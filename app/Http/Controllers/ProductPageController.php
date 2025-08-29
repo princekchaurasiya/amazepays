@@ -273,7 +273,11 @@ class ProductPageController extends Controller
         $UnlimitPaymentController = new UnlimitPaymentController();
         $UnlimitPaymentController->getToken();
         $UnlimitPaymentController->store($request);
+        $UnlimitPaymentController = new UnlimitPaymentController();
+        $UnlimitPaymentController->getToken();
+        $UnlimitPaymentController->store($request);
         return view('checkout', compact('checkoutData'));
+        
         
     }
 }

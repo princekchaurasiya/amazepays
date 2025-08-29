@@ -409,7 +409,31 @@ class WoohooOrderController extends Controller
         ];
         try
         {
-        $prepareSmsDetails = ["name" => $order["sender_first_name"], "order_id" => $order["woohoo_order_id"], "reference_id" => $order["id"], "order_date" => $order["created_at"], "billing_name" => $order["sender_first_name"], "order_amount" => $order["amount"], "cardSku" => $order["sku"], "cardProductName" => $order["name"], "shipToName" => $order["receiver_name"] ?? $order["sender_first_name"], "shipToContactNo" => $order["receiver_mobile"] ?? $order["sender_phone_no"], 'grand_payable_amount"' => $order['grand_payable_amount"'], "perOrderQuantity" => $order["quantity"], "giftSendOption" => $order["gift_send_option"], "billing_tel" => $order["sender_phone_no"],];
+        // Build robust SMS details with safe fallbacks
+        $senderName = $order["sender_first_name"] ?? ($billingInfo->billing_name ?? 'Customer');
+        $orderIdForSms = $order["woohoo_order_id"] ?? ($order["id"] ?? null);
+        $orderAmountForSms = $order["amount"] ?? ($order["grand_payable_amount"] ?? null);
+        $productNameForSms = $order["name"] ?? ($order["sku"] ?? 'Gift Card');
+        $billingTelForSms = $billingInfo->billing_tel ?? $order["sender_phone_no"] ?? null;
+        $shipToNameForSms = $order["receiver_name"] ?? $senderName;
+        $shipToContactForSms = $order["receiver_mobile"] ?? $billingTelForSms;
+
+        $prepareSmsDetails = [
+            "name" => $senderName,
+            "order_id" => $orderIdForSms,
+            "reference_id" => $order["id"] ?? null,
+            "order_date" => $order["created_at"] ?? null,
+            "billing_name" => $billingInfo->billing_name ?? $senderName,
+            "order_amount" => $orderAmountForSms,
+            "cardSku" => $order["sku"] ?? null,
+            "cardProductName" => $productNameForSms,
+            "shipToName" => $shipToNameForSms,
+            "shipToContactNo" => $shipToContactForSms,
+            "grand_payable_amount" => $order["grand_payable_amount"] ?? null,
+            "perOrderQuantity" => $order["quantity"] ?? 1,
+            "giftSendOption" => $order["gift_send_option"] ?? 'buy_for_self',
+            "billing_tel" => $billingTelForSms,
+        ];
         if ($order["delivery_mode"] == "both") {
             $this->sendTransactionMail($prepareMailDetails);
             $this->sendGiftMail($prepareMailDetails, $cardsArray);
@@ -789,10 +813,11 @@ class WoohooOrderController extends Controller
     {
         
         try {
-            $name = $prepareSmsDetails["shipToName"];
-            $orderNumber = $prepareSmsDetails["order_id"];
-            $orderAmount = $prepareSmsDetails["order_amount"];
-            $destination = $prepareSmsDetails["shipToContactNo"];
+            $name = $prepareSmsDetails["shipToName"] ?? ($prepareSmsDetails["billing_name"] ?? 'Customer');
+            $orderNumber = $prepareSmsDetails["order_id"] ?? 'N/A';
+            $orderAmount = $prepareSmsDetails["order_amount"] ?? ($prepareSmsDetails["grand_payable_amount"] ?? null);
+            // Prefer recipient mobile; fall back to billing tel if missing
+            $destination = $prepareSmsDetails["shipToContactNo"] ?? $prepareSmsDetails["billing_tel"] ?? null;
             
             // Validate phone number before sending SMS
             if (empty($destination) || !preg_match('/^[6-9]\d{9}$/', $destination)) {

@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\QsOrder;
 use App\Models\User;
-use App\Models\CcAvenuePayment;
+
 use App\Helpers\CommonHelper;
 use Auth;
 

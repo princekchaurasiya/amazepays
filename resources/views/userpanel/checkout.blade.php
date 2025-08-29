@@ -920,6 +920,7 @@
                         billing_name: {
                             required: true,
                             lattersonly: true,
+                            fullname: true,
                             maxlength: 30
                         },
                         billing_email: {
@@ -967,6 +968,7 @@
                         billing_name: {
                             required: "Please enter a name",
                             lattersonly: "Please enter a valid name",
+                            fullname: "Please enter both the first name and last name",
                             maxlength: "Name cannot exceed 255 characters"
                         },
                         billing_email: {
@@ -1022,6 +1024,11 @@
                 jQuery.validator.addMethod('indianNumber', function(value, element) {
                     return /^[6-9]\d{9}$/.test(value);
                 }, "Please enter a valid Indian number");
+
+                jQuery.validator.addMethod('fullname', function(value, element) {
+                    // Require at least two words (first and last name)
+                    return /^\s*[A-Za-z]+(?:\s+[A-Za-z]+)+\s*$/.test(value);
+                }, "Please enter both the first name and last name");
             });
         </script>
     @endpush

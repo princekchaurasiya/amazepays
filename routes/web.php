@@ -494,13 +494,13 @@ Route::get('/api/vd-brands/test-connection', [VDHomeController::class, 'testVDCo
 // KGEN API
 use App\Http\Controllers\DeliveryPartnerController;
 
-Route::get('/products', [DeliveryPartnerController::class, 'getProducts'])->name('products');
-Route::get('/authenticate', [DeliveryPartnerController::class, 'authenticate'])->name('authenticate');
+Route::get('/kgen-products', [DeliveryPartnerController::class, 'getProducts'])->name('products');
+//Route::get('/authenticate', [DeliveryPartnerController::class, 'authenticate'])->name('authenticate');
 
 use App\Http\Controllers\KGenOrderController;
 
-Route::get('/place-order', [KGenOrderController::class, 'showForm'])->name('place-order.form');
-Route::post('/place-order', [KGenOrderController::class, 'placeOrder'])->name('place-order.submit');
+Route::get('/kgen-place-order', [KGenOrderController::class, 'showForm'])->name('place-order.form');
+Route::post('/kgen-place-order', [KGenOrderController::class, 'placeOrder'])->name('place-order.submit');
 
 Route::get('/kgen-orders', [KGenOrderController::class, 'listOrders'])->name('orders.list');
 Route::get('/get-kgenorders', [KGenOrderController::class, 'getOrders'])->name('orders.get');

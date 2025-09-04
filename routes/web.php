@@ -481,7 +481,19 @@ Route::get('/giftcards2', [AthenaGiftcardController::class, 'showGiftcards'])->n
 Route::get('/giftcard/purchase/view', [AthenaGiftCardController::class, 'purchaseView'])->name('giftcard.purchase.view');
 Route::post('/giftcard/purchase', [AthenaGiftCardController::class, 'purchase'])->name('giftcard.purchase');
 
+
+//Unlimit redirect
+Route::get('/redirect-to-woohoo', function () {
+    return view('woohoo.redirect-to-woohoo'); 
+});
+
 Route::post('/vd-update-session-data', [VDPageController::class, 'updateSessionData'])->name('vdupdateSessionData');
+
+ Route::match(['get', 'post'], '/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckoutPage');
+
+ Route::post('/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckout.store');
+
+
    Route::match(['get', 'post'], '/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckoutPage');
    Route::post('/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckout.store');
 
@@ -491,16 +503,17 @@ Route::get('/api/vd-brands/home', [VDHomeController::class, 'getVDBrandsForHome'
 Route::post('/api/vd-brands/clear-cache', [VDHomeController::class, 'clearVDBrandsCache'])->name('vd.brands.clear-cache');
 Route::get('/api/vd-brands/test-connection', [VDHomeController::class, 'testVDConnection'])->name('vd.brands.test-connection');
 
+
 // KGEN API
 use App\Http\Controllers\DeliveryPartnerController;
 
-Route::get('/products', [DeliveryPartnerController::class, 'getProducts'])->name('products');
-Route::get('/authenticate', [DeliveryPartnerController::class, 'authenticate'])->name('authenticate');
+Route::get('/kgen-products', [DeliveryPartnerController::class, 'getProducts'])->name('products');
+//Route::get('/authenticate', [DeliveryPartnerController::class, 'authenticate'])->name('authenticate');
 
 use App\Http\Controllers\KGenOrderController;
 
-Route::get('/place-order', [KGenOrderController::class, 'showForm'])->name('place-order.form');
-Route::post('/place-order', [KGenOrderController::class, 'placeOrder'])->name('place-order.submit');
+Route::get('/kgen-place-order', [KGenOrderController::class, 'showForm'])->name('place-order.form');
+Route::post('/kgen-place-order', [KGenOrderController::class, 'placeOrder'])->name('place-order.submit');
 
 Route::get('/kgen-orders', [KGenOrderController::class, 'listOrders'])->name('orders.list');
 Route::get('/get-kgenorders', [KGenOrderController::class, 'getOrders'])->name('orders.get');
@@ -508,3 +521,5 @@ Route::get('/get-kgenorders', [KGenOrderController::class, 'getOrders'])->name('
 use App\Http\Controllers\KGenWalletController;
 
 Route::get('/wallet', [KGenWalletController::class, 'wallet'])->name('wallet');
+
+

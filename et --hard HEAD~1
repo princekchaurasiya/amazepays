@@ -1,0 +1,237 @@
+[33m9a857cc[m[33m ([m[1;36mHEAD -> [m[1;32mdev[m[33m, [m[1;31morigin/dev[m[33m)[m HEAD@{0}: pull origin dev: Fast-forward
+[33m3a79bf0[m HEAD@{1}: pull origin dev: Fast-forward
+[33maaa0125[m HEAD@{2}: pull origin dev: Fast-forward
+[33ma65f789[m HEAD@{3}: pull origin dev: Fast-forward
+[33mc6943db[m HEAD@{4}: pull origin dev: Fast-forward
+[33m97df43f[m HEAD@{5}: pull origin dev: Fast-forward
+[33m1f94671[m HEAD@{6}: pull origin dev: Fast-forward
+[33me12d436[m HEAD@{7}: pull origin dev: Fast-forward
+[33mc9deb18[m HEAD@{8}: pull origin dev: Fast-forward
+[33mc8d296d[m HEAD@{9}: pull origin dev: Fast-forward
+[33ma5f7f1d[m HEAD@{10}: pull origin dev: Fast-forward
+[33mba39501[m HEAD@{11}: pull origin dev: Fast-forward
+[33m8ef4f33[m HEAD@{12}: pull origin dev: Fast-forward
+[33mb7fd93e[m HEAD@{13}: pull origin dev: Fast-forward
+[33m2d2e6b7[m HEAD@{14}: pull origin dev: Fast-forward
+[33m575c8bd[m HEAD@{15}: pull origin dev: Fast-forward
+[33me6032fb[m HEAD@{16}: pull origin dev: Fast-forward
+[33md717dec[m HEAD@{17}: pull origin dev: Fast-forward
+[33m5f82b21[m HEAD@{18}: pull origin dev: Fast-forward
+[33m5164812[m HEAD@{19}: pull origin dev: Fast-forward
+[33medec972[m HEAD@{20}: pull origin dev: Fast-forward
+[33mee3ae03[m HEAD@{21}: pull origin dev: Fast-forward
+[33m70e8ad6[m HEAD@{22}: pull origin dev: Fast-forward
+[33m2355cda[m HEAD@{23}: pull origin dev: Fast-forward
+[33m0720de5[m HEAD@{24}: pull origin dev: Fast-forward
+[33mcfb4f76[m HEAD@{25}: pull origin dev: Fast-forward
+[33m47c3431[m HEAD@{26}: pull origin dev: Fast-forward
+[33mb5e2879[m HEAD@{27}: pull origin dev: Fast-forward
+[33m09832f8[m HEAD@{28}: pull origin dev: Fast-forward
+[33mc2a8dd0[m HEAD@{29}: pull origin dev: Fast-forward
+[33mfc44681[m HEAD@{30}: pull origin dev: Fast-forward
+[33m6fcb3b9[m HEAD@{31}: pull origin dev: Fast-forward
+[33mf50b445[m HEAD@{32}: pull origin dev: Fast-forward
+[33m11bc998[m HEAD@{33}: pull origin dev: Fast-forward
+[33m6a059ec[m HEAD@{34}: pull origin dev: Fast-forward
+[33me6a376c[m HEAD@{35}: pull origin dev: Fast-forward
+[33m35b437b[m HEAD@{36}: pull origin dev: Fast-forward
+[33mf7a212c[m HEAD@{37}: pull origin dev: Fast-forward
+[33mcfd65b5[m HEAD@{38}: pull origin dev: Fast-forward
+[33m2d529da[m HEAD@{39}: pull origin dev: Fast-forward
+[33me9a110f[m HEAD@{40}: pull origin dev: Fast-forward
+[33m47e3a56[m HEAD@{41}: pull origin dev: Fast-forward
+[33mf1d8cb2[m HEAD@{42}: pull origin dev: Fast-forward
+[33mc6efea5[m HEAD@{43}: pull origin dev: Fast-forward
+[33mc7a79fe[m HEAD@{44}: pull origin dev: Fast-forward
+[33m9822a25[m HEAD@{45}: pull origin dev: Fast-forward
+[33me20fd46[m HEAD@{46}: pull origin dev: Fast-forward
+[33m2696e5b[m HEAD@{47}: pull origin dev: Fast-forward
+[33m33e359b[m HEAD@{48}: pull origin dev: Fast-forward
+[33ma9eab4c[m HEAD@{49}: pull origin dev: Fast-forward
+[33m17d6a33[m HEAD@{50}: pull origin dev: Fast-forward
+[33m22f31ee[m HEAD@{51}: pull origin dev: Fast-forward
+[33m329f81b[m HEAD@{52}: pull origin dev: Fast-forward
+[33m17ca81b[m HEAD@{53}: pull origin dev: Fast-forward
+[33mcd37df2[m HEAD@{54}: pull origin dev: Fast-forward
+[33m0fe847e[m HEAD@{55}: pull origin dev: Fast-forward
+[33m1d5b451[m HEAD@{56}: pull origin dev: Fast-forward
+[33md1d7d00[m HEAD@{57}: pull origin dev: Fast-forward
+[33maf7f17a[m HEAD@{58}: pull origin dev: Fast-forward
+[33m8085278[m HEAD@{59}: pull origin dev: Fast-forward
+[33m8f0020f[m HEAD@{60}: pull origin dev: Fast-forward
+[33mbf953f8[m HEAD@{61}: pull origin dev: Fast-forward
+[33mb31aef7[m HEAD@{62}: pull origin dev: Fast-forward
+[33mc5b8d74[m HEAD@{63}: pull origin dev: Fast-forward
+[33m4b0b331[m HEAD@{64}: reset: moving to ORIG_HEAD
+[33mc5b8d74[m HEAD@{65}: reset: moving to ORIG_HEAD
+[33m4b0b331[m HEAD@{66}: reset: moving to ORIG_HEAD
+[33mc5b8d74[m HEAD@{67}: pull origin dev: Fast-forward
+[33m4b0b331[m HEAD@{68}: pull origin dev: Fast-forward
+[33md03bbfb[m HEAD@{69}: pull origin dev: Fast-forward
+[33mf16ed5b[m HEAD@{70}: pull origin dev: Fast-forward
+[33mc8b486a[m HEAD@{71}: reset: moving to HEAD
+[33mc8b486a[m HEAD@{72}: pull origin dev: Fast-forward
+[33m71124c6[m HEAD@{73}: pull origin dev: Fast-forward
+[33md382df6[m HEAD@{74}: pull origin dev: Fast-forward
+[33me9d3eea[m HEAD@{75}: pull origin dev: Fast-forward
+[33m0f2e606[m HEAD@{76}: pull origin dev: Fast-forward
+[33m96102d9[m HEAD@{77}: pull origin dev: Fast-forward
+[33m753f285[m HEAD@{78}: pull origin dev --rebase (finish): returning to refs/heads/dev
+[33m753f285[m HEAD@{79}: pull origin dev --rebase (start): checkout 753f285fab0e9c84bdfa0f6744969442c33ba6f4
+[33m754fd46[m HEAD@{80}: reset: moving to HEAD
+[33m754fd46[m HEAD@{81}: pull --no-ff: Merge made by the 'ort' strategy.
+[33m8022a38[m HEAD@{82}: pull --no-ff: Merge made by the 'ort' strategy.
+[33m516cb58[m HEAD@{83}: pull origin main: Fast-forward
+[33m8dec9c8[m HEAD@{84}: pull origin dev: Fast-forward
+[33m568f013[m HEAD@{85}: pull: Fast-forward
+[33mce1e4df[m HEAD@{86}: checkout: moving from main to dev
+[33mf1546be[m[33m ([m[1;32mmain[m[33m)[m HEAD@{87}: pull origin main: Merge made by the 'ort' strategy.
+[33m88f329f[m HEAD@{88}: pull origin main: Merge made by the 'ort' strategy.
+[33m67e4a84[m HEAD@{89}: pull origin main: Merge made by the 'ort' strategy.
+[33m83fa565[m HEAD@{90}: pull --rebase origin main (finish): returning to refs/heads/main
+[33m83fa565[m HEAD@{91}: pull --rebase origin main (pick): Save local changes to blade files
+[33m4fddeb8[m HEAD@{92}: pull --rebase origin main (pick): Revert "css changes"
+[33m3e0a5b5[m HEAD@{93}: pull --rebase origin main (start): checkout 3e0a5b5fce1d43fc927c1b0834cd9ffa3e43f80e
+[33m6b450f4[m HEAD@{94}: pull origin main: Merge made by the 'ort' strategy.
+[33mbc4e200[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{95}: merge master: Fast-forward
+[33m69cac99[m HEAD@{96}: checkout: moving from master to main
+[33mbc4e200[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{97}: rebase (continue) (finish): returning to refs/heads/master
+[33mbc4e200[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{98}: rebase (continue) (pick): Save local changes to blade files
+[33ma0bd473[m HEAD@{99}: pull origin main --no-rebase: Merge made by the 'ort' strategy.
+[33m1a710b4[m HEAD@{100}: revert: Revert "css changes"
+[33m09e4c9b[m HEAD@{101}: reset: moving to 09e4c9b
+[33macd9c0b[m HEAD@{102}: pull --rebase origin main (start): checkout acd9c0bdb1da7c3d40e42293303fd9eef935427e
+[33m68ce445[m HEAD@{103}: reset: moving to HEAD
+[33m68ce445[m HEAD@{104}: commit (merge): Resolved conflicts by accepting local changes for composer.json and composer.lock
+[33m2df8340[m HEAD@{105}: commit: Save local changes to blade files
+[33mc76453d[m HEAD@{106}: commit: Save local changes to composer files
+[33m26dfffa[m HEAD@{107}: pull origin main: Merge made by the 'ort' strategy.
+[33me5532ba[m HEAD@{108}: pull origin main: Merge made by the 'ort' strategy.
+[33m9faa9ea[m HEAD@{109}: pull origin main: Merge made by the 'ort' strategy.
+[33mae57336[m HEAD@{110}: pull origin main: Merge made by the 'ort' strategy.
+[33meef2e82[m HEAD@{111}: pull origin main: Merge made by the 'ort' strategy.
+[33mba07d3c[m HEAD@{112}: pull origin main: Merge made by the 'ort' strategy.
+[33m388c515[m HEAD@{113}: pull origin main: Merge made by the 'ort' strategy.
+[33mf4940eb[m HEAD@{114}: pull origin main: Merge made by the 'ort' strategy.
+[33mc7f1ac3[m HEAD@{115}: pull origin main: Merge made by the 'ort' strategy.
+[33mfc5abc0[m HEAD@{116}: pull origin main: Merge made by the 'ort' strategy.
+[33mfeac8b0[m HEAD@{117}: pull origin main: Merge made by the 'ort' strategy.
+[33m03d0607[m HEAD@{118}: pull origin main: Merge made by the 'ort' strategy.
+[33mb338576[m HEAD@{119}: pull origin main: Merge made by the 'ort' strategy.
+[33mc389d3c[m HEAD@{120}: pull origin main: Merge made by the 'ort' strategy.
+[33m8b3b68e[m HEAD@{121}: pull origin main: Merge made by the 'ort' strategy.
+[33md9ae7d9[m HEAD@{122}: pull: Merge made by the 'ort' strategy.
+[33mbd24a05[m HEAD@{123}: pull origin main: Merge made by the 'ort' strategy.
+[33m256e635[m HEAD@{124}: pull origin main: Merge made by the 'ort' strategy.
+[33mf2d9a8e[m HEAD@{125}: pull origin main: Merge made by the 'ort' strategy.
+[33m0d8f8ec[m HEAD@{126}: pull origin main: Merge made by the 'ort' strategy.
+[33medb77dc[m HEAD@{127}: pull: Merge made by the 'ort' strategy.
+[33m051adc4[m HEAD@{128}: pull: Merge made by the 'ort' strategy.
+[33m2e9035d[m HEAD@{129}: pull: Merge made by the 'ort' strategy.
+[33m6f94bb2[m HEAD@{130}: pull: Merge made by the 'ort' strategy.
+[33m1a9b707[m HEAD@{131}: pull: Merge made by the 'ort' strategy.
+[33m3cd2d9c[m HEAD@{132}: pull: Merge made by the 'ort' strategy.
+[33m100e439[m HEAD@{133}: pull: Merge made by the 'ort' strategy.
+[33m483d965[m HEAD@{134}: pull: Merge made by the 'ort' strategy.
+[33md6ea09e[m HEAD@{135}: pull: Merge made by the 'ort' strategy.
+[33mb94fa07[m HEAD@{136}: pull: Merge made by the 'ort' strategy.
+[33m40be738[m HEAD@{137}: pull: Merge made by the 'ort' strategy.
+[33m3c4e399[m HEAD@{138}: pull: Merge made by the 'ort' strategy.
+[33m5b89b99[m HEAD@{139}: pull: Merge made by the 'ort' strategy.
+[33m4781cad[m HEAD@{140}: pull: Merge made by the 'ort' strategy.
+[33m3dd9eb8[m HEAD@{141}: pull: Merge made by the 'ort' strategy.
+[33mb8e6f13[m HEAD@{142}: pull origin main: Merge made by the 'ort' strategy.
+[33m8d7f8c9[m HEAD@{143}: pull origin main: Merge made by the 'ort' strategy.
+[33m00fe601[m HEAD@{144}: pull origin main: Merge made by the 'ort' strategy.
+[33m355d1e5[m HEAD@{145}: pull origin main: Merge made by the 'ort' strategy.
+[33m9d7baf9[m HEAD@{146}: pull origin main: Merge made by the 'ort' strategy.
+[33m0a95327[m HEAD@{147}: pull origin main: Merge made by the 'ort' strategy.
+[33mf2995ab[m HEAD@{148}: pull origin main: Merge made by the 'ort' strategy.
+[33m436474e[m HEAD@{149}: pull: Merge made by the 'ort' strategy.
+[33m5557537[m HEAD@{150}: pull: Merge made by the 'ort' strategy.
+[33m0e3dda1[m HEAD@{151}: pull: Merge made by the 'ort' strategy.
+[33m8d7cf88[m HEAD@{152}: pull: Merge made by the 'ort' strategy.
+[33ma500aa4[m HEAD@{153}: pull: Merge made by the 'ort' strategy.
+[33mc03afac[m HEAD@{154}: pull: Merge made by the 'ort' strategy.
+[33ma04a2b4[m HEAD@{155}: pull: Merge made by the 'ort' strategy.
+[33m6df0662[m HEAD@{156}: pull: Merge made by the 'ort' strategy.
+[33mc7175cc[m HEAD@{157}: pull origin main: Fast-forward
+[33m1565565[m HEAD@{158}: pull origin main: Fast-forward
+[33m1d7e4ec[m HEAD@{159}: pull origin main: Fast-forward
+[33mb539851[m HEAD@{160}: pull origin main: Fast-forward
+[33m123d873[m HEAD@{161}: pull origin main: Fast-forward
+[33me1638cb[m HEAD@{162}: pull origin main: Fast-forward
+[33m0d559a7[m HEAD@{163}: pull origin main: Fast-forward
+[33mfe24bd6[m HEAD@{164}: pull origin main: Fast-forward
+[33m81e682b[m HEAD@{165}: pull origin main: Fast-forward
+[33m5f26a84[m HEAD@{166}: pull origin main: Fast-forward
+[33m730b74f[m HEAD@{167}: pull: Fast-forward
+[33md80e4ef[m HEAD@{168}: pull: Fast-forward
+[33m6ca0423[m HEAD@{169}: pull origin main: Fast-forward
+[33m13b60f0[m HEAD@{170}: pull origin main: Fast-forward
+[33ma9f266a[m HEAD@{171}: pull origin main: Fast-forward
+[33m592118c[m HEAD@{172}: reset: moving to HEAD
+[33m592118c[m HEAD@{173}: pull origin main: Fast-forward
+[33m16c6d78[m HEAD@{174}: reset: moving to HEAD
+[33m16c6d78[m HEAD@{175}: pull origin main: Fast-forward
+[33m4ce3274[m HEAD@{176}: pull origin main: Fast-forward
+[33m57938f2[m HEAD@{177}: pull origin main: Fast-forward
+[33m6b1635e[m HEAD@{178}: pull origin main: Fast-forward
+[33ma5ded62[m HEAD@{179}: pull origin main: Fast-forward
+[33m844a377[m HEAD@{180}: pull origin main: Fast-forward
+[33ma726665[m HEAD@{181}: pull origin main: Fast-forward
+[33m2907370[m HEAD@{182}: pull origin main: Fast-forward
+[33m1e3cae7[m HEAD@{183}: pull origin main: Fast-forward
+[33m3c57f53[m HEAD@{184}: pull origin main: Fast-forward
+[33m0f75e82[m HEAD@{185}: pull origin main: Fast-forward
+[33m25bb088[m HEAD@{186}: pull origin main: Fast-forward
+[33m91d259b[m HEAD@{187}: pull origin main: Fast-forward
+[33mfd319da[m HEAD@{188}: pull origin main: Fast-forward
+[33m8a0df90[m HEAD@{189}: pull origin main: Fast-forward
+[33m9757ba6[m HEAD@{190}: pull origin main: Fast-forward
+[33m4daedd5[m HEAD@{191}: pull origin main: Fast-forward
+[33m8366128[m HEAD@{192}: pull origin main: Fast-forward
+[33me9eccd5[m HEAD@{193}: pull origin main: Fast-forward
+[33maf0fd9f[m HEAD@{194}: pull origin main: Fast-forward
+[33m0139f0d[m HEAD@{195}: pull origin main: Fast-forward
+[33mb46606d[m HEAD@{196}: pull origin main: Fast-forward
+[33m7d897df[m HEAD@{197}: pull origin main: Fast-forward
+[33m8afc866[m HEAD@{198}: pull origin main: Fast-forward
+[33mb93b16f[m HEAD@{199}: pull origin main: Fast-forward
+[33m07dd798[m HEAD@{200}: pull origin main: Fast-forward
+[33m257ab72[m HEAD@{201}: pull origin main: Fast-forward
+[33m7883bda[m HEAD@{202}: pull origin main: Fast-forward
+[33mfade717[m HEAD@{203}: pull origin main: Fast-forward
+[33m0f7f3ca[m HEAD@{204}: pull origin main: Fast-forward
+[33m450c1ec[m HEAD@{205}: pull origin main: Fast-forward
+[33m5a43c48[m HEAD@{206}: pull origin main: Fast-forward
+[33m999d21c[m HEAD@{207}: pull origin main: Fast-forward
+[33m449ae81[m HEAD@{208}: pull origin main: Fast-forward
+[33m4a9f8f7[m HEAD@{209}: pull origin main: Fast-forward
+[33m920c80c[m HEAD@{210}: pull origin main: Fast-forward
+[33m4b5078a[m HEAD@{211}: pull origin main: Fast-forward
+[33mc76c2f0[m HEAD@{212}: pull origin main: Fast-forward
+[33m437a338[m HEAD@{213}: pull origin main: Fast-forward
+[33m34f7cab[m HEAD@{214}: pull origin main: Fast-forward
+[33mc10d14f[m HEAD@{215}: pull origin main: Fast-forward
+[33m4005ff7[m HEAD@{216}: pull origin main: Fast-forward
+[33m079fafe[m HEAD@{217}: pull origin main: Merge made by the 'ort' strategy.
+[33m89667da[m HEAD@{218}: commit (merge): removed files
+[33mb8b2df1[m HEAD@{219}: commit: composer lock file
+[33m76a77e8[m HEAD@{220}: pull origin main: Merge made by the 'ort' strategy.
+[33m5492b70[m HEAD@{221}: pull origin main: Merge made by the 'ort' strategy.
+[33m3bc0176[m HEAD@{222}: pull origin main: Merge made by the 'ort' strategy.
+[33ma8eb81c[m HEAD@{223}: pull origin main: Merge made by the 'ort' strategy.
+[33m7216cb4[m HEAD@{224}: pull origin main: Merge made by the 'ort' strategy.
+[33m67ad3ec[m HEAD@{225}: pull origin main: Merge made by the 'ort' strategy.
+[33mb54964d[m HEAD@{226}: commit: compoer lock
+[33mbd069e4[m HEAD@{227}: commit (merge): added new files
+[33m44a5471[m HEAD@{228}: pull origin master: Merge made by the 'ort' strategy.
+[33m382e94a[m HEAD@{229}: pull origin master: Merge made by the 'ort' strategy.
+[33m77e026c[m HEAD@{230}: commit: server data
+[33m0117108[m HEAD@{231}: reset: moving to HEAD
+[33m0117108[m HEAD@{232}: pull origin main: Merge made by the 'ort' strategy.
+[33mb2ea246[m HEAD@{233}: commit: added htaccess file
+[33md45fb6c[m HEAD@{234}: reset: moving to HEAD
+[33md45fb6c[m HEAD@{235}: checkout: moving from main to master
+[33m69cac99[m HEAD@{236}: clone: from https://gitlab.com/shubham.toutle/gift_giggles.git

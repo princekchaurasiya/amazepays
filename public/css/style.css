@@ -17612,7 +17612,7 @@ body {
 
 
 
-@media (min-width: 1500px) {
+@media (max-width: 768px) {
     .product-wrapper-image {
         height: 320px;
     }}

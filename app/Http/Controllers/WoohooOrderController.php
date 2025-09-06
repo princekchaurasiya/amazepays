@@ -19,21 +19,33 @@ class WoohooOrderController extends Controller
 {
     public function createOrder(Request $request)
     {
-        /*$request->validate(['order_id' => 'nullable|integer|exists:qs_orders,id',]);
-        if ($request->order_id) {
-            $qsOrderDetails = QsOrder::where('id', $request->order_id)->first();
-            if (!$qsOrderDetails) {
-                Log::error("No order details found for ID: " . $request->order_id);
-                return view("order.order-status", ['transactionStatusMessage' => __("errors.order_not_found"), 'isSuccessful' => false,]);
-            }*/
+        // Get payment return data from session
+        $paymentReturnData = session('payment_return_data');
+        Log::info('Payment return data from session:', $paymentReturnData);
+        
+        // Get order details from session or latest order
+        $qsOrderDetails = null;
+        
+        if ($paymentReturnData && isset($paymentReturnData['order_id'])) {
+            // Try to get order by payment order ID first
+            $qsOrderDetails = QsOrder::where('id', $paymentReturnData['order_id'])->first();
+            Log::info('Found order by payment order ID:', ['order_id' => $paymentReturnData['order_id']]);
+        }
+        
+        if (!$qsOrderDetails) {
+            // Fallback to latest order
             $qsOrderDetails = QsOrder::latest('id')->first();
+            Log::info('Using latest order as fallback:', ['order_id' => $qsOrderDetails ? $qsOrderDetails->id : 'none']);
+        }
+        
+        if ($qsOrderDetails) {
             $newRefNo = 'Amzr' . $qsOrderDetails->id;
             $qsOrderDetails->refno = $newRefNo;
             $qsOrderDetails->save();
-       /* } else {
-            $qsOrderDetails = Session::get("payment_data", null);
-        }*/
-       // Log::info("Payment data collected from session and stored in \$qsOrderDetails variable is: " . json_encode($qsOrderDetails));
+            Log::info('Updated order with reference number:', ['refno' => $newRefNo]);
+        }
+        
+        Log::info("Order details for Woohoo order creation:", $qsOrderDetails ? $qsOrderDetails->toArray() : 'No order found');
         $isSuccessful = false;
         $transactionStatusMessage = __("errors.default");
         

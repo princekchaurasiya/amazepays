@@ -11,11 +11,9 @@ use App\Models\ApiToken;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
-class UnlimitPaymentController extends Controller
+class VDPaymentController extends Controller
 {
-
-
-     public function getToken()
+    public function getToken()
     {
         $response = Http::asForm()
             ->withHeaders([
@@ -45,21 +43,10 @@ class UnlimitPaymentController extends Controller
 
     return response()->json(['error' => 'Token not received', 'response' => $data], 400);
 }
-    public function store(Request $request)
-    {
-        //$discount = session('discounted_amount_value');
-        //return view('unlimitpayment', ['discount' => $discount]);
-        // Validate input
-      /*$validated = $request->validate([
-        'amount' => 'required|numeric|min:0.01',
-        'card_number' => 'required|string|digits_between:13,19',
-        'holder' => 'required|string|max:255',
-        'expiration' => 'required|string',
-        'cvv' => 'required|digits_between:3,4',
-    ]);*/
 
-    // 2. Get Unlimit token (internal call)
-    $token = $this->getToken();
+public function store(Request $request)
+    {
+         $token = $this->getToken();
 
     if (!$token) {
         return response()->json(['error' => 'Token not available'], 401);
@@ -90,19 +77,12 @@ class UnlimitPaymentController extends Controller
         ],
 
         'return_urls' => [
-            'success_url' => route('unlimit.return'),
-            'decline_url' => route('unlimit.return'),
+            'success_url' => "https://amazepay.toutle.in/evc-req",
+            'decline_url' => route('payment.failed')
         ],
-        // Note: card_account.card was removed based on your earlier error for Payment Page mode
-    ];
+         ];
 
-          /*$token = ApiToken::latest()->first();
-
-    if (!$token || ($token->expires_at && $token->expires_at->isPast())) {
-        return response()->json(['error' => 'Token expired or missing.'], 401);
-    }*/
-
-   try {
+          try {
    $response = Http::withHeaders([
     'Authorization' => 'Bearer ' . $token,
    //'Accept' => 'application/json',
@@ -113,16 +93,13 @@ class UnlimitPaymentController extends Controller
 Log::info('Payment Request', $data);
 Log::info('Payment Response', ['body' => $response->body(), 'status' => $response->status()]);
 
-    //  return $response->json();
-    $responseData = $response->json();
+$responseData = $response->json();
 
     if (isset($responseData['redirect_url'])) {
         // Store payment information before redirecting
         $this->storePaymentInfo($request, $orderId, $responseData);
         return redirect()->away($responseData['redirect_url']);
     }
-
-    // If no redirect URL, handle the response accordingly
     Log::error('No redirect URL in response', $responseData);
     return response()->json(['error' => 'No redirect URL received', 'response' => $responseData], 400);
 
@@ -144,9 +121,8 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
         'response' => $e->response?->body(),
     ], 500);
 }        
-    }
-
-    public function handleReturnSuccess(Request $request)
+}
+public function handleReturnSuccess(Request $request)
     {
         // Log the return request for debugging
         Log::info('Payment return received', [
@@ -182,55 +158,13 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
         ]);
     }
 
-    /**
-     * Handle webhook notifications from Unlimit
-     */
-    public function webhook(Request $request)
-    {
-        Log::info('Unlimit webhook received', [
-            'request_data' => $request->all(),
-            'headers' => $request->headers->all()
-        ]);
-
-        // Verify webhook signature if Unlimit provides one
-        // For now, we'll process the webhook data
-        
-        $paymentId = $request->input('payment_id');
-        $orderId = $request->input('merchant_order_id');
-        $status = $request->input('status');
-        $amount = $request->input('amount');
-
-        if ($paymentId && $orderId) {
-            $this->updatePaymentStatus($paymentId, $orderId, $status);
-            
-            // If payment is successful, you might want to trigger order creation
-            if ($status === 'success' || $status === 'approved') {
-                Log::info('Payment successful, ready for order creation', [
-                    'order_id' => $orderId,
-                    'payment_id' => $paymentId
-                ]);
-            }
-        }
-
-        return response()->json(['status' => 'success'], 200);
-    }
-
-public function process(Request $request)
+    public function process(Request $request)
     {
         // Get the payable amount from request
         $payableAmount = $request->input('payable_amount');
-
-        // Debug or use the amount
-        // dd($payableAmount);
-
-        // Proceed with your custom logic (e.g., saving to DB, initiating a new payment method, etc.)
-        
         return view('payment.success', ['amount' => $payableAmount]);
     }
 
-    /**
-     * Store payment information in the database
-     */
     private function storePaymentInfo(Request $request, $orderId, $responseData)
     {
         try {
@@ -258,9 +192,6 @@ public function process(Request $request)
         }
     }
 
-    /**
-     * Update payment status when return is received
-     */
     private function updatePaymentStatus($paymentId, $orderId, $status)
     {
         try {
@@ -288,4 +219,3 @@ public function process(Request $request)
         }
     }
 }
-

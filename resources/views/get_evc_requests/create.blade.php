@@ -94,7 +94,7 @@
     </div>
 @endif
 
-<form action="{{ route('request.evc') }}" method="POST" id="evcForm">
+<form action="{{ route('vd.payment') }}" method="POST" id="evcForm">
     @csrf
     
     <!-- Hidden fields for brand data -->

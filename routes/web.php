@@ -46,6 +46,7 @@ use App\Http\Controllers\{
     StoreBrandsController,
     AthenaGiftCardController,
     AuthController,
+    VDPaymentController,
 };
 
 /*
@@ -521,5 +522,9 @@ Route::get('/get-kgenorders', [KGenOrderController::class, 'getOrders'])->name('
 use App\Http\Controllers\KGenWalletController;
 
 Route::get('/wallet', [KGenWalletController::class, 'wallet'])->name('wallet');
+
+//VD Payment
+Route::get('/vd/payment/return', [VDPaymentController::class, 'handleReturnSuccess'])->name('vd.return');
+Route::post('/vd-payment', [VDPaymentController::class, 'process'])->name('vd.payment');
 
 

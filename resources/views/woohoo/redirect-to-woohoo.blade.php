@@ -73,7 +73,8 @@
         setInterval(updateClock, 1000);
         updateClock(); // Initial call to start the timer immediately
 
- document.getElementById('redirectForm').submit();
+        // Remove immediate form submission - let the timer handle it
+        // document.getElementById('redirectForm').submit();
     </script>
 </body>
 </html>

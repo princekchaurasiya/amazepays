@@ -12,7 +12,7 @@ use GuzzleHttp\Exception\ConnectException;
 
 class VDWebApiService
 {
-    protected $baseUrl = 'http://cards.vdwebapi.com/distributor/';
+    protected $baseUrl = 'https://at.valuedesign.co.in//distributor';
 
     protected $username;
     protected $password;
@@ -305,7 +305,7 @@ public function getEvc(string $token, string $payload)
             'token' => $token,
              'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-        ])->post('http://cards.vdwebapi.com/distributor/getevc/', $payload);
+        ])->post('https://at.valuedesign.co.in/distributor/getevc/', $payload);
 
         // Debug response
         if ($response->failed()) {
@@ -332,7 +332,7 @@ public function getEvcStatus(string $token, string $orderId, string $requestRefN
 
 public function getActivatedEvc($token, $orderId, $requestRefNo)
 {
-    $url = 'http://cards.vdwebapi.com/distributor/getactivatedevc/';
+    $url = 'https://at.valuedesign.co.in/distributor/getactivatedevc/';
 
     $response = Http::withHeaders([
         'Authorization' => 'Bearer ' . $token,

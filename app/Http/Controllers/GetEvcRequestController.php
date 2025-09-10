@@ -52,6 +52,10 @@ class GetEvcRequestController extends Controller
             ];
 
             GetEvcRequest::create($giftCardData);
+            return view('payment.success', [
+            'orderId' => $evcRequest->order_id,
+            'requestRefNo' => $evcRequest->req_id, // or whatever field you use
+        ]);
         } catch (\Exception $e) {
             // Log error but don't stop the flow
             \Log::error('Error storing gift card data: ' . $e->getMessage());
@@ -85,4 +89,14 @@ class GetEvcRequestController extends Controller
 
         return redirect()->back()->with('success', 'Request saved successfully!');
     }
+
+    public function show($orderId, $requestRefNo)
+{
+    $evcRequest = GetEvcRequest::where('order_id', $orderId)
+                  ->where('req_id', $requestRefNo)
+                  ->firstOrFail();
+
+    return view('get_evc_requests.show', compact('evcRequest'));
+}
+
 }

@@ -4,27 +4,30 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="container py-5">
     @php
-        $brand = json_decode($brands['original']['decrypted_data'], true)[0];
-        $images = json_decode(str_replace("'", '"', $brand['Images']), true);
-        $redeemSteps = $brand['RedeemSteps'];
+        $brand = $brands[0] ?? [];
+        $images = isset($brand['Images']) ? json_decode(str_replace("'", '"', $brand['Images']), true) : [];
+        $redeemSteps = $brand['RedeemSteps'] ?? [];
     @endphp
+    @if (empty($brand))
+        <div class="alert alert-warning">No brand data available. Please try again later.</div>
+    @endif
 <form action="{{ route('getevc.request') }}" method="GET" id="giftCardPageForm">
     @csrf
     <div class="card mb-4 shadow">
         <div class="row g-0">
             <div class="col-md-4">
-                <img src="{{ $images['featured'] }}" class="img-fluid rounded-start" alt="{{ $brand['BrandName'] }}">
+                <img src="{{ $images['featured'] ?? '' }}" class="img-fluid rounded-start" alt="{{ $brand['BrandName'] ?? '' }}">
             </div>
             <div class="col-md-8">
                 <div class="card-body">
-                    <h2 class="card-title">{{ $brand['BrandName'] }}</h2>
-                    <p><strong>Discount:</strong> {{ $brand['Discount'] }}%</p>
-                    <p class="text-muted">{{ $brand['Category'] }}</p>
-                    <p><strong>Price Range:</strong> ₹{{ $brand['minPrice'] }} - ₹{{ $brand['maxPrice'] }}</p>
+                    <h2 class="card-title">{{ $brand['BrandName'] ?? '' }}</h2>
+                    <p><strong>Discount:</strong> {{ $brand['Discount'] ?? 0 }}%</p>
+                    <p class="text-muted">{{ $brand['Category'] ?? '' }}</p>
+                    <p><strong>Price Range:</strong> ₹{{ $brand['minPrice'] ?? 0 }} - ₹{{ $brand['maxPrice'] ?? 0 }}</p>
                     <label>Enter Denomination</label>
                     <input type="number" name="denomination" min="100" max="10000">
-                    <p><strong>Available Denominations:</strong> {{ $brand['DenominationList'] }}</p>
-                    <p><strong>Stock Available:</strong> {{ $brand['StockAvailable'] ? 'Yes' : 'No' }}</p>
+                    <p><strong>Available Denominations:</strong> {{ $brand['DenominationList'] ?? '' }}</p>
+                    <p><strong>Stock Available:</strong> {{ !empty($brand['StockAvailable']) ? 'Yes' : 'No' }}</p>
 
                     <label>Quantity</label>
                     <input type="number" name="quantity" min="1" max="10">
@@ -65,12 +68,12 @@
                                         <label for="tabone">How to Redeem</label>
                                         <div class="tab p-3 font-xsss instructions text-black">
                                             <div class="row">
-                                            @foreach($redeemSteps as $step)
-                                            <img src="{{ $step['image'] }}" class="card-img-top" alt="Redeem Step">
+                                            @foreach(($redeemSteps ?? []) as $step)
+                                            <img src="{{ $step['image'] ?? '' }}" class="card-img-top" alt="Redeem Step">
                                                 <div class="col-md-4 mb-3">
                                                     <div class="card h-100">
                                                         <div class="card-body">
-                                                            <p class="card-text">{!! nl2br($step['title']) !!}</p>
+                                                            <p class="card-text">{!! nl2br($step['title'] ?? '') !!}</p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -83,7 +86,7 @@
                                                                             <input type="radio" name="tabs" id="tabtwo">
                                         <label for="tabtwo">Description</label>
                                         <div class="tab p-3 font-xsss text-black">
-                                            <p>{!! nl2br(strip_tags($brand['Description'])) !!}</p>
+                                            <p>{!! nl2br(strip_tags($brand['Description'] ?? '')) !!}</p>
                                         </div>
                                     
                                     
@@ -91,7 +94,7 @@
                                                                             <input type="radio" name="tabs" id="tabthree">
                                         <label for="tabthree">Terms &amp; Condition</label>
                                         <div class="tab term-condition p-3 font-xsss termsConditions text-black">
-                                            <p>{!! nl2br(strip_tags($brand['TnC'])) !!}</p>
+                                            <p>{!! nl2br(strip_tags($brand['TnC'] ?? '')) !!}</p>
                                         </div>
                                     
                                 </div>
@@ -104,7 +107,7 @@
 
     <h4>Important Instructions</h4>
     <ul class="list-group mb-4">
-        @foreach($brand['ImportantInstruction'] as $instruction)
+        @foreach((array)($brand['ImportantInstruction'] ?? []) as $instruction)
             <li class="list-group-item">{{ $instruction }}</li>
         @endforeach
     </ul>
@@ -151,8 +154,8 @@
             receiver_email: $('input[name="receiver_email"]').val(),
             receiver_mobile: $('input[name="receiver_mobile"]').val(),
             receiver_msg: $('input[name="receiver_msg"]').val(),
-            vd_discount: {{ $brand['Discount'] }},
-            vd_brand_code: '{{ $brand['BrandCode'] }}'
+            vd_discount: {{ $brand['Discount'] ?? 0 }},
+            vd_brand_code: '{{ $brand['BrandCode'] ?? '' }}'
         };
 
         // Build query string
@@ -194,11 +197,11 @@
     function updateSessionData() {
 
                     var formData = {
-                        vd_discount: {{ $brand['Discount'] }},
-                        vd_brand_code: '{{ $brand['BrandCode'] }}',
+                        vd_discount: {{ $brand['Discount'] ?? 0 }},
+                        vd_brand_code: '{{ $brand['BrandCode'] ?? '' }}',
                         vd_denomination: $('input[name="denomination"]').val(),
                         vd_quantity: $('input[name="quantity"]').val(),
-                        vd_gift_send_option: $('input[name="gift_send_option"]:checked').val(),
+                        vd_gift_send_option: $('select[name="gift_send_option"]').val(),
                         vd_receiver_name: $('input[name="receiver_name"]').val(),
                         vd_receiver_email: $('input[name="receiver_email"]').val(),
                         vd_receiver_mobile: $('input[name="receiver_mobile"]').val(),

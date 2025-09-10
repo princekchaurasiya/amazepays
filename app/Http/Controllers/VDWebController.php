@@ -82,16 +82,16 @@ class VDWebController extends Controller
     {
         $token = $this->getToken();
 
-        if (!$token) {
+        if (!$token || !is_string($token)) {
             return response()->json(['error' => 'Failed to generate token'], 500);
         }
 
         $brands = $this->vdWebApiService->getBrands($token);
 
-        if ($brands) {
+        if (is_array($brands) && !empty($brands)) {
             return response()->json(['brands' => $brands]);
         }
-        dd($brands);
+
         return response()->json(['error' => 'Failed to fetch brands'], 500);
     }
 

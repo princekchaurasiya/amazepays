@@ -12,7 +12,7 @@ use GuzzleHttp\Exception\ConnectException;
 
 class VDWebApiService
 {
-    protected $baseUrl = 'https://at.valuedesign.co.in//distributor';
+    protected $baseUrl = 'https://at.valuedesign.co.in/distributor/';
 
     protected $username;
     protected $password;
@@ -106,30 +106,30 @@ class VDWebApiService
             $response = Http::withHeaders([
                 'token' => $token,
             ])->post($this->baseUrl . 'api-getbrand/', [
-                'BrandCode' => $brandCode, // leave empty string for all brands
+                'BrandCode' => $brandCode,
             ]);
 
             if ($response->successful()) {
                 $brands = $response->json();
-
                 $encryptedBrandData = $brands['data'] ?? null;
 
-                if ($encryptedBrandData) {
-                    $decryptedBrandData = $this->decryptAES($encryptedBrandData);
-                    
-                } else {
-                    $decryptedBrandData = 'No data field in response.';
+                if (!$encryptedBrandData) {
+                    Log::error('Get brands: missing data field', ['response' => $brands]);
+                    return null;
                 }
 
-                return response()->json([
-                    'decrypted_data' => $decryptedBrandData,
-                ]);
-                //return $response->json(); // Will return array of brands or brand details
+                $decryptedBrandData = $this->decryptAES($encryptedBrandData);
+                $decoded = json_decode($decryptedBrandData, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+                    Log::error('Get brands: JSON decode failed', ['error' => json_last_error_msg(), 'raw' => $decryptedBrandData]);
+                    return null;
+                }
+
+                return $decoded;
             }
 
-            $this->storeBrandsFromResponse(json_decode($decryptedBrandData, true));
-
-            Log::error('Get brands failed', ['response' => $response->body()]);
+            Log::error('Get brands failed', ['status' => $response->status(), 'body' => $response->body()]);
             return null;
         } catch (\Exception $e) {
             Log::error('Get brands exception', ['error' => $e->getMessage()]);

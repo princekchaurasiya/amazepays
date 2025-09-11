@@ -192,10 +192,10 @@ public function buildPayloadFromDB($recordId = null)
         abort(422, 'No GetEvcRequest record found. Please create one before requesting EVC.');
     }
 
-    // Build payload using database values + dynamic IDs
+    // Build payload using database values and persist identifiers
     $payload = [
-        'order_id'        => 'ORD-' . strtoupper(Str::random(10)),
-        'request_ref_no'  => 'REF-' . strtoupper(Str::random(12)),
+        'order_id'        => $evcRequest->order_id,
+        'request_ref_no'  => $evcRequest->req_id,
         'distributor_id'  => $evcRequest->distributor_id,
         'sku_code'        => $evcRequest->sku_code,
         'no_of_card'      => $evcRequest->no_of_card,

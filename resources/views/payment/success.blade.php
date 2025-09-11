@@ -5,11 +5,11 @@
         <h2>Payment Successful</h2>
 
         <button 
-    onclick="window.location.href='{{ route('evc.details', ['orderId' => $orderId, 'requestRefNo' => $requestRefNo]) }}'" 
-    style="margin-top: 20px; padding: 10px 20px; border: none; border-radius: 5px; background-color: #007bff; color: white; cursor: pointer;"
->
-    Get Order Details
-</button>
+            onclick="redirectToEvcDetails()"
+            style="margin-top: 20px; padding: 10px 20px; border: none; border-radius: 5px; background-color: #007bff; color: white; cursor: pointer;"
+        >
+            Get Order Details
+        </button>
     </div>
 
     <script>
@@ -41,13 +41,16 @@
         }
 
         function redirectToEvcDetails() {
-            // Use server-side values if available, otherwise generate them
-            const orderId = @if(isset($orderId)) '{{ $orderId }}' @else generateOrderId() @endif;
-            const requestRefNo = @if(isset($requestRefNo)) '{{ $requestRefNo }}' @else generateRequestRefNo() @endif;
-
-            // Build the Laravel route URL dynamically
-            const url = `/evc-details/${orderId}/${requestRefNo}`;
-            window.location.href = url;
+            @if(isset($orderId) && isset($requestRefNo))
+                // Use server-side values when available
+                window.location.href = '{{ route('evc.details', ['orderId' => $orderId, 'requestRefNo' => $requestRefNo]) }}';
+            @else
+                // Generate values when server-side values are not available
+                const orderId = generateOrderId();
+                const requestRefNo = generateRequestRefNo();
+                const url = `/evc-details/${orderId}/${requestRefNo}`;
+                window.location.href = url;
+            @endif
         }
     </script>
 @endsection

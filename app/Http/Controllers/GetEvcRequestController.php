@@ -91,12 +91,20 @@ class GetEvcRequestController extends Controller
     }
 
     public function show($orderId, $requestRefNo)
-{
-    $evcRequest = GetEvcRequest::where('order_id', $orderId)
-                  ->where('req_id', $requestRefNo)
-                  ->firstOrFail();
+    {
+        $evcRequest = GetEvcRequest::where('order_id', $orderId)
+                        ->where('req_id', $requestRefNo)
+                        ->first();
 
-    return view('get_evc_requests.show', compact('evcRequest'));
-}
+        if (!$evcRequest) {
+            return view('get_evc_requests.show', [
+                'evcRequest' => null,
+                'orderId' => $orderId,
+                'requestRefNo' => $requestRefNo,
+            ]);
+        }
+
+        return view('get_evc_requests.show', compact('evcRequest'));
+    }
 
 }

@@ -10,7 +10,7 @@ use App\Models\Brand;
 
 class StoreBrandsController extends Controller
 {
-    protected string $baseUrl = 'http://cards.vdwebapi.com/distributor/';
+    protected string $baseUrl = 'https://at.valuedesign.co.in/distributor';
     protected $vdWebApiService;
 
     public function __construct(VDWebApiService $vdWebApiService)

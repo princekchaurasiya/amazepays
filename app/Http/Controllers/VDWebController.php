@@ -181,10 +181,16 @@ class VDWebController extends Controller
     ]);
 }
 
-public function buildPayloadFromDB($recordId)
+public function buildPayloadFromDB($recordId = null)
 {
-    // Fetch the stored record by ID
-    $evcRequest = GetEvcRequest::findOrFail($recordId);
+    // Fetch the stored record by ID or use latest if not provided
+    $evcRequest = $recordId
+        ? GetEvcRequest::find($recordId)
+        : GetEvcRequest::latest()->first();
+
+    if (!$evcRequest) {
+        abort(422, 'No GetEvcRequest record found. Please create one before requesting EVC.');
+    }
 
     // Build payload using database values + dynamic IDs
     $payload = [
@@ -222,7 +228,7 @@ public function buildPayloadFromDB($recordId)
         }
 
         // Step 2: Create Payload with Unique IDs
-        $payload = $this->buildPayloadFromDB(1);
+        $payload = $this->buildPayloadFromDB();
         $payload['amount'] = (float) $payload['amount'];
         $jsonPayload = json_encode($payload);
         //$encryptedPayload = AesHelper::encrypt($jsonPayload);
@@ -281,7 +287,7 @@ public function showEvcDetails(Request $request, VDWebApiService $vdWebApiServic
     }
 
     // Step 2: Create Payload with Unique IDs
-    $payload = $this->buildPayloadFromDB(1);
+    $payload = $this->buildPayloadFromDB();
     $payload['amount'] = (float) $request->denomination; // Use form denomination instead of DB
     $jsonPayload = json_encode($payload);
     //$encryptedPayload = AesHelper::encrypt($jsonPayload);
@@ -323,7 +329,7 @@ public function evcDetails(VDWebApiService $vdWebApiService)
     }
 
     // Step 2: Create Payload with Unique IDs
-    $payload = $this->buildPayloadFromDB(1);
+    $payload = $this->buildPayloadFromDB();
     $payload['amount'] = (float) $payload['amount'];
     $jsonPayload = json_encode($payload);
     //$encryptedPayload = AesHelper::encrypt($jsonPayload);

@@ -41,8 +41,9 @@
         }
 
         function redirectToEvcDetails() {
-            const orderId = generateOrderId();
-            const requestRefNo = generateRequestRefNo();
+            // Use server-side values if available, otherwise generate them
+            const orderId = @if(isset($orderId)) '{{ $orderId }}' @else generateOrderId() @endif;
+            const requestRefNo = @if(isset($requestRefNo)) '{{ $requestRefNo }}' @else generateRequestRefNo() @endif;
 
             // Build the Laravel route URL dynamically
             const url = `/evc-details/${orderId}/${requestRefNo}`;

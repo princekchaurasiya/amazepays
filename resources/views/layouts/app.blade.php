@@ -17,6 +17,29 @@
                 font-weight: 500;
                 transition: all 0.3s ease;
             }
+            /* Working time ribbon */
+            .working-ribbon {
+                background: #0d6efd;
+                color: #fff;
+                width: 100%;
+                overflow: hidden;
+                white-space: nowrap;
+                position: relative;
+                z-index: 1030; /* above navbar backgrounds */
+            }
+            .working-ribbon-inner {
+                display: inline-block;
+                padding: 8px 0;
+                animation: ribbon-marquee 18s linear infinite;
+            }
+            .working-ribbon-text {
+                font-weight: 600;
+                letter-spacing: 0.3px;
+            }
+            @keyframes ribbon-marquee {
+                0% { transform: translateX(100%); }
+                100% { transform: translateX(-100%); }
+            }
             
             .verify-email:hover {
                 transform: translateY(-2px);
@@ -54,6 +77,13 @@
                 <!-- navigation wrapper starts here -->
                 @include('layouts.partials.navbar')
                 <!-- navigation wrapper ends here -->
+                @if(request()->routeIs('home'))
+                <div class="working-ribbon">
+                    <div class="working-ribbon-inner">
+                        <span class="working-ribbon-text">Amazepays Working time: 10am to 6.30pm &nbsp; • &nbsp; Amazepays Working time: 10am to 6.30pm &nbsp; • &nbsp; Amazepays Working time: 10am to 6.30pm</span>
+                    </div>
+                </div>
+                @endif
             </div>
             <!-- header wrapper -->
             @if(session('error'))

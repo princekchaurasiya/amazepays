@@ -551,7 +551,7 @@ public function evcDetails(VDWebApiService $vdWebApiService)
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
         ])->post('https://at.valuedesign.co.in/distributor/getwalletbalance/', [
-            'distributor_id' => 'VDIDAmazepay',
+            'distributor_id' => 'VDAmazepay97',
         ]);
 
         // Debug if it fails

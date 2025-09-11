@@ -51,11 +51,11 @@ class GetEvcRequestController extends Controller
                 'vd_brand_code' => request('vd_brand_code'),
             ];
 
-            GetEvcRequest::create($giftCardData);
+            $evcRequest = GetEvcRequest::create($giftCardData);
             return view('payment.success', [
-            'orderId' => $evcRequest->order_id,
-            'requestRefNo' => $evcRequest->req_id, // or whatever field you use
-        ]);
+                'orderId' => $evcRequest->order_id,
+                'requestRefNo' => $evcRequest->req_id,
+            ]);
         } catch (\Exception $e) {
             // Log error but don't stop the flow
             \Log::error('Error storing gift card data: ' . $e->getMessage());

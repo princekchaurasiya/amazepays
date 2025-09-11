@@ -10,7 +10,7 @@ use App\Models\Brand;
 
 class StoreBrandsController extends Controller
 {
-    protected string $baseUrl = 'https://at.valuedesign.co.in/distributor';
+    protected string $baseUrl = 'https://at.valuedesign.co.in/distributor/';
     protected $vdWebApiService;
 
     public function __construct(VDWebApiService $vdWebApiService)
@@ -59,7 +59,7 @@ public function getAndStoreBrands()
                         'min_price' => $brandData['minPrice'] ?? null,
                         'max_price' => $brandData['maxPrice'] ?? null,
                         'denomination_list' => $brandData['DenominationList'] ?? null,
-                        'stock_available' => $brandData['StockAvailable'] ?? null,
+                        'stock_available' => !empty($brandData['StockAvailable']) ? (int) $brandData['StockAvailable'] : 0,
                         'category' => $brandData['Category'] ?? null,
                         'description' => $brandData['Description'] ?? null,
                         'images' => json_decode($brandData['Images'], true) ?: null,

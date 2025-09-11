@@ -228,19 +228,31 @@ class VDWebApiService
     }
 
     foreach ($stores as $store) {
-    StoreDetail::updateOrCreate(
-        ['store_code' => $store['StoreCode'] ?? null], // or unique identifier
-        [
-            'brand_code' => $store['BrandCode'] ?? '',
-            'brand_name' => $store['BrandName'] ?? '',
-            'address' => $store['Address'] ?? '',
-            'city' => $store['City'] ?? '',
-            'state' => $store['State'] ?? '',
-            'country' => $store['Country'] ?? '',
-            'contact_number' => $store['ContactNumber'] ?? null,
-        ]
-    );
-}
+        $hasStoreCode = isset($store['StoreCode']) && $store['StoreCode'] !== null && $store['StoreCode'] !== '';
+
+        $where = $hasStoreCode
+            ? ['store_code' => $store['StoreCode']]
+            : [
+                'brand_code' => $store['BrandCode'] ?? '',
+                'address' => $store['Address'] ?? '',
+                'city' => $store['City'] ?? '',
+                'state' => $store['State'] ?? '',
+                'contact_number' => $store['ContactNumber'] ?? null,
+            ];
+
+        StoreDetail::updateOrCreate(
+            $where,
+            [
+                'brand_code' => $store['BrandCode'] ?? '',
+                'brand_name' => $store['BrandName'] ?? '',
+                'address' => $store['Address'] ?? '',
+                'city' => $store['City'] ?? '',
+                'state' => $store['State'] ?? '',
+                'country' => $store['Country'] ?? '',
+                'contact_number' => $store['ContactNumber'] ?? null,
+            ]
+        );
+    }
 
     return true;
 }

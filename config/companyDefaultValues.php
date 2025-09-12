@@ -35,7 +35,7 @@ return [
     'company_bank_ifsc_code' => env('COMPANY_BANK_IFSC_CODE', 'KKBK0001413'),
     'company_bank_branch' => env('COMPANY_BANK_BRANCH', 'Goregaon West'),
     'company_bank_name' => env('COMPANY_BANK_NAME', 'KOTAK BANK'),
-    'company_email' => env('COMPANY_EMAIL', 'itsupport@amazepay.in'),
+    'company_email' => 'support@amazepays.in',
     'default_subject' => env('DEFAULT_SUBJECT', 'Amazepays - Order Confirmation'),
     'gift_subject' => env('GIFT_SUBJECT', 'Amazepays - You Received A Gift Card'),
     'sms_api_url' => env('SMS_API_URL', 'http://route.digimiles.in/bulksms/bulksms'),
@@ -48,7 +48,7 @@ return [
     'sms_tmid' => env('SMS_TMID', '1101633530000071318,1602100000000009244'),
     'sendMailFrom' => env('SEND_MAIL_FROM', 'it@amazepays.in'),
     'company_website' => env('COMPANY_WEBSITE', 'https://amazepays.in/'),
-    'company_contact_no' => env('COMPANY_CONTACT_NO', '8208893951'),
+    'company_contact_no' =>  '9324449485',
     'company_new_website_link' => env('COMPANY_NEW_WEBSITE_LINK', 'https://freneticindia.com/'),
     'company_new_website_link_about_us' => env('COMPANY_NEW_WEBSITE_LINK', 'https://theamazeindia.com/about.html'),
 

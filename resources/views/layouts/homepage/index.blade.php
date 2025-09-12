@@ -70,7 +70,7 @@
                                     @if ($product->slug)
                                     <div class="col-lg-3 col-6">
                                         <div class="product-wrapper-image">
-                                            <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
+                                            <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center position-relative">
                                                 @php
                                                     $productImage = CommonHelper::getProductImage($product);
                                                 @endphp
@@ -80,6 +80,9 @@
                                                     <div class="no-product-image">
                                                         <span>{{ substr($product->name, 0, 1) }}</span>
                                                     </div>
+                                                @endif
+                                                @if (!empty($product->out_of_stock) && $product->out_of_stock)
+                                                    <span class="stock-badge">Out of stock</span>
                                                 @endif
                                             </a>
                                             <hr>
@@ -157,8 +160,11 @@
                                     @if ($product->slug && !empty($productImage))
                                         <div class="col-lg-3 col-6">
                                             <div class="product-wrapper-image">
-                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
+                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center position-relative">
                                                     <img src="{{ $productImage }}" alt="product-image" class="w-100 mt-4">
+                                                    @if (!empty($product->out_of_stock) && $product->out_of_stock)
+                                                        <span class="stock-badge">Out of stock</span>
+                                                    @endif
                                                 </a>
 
                                                 <hr>

@@ -19,7 +19,7 @@
             }
             /* Working time ribbon */
             .working-ribbon {
-                background: #0d6efd;
+                background:rgb(253, 13, 13);
                 color: #fff;
                 width: 100%;
                 overflow: hidden;
@@ -67,6 +67,19 @@
                 background-color: #f8d7da;
                 color: #721c24;
                 border-left: 4px solid #dc3545;
+            }
+            .position-relative { position: relative; }
+            .stock-badge {
+                position: absolute;
+                top: 12px;
+                left: 12px;
+                background: rgba(0,0,0,0.7);
+                color: #fff;
+                padding: 6px 10px;
+                font-size: 12px;
+                border-radius: 4px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }
         </style>
     </head>

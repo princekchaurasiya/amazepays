@@ -527,4 +527,10 @@ Route::get('/wallet', [KGenWalletController::class, 'wallet'])->name('wallet');
 Route::get('/vd/payment/return', [VDPaymentController::class, 'handleReturnSuccess'])->name('vd.return');
 Route::post('/vd-payment', [VDPaymentController::class, 'process'])->name('vd.payment');
 
+// Qs Products: Upload disabled products sheet
+use App\Http\Controllers\Voyager\QsProductStockImportController;
+Route::post('/admin/qs-products/upload-disabled', [QsProductStockImportController::class, 'uploadDisabledProducts'])
+    ->name('admin.qs_products.upload_disabled')
+    ->middleware(['web', 'auth', 'admin.user']);
+
 

@@ -28,12 +28,15 @@
 
                         <div class="col-lg-3 col-6">
                             <div class="product-wrapper-image">
-                                <a href="{{ route('get-product-by-slug', ['slug' => $result->url]) }}" class="d-block text-center">
+                                <a href="{{ route('get-product-by-slug', ['slug' => $result->url]) }}" class="d-block text-center position-relative">
                                     <p class="single-image-wrapper">
                                         <img src="{{ CommonHelper::getProductImage($result) }}"
                                              alt="product-image"
                                              class="w-100 mt-4 d-inline-block">
                                     </p>
+                                    @if (!empty($result->out_of_stock) && $result->out_of_stock)
+                                        <span class="stock-badge">Out of stock</span>
+                                    @endif
                                 </a>
                                 <hr>
                                 <a href="{{ route('get-product-by-slug', ['slug' => $result->url]) }}">

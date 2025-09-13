@@ -16,6 +16,10 @@
             @include('voyager::partials.bulk-delete')
         @endcan
 
+        <a href="{{ url('/admin/upload-document') }}" class="btn btn-primary btn-add-new" onclick="showUploadForm()">
+            <i class="voyager-upload"></i> <span>Upload Discount Sheet Here</span>
+        </a>
+
         <button type="button" class="btn btn-primary btn-add-new" data-toggle="modal" data-target="#disabledUploadModal">
             <i class="voyager-upload"></i> <span>Upload disabled products sheet</span>
         </button>
@@ -42,7 +46,6 @@
             @if ($usesSoftDeletes)
                 <input type="checkbox" @if ($showSoftDeleted) checked @endif id="show_soft_deletes"
                     data-toggle="toggle" data-on="{{ __('voyager::bread.soft_deletes_off') }}"
-                    data-off="{{ __('voyager::bread.soft_deletes_on') }}">
             @endif
         @endcan
         @foreach ($actions as $action)
@@ -370,6 +373,37 @@
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
 
+ {{-- document upload modal start here --}}
+    <!-- Modal HTML -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadModalLabel">Upload Document</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="document">Choose file</label>
+                            <input type="file" class="form-control-file" id="document" name="document"
+                                accept=".xlsx,.xls,.csv" required>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div id="uploadProgress1" class="progress-bar progress-bar-striped progress-bar-animated"
+                                role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0"
+                                aria-valuemax="100">0%</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Upload</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{-- document modal ends here --}}
     <!-- Disabled Products Upload Modal -->
     <div class="modal fade" id="disabledUploadModal" tabindex="-1" role="dialog" aria-labelledby="disabledUploadLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">

@@ -37,7 +37,7 @@
                     <li>Ensure you are redeeming the voucher in the correct place.</li>
                     <li>Check your account balance by logging out and back in.</li>
                 </ul>
-                <p class="text-grey-900">For any issues, please send us a screenshot of the error at <a href="mailto:{{ env('COMPANY_EMAIL') }}">{{ env('COMPANY_EMAIL') }}</a>, and we will assist you as quickly as possible.</p>
+                <p class="text-grey-900">For any issues, please send us a screenshot of the error at <a href="mailto:{{ 'itsupport@amazepays.in' }}">{{ 'itsupport@amazepays.in' }}</a>, and we will assist you as quickly as possible.</p>
             </div>
 
             <div class="mt-4">

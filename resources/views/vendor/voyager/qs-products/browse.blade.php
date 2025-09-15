@@ -20,6 +20,10 @@
             <i class="voyager-upload"></i> <span>Upload Discount Sheet Here</span>
         </a>
 
+        <button type="button" class="btn btn-primary btn-add-new" data-toggle="modal" data-target="#disabledUploadModal">
+            <i class="voyager-upload"></i> <span>Upload disabled products sheet</span>
+        </button>
+
         <a href="{{ route('download-product-details') }}" class="btn btn-add-new" style="background-color: #4CAF50; color: white;">
             <i class="voyager-download"></i> <span>Download Product Details</span>
         </a>
@@ -42,7 +46,6 @@
             @if ($usesSoftDeletes)
                 <input type="checkbox" @if ($showSoftDeleted) checked @endif id="show_soft_deletes"
                     data-toggle="toggle" data-on="{{ __('voyager::bread.soft_deletes_off') }}"
-                    data-off="{{ __('voyager::bread.soft_deletes_on') }}">
             @endif
         @endcan
         @foreach ($actions as $action)
@@ -370,7 +373,7 @@
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
 
-    {{-- document upload modal start here --}}
+ {{-- document upload modal start here --}}
     <!-- Modal HTML -->
     <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel"
         aria-hidden="true">
@@ -390,7 +393,7 @@
                                 accept=".xlsx,.xls,.csv" required>
                         </div>
                         <div class="progress" style="height: 25px;">
-                            <div id="uploadProgress" class="progress-bar progress-bar-striped progress-bar-animated"
+                            <div id="uploadProgress1" class="progress-bar progress-bar-striped progress-bar-animated"
                                 role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0"
                                 aria-valuemax="100">0%</div>
                         </div>
@@ -401,6 +404,33 @@
         </div>
     </div>
     {{-- document modal ends here --}}
+    <!-- Disabled Products Upload Modal -->
+    <div class="modal fade" id="disabledUploadModal" tabindex="-1" role="dialog" aria-labelledby="disabledUploadLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="disabledUploadLabel">Upload disabled products sheet</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="disabledUploadForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="disabledSheet">Excel file (.xlsx, .xls, .csv)</label>
+                            <input type="file" class="form-control-file" id="disabledSheet" name="file" accept=".xlsx,.xls,.csv" required>
+                            <small class="text-muted">Columns required: Product Name, SKU, Comments</small>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div id="disabledUploadProgress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Upload</button>
+                    </form>
+                    <div class="mt-3" id="disabledUploadResult" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('css')
@@ -520,6 +550,42 @@
                 }
             });
             $('.selected_ids').val(ids);
+        });
+
+        // Handle disabled products upload
+        $('#disabledUploadForm').on('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            var $progress = $('#disabledUploadProgress');
+            $progress.css('width', '0%').attr('aria-valuenow', 0).text('0%');
+
+            $.ajax({
+                url: '{{ route('admin.qs_products.upload_disabled') }}',
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                data: formData,
+                processData: false,
+                contentType: false,
+                xhr: function() {
+                    var xhr = new window.XMLHttpRequest();
+                    xhr.upload.addEventListener('progress', function(evt) {
+                        if (evt.lengthComputable) {
+                            var percentComplete = Math.round((evt.loaded / evt.total) * 100);
+                            $progress.css('width', percentComplete + '%').attr('aria-valuenow', percentComplete).text(percentComplete + '%');
+                        }
+                    }, false);
+                    return xhr;
+                },
+                success: function(resp) {
+                    $('#disabledUploadResult').show().html('<div class="alert alert-success">' + resp.message + '<br>Updated: ' + resp.updated + (resp.not_found && resp.not_found.length ? '<br>Not found SKUs: ' + resp.not_found.join(', ') : '') + '</div>');
+                    setTimeout(function(){ location.reload(); }, 1500);
+                },
+                error: function(xhr) {
+                    var msg = 'Upload failed';
+                    if (xhr.responseJSON && xhr.responseJSON.message) { msg = xhr.responseJSON.message; }
+                    $('#disabledUploadResult').show().html('<div class="alert alert-danger">' + msg + '</div>');
+                }
+            });
         });
     </script>
 @stop

@@ -18,7 +18,7 @@
             <div class="mt-4">
                 <h2><strong>B. Communication</strong></h2>
                 <p>Frenetic India Services Private Limited may use the information submitted by you to respond to any queries raised by you pursuant to your use and access to the Website. We may also use this information to send you e-mails and SMS for administrative and marketing purposes, through its servers and systems; or through third party e-mail or SMS service providers. User can unsubscribe/opt-out from our communications sent on SMS and email anytime:</p>
-                    Please email us at <a href="mailto:info@amazepays.in">info@amazepays.in</a> to unsubscribe from SMS or email;
+                    Please email us at <a href="mailto:support@amazepays.in">support@amazepays.in</a> to unsubscribe from SMS or email;
                  <br/>
                     User can also unsubscribe from emails by clicking the "Unsubscribe URL" mentioned in the footer of the emails.
             </div>
@@ -151,7 +151,7 @@ These Terms of Use described the legally binding terms and conditions that overs
 
             <div class="mt-4">
                 <h2><strong>V. Report Abuse</strong></h2>
-                <p>If you come across any abuse or violation of these Terms, please report to <a href="mailto:info@amazepays.in">info@amazepays.in</a></p>
+                <p>If you come across any abuse or violation of these Terms, please report to <a href="mailto:support@amazepays.in">support@amazepays.in</a></p>
             </div>
         </div>
     </div>

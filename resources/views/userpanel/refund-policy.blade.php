@@ -16,7 +16,11 @@
 
             <div class="mt-4">
                 <h2>B. Non-Refundable Items</h2>
-                <p class="text-grey-900">Once a gift voucher is sent to your email, it is considered non-refundable. We cannot guarantee the validity of the code once it leaves our secure inventory. Please be cautious when selecting your voucher.</p>
+                <p class="text-grey-900">Once a gift voucher is sent to your email, it is considered non-refundable. We cannot guarantee the validity of the code once it leaves our secure inventory. Please be cautious when selecting your voucher.
+                    <br/>
+                    If voucher is not generated, capture a screenshot of the error and send it to the support team at <a href="mailto:{{ env('COMPANY_EMAIL') }}">{{ env('COMPANY_EMAIL') }}</a> for assistance.
+                    In this case of refund,it may take up to 7 working days for the amount to be credited to your account.
+                </p>
             </div>
 
             <div class="mt-4">
@@ -33,7 +37,7 @@
                     <li>Ensure you are redeeming the voucher in the correct place.</li>
                     <li>Check your account balance by logging out and back in.</li>
                 </ul>
-                <p class="text-grey-900">For any issues, please send us a screenshot of the error at <a href="mailto:{{ env('COMPANY_EMAIL') }}">{{ env('COMPANY_EMAIL') }}</a>, and we will assist you as quickly as possible.</p>
+                <p class="text-grey-900">For any issues, please send us a screenshot of the error at <a href="mailto:{{ 'itsupport@amazepays.in' }}">{{ 'itsupport@amazepays.in' }}</a>, and we will assist you as quickly as possible.</p>
             </div>
 
             <div class="mt-4">

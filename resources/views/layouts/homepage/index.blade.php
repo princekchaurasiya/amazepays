@@ -229,6 +229,37 @@
         </a>
     </div>
 </div>-->
+
+{{-- Values Design Gift Cards --}}
+ <div class="product-wrapper pt-5 pb-5">
+        <div class="container-fluid">
+<div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">
+Explore more Gift Cards & Vouchers
+</h1>
+                        <hr class="normalhr">
+
+                        <div class="row mt-5 mb-5 justify-content-center mx-0 gx-0">
+
+
+                            <div class="brand-slick-slider">
+<div class="col-lg-1 mx-auto col-3">
+        <div class="flex items-center gap-2 mb-4">
+        <img src="{{ asset('images/glam_logo.png') }}" alt="Glam logo" class="w-10 h-10 object-contain" width="120" height="30">
+         
+       
+            <a href="{{ url('/vdbrands') }}" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+              Explore more Gift Cards
+              <img src="{{ asset('images/gc_image.png') }}" alt="Brand logo" class="w-20 h-20 md:w-24 md:h-24 object-contain" width="300" height="150">
+            </a>
+        </div>
+</div>
+</div>
+                        </div>
+                    </div>
+                </div>  
+</div>
 @endsection
 @push('scripts')
     <script>

@@ -57,21 +57,32 @@ class QsProductStockImportController extends Controller
                 continue;
             }
             $sku = isset($row[$skuIndex]) ? trim((string) $row[$skuIndex]) : '';
-            if ($sku === '') {
-                continue;
-            }
+            $name = $nameIndex !== false && isset($row[$nameIndex]) ? trim((string) $row[$nameIndex]) : '';
             $comment = $commentIndex !== false && isset($row[$commentIndex]) ? trim((string) $row[$commentIndex]) : null;
 
-            $product = QsProduct::where('sku', $sku)->first();
-            if (!$product) {
-                $notFound[] = $sku;
-                continue;
+            // Try updating by SKU if present
+            if ($sku !== '') {
+                $product = QsProduct::where('sku', $sku)->first();
+                if (!$product && $name !== '') {
+                    // Fallback: try by product name if SKU not found
+                    $product = QsProduct::where('name', $name)->first();
+                }
+            } else {
+                // No SKU provided: try by product name if available
+                $product = $name !== '' ? QsProduct::where('name', $name)->first() : null;
             }
 
-            $product->out_of_stock = true;
-            $product->out_of_stock_comment = $comment;
-            $product->save();
-            $updated++;
+            if ($product) {
+                $product->out_of_stock = true;
+                $product->out_of_stock_comment = $comment;
+                $product->save();
+                $updated++;
+            } else {
+                // Preserve existing response message format (SKUs list). Only push SKU when present.
+                if ($sku !== '') {
+                    $notFound[] = $sku;
+                }
+            }
         }
 
         return response()->json([

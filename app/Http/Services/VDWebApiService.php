@@ -326,7 +326,13 @@ public function getEvc(string $token, string $payload)
                 'body' => $response->body(),
             ]);
                 }
-
+        
+        Log::info('Final Request', [
+    'headers' => [
+        'token' => $token,
+    ],
+    'body' => $payload,
+    ]);
         return $response->json();
     }
 

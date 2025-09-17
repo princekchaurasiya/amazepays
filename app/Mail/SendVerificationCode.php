@@ -25,7 +25,8 @@ class SendVerificationCode extends Mailable
      */
     public function build()
     {
-        return $this->subject('Your Verification Code')
+        return $this->from(config('mail.from.address'), config('mail.from.name'))
+                    ->subject('Your Verification Code')
                     ->view('email.verification-code') // make sure the folder is correct (emails/, not email/)
                     ->with(['code' => $this->code]);
     }

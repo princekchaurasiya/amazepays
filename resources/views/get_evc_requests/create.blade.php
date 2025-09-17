@@ -110,8 +110,8 @@
 
     <label>Gift Send Option</label>
     <select name="gift_send_option" id="sendAsGiftRadio" onchange="toggleReceiverFields()">
-        <option value="Send as Gift" {{ request('gift_send_option') == 'Send as Gift' ? 'selected' : '' }}>Send as Gift</option>
-        <option value="Buy for Self" {{ request('gift_send_option') == 'Buy for Self' ? 'selected' : '' }}>Buy for Self</option>
+        <option value="send_as_gift" {{ in_array(request('gift_send_option'), ['send_as_gift','Send as Gift']) ? 'selected' : '' }}>Send as Gift</option>
+        <option value="buy_for_self" {{ in_array(request('gift_send_option'), ['buy_for_self','Buy for Self']) ? 'selected' : '' }}>Buy for Self</option>
     </select>
 
     <input type="hidden" name="delivery_mode" value="both">
@@ -152,7 +152,7 @@ function toggleReceiverFields() {
     const selectedOption = document.getElementById('sendAsGiftRadio').value;
     const giftingDetails = document.getElementById('giftingDetails');
 
-    if (selectedOption === 'Send as Gift') {
+    if (selectedOption === 'send_as_gift') {
         giftingDetails.style.display = 'block';
     } else {
         giftingDetails.style.display = 'none';

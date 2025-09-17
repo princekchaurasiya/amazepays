@@ -257,7 +257,7 @@ public function showEvcDetails(Request $request, VDWebApiService $vdWebApiServic
     $request->validate([
         'denomination' => 'required|numeric|min:100|max:10000',
         'quantity' => 'required|integer|min:1|max:10',
-        'gift_send_option' => 'required|in:Send as Gift,Buy for Self',
+        'gift_send_option' => 'required|in:Send as Gift,Buy for Self,send_as_gift,buy_for_self',
         'delivery_mode' => 'required|in:both,email,sms',
         'receiver_name' => 'nullable|string|max:255',
         'receiver_email' => 'nullable|email|max:255',
@@ -265,11 +265,19 @@ public function showEvcDetails(Request $request, VDWebApiService $vdWebApiServic
         'receiver_msg' => 'nullable|string',
     ]);
 
+    // Normalize gift_send_option to snake_case for consistency
+    $normalizedGiftOption = $request->gift_send_option;
+    if ($normalizedGiftOption === 'Send as Gift') {
+        $normalizedGiftOption = 'send_as_gift';
+    } elseif ($normalizedGiftOption === 'Buy for Self') {
+        $normalizedGiftOption = 'buy_for_self';
+    }
+
     // Store form data in session for later use
     session([
         'denomination' => $request->denomination,
         'quantity' => $request->quantity,
-        'gift_send_option' => $request->gift_send_option,
+        'gift_send_option' => $normalizedGiftOption,
         'delivery_mode' => $request->delivery_mode,
         'receiver_name' => $request->receiver_name,
         'receiver_email' => $request->receiver_email,

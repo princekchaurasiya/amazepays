@@ -33,8 +33,8 @@
                     <input type="number" name="quantity" min="1" max="10">
 
                     <select name="gift_send_option" id="sendAsGiftRadio">
-                    <option value="Send as Gift">Send as Gift</option>
-                    <option value="Buy for Self">Buy for Self</option>
+                    <option value="send_as_gift">Send as Gift</option>
+                    <option value="buy_for_self">Buy for Self</option>
                     </select>
 
                     <input type="hidden" name="delivery_mode" value="both">
@@ -134,7 +134,7 @@
     function toggleReceiverFields() {
         const selectedOption = $('#sendAsGiftRadio').val();
 
-        if (selectedOption === 'Send as Gift') {
+        if (selectedOption === 'send_as_gift') {
             $('.gifting-details, .credentails-field').show();
         } else {
             $('.gifting-details, .credentails-field').hide();
@@ -295,19 +295,19 @@
                         },
                         receiver_name: {
                             required: function(element) {
-                                return $('#sendAsGiftRadio').val() === 'Send as Gift';
+                                return $('#sendAsGiftRadio').val() === 'send_as_gift';
                             },
                             validReceiverName: true
                         },
                         receiver_email: {
                             required: function(element) {
-                                return $('#sendAsGiftRadio').val() === 'Send as Gift';
+                                return $('#sendAsGiftRadio').val() === 'send_as_gift';
                             },
                             email: true
                         },
                         receiver_mobile: {
                             required: function(element) {
-                                return $('#sendAsGiftRadio').val() === 'Send as Gift';
+                                return $('#sendAsGiftRadio').val() === 'send_as_gift';
                             },
                             indianMobile: true
                         }

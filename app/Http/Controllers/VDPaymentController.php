@@ -70,7 +70,7 @@ public function store(Request $request)
             'id' => $orderId,
             'description' => "Gift Card Payment - " . $orderId,
         ],
-        'payment_method' => 'bankcard',
+        'payment_method' => 'upi',
         'payment_data' => [ 
             'amount' => $payableAmount,
             'currency' => 'INR',

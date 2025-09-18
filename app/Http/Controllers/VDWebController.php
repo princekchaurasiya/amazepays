@@ -335,41 +335,33 @@ public function showEvcDetails(Request $request, VDWebApiService $vdWebApiServic
     ]);
 }
 
-public function evcDetails(VDWebApiService $vdWebApiService)
+public function evcDetails($orderId, $requestRefNo, VDWebApiService $vdWebApiService)
 {
-    // Step 1: Get Token
-    $tokenResponse = $vdWebApiService->getToken();
-    //dd($tokenResponse);
-    $token = $tokenResponse;
-
-    if (!$token) {
+    // Get Token
+    $token = $vdWebApiService->getToken();
+    if (!$token || !is_string($token)) {
         return response()->json(['error' => 'Failed to get token'], 500);
     }
 
-    // Step 2: Create Payload with Unique IDs
-    $payload = $this->buildPayloadFromDB();
-    $payload['amount'] = (float) $payload['amount'];
-    $jsonPayload = json_encode($payload);
-    //$encryptedPayload = AesHelper::encrypt($jsonPayload);
-    //dd($encryptedPayload);
-
-    // Step 3: Call API
-    $response = $vdWebApiService->getEvc($token, $jsonPayload);
-    if (!$response) {
-        return response()->json(['error' => 'Failed to get EVC']);
+    // Fetch Activated EVC details for provided IDs
+    $activatedEvc = $vdWebApiService->getActivatedEvc($token, $orderId, $requestRefNo);
+    if (!$activatedEvc) {
+        Log::error('Activated EVC fetch failed', ['order_id' => $orderId, 'request_ref_no' => $requestRefNo]);
+        return response()->json(['error' => 'Failed to fetch EVC details'], 502);
     }
 
-    // Decrypt data safely
-    if (!is_array($response) || !array_key_exists('data', $response) || empty($response['data'])) {
-        Log::error('EVC response missing data field (evcDetails)', ['response' => $response]);
-        return response()->json(['error' => 'EVC response invalid or missing data'], 502);
+    $decryptedData = null;
+    if (is_array($activatedEvc) && !empty($activatedEvc['data'])) {
+        $decryptedData = $this->decryptAES($activatedEvc['data']);
+    } else {
+        Log::warning('Activated EVC response missing data field', ['response' => $activatedEvc]);
     }
-    $decryptedData = $this->decryptAES($response['data']);
 
-    return view('evc.success', [
-    'orderId' => $response['order_id'],
-    'requestRefNo' => $response['request_ref_no'],
-    'evcData' => $decryptedData,
+    return view('evc.activated', [
+        'evc' => $activatedEvc,
+        'order_id' => $orderId,
+        'request_ref_no' => $requestRefNo,
+        'decryptedData' => $decryptedData
     ]);
 }
 

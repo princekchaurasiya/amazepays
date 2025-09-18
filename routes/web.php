@@ -525,9 +525,7 @@ Route::get('/wallet', [KGenWalletController::class, 'wallet'])->name('wallet');
 
 //VD Payment
 Route::get('/vd/payment/return', [VDPaymentController::class, 'handleReturnSuccess'])->name('vd.return');
-Route::post('/vd-payment', [VDPaymentController::class, 'process'])->name('vd.payment');
-Route::get('/evc-details/{orderId}/{requestRefNo}', [GetEvcRequestController::class, 'show'])->name('evc.details');
-
+Route::post('/vd-payment', [VDPaymentController::class, 'store'])->name('vd.payment');
 
 // Qs Products: Upload disabled products sheet
 use App\Http\Controllers\Voyager\QsProductStockImportController;

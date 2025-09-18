@@ -73,11 +73,11 @@ class VDPageController extends Controller
             ->where('order_status', 'COMPLETE')
             ->sum('grand_payable_amount');
 
-            Log::info('Total purchases this month:', ['total' => $totalPurchasesThisMonth]);
+            //Log::info('Total purchases this month:', ['total' => $totalPurchasesThisMonth]);
 
              // Calculate the grand payable amount for the current order
-            $grandPayableAmount = $request->quantity * $request->denomination;
-            Log::info('Calculated grand payable amount:', ['amount' => $grandPayableAmount]);
+           // $grandPayableAmount = $request->quantity * $request->denomination;
+            //Log::info('Calculated grand payable amount:', ['amount' => $grandPayableAmount]);
 
             // Create a new order since all validations passed
         Log::info('Creating a new order for user:', ['user_id' => Auth::id()]);

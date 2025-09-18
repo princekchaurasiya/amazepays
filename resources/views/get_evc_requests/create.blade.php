@@ -98,15 +98,16 @@
     @csrf
     
     <!-- Hidden fields for brand data -->
-    <input type="hidden" name="vd_discount" value="{{ request('vd_discount') }}">
+    <input type="hidden" name="vd_discount" id="vd_discount" value="{{ request('vd_discount') }}">
     <input type="hidden" name="vd_brand_code" value="{{ request('vd_brand_code') }}">
+    <input type="hidden" name="payable_amount" id="payable_amount" value="">
 
     <!-- Gift card details -->
     <label>Denomination</label>
-    <input type="number" name="denomination" value="{{ request('denomination') }}" min="100" max="10000" required>
+    <input type="number" name="denomination" id="denomination" value="{{ request('denomination') }}" min="100" max="10000" required>
 
     <label>Quantity</label>
-    <input type="number" name="quantity" value="{{ request('quantity') }}" min="1" max="10" required>
+    <input type="number" name="quantity" id="quantity" value="{{ request('quantity') }}" min="1" max="10" required>
 
     <label>Gift Send Option</label>
     <select name="gift_send_option" id="sendAsGiftRadio" onchange="toggleReceiverFields()">
@@ -162,7 +163,39 @@ function toggleReceiverFields() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     toggleReceiverFields();
+    attachPayableCalculator();
 });
+
+function attachPayableCalculator() {
+    const denom = document.getElementById('denomination');
+    const qty = document.getElementById('quantity');
+    const disc = document.getElementById('vd_discount');
+    const payable = document.getElementById('payable_amount');
+    const form = document.getElementById('evcForm');
+
+    const recalc = () => {
+        const d = parseFloat(denom.value || '0');
+        const q = parseInt(qty.value || '0');
+        const discountPct = parseFloat(disc.value || '0');
+        let gross = d * q;
+        if (!isFinite(gross) || gross < 0) gross = 0;
+        let discount = 0;
+        if (isFinite(discountPct) && discountPct > 0) {
+            discount = gross * (discountPct / 100);
+        }
+        let net = gross - discount;
+        if (net < 0) net = 0;
+        payable.value = Number(net.toFixed(2));
+    };
+
+    denom.addEventListener('input', recalc);
+    qty.addEventListener('input', recalc);
+    form.addEventListener('submit', () => {
+        recalc();
+    });
+
+    recalc();
+}
 </script>
 
 </body>

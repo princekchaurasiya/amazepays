@@ -78,7 +78,7 @@ public function store(Request $request)
         ],
 
         'return_urls' => [
-            'decline_url' => "https://amazepays.in/evc-details?order_id=" . $orderId . "&request_ref_no=" . $request_ref_no,
+            'decline_url' => "https://amazepays.in/evc-details/" . $orderId . "/" . $request_ref_no,
             //'decline_url' => route('payment.failed')
         ],
          ];

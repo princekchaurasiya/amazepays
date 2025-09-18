@@ -93,6 +93,7 @@ public function store(Request $request)
 
 Log::info('Payment Request', $data);
 Log::info('Payment Response', ['body' => $response->body(), 'status' => $response->status()]);
+Log::info('Order ID', ['order_id' => $orderId]);
 
 $responseData = $response->json();
 

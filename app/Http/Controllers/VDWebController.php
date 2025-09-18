@@ -9,6 +9,7 @@ use App\Helpers\AesHelper;
 use App\Models\EvcCardItem;
 use App\Models\EvcStatus;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use App\Models\Brand;
 use App\Models\GetEvcRequest;
 use Illuminate\Support\Facades\Crypt;
@@ -240,7 +241,12 @@ public function buildPayloadFromDB($recordId = null)
             return response()->json(['error' => 'Failed to get EVC']);
         }
 
-        //This is tp decrypt Data
+        // Decrypt data safely
+        if (!is_array($response) || !array_key_exists('data', $response) || empty($response['data'])) {
+            Log::error('EVC response missing data field', ['response' => $response]);
+            return response()->json(['error' => 'EVC response invalid or missing data'], 502);
+        }
+
         $decryptedData = $this->decryptAES($response['data']);
 
         return view('evc.success', [
@@ -307,7 +313,11 @@ public function showEvcDetails(Request $request, VDWebApiService $vdWebApiServic
         return response()->json(['error' => 'Failed to get EVC']);
     }
 
-    //This is to decrypt Data
+    // Decrypt data safely
+    if (!is_array($response) || !array_key_exists('data', $response) || empty($response['data'])) {
+        Log::error('EVC response missing data field (showEvcDetails)', ['response' => $response]);
+        return back()->with('error', 'EVC response invalid or missing data. Please try again.');
+    }
     $decryptedData = $this->decryptAES($response['data']);
     
     // Parse the decrypted data to extract specific fields
@@ -349,7 +359,11 @@ public function evcDetails(VDWebApiService $vdWebApiService)
         return response()->json(['error' => 'Failed to get EVC']);
     }
 
-    //This is tp decrypt Data
+    // Decrypt data safely
+    if (!is_array($response) || !array_key_exists('data', $response) || empty($response['data'])) {
+        Log::error('EVC response missing data field (evcDetails)', ['response' => $response]);
+        return response()->json(['error' => 'EVC response invalid or missing data'], 502);
+    }
     $decryptedData = $this->decryptAES($response['data']);
 
     return view('evc.success', [

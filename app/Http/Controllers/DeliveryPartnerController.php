@@ -35,38 +35,18 @@ class DeliveryPartnerController extends Controller
         $response = Http::withHeaders([
             'x-client-id' => env('EXLR8_USER_ID'),
             'x-client-secret' => env('EXLR8_USER_SECRET'),
-        ])->get(env('EXLR8_BASE_URL') . '/products/delivery-partners/{dpID}', $queryParams);
+        ])->get(env('EXLR8_BASE_URL') . '/products/delivery-partners/'. env('dpID'));
 
         if ($response->successful()) {
             return response()->json([
-                'message' => $response['message'],
-                'products' => $response['data']['products'],
-                'categories' => $response['data']['categories'],
-                'createdAt' => $response['data']['createdAt'],
-                'descriptionText' => $response['data']['descriptionText'] ?? null,
-                'productDisplayName' => $response['data']['productDisplayName'] ?? null,
-                'productName' => $response['data']['productName'] ?? null,
-                'productOrigin' => $response['data']['productOrigin'] ?? null,
-                'redemptionInstructions' => $response['data']['redemptionInstructions'] ?? null,
-            ]);
-            if ($queryParams == 'variantID') {
-                return response()->json([
-                    'message' => $response['message'],
-                    'variants' => $response['data']['variants'],
-                ]);
-
-            }
-        }
-
-        if($queryParams == 'productID') {
-
-            $response = Http::withHeaders([
-            'x-client-id' => env('EXLR8_USER_ID'),
-            'x-client-secret' => env('EXLR8_USER_SECRET'),
-        ])->get(env('EXLR8_BASE_URL') . '/delivery-partners/product/{productID}');
-
-            return response()->json([
-                'data' => $response['data'],
+                'products' => $response['products'],
+               /* 'categories' => $response['products']['categories'],
+                'descriptionText' => $response['products']['descriptionText'] ?? null,
+                'productDisplayName' => $response['products']['productDisplayName'] ?? null,
+                'productName' => $response['products']['productName'] ?? null,
+                'redemptionInstructions' => $response['products']['redemptionInstructions'] ?? null,
+                'termsAndConditions' => $response['products']['termsAndConditions'] ?? null,
+                'variants' => $response['products']['variants'],*/
             ]);
         }
 
@@ -84,14 +64,43 @@ class DeliveryPartnerController extends Controller
         $response = Http::withHeaders([
             'x-client-id' => env('EXLR8_USER_ID'),
             'x-client-secret' => env('EXLR8_USER_SECRET'),
-        ])->get(env('EXLR8_BASE_URL') . '/products/delivery-partners/{dpID}/{productID}');
+        ])->get(env('EXLR8_BASE_URL') . '/products/delivery-partners/' . env('dpID') . $productID);
 
         if ($response->successful()) {
             return response()->json([
-                'data' => $response['data'],
+                'products' => $response['products'],
+                /*'productID' => $response['data']['productID'],
+                 'categories' => $response['data']['categories'],
+                'descriptionText' => $response['data']['descriptionText'] ?? null,
+                'productDisplayName' => $response['data']['productDisplayName'] ?? null,
+                'productName' => $response['data']['productName'],
+                'redemptionInstructions' => $response['data']['redemptionInstructions'] ?? null,
+                'termsAndConditions' => $response['data']['termsAndConditions'] ?? null,
+                'variants' => $response['data']['variants'],*/
             ]);
         }
 
         return response()->json(['error' => 'Failed to fetch product details'], $response->status());
+    }
+
+    public function showproducts(Request $request)
+    {
+        $queryParams = array_filter([
+            'nextCursor' => $request->page ?? 1,
+            'limit' => $request->limit ?? 10,
+        ]);
+
+        $response = Http::withHeaders([
+            'x-client-id' => env('EXLR8_USER_ID'),
+            'x-client-secret' => env('EXLR8_USER_SECRET'),
+        ])->get(env('EXLR8_BASE_URL') . '/products/delivery-partners/'. env('dpID'));
+
+        if ($response->successful()) {
+            return view('kgen.products', [
+                'products' => $response['products'] ?? [],
+            ]);
+        }
+
+        return back()->withErrors(['error' => 'Failed to fetch products']);
     }
 }

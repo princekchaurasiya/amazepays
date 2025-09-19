@@ -47,6 +47,7 @@ use App\Http\Controllers\{
     AthenaGiftCardController,
     AuthController,
     VDPaymentController,
+    DeliveryPartnerController,
 };
 
 /*
@@ -506,9 +507,10 @@ Route::get('/api/vd-brands/test-connection', [VDHomeController::class, 'testVDCo
 
 
 // KGEN API
-use App\Http\Controllers\DeliveryPartnerController;
 
 Route::get('/kgen-products', [DeliveryPartnerController::class, 'getProducts'])->name('products');
+Route::get('/kgen-showproducts', [DeliveryPartnerController::class, 'showproducts'])
+    ->name('kgen.products');
 //Route::get('/authenticate', [DeliveryPartnerController::class, 'authenticate'])->name('authenticate');
 
 use App\Http\Controllers\KGenOrderController;

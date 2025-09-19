@@ -3,6 +3,19 @@
 @section('content')
 <div class="container">
       <br/>
+      @if(session('success'))
+    <div class="alert alert-success">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if($errors->any())
+    <div class="alert alert-danger">
+        @foreach($errors->all() as $error)
+            <p>{{ $error }}</p>
+        @endforeach
+    </div>
+@endif
     <h1>Place Order</h1>
 
     @if($errors->any())
@@ -25,5 +38,18 @@
         <button type="submit" class="btn btn-primary">Confirm Order</button>
         <a href="{{ route('products') }}" class="btn btn-secondary">Cancel</a>
     </form>
+    @if(session('vouchers'))
+    <div class="card mt-3">
+        <div class="card-header">Voucher Details</div>
+        <div class="card-body">
+            @foreach(session('vouchers') as $voucher)
+                <p><strong>Code:</strong> {{ $voucher['voucherCode'] }}</p>
+                <p><strong>PIN:</strong> {{ $voucher['voucherPin'] }}</p>
+                <p><strong>Expires on:</strong> {{ \Carbon\Carbon::parse($voucher['expirationDate'])->toDateString() }}</p>
+                <hr>
+            @endforeach
+        </div>
+    </div>
+@endif
 </div>
 @endsection

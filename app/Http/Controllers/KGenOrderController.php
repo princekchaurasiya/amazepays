@@ -20,27 +20,30 @@ class KGenOrderController extends Controller
     public function placeOrder(Request $request)
     {
         $validated = $request->validate([
-            'dpID' => 'required|string',
             'variantId' => 'required|string',
         ]);
+
+        $dpValue = env('dpID');
 
         $response = Http::withHeaders([
             'x-client-id' => env('EXLR8_USER_ID'),
             'x-client-secret' => env('EXLR8_USER_SECRET'),
             'Content-Type' => 'application/json',
         ])->post(env('EXLR8_BASE_URL') . '/orders/b2b/direct-checkout', [
-            'dpID' => $validated['dpID'],
-            'variantId' => $validated['variantId'],
-            'externalRef' => 'ORDER_' . strtoupper(Str::random(8)), // Unique ID
+            'dpID' => $dpValue,
+            'variantID' => $validated['variantId'],
+            'externalRefID' => 'ORDER_' . strtoupper(Str::random(6)), // Unique ID
         ]);
 
-        if ($response->successful()) {
-            return redirect()->route('products')->with('success', 'Order placed successfully!');
+        //dd($response->json());
+
+       /*if ($response->successful()) {
+             return back()->with('success', 'Order placed successfully');
         }
 
         if (!$response->successful()) {
-        return back()->withErrors(['error' => 'Failed to place order'])->withInput();
-        }
+        return back()->withErrors(['error' => 'Failed to place order']);
+        }*/
         
          $data = $response->json();
 
@@ -48,19 +51,23 @@ class KGenOrderController extends Controller
     switch ($data['status'] ?? null) {
         case 'COMPLETED':
             // recharge successful — show voucher details if available
+            $orderID = $data['orderID'];
             $vouchers = $data['lineItems'][0]['vouchers'] ?? [];
-            return redirect()->route('recharges')->with([
-                'success' => 'Order completed successfully!',
-                'orderId' => $data['orderID'],
-                'vouchers' => $vouchers,
-            ]);
-
+            $voucherdata =json_encode($vouchers);
+          // return back()->with('success', "Order placed successfully. Order ID: {$orderID} . Vouchers: " . json_encode($vouchers));
+            return back()->with([
+    'success'  => 'Order placed successfully',
+    'orderID'  => $orderID,
+    'vouchers' => $vouchers,
+    ]);
+    
         case 'PROCESSED':
             // recharge is still in process
-            return redirect()->route('recharges')->with([
+           /* return redirect()->route('recharges')->with([
                 'info' => 'Order is being processed. Please check status later.',
                 'orderId' => $data['orderID'],
-            ]);
+            ]);*/
+              return back()->with('success', 'Order placed successfully');
 
         case 'FAILED':
             // recharge failed

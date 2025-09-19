@@ -32,6 +32,8 @@ class DeliveryPartnerController extends Controller
             'limit' => $request->limit ?? 10,
         ]);
 
+          
+
         $response = Http::withHeaders([
             'x-client-id' => env('EXLR8_USER_ID'),
             'x-client-secret' => env('EXLR8_USER_SECRET'),
@@ -90,16 +92,45 @@ class DeliveryPartnerController extends Controller
             'limit' => $request->limit ?? 10,
         ]);
 
+          $products = []; 
+
         $response = Http::withHeaders([
             'x-client-id' => env('EXLR8_USER_ID'),
             'x-client-secret' => env('EXLR8_USER_SECRET'),
         ])->get(env('EXLR8_BASE_URL') . '/products/delivery-partners/'. env('dpID'));
 
         if ($response->successful()) {
+               if ($request->filled('search')) {
+            $search = strtolower($request->search);
+
+            $products = collect($products)
+                ->filter(function ($product) use ($search) {
+                    return str_contains(strtolower($product['productDisplayName'] ?? ''), $search)
+                        || str_contains(strtolower($product['productID'] ?? ''), $search)
+                        || str_contains(strtolower($product['productName'] ?? ''), $search)
+                        || collect($product['categories'] ?? [])->contains(function ($category) use ($search) {
+                            return str_contains(strtolower($category['categoryName'] ?? ''), $search);
+                        });
+                })
+                ->values()
+                ->all();
+        }
             return view('kgen.products', [
                 'products' => $response['products'] ?? [],
             ]);
         }
+
+         \Log::error('Failed to fetch DP products', [
+        'status' => $response->status(),
+        'body' => $response->body(),
+        'query' => $queryParams,
+    ]);
+
+    // Return the same view with empty products and an error message
+    return view('kgen.products', [
+        'products' => $products,
+        'error' => 'Failed to fetch products from API. Check logs.'
+    ]);
 
         return back()->withErrors(['error' => 'Failed to fetch products']);
     }

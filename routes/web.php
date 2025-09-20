@@ -524,6 +524,7 @@ Route::get('/get-kgenorders', [KGenOrderController::class, 'getOrders'])->name('
 use App\Http\Controllers\KGenWalletController;
 
 Route::get('/wallet', [KGenWalletController::class, 'wallet'])->name('wallet');
+Route::get('/export-csv', [KGenWalletController::class, 'exportCsv'])->name('wallet.exportCsv');
 
 //VD Payment
 Route::get('/vd/payment/return', [VDPaymentController::class, 'handleReturnSuccess'])->name('vd.return');

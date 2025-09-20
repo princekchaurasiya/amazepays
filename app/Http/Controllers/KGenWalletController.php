@@ -12,18 +12,18 @@ class KGenWalletController extends Controller
         $response = Http::withHeaders([
             'x-client-id' => env('EXLR8_USER_ID'),
             'x-client-secret' => env('EXLR8_USER_SECRET'),
-        ])->get(env('EXLR8_BASE_URL') . '/delivery-partners/{dpID}/wallet/balance');
+        ])->get(env('EXLR8_BASE_URL') . '/delivery-partners/' . env('dpID') . '/wallet/balance');
 
         if ($response->successful()) {
-            return response()->json([
-                'data' => $response['data'],
-            ]);
+           return response()->json([
+                'KGen Balance: ' => $response['balance'],
+            ]); 
         }
 
         return back()->withErrors(['error' => 'Failed to fetch wallet details']);
     }
 
-    private function exportCsv(Request $request, $token)
+    public function exportCsv(Request $request)
     {
         $queryParams = array_filter([
             'txnType' => $request->txnType,
@@ -32,13 +32,13 @@ class KGenWalletController extends Controller
         $response = Http::withHeaders([
             'x-client-id' => env('EXLR8_USER_ID'),
             'x-client-secret' => env('EXLR8_USER_SECRET'),
-        ])->get(env('EXLR8_BASE_URL') . '/delivery-partners/{dpID}/wallet/transactions', $queryParams);
+        ])->get(env('EXLR8_BASE_URL') . '/delivery-partners/' . env('dpID') . '/wallet/transactions', $queryParams);
 
         if (!$response->successful()) {
             return back()->withErrors(['error' => 'Failed to export CSV']);
         }
 
-        $transactions = $response['data']['transactions'];
+        $transactions = $response['transactions'];
 
         $filename = 'wallet_transactions_' . now()->format('Ymd_His') . '.csv';
         $headers = [
@@ -49,7 +49,7 @@ class KGenWalletController extends Controller
         $callback = function () use ($transactions) {
             $file = fopen('php://output', 'w');
             fputcsv($file, [
-                'Txn ID', 'Type', 'Currency', 'Amount','Balance Before', 'Balance After','Source System','Activity',
+                'Txn ID','dpID', 'TxnType', 'Currency', 'Amount','Balance Before', 'Balance After','Source System','Activity',
                 'Reference ID', 'Reference Type', 'Comment',  'Created Date'
             ]);
             foreach ($transactions as $txn) {

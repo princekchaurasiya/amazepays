@@ -83,15 +83,6 @@
                                 </a>
                             </li>
 
-
-                            <li>
-                                <a class="text-black"
-                                    href="tel:{{ str_replace(' ', '', config('companyDefaultValues.company_contact_no')) }}">
-                                    <i class="fas fa-phone-alt"></i> +91
-                                    {{ config('companyDefaultValues.company_contact_no') }}
-                                </a>
-                            </li>
-
                         </ul>
                     </div>
                 </div>

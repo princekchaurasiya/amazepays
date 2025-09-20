@@ -112,12 +112,6 @@
                                     {{ env('COMPANY_EMAIL') }}
                                 </h5>
                             </div>
-                            <div class="col-lg-4 col-md-4 md-mb25">
-                                <h4 class="text-grey-900 fw-600 font-xl ls-2">Contact Us</h4>
-                                <h5 class="font-xsss lh-24 fw-600 text-grey-900 mt-0">
-                                    +91 {{ env('COMPANY_CONTACT_NO') }}
-                                </h5>
-                            </div>
                         </div>
                     </div>
                 </div>

@@ -229,9 +229,17 @@
         </a>
     </div>
 </div>-->
+@php
+use App\Models\HomepageSection;
 
+$section = HomepageSection::where('section_name', 'hero')->first();
+@endphp
+
+@if($section && $section->status)
+    {!! $section->content !!}
+@endif
 {{-- Values Design Gift Cards --}}
- <div class="product-wrapper pt-5 pb-5">
+<!-- <div class="product-wrapper pt-5 pb-5">
         <div class="container-fluid">
 <div class="row justify-content-center">
                     <div class="col-lg-10">
@@ -259,7 +267,7 @@ Explore more Gift Cards & Vouchers
                         </div>
                     </div>
                 </div>  
-</div>
+</div>-->
 @endsection
 @push('scripts')
     <script>

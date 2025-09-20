@@ -5,6 +5,7 @@
     <br/>
     <h1>Product Search</h1>
     
+    {{-- Search Form --}}
     <form method="GET" action="{{ route('products') }}" class="mb-4">
        <div class="row g-3">
             <div class="col-md-6">
@@ -17,7 +18,9 @@
             </div>
         </div>
     </form>
-    
+
+    {{-- Show list view only if NOT searching --}}
+    @if(!request()->filled('search'))
         <div class="list-group mb-4">
             @foreach($products as $product)
                 <div class="list-group-item">
@@ -31,12 +34,14 @@
                 </div>
             @endforeach
         </div>
-        {{-- Error message --}}
+    @endif
+
+    {{-- Error message --}}
     @if(!empty($error))
         <div class="alert alert-danger">{{ $error }}</div>
     @endif
 
-    {{-- Product Cards --}}
+    {{-- Card view always shown --}}
     <div class="row">
         @forelse($products ?? [] as $product)
             <div class="col-md-4 mb-4">
@@ -47,20 +52,14 @@
                          alt="{{ $product['productDisplayName'] ?? 'Product' }}">
 
                     <div class="card-body">
-                        {{-- Product Name --}}
                         <h5 class="card-title">{{ $product['productDisplayName'] ?? 'Unnamed' }}</h5>
-
-                        {{-- Category --}}
                         <p class="text-muted">
                             Category: {{ $product['categories'][0]['categoryName'] ?? 'Uncategorized' }}
                         </p>
-
-                        {{-- Description --}}
                         <p class="card-text">
                             {{ Str::limit($product['descriptionText'] ?? '', 100) }}
                         </p>
 
-                        {{-- Variants & Pricing --}}
                         @foreach($product['variants'] ?? [] as $variant)
                             <div class="mb-2">
                                 <strong>{{ $variant['variantDisplayName'] ?? '-' }}</strong><br>
@@ -69,7 +68,6 @@
                             </div>
                         @endforeach
 
-                        {{-- Order Button (example) --}}
                         <form action="{{ route('place-order.form') }}" method="GET">
                             <input type="hidden" name="variantId" value="{{ $product['variants'][0]['variantID'] ?? '' }}">
                             <input type="hidden" name="mrp" value="{{ $product['variants'][0]['mrp'] ?? '' }}">
@@ -83,6 +81,6 @@
                 <div class="alert alert-info">No products found.</div>
             </div>
         @endforelse
-
+    </div>
 </div>
 @endsection

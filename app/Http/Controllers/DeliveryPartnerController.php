@@ -84,22 +84,24 @@ class DeliveryPartnerController extends Controller
         return response()->json(['error' => 'Failed to fetch product details'], $response->status());
     }
 
-    public function showproducts(Request $request)
-    {
-        $queryParams = array_filter([
-            'nextCursor' => $request->page ?? 1,
-            'limit' => $request->limit ?? 10,
-        ]);
+   public function showproducts(Request $request)
+{
+    $queryParams = array_filter([
+        'nextCursor' => $request->page ?? 1,
+        'limit' => $request->limit ?? 10,
+    ]);
 
-          $products = []; 
+    $response = Http::withHeaders([
+        'x-client-id' => env('EXLR8_USER_ID'),
+        'x-client-secret' => env('EXLR8_USER_SECRET'),
+    ])->get(env('EXLR8_BASE_URL') . '/products/delivery-partners/' . env('dpID'));
 
-        $response = Http::withHeaders([
-            'x-client-id' => env('EXLR8_USER_ID'),
-            'x-client-secret' => env('EXLR8_USER_SECRET'),
-        ])->get(env('EXLR8_BASE_URL') . '/products/delivery-partners/'. env('dpID'));
+    if ($response->successful()) {
+        // ✅ Start with full product list from API
+        $products = $response['products'] ?? [];
 
-        if ($response->successful()) {
-               if ($request->filled('search')) {
+        // ✅ Apply search filter
+        if ($request->filled('search')) {
             $search = strtolower($request->search);
 
             $products = collect($products)
@@ -114,23 +116,25 @@ class DeliveryPartnerController extends Controller
                 ->values()
                 ->all();
         }
-            return view('kgen.products', [
-                'products' => $response['products'] ?? [],
-            ]);
-        }
 
-         \Log::error('Failed to fetch DP products', [
+        // ✅ Always return the correct (filtered or not) list
+        return view('kgen.products', [
+            'products' => $products,
+        ]);
+    }
+
+    // Log error if API fails
+    \Log::error('Failed to fetch DP products', [
         'status' => $response->status(),
         'body' => $response->body(),
         'query' => $queryParams,
     ]);
 
-    // Return the same view with empty products and an error message
+    // Return view with error
     return view('kgen.products', [
-        'products' => $products,
+        'products' => [],
         'error' => 'Failed to fetch products from API. Check logs.'
     ]);
+}
 
-        return back()->withErrors(['error' => 'Failed to fetch products']);
-    }
 }

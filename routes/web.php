@@ -508,9 +508,10 @@ Route::get('/api/vd-brands/test-connection', [VDHomeController::class, 'testVDCo
 
 // KGEN API
 
-Route::get('/kgen-products', [DeliveryPartnerController::class, 'getProducts'])->name('products');
-Route::get('/kgen-showproducts', [DeliveryPartnerController::class, 'showproducts'])
-    ->name('kgen.products');
+//Route::get('/kgen-products', [DeliveryPartnerController::class, 'getProducts'])->name('products');
+//Route::get('/kgen-showproducts', [DeliveryPartnerController::class, 'showproducts'])
+//    ->name('kgen.products');
+Route::get('/kgen-products', [DeliveryPartnerController::class, 'showproducts'])->name('products');
 //Route::get('/authenticate', [DeliveryPartnerController::class, 'authenticate'])->name('authenticate');
 Route::get('/products/{productID}', [DeliveryPartnerController::class, 'getproductsbyID'])
     ->name('products.getById');

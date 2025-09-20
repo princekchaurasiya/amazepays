@@ -512,6 +512,8 @@ Route::get('/kgen-products', [DeliveryPartnerController::class, 'getProducts'])-
 Route::get('/kgen-showproducts', [DeliveryPartnerController::class, 'showproducts'])
     ->name('kgen.products');
 //Route::get('/authenticate', [DeliveryPartnerController::class, 'authenticate'])->name('authenticate');
+Route::get('/products/{productID}', [DeliveryPartnerController::class, 'getproductsbyID'])
+    ->name('products.getById');
 
 use App\Http\Controllers\KGenOrderController;
 

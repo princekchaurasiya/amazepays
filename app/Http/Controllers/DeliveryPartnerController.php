@@ -66,19 +66,18 @@ class DeliveryPartnerController extends Controller
         $response = Http::withHeaders([
             'x-client-id' => env('EXLR8_USER_ID'),
             'x-client-secret' => env('EXLR8_USER_SECRET'),
-        ])->get(env('EXLR8_BASE_URL') . '/products/delivery-partners/' . env('dpID') . $productID);
+        ])->get(env('EXLR8_BASE_URL') . '/products/delivery-partners/' . env('dpID') . '/' . $productID);
 
         if ($response->successful()) {
             return response()->json([
-                'products' => $response['products'],
-                /*'productID' => $response['data']['productID'],
-                 'categories' => $response['data']['categories'],
-                'descriptionText' => $response['data']['descriptionText'] ?? null,
-                'productDisplayName' => $response['data']['productDisplayName'] ?? null,
-                'productName' => $response['data']['productName'],
-                'redemptionInstructions' => $response['data']['redemptionInstructions'] ?? null,
-                'termsAndConditions' => $response['data']['termsAndConditions'] ?? null,
-                'variants' => $response['data']['variants'],*/
+                'productID' => $response['productID'],
+                'categories' =>  $response['categories'],
+                'descriptionText' =>  $response['descriptionText'] ?? null,
+                'productDisplayName' =>  $response['productDisplayName'] ?? null,
+                'productName' =>  $response['productName'],
+                'redemptionInstructions' =>  $response['redemptionInstructions'] ?? null,
+                'termsAndConditions' =>  $response['termsAndConditions'] ?? null,
+                'variants' =>  $response['variants'],
             ]);
         }
 

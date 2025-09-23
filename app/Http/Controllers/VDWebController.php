@@ -408,7 +408,27 @@ public function evcDetails($orderId, $requestRefNo, VDWebApiService $vdWebApiSer
     $iv = env('AES_IV');
     $encryptedPayload = $request->input('encrypted_payload');
 
-    $decrypted = \App\Helpers\AesHelper::decryptPayload($encryptedPayload, $key, $iv);
+    $svc = app(\App\Http\Services\VDWebApiService::class);
+    $res = $svc->tryDecryptEvc($encryptedPayload);
+
+    if (!$res['ok']) {
+        return response()->json([
+            'error' => 'Decryption failed',
+            'details' => $res['error'],
+            'mode' => $res['mode'],
+        ], 400);
+    }
+
+    $data = json_decode($res['decrypted'], true);
+    if (!is_array($data)) {
+        return response()->json(['error' => 'Invalid JSON structure'], 422);
+    }
+
+    $this->storeEvcData($data);
+
+    return response()->json(['message' => 'EVC items stored successfully']);
+
+  /*  $decrypted = \App\Helpers\AesHelper::decryptPayload($encryptedPayload, $key, $iv);
     if (!$decrypted) {
         return response()->json(['error' => 'Decryption failed'], 400);
     }
@@ -420,7 +440,7 @@ public function evcDetails($orderId, $requestRefNo, VDWebApiService $vdWebApiSer
 
     $this->storeEvcData($data);
 
-    return response()->json(['message' => 'EVC items stored successfully']);
+    return response()->json(['message' => 'EVC items stored successfully']);*/
     }
 
     public function getEvcStatus(Request $request, VDWebApiService $vdWebApiService)
@@ -577,5 +597,15 @@ public function evcDetails($orderId, $requestRefNo, VDWebApiService $vdWebApiSer
 
         return view('wallet.balance', compact('data'));
     }
+
+    public function testDecrypt(Request $request)
+{
+    $svc = app(\App\Http\Services\VDWebApiService::class);
+
+    $encrypted = $request->query('evc'); // ?evc=...
+    $res = $svc->tryDecryptEvc($encrypted);
+
+    return response()->json($res);
+}
 
 }

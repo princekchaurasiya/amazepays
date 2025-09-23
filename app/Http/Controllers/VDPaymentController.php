@@ -78,8 +78,8 @@ public function store(Request $request)
         ],
 
         'return_urls' => [
-            'decline_url' => "https://amazepays.in/evc-details/" . $orderId . "/" . $request_ref_no,
-            //'decline_url' => route('payment.failed')
+            'success_url' => "https://amazepays.in/evc-details/" . $orderId . "/" . $request_ref_no,
+            'decline_url' => route('payment.failed')
         ],
          ];
 

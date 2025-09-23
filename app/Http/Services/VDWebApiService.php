@@ -79,25 +79,106 @@ class VDWebApiService
     return null;
 }
 
- public function decryptAES(string $encryptedBase64): string
+	/**
+	 * Decode env-provided key/iv values which may be raw, base64, or hex.
+	 */
+	private function decodeKeyOrIv(?string $value): ?string
+	{
+		if ($value === null || $value === '') {
+			return null;
+		}
+		$value = trim($value);
+		// Try base64 (strict)
+		$decodedB64 = base64_decode($value, true);
+		if ($decodedB64 !== false && $decodedB64 !== '') {
+			// Heuristic: if re-encoding yields the same (ignoring padding differences), accept
+			if (rtrim($value, '=') === rtrim(base64_encode($decodedB64), '=')) {
+				return $decodedB64;
+			}
+		}
+		// Try hex
+		if (ctype_xdigit($value) && (strlen($value) % 2 === 0)) {
+			$decodedHex = @hex2bin($value);
+			if ($decodedHex !== false) {
+				return $decodedHex;
+			}
+		}
+		// Fallback raw
+		return $value;
+	}
+
+	/**
+	 * Load and normalize AES key and IV from environment.
+	 */
+	private function loadAesKeyAndIv(): array
+	{
+		// Support multiple env names for compatibility
+		$keyRaw = env('AES_SECRET_KEY') ?: env('AES_KEY');
+		$ivRaw = env('AES_IV');
+
+		$key = $this->decodeKeyOrIv($keyRaw);
+		$iv = $this->decodeKeyOrIv($ivRaw);
+
+		// Log lengths only (not values)
+		Log::debug('AES materials loaded', [
+			'key_len' => $key !== null ? strlen($key) : null,
+			'iv_len' => $iv !== null ? strlen($iv) : null,
+		]);
+
+		return [$key, $iv];
+	}
+
+	/**
+	 * Robust AES-256-CBC decryption supporting url/base64/hex inputs.
+	 */
+	public function decryptAES(string $encryptedInput): string
     {
-        $key = env('AES_SECRET_KEY');
-        $iv = env('AES_IV');
+		[$key, $iv] = $this->loadAesKeyAndIv();
 
-        $ciphertext = base64_decode($encryptedBase64, true);
-        if ($ciphertext === false) {
-            return 'Base64 decode failed';
-        }
+		if (empty($encryptedInput)) {
+			Log::error('decryptAES: input is empty');
+			return '';
+		}
 
-        $decrypted = openssl_decrypt(
-            $ciphertext,
-            'AES-256-CBC',
-            $key,
-            OPENSSL_RAW_DATA,
-            $iv
-        );
+		$original = $encryptedInput;
+		$prepared = urldecode($encryptedInput);
+		$prepared = str_replace(' ', '+', $prepared);
 
-        return $decrypted ?: 'Decryption failed';
+		$ciphertext = base64_decode($prepared, true);
+		if ($ciphertext === false) {
+			// Try hex as fallback
+			if (ctype_xdigit($prepared) && (strlen($prepared) % 2 === 0)) {
+				$ciphertext = @hex2bin($prepared);
+			}
+		}
+
+		if ($ciphertext === false || $ciphertext === '' || $ciphertext === null) {
+			Log::error('decryptAES: ciphertext decode failed', [
+				'input_len' => strlen($original),
+				'prepared_prefix' => substr($prepared, 0, 16),
+			]);
+			return '';
+		}
+
+		$decrypted = @openssl_decrypt(
+			$ciphertext,
+			'AES-256-CBC',
+			$key,
+			OPENSSL_RAW_DATA,
+			$iv
+		);
+
+		if ($decrypted === false || $decrypted === '') {
+			Log::error('decryptAES: openssl_decrypt failed or empty', [
+				'cipher_len' => strlen($ciphertext),
+				'key_len' => $key !== null ? strlen($key) : null,
+				'iv_len' => $iv !== null ? strlen($iv) : null,
+				'openssl_err' => openssl_error_string(),
+			]);
+			return '';
+		}
+
+		return $decrypted;
     }
 
     public function getBrands(string $token, string $brandCode = '')
@@ -294,11 +375,10 @@ public function displayBrands(string $token, string $brandCode = '')
 
 public function getEvc(string $token, string $payload)
     {
-        $key = env('AES_KEY');
-        $iv = env('AES_IV');
+		[$key, $iv] = $this->loadAesKeyAndIv();
 
        //$encryptedPayload = \App\Helpers\AesHelper::encrypt($payload);
-       $rawEncrypted = openssl_encrypt(
+		$rawEncrypted = openssl_encrypt(
         $payload,
         'AES-256-CBC',
         $key,
@@ -311,7 +391,9 @@ public function getEvc(string $token, string $payload)
         $payload = [
                     'payload' => $encryptedPayload, // encryptedPayload is the full string you showed
                     ];
-        Log::info('Payload Sent:', $payload);
+		Log::info('Payload Sent:', [
+			'payload_len' => strlen($encryptedPayload),
+		]);
 
         $response = Http::withHeaders([
             'token' => $token,
@@ -327,12 +409,12 @@ public function getEvc(string $token, string $payload)
             ]);
                 }
         
-        Log::info('Final Request', [
-    'headers' => [
-        'token' => $token,
-    ],
-    'body' => $payload,
-    ]);
+		Log::debug('Final Request', [
+			'headers' => [
+				'token_present' => !empty($token),
+			],
+			'body_keys' => array_keys($payload),
+		]);
         return $response->json();
     }
 

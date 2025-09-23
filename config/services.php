@@ -40,4 +40,8 @@ return [
     'secret' => env('LYSTO_API_KEY'),
     ],
 
+    'unlimit' => [
+    'callback_secret' => env('UNLIMIT_CALLBACK_SECRET'),
+    ],
+
 ];

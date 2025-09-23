@@ -66,6 +66,7 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'check.transaction' => \App\Http\Middleware\CheckUserTransactionStatus::class,
+        'verify.unlimit.signature' => \App\Http\Middleware\VerifyUnlimitSignature::class,
         //'block.vpn' => \App\Http\Middleware\BlockVPNUsers::class,
     ];
 }

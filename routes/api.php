@@ -32,3 +32,8 @@ Route::middleware('api')->group(function () {
 Route::middleware('auth:sanctum')->get('/products', [ProductController::class, 'index']);
 Route::get('/products', [ProductController::class, 'index']);   // All products
 Route::get('/products/{id}', [ProductController::class, 'show']); // Single product
+
+use App\Http\Controllers\UnlimitCallbackController;
+
+Route::post('/unlimit/callback', [UnlimitCallbackController::class, 'handle'])
+    ->middleware('verify.unlimit.signature');

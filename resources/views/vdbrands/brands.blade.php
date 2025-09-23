@@ -4,7 +4,23 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="container py-5">
     @php
-        $brand = $brands[0] ?? [];
+        // Normalize to array if a collection is passed
+        if ($brands instanceof \Illuminate\Support\Collection) {
+            $brands = $brands->toArray();
+        }
+
+        $brand = [];
+        if (is_array($brands) && !empty($brands)) {
+            $keys = array_keys($brands);
+            // If numeric, zero-based array -> take index 0; otherwise take first value
+            if ($keys === range(0, count($brands) - 1)) {
+                $brand = $brands[0] ?? [];
+            } else {
+                $first = reset($brands);
+                $brand = is_array($first) ? $first : [];
+            }
+        }
+
         $images = isset($brand['Images']) ? json_decode(str_replace("'", '"', $brand['Images']), true) : [];
         $redeemSteps = $brand['RedeemSteps'] ?? [];
     @endphp

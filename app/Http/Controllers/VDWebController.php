@@ -9,7 +9,6 @@ use App\Helpers\AesHelper;
 use App\Models\EvcCardItem;
 use App\Models\EvcStatus;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use App\Models\Brand;
 use App\Models\GetEvcRequest;
 use Illuminate\Support\Facades\Crypt;
@@ -83,16 +82,16 @@ class VDWebController extends Controller
     {
         $token = $this->getToken();
 
-        if (!$token || !is_string($token)) {
+        if (!$token) {
             return response()->json(['error' => 'Failed to generate token'], 500);
         }
 
         $brands = $this->vdWebApiService->getBrands($token);
 
-        if (is_array($brands) && !empty($brands)) {
+        if ($brands) {
             return response()->json(['brands' => $brands]);
         }
-
+        dd($brands);
         return response()->json(['error' => 'Failed to fetch brands'], 500);
     }
 
@@ -182,21 +181,15 @@ class VDWebController extends Controller
     ]);
 }
 
-public function buildPayloadFromDB($recordId = null)
+public function buildPayloadFromDB($recordId)
 {
-    // Fetch the stored record by ID or use latest if not provided
-    $evcRequest = $recordId
-        ? GetEvcRequest::find($recordId)
-        : GetEvcRequest::latest()->first();
+    // Fetch the stored record by ID
+    $evcRequest = GetEvcRequest::findOrFail($recordId);
 
-    if (!$evcRequest) {
-        abort(422, 'No GetEvcRequest record found. Please create one before requesting EVC.');
-    }
-
-    // Build payload using database values and persist identifiers
+    // Build payload using database values + dynamic IDs
     $payload = [
-        'order_id'        => $evcRequest->order_id,
-        'request_ref_no'  => $evcRequest->req_id,
+        'order_id'        => 'ORD-' . strtoupper(Str::random(10)),
+        'request_ref_no'  => 'REF-' . strtoupper(Str::random(12)),
         'distributor_id'  => $evcRequest->distributor_id,
         'sku_code'        => $evcRequest->sku_code,
         'no_of_card'      => $evcRequest->no_of_card,
@@ -229,7 +222,7 @@ public function buildPayloadFromDB($recordId = null)
         }
 
         // Step 2: Create Payload with Unique IDs
-        $payload = $this->buildPayloadFromDB();
+        $payload = $this->buildPayloadFromDB(1);
         $payload['amount'] = (float) $payload['amount'];
         $jsonPayload = json_encode($payload);
         //$encryptedPayload = AesHelper::encrypt($jsonPayload);
@@ -241,12 +234,7 @@ public function buildPayloadFromDB($recordId = null)
             return response()->json(['error' => 'Failed to get EVC']);
         }
 
-        // Decrypt data safely
-        if (!is_array($response) || !array_key_exists('data', $response) || empty($response['data'])) {
-            Log::error('EVC response missing data field', ['response' => $response]);
-            return response()->json(['error' => 'EVC response invalid or missing data'], 502);
-        }
-
+        //This is tp decrypt Data
         $decryptedData = $this->decryptAES($response['data']);
 
         return view('evc.success', [
@@ -263,7 +251,7 @@ public function showEvcDetails(Request $request, VDWebApiService $vdWebApiServic
     $request->validate([
         'denomination' => 'required|numeric|min:100|max:10000',
         'quantity' => 'required|integer|min:1|max:10',
-        'gift_send_option' => 'required|in:Send as Gift,Buy for Self,send_as_gift,buy_for_self',
+        'gift_send_option' => 'required|in:Send as Gift,Buy for Self',
         'delivery_mode' => 'required|in:both,email,sms',
         'receiver_name' => 'nullable|string|max:255',
         'receiver_email' => 'nullable|email|max:255',
@@ -271,19 +259,11 @@ public function showEvcDetails(Request $request, VDWebApiService $vdWebApiServic
         'receiver_msg' => 'nullable|string',
     ]);
 
-    // Normalize gift_send_option to snake_case for consistency
-    $normalizedGiftOption = $request->gift_send_option;
-    if ($normalizedGiftOption === 'Send as Gift') {
-        $normalizedGiftOption = 'send_as_gift';
-    } elseif ($normalizedGiftOption === 'Buy for Self') {
-        $normalizedGiftOption = 'buy_for_self';
-    }
-
     // Store form data in session for later use
     session([
         'denomination' => $request->denomination,
         'quantity' => $request->quantity,
-        'gift_send_option' => $normalizedGiftOption,
+        'gift_send_option' => $request->gift_send_option,
         'delivery_mode' => $request->delivery_mode,
         'receiver_name' => $request->receiver_name,
         'receiver_email' => $request->receiver_email,
@@ -301,7 +281,7 @@ public function showEvcDetails(Request $request, VDWebApiService $vdWebApiServic
     }
 
     // Step 2: Create Payload with Unique IDs
-    $payload = $this->buildPayloadFromDB();
+    $payload = $this->buildPayloadFromDB(1);
     $payload['amount'] = (float) $request->denomination; // Use form denomination instead of DB
     $jsonPayload = json_encode($payload);
     //$encryptedPayload = AesHelper::encrypt($jsonPayload);
@@ -313,11 +293,7 @@ public function showEvcDetails(Request $request, VDWebApiService $vdWebApiServic
         return response()->json(['error' => 'Failed to get EVC']);
     }
 
-    // Decrypt data safely
-    if (!is_array($response) || !array_key_exists('data', $response) || empty($response['data'])) {
-        Log::error('EVC response missing data field (showEvcDetails)', ['response' => $response]);
-        return back()->with('error', 'EVC response invalid or missing data. Please try again.');
-    }
+    //This is to decrypt Data
     $decryptedData = $this->decryptAES($response['data']);
     
     // Parse the decrypted data to extract specific fields
@@ -335,33 +311,37 @@ public function showEvcDetails(Request $request, VDWebApiService $vdWebApiServic
     ]);
 }
 
-public function evcDetails($orderId, $requestRefNo, VDWebApiService $vdWebApiService)
+public function evcDetails(VDWebApiService $vdWebApiService)
 {
-    // Get Token
-    $token = $vdWebApiService->getToken();
-    if (!$token || !is_string($token)) {
+    // Step 1: Get Token
+    $tokenResponse = $vdWebApiService->getToken();
+    //dd($tokenResponse);
+    $token = $tokenResponse;
+
+    if (!$token) {
         return response()->json(['error' => 'Failed to get token'], 500);
     }
 
-    // Fetch Activated EVC details for provided IDs
-    $activatedEvc = $vdWebApiService->getActivatedEvc($token, $orderId, $requestRefNo);
-    if (!$activatedEvc) {
-        Log::error('Activated EVC fetch failed', ['order_id' => $orderId, 'request_ref_no' => $requestRefNo]);
-        return response()->json(['error' => 'Failed to fetch EVC details'], 502);
+    // Step 2: Create Payload with Unique IDs
+    $payload = $this->buildPayloadFromDB(1);
+    $payload['amount'] = (float) $payload['amount'];
+    $jsonPayload = json_encode($payload);
+    //$encryptedPayload = AesHelper::encrypt($jsonPayload);
+    //dd($encryptedPayload);
+
+    // Step 3: Call API
+    $response = $vdWebApiService->getEvc($token, $jsonPayload);
+    if (!$response) {
+        return response()->json(['error' => 'Failed to get EVC']);
     }
 
-    $decryptedData = null;
-    if (is_array($activatedEvc) && !empty($activatedEvc['data'])) {
-        $decryptedData = $this->decryptAES($activatedEvc['data']);
-    } else {
-        Log::warning('Activated EVC response missing data field', ['response' => $activatedEvc]);
-    }
+    //This is tp decrypt Data
+    $decryptedData = $this->decryptAES($response['data']);
 
-    return view('evc.activated', [
-        'evc' => $activatedEvc,
-        'order_id' => $orderId,
-        'request_ref_no' => $requestRefNo,
-        'decryptedData' => $decryptedData
+    return view('evc.success', [
+    'orderId' => $response['order_id'],
+    'requestRefNo' => $response['request_ref_no'],
+    'evcData' => $decryptedData,
     ]);
 }
 
@@ -408,27 +388,7 @@ public function evcDetails($orderId, $requestRefNo, VDWebApiService $vdWebApiSer
     $iv = env('AES_IV');
     $encryptedPayload = $request->input('encrypted_payload');
 
-    $svc = app(\App\Http\Services\VDWebApiService::class);
-    $res = $svc->tryDecryptEvc($encryptedPayload);
-
-    if (!$res['ok']) {
-        return response()->json([
-            'error' => 'Decryption failed',
-            'details' => $res['error'],
-            'mode' => $res['mode'],
-        ], 400);
-    }
-
-    $data = json_decode($res['decrypted'], true);
-    if (!is_array($data)) {
-        return response()->json(['error' => 'Invalid JSON structure'], 422);
-    }
-
-    $this->storeEvcData($data);
-
-    return response()->json(['message' => 'EVC items stored successfully']);
-
-  /*  $decrypted = \App\Helpers\AesHelper::decryptPayload($encryptedPayload, $key, $iv);
+    $decrypted = \App\Helpers\AesHelper::decryptPayload($encryptedPayload, $key, $iv);
     if (!$decrypted) {
         return response()->json(['error' => 'Decryption failed'], 400);
     }
@@ -440,7 +400,7 @@ public function evcDetails($orderId, $requestRefNo, VDWebApiService $vdWebApiSer
 
     $this->storeEvcData($data);
 
-    return response()->json(['message' => 'EVC items stored successfully']);*/
+    return response()->json(['message' => 'EVC items stored successfully']);
     }
 
     public function getEvcStatus(Request $request, VDWebApiService $vdWebApiService)
@@ -584,8 +544,8 @@ public function evcDetails($orderId, $requestRefNo, VDWebApiService $vdWebApiSer
             'token' => $token, 
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-        ])->post('https://at.valuedesign.co.in/distributor/getwalletbalance/', [
-            'distributor_id' => 'VDAmazepay97',
+        ])->post('http://cards.vdwebapi.com/distributor/getwalletbalance/', [
+            'distributor_id' => 'VDIDAmazepay',
         ]);
 
         // Debug if it fails
@@ -597,15 +557,5 @@ public function evcDetails($orderId, $requestRefNo, VDWebApiService $vdWebApiSer
 
         return view('wallet.balance', compact('data'));
     }
-
-    public function testDecrypt(Request $request)
-{
-    $svc = app(\App\Http\Services\VDWebApiService::class);
-
-    $encrypted = $request->query('evc'); // ?evc=...
-    $res = $svc->tryDecryptEvc($encrypted);
-
-    return response()->json($res);
-}
 
 }

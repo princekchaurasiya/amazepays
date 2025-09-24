@@ -79,6 +79,80 @@ class VDWebApiService
     return null;
 }
 
+    /**
+     * New: Normalize an encrypted token from URL/body by url-decoding and fixing spaces.
+     * Does not change existing decrypt logic; can be used by callers before decryptAES().
+     */
+    public function normalizeEncryptedInput(?string $encrypted): string
+    {
+        if ($encrypted === null) {
+            return '';
+        }
+        $normalized = urldecode($encrypted);
+        // Some gateways convert '+' to space inside URLs; revert for base64
+        $normalized = str_replace(' ', '+', $normalized);
+        return $normalized;
+    }
+
+    /**
+     * New: Tolerant decryption that tries base64 (with url-fix) and hex as fallback.
+     * Uses the same env variables and cipher as existing code, but does not modify it.
+     */
+    public function tryDecryptEvc(string $encrypted): array
+    {
+        $result = [
+            'ok' => false,
+            'decrypted' => '',
+            'mode' => null,
+            'error' => null,
+        ];
+
+        if ($encrypted === '') {
+            $result['error'] = 'empty_input';
+            \Log::error('tryDecryptEvc: empty encrypted input');
+            return $result;
+        }
+
+        $key = env('AES_SECRET_KEY');
+        $iv = env('AES_IV');
+
+        // Attempt 1: base64 with URL normalization
+        $prepared = $this->normalizeEncryptedInput($encrypted);
+        $ciphertext = base64_decode($prepared, true);
+        if ($ciphertext !== false && $ciphertext !== '') {
+            $plain = openssl_decrypt($ciphertext, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+            if ($plain !== false && $plain !== '') {
+                $result['ok'] = true;
+                $result['decrypted'] = $plain;
+                $result['mode'] = 'base64_urlfix';
+                return $result;
+            }
+        }
+
+        // Attempt 2: hex fallback
+        if (ctype_xdigit($prepared) && (strlen($prepared) % 2 === 0)) {
+            $cipherHex = @hex2bin($prepared);
+            if ($cipherHex !== false && $cipherHex !== '') {
+                $plain = openssl_decrypt($cipherHex, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+                if ($plain !== false && $plain !== '') {
+                    $result['ok'] = true;
+                    $result['decrypted'] = $plain;
+                    $result['mode'] = 'hex';
+                    return $result;
+                }
+            }
+        }
+
+        $result['error'] = 'decrypt_failed';
+        \Log::error('tryDecryptEvc: decryption failed', [
+            'input_len' => strlen($encrypted),
+            'prepared_prefix' => substr($prepared, 0, 16),
+            'key_len' => $key !== null ? strlen($key) : null,
+            'iv_len' => $iv !== null ? strlen($iv) : null,
+        ]);
+        return $result;
+    }
+
     public function decryptAES(string $encryptedBase64): string
     {
         $key = env('AES_SECRET_KEY');

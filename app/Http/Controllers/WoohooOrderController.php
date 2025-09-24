@@ -23,19 +23,20 @@ class WoohooOrderController extends Controller
         $paymentReturnData = session('payment_return_data');
         Log::info('Payment return data from session:', $paymentReturnData);
         
-        // Get order details from session or latest order
+        // Get order details strictly from session/ID; no latest-order fallback
         $qsOrderDetails = null;
-        
+
         if ($paymentReturnData && isset($paymentReturnData['order_id'])) {
             // Try to get order by payment order ID first
             $qsOrderDetails = QsOrder::where('id', $paymentReturnData['order_id'])->first();
-            Log::info('Found order by payment order ID:', ['order_id' => $paymentReturnData['order_id']]);
+            Log::info('Attempt to find order by payment order ID', ['order_id' => $paymentReturnData['order_id']]);
         }
-        
+
         if (!$qsOrderDetails) {
-            // Fallback to latest order
-            $qsOrderDetails = QsOrder::latest('id')->first();
-            Log::info('Using latest order as fallback:', ['order_id' => $qsOrderDetails ? $qsOrderDetails->id : 'none']);
+            Log::error('Intended order not found via session or ID. Aborting Woohoo order creation.');
+            $isSuccessful = false;
+            $transactionStatusMessage = __("errors.default");
+            return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
         }
         
         if ($qsOrderDetails) {

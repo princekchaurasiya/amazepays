@@ -9,6 +9,7 @@ use App\Models\User;
 
 use App\Helpers\CommonHelper;
 use Auth;
+use Illuminate\Support\Facades\DB;
 
 class MyOrderController extends Controller
 {
@@ -54,4 +55,50 @@ class MyOrderController extends Controller
 
         return view('order.myOrder')->with('order', $recentOrders);
     }
+
+    public function displayValueDesignOrder()
+{
+    $user = Auth::user();
+
+    $recentOrders = DB::table('get_evc_requests')
+        ->where('email', $user->email) // assuming email links to user
+        ->orderBy('created_at', 'desc')
+        ->select(
+            'order_id',
+            'distributor_id',
+            'sku_code',
+            'no_of_card',
+            'amount',
+            'receipt_no',
+            'req_id',
+            'firstname',
+            'lastname',
+            'email',
+            'mobile_no',
+            'address',
+            'city',
+            'state',
+            'country',
+            'pincode',
+            'curr',
+            'gift_send_option',
+            'delivery_mode',
+            'receiver_name',
+            'receiver_email',
+            'receiver_mobile',
+            'receiver_msg',
+            'vd_discount',
+            'vd_brand_code'
+        )
+        ->get();
+
+    // Attach static glam logo image
+    $recentOrders->transform(function ($order) {
+        $order->display_image = asset('images/glam_logo.png');
+        return $order;
+    });
+
+    return view('order.myValueDesignOrder')->with('order', $recentOrders);
+}
+
 }

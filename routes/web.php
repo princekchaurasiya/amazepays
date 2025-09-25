@@ -464,6 +464,8 @@ use App\Http\Controllers\GetEvcRequestController;
 Route::get('/get-evc-request/create', [GetEvcRequestController::class, 'create'])->name('getevc.request');
 Route::post('/get-evc-request', [GetEvcRequestController::class, 'store']);
 
+//Value Design Orders
+Route::get('/my-vdorder', [MyOrderController::class, 'displayValueDesignOrder'])->name('my-vdorder');
 //Lysto API Integration
 
 Route::get('/giftcards', [AthenaGiftCardController::class, 'index']);

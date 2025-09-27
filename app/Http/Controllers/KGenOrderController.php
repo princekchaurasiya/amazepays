@@ -9,6 +9,31 @@ use App\Models\KGenOrder;
 
 class KGenOrderController extends Controller
 {
+    public function store(Request $request)
+    {
+        if (!$request->has('variant_id')) {
+            return kgenError("invalid variant ID", "BAD_REQUEST");
+        }
+
+        if (!auth()->check()) {
+            return kgenError("unauthenticated", "UNAUTHORIZED");
+        }
+
+         if (!auth()->user()->hasRole('admin')) {
+            return kgenError(
+                "Insufficient permissions: You don’t have access to this resource",
+                "FORBIDDEN"
+            );
+        }
+        if (!$product) {
+            return kgenError(
+                "Record not found",
+                "RECORD_NOT_FOUND",
+                ["reason" => "No matching record", "id" => $id]
+            );
+        }
+    }
+
     public function showForm(Request $request)
     {
         return view('kgen.place-order', [

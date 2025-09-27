@@ -8,11 +8,25 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\RequestException;
 use App\Models\ApiToken;
+use App\Models\QsProduct;
+use App\Models\QsOrder;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class UnlimitPaymentController extends Controller
 {
+    public function showPaymentForm(Request $request,$slug)
+    {
+        $qsProd = QsProduct::where('url', $slug)->firstOrFail();
+        $qsProd['prodData'] = $request->all();
+        $qsProd['currency'] = json_decode($qsProd['currency']);
+        $qsProd['images'] = json_decode($qsProd->images);
+        $qsOrder = new QsOrder();
+        $qsOrder->user_id = Auth::id();
+
+        return view('userpanel.checkout', ['qsProd' => $qsProd, 'qsOrder' => $qsOrder]);
+    }
 
 
      public function getToken()
@@ -38,12 +52,16 @@ class UnlimitPaymentController extends Controller
                 : null,
         ]);
 
-        //return response()->json(['message' => 'Token saved.']);
         return $data['access_token'];
-
     }
 
-    return response()->json(['error' => 'Token not received', 'response' => $data], 400);
+    // Log the error for debugging but return false instead of JSON response
+    Log::error('Token not received from Unlimit API', [
+        'response' => $data,
+        'status_code' => $response->status()
+    ]);
+    
+    return false;
 }
     public function store(Request $request)
     {
@@ -62,7 +80,8 @@ class UnlimitPaymentController extends Controller
     $token = $this->getToken();
 
     if (!$token) {
-        return response()->json(['error' => 'Token not available'], 401);
+        // Return user-friendly error message instead of technical error
+        return redirect()->back()->with('error', 'Payment service is temporarily unavailable. Please try again later.');
     }
 
     // Generate current time with milliseconds and Z suffix in UTC

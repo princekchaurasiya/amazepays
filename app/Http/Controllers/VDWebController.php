@@ -335,6 +335,8 @@ public function evcDetails(VDWebApiService $vdWebApiService)
         return response()->json(['error' => 'Failed to get EVC']);
     }
 
+    dd($response);
+
     //This is tp decrypt Data
     $decryptedData = $this->decryptAES($response['data']);
 

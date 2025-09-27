@@ -29,8 +29,12 @@ class ProductPageController extends Controller
 
     public function storePayNowData(Request $request, $slug)
     {
-  
-        //return redirect()->route('payment.choice');
+        // Handle GET request - show checkout form
+        if ($request->isMethod('get')) {
+            return $this->showCheckoutForm($request, $slug);
+        }
+        
+        // Handle POST request - process order and payment
         Log::info('storePayNowData initiated with slug: ' . $slug);
 
         // Fetch product by slug
@@ -244,12 +248,8 @@ class ProductPageController extends Controller
         $qsProd['currency'] = json_decode($qsProd['currency']);
         $qsProd['images'] = json_decode($qsProd->images);
 
-        $UnlimitPaymentController = new UnlimitPaymentController();
-        $UnlimitPaymentController->getToken();
-        //$UnlimitPaymentController->store($request);
-        $UPIPaymentController = new UPIPaymentController();
-        $UPIPaymentController->getToken();
-        $UPIPaymentController->store($request);
+        // Remove payment gateway calls from GET request - these should only be called on form submission
+        // Payment gateway initialization will be handled when user clicks submit button
 
         return view('userpanel.checkout', compact('qsProd', 'checkoutData', 'qsOrder'));
     }
@@ -265,19 +265,27 @@ class ProductPageController extends Controller
         return response()->json(['message' => 'Session data updated successfully']);
     }
 
-    public function showCheckoutForm()
+    public function showCheckoutForm(Request $request, $slug)
     {
-        Log::info('showCheckoutForm called.');
-        $checkoutData = session('checkout', []);
+        Log::info('showCheckoutForm called for slug: ' . $slug);
+        
+        // Fetch product by slug
+        $product = QsProduct::where('url', $slug)->firstOrFail();
+        $product['prodData'] = $request->all();
+        $product['currency'] = json_decode($product['currency']);
+        $product['images'] = json_decode($product->images);
+        
+        // Create a new order instance for the form
+        $qsOrder = new QsOrder();
+        $qsOrder->user_id = Auth::id();
+        
+        // Get checkout data from session
+        $checkoutData = session('checkout_data', []);
         Log::info('Checkout data retrieved from session:', $checkoutData);
-        $UnlimitPaymentController = new UnlimitPaymentController();
-        $UnlimitPaymentController->getToken();
-        $UnlimitPaymentController->store($request);
-        $UnlimitPaymentController = new UnlimitPaymentController();
-        $UnlimitPaymentController->getToken();
-        $UnlimitPaymentController->store($request);
-        return view('checkout', compact('checkoutData'));
         
+        // Remove payment gateway calls from GET request - these should only be called on form submission
+        // Payment gateway initialization will be handled when user clicks submit button
         
+        return view('userpanel.checkout', compact('product', 'checkoutData', 'qsOrder'));
     }
 }

@@ -24,6 +24,14 @@ class DeliveryPartnerController extends Controller
         return response()->json(['error' => 'Authentication failed'], 401);
     }*/
 
+        public function store(Request $request)
+    {
+      if (!auth()->check()) {
+            return kgenError("unauthenticated", "UNAUTHORIZED");
+        }
+        
+
+    }
     // Get Products
     public function getProducts(Request $request)
     {

@@ -26,8 +26,8 @@
         @csrf
       
         <div class="mb-3">
-            <label>Variant ID</label>
-            <input type="text" name="variantId" class="form-control" value="{{ $variantId }}" readonly>
+           <!-- <label>Variant ID</label>-->
+            <input type="hidden" name="variantId" class="form-control" value="{{ $variantId }}" readonly>
         </div>
 
         <div class="mb-3">

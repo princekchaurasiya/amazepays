@@ -304,13 +304,15 @@ Route::get('/order-failure', function () {
 // Transaction routes that need protection
 Route::middleware(['auth', 'check.transaction'])->group(function () {
     Route::post('/update-session-data', [ProductPageController::class, 'updateSessionData'])->name('updateSessionData');
-   Route::match(['get', 'post'], '/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
-   //Route::match(['get', 'post'], '/checkout/{slug}',[UnlimitPaymentController::class, 'store'])->name('unlimit.store');
-   // Route::post('/store-pay-now/{slug}', [UserPanelController::class, 'storePayNowData'])->name('store-pay-now');
+    
+    // Checkout routes - GET shows form, POST processes order
+    Route::get('/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
+    Route::post('/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage.post');
+    
+    // Payment processing routes
+    Route::post('/payment-process', [UnlimitPaymentController::class, 'store'])->name('unlimit.store');
+    
     Route::post('/save-gift-card-form', [UserPanelController::class, 'saveGiftCardFormValues'])->name('save-gift-card-form');
-   // Route::post('/payment-process', [CCAvenueController::class, 'processPayment'])->name('payment-process');
-    Route::post('/payment-process',[UnlimitPaymentController::class, 'store'])->name('unlimit.store');
-    //Route::post('/response_ccavenue', [CCAvenueController::class, 'responseCcavenue'])->name('response_ccavenue');
 });
 
 //Storing formData in database

@@ -17,23 +17,9 @@
                 </div>
             @endif
 
-            @if ($errors->any())
+            @if (session('error'))
                 <div class="alert alert-danger">
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+                    {{ session('error') }}
                 </div>
             @endif
 
@@ -41,7 +27,7 @@
             <h2 class="text-grey-900 fw-400 display1-size mb-4 pb-3 text-center">Checkout</h2>
 
 
-            <form method="POST" name="customerData" action="{{ url('payment-process') }}" id="checkoutForm">
+            <form method="POST" name="customerData" action="#" id="checkoutForm">
                 @csrf
                 <div class="row">
                     <div class="col-lg-7">
@@ -728,18 +714,18 @@
                                                     <span>Order Summary</span>
                                                 </div>
                                                 <div class="col-md-6 col-sm-4 col-xp-6">
-                                                    <a href="{{ route('get-product-by-slug', ['slug' => $qsProd->url]) }}"
+                                                    <a href="{{ route('get-product-by-slug', ['slug' => ($product ?? $qsProd)->url]) }}"
                                                         class="float-right mont-font">Edit</a>
                                                 </div>
                                             </div>
                                             <div class="row cart-item-record">
                                                 <div class="col-md-5 col-sm-4 col-xs-12">
                                                     <img class="cart-coupan-img"
-                                                        src="{{ CommonHelper::getProductImage($qsProd) ?? URL::asset('/images/hamburger.jpg') }}"
+                                                        src="{{ CommonHelper::getProductImage($product ?? $qsProd) ?? URL::asset('/images/hamburger.jpg') }}"
                                                         alt="Avatar" style="width:100%;">
                                                 </div>
                                                 <div class="col-md-7 col-sm-4 col-xs-12">
-                                                    <span class="product-name mont-font">{{ $qsProd->name }}</span>
+                                                    <span class="product-name mont-font">{{ ($product ?? $qsProd)->name }}</span>
                                                     <div class="row item-qty-subtotal">
                                                         <div class="col-12">
                                                             <span>Denomination: ₹{{ $qsOrder->denomination }}</span>
@@ -800,11 +786,16 @@
                                 type="submit" value="Card Payment" id="placeOrder">
                         </div> -->
             </form>
-<form method="POST" action="{{ route('payment.upi') }}">
-    @csrf
-    <input type="hidden" name="payable_amount" value="{{ $qsOrder->amount_payable_after_discount }}">
-    <button type="submit" class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-current rounded-lg text-uppercase fw-300 ls-3">Pay with UPI</button>
-</form>
+                
+                <!-- UPI Payment -->
+                <form method="POST" action="{{ route('payment.upi') }}" id="upiPaymentForm">
+                    @csrf
+                    <input type="hidden" name="payable_amount" value="{{ $qsOrder->amount_payable_after_discount }}">
+                    <button type="submit" class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-success rounded-lg text-uppercase fw-300 ls-3">
+                        Pay with UPI
+                    </button>
+                </form>
+            </div>
 <!--<form method="POST" action="{{ route('payment.netbnk') }}">
     @csrf
     <input type="hidden" name="payable_amount" value="{{ $qsOrder->amount_payable_after_discount }}">
@@ -905,10 +896,24 @@
                         debouncedUpdateSessionData();
                     });
 
-                // Optionally bind updateSessionData function to form submit event
-                $('form').submit(function(event) {
+                // Handle payment form submissions
+                $('#cardPaymentForm, #upiPaymentForm').submit(function(event) {
+                    // First validate the billing form
+                    if (!$('#checkoutForm').valid()) {
+                        event.preventDefault();
+                        // Scroll to top to show validation errors instead of alert
+                        $('html, body').animate({
+                            scrollTop: 0
+                        }, 500);
+                        return false;
+                    }
+                    
+                    // Update session data and store billing before payment
                     updateSessionData();
                     storeBillingInDatabase();
+                    
+                    // Show loading state
+                    $(this).find('button[type="submit"]').prop('disabled', true).text('Processing...');
                 });
 
 

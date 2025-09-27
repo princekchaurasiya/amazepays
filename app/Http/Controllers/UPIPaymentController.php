@@ -38,12 +38,16 @@ class UPIPaymentController extends Controller
                 : null,
         ]);
 
-        //return response()->json(['message' => 'Token saved.']);
         return $data['access_token'];
-
     }
 
-    return response()->json(['error' => 'Token not received', 'response' => $data], 400);
+    // Log the error for debugging but return false instead of JSON response
+    Log::error('Token not received from Unlimit API (UPI)', [
+        'response' => $data,
+        'status_code' => $response->status()
+    ]);
+    
+    return false;
 }
     public function store(Request $request)
     {
@@ -62,7 +66,8 @@ class UPIPaymentController extends Controller
     $token = $this->getToken();
 
     if (!$token) {
-        return response()->json(['error' => 'Token not available'], 401);
+        // Return user-friendly error message instead of technical error
+        return redirect()->back()->with('error', 'Payment service is temporarily unavailable. Please try again later.');
     }
 
     // Generate current time with milliseconds and Z suffix in UTC

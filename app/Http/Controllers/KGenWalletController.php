@@ -7,6 +7,19 @@ use Illuminate\Support\Facades\Http;
 
 class KGenWalletController extends Controller
 {
+    public function store(Request $request)
+    {
+
+    if (!auth()->check()) {
+            return kgenError("unauthenticated", "UNAUTHORIZED");
+        }
+
+    if(env('dpID') == '')
+    {
+        return kgenError("forbidden: param: admin user does not have access to DP: INVALID_DP_ID", "FORBIDDEN");
+    }
+    }
+
     public function wallet(Request $request)
     {
         $response = Http::withHeaders([
@@ -74,4 +87,59 @@ class KGenWalletController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+        public function index(Request $request)
+    {
+        $queryParams = array_filter([
+            'txnType'    => $request->txnType,
+            'limit'      => $request->limit ?? 50,
+            'nextCursor' => $request->nextCursor,
+        ]);
+
+        try {
+            $response = Http::withHeaders([
+                'x-client-id'     => env('EXLR8_USER_ID'),
+                'x-client-secret' => env('EXLR8_USER_SECRET'),
+            ])->get(env('EXLR8_BASE_URL') . '/delivery-partners/' . env('dpID') . '/wallet/transactions', $queryParams);
+
+            if ($response->failed()) {
+                $status = $response->status();
+                $body = $response->json();
+
+                switch ($status) {
+                    case 401:
+                        $message = $body['error'] ?? 'Unauthorized access';
+                        break;
+                    case 403:
+                        $message = $body['error'] ?? 'Forbidden access';
+                        break;
+                    case 400:
+                        $message = $body['error'] ?? 'Bad request';
+                        break;
+                    default:
+                        $message = 'Something went wrong while fetching transactions';
+                }
+
+                return view('kgen.transactions.index', [
+                    'transactions' => [],
+                    'errorMessage' => $message,
+                ]);
+            }
+
+            $data = $response->json();
+
+            return view('kgen.transactions.index', [
+                'transactions' => $data['data'] ?? [],
+                'nextCursor'   => $data['pagination']['nextCursor'] ?? null,
+                'errorMessage' => null,
+            ]);
+
+        } catch (\Exception $e) {
+            return view('transactions.index', [
+                'transactions' => [],
+                'errorMessage' => $e->getMessage(),
+            ]);
+        }
+    }
+
 }

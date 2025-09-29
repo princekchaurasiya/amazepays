@@ -528,10 +528,14 @@ Route::post('/kgen-place-order', [KGenOrderController::class, 'placeOrder'])->na
 Route::get('/kgen-orders', [KGenOrderController::class, 'listOrders'])->name('orders.list');
 Route::get('/get-kgenorders', [KGenOrderController::class, 'getOrders'])->name('orders.get');
 
+Route::get('/order/{order}/assets', [KGenOrderController::class, 'showAssets'])->name('order.assets');
+Route::get('/order/{order}/download', [KGenOrderController::class, 'downloadAsset'])->name('order.download');
+
 use App\Http\Controllers\KGenWalletController;
 
 Route::get('/wallet', [KGenWalletController::class, 'wallet'])->name('wallet');
 Route::get('/export-csv', [KGenWalletController::class, 'exportCsv'])->name('wallet.exportCsv');
+Route::get('/kgen/transactions', [KGenWalletController::class, 'index'])->name('kgen.transactions.index');
 
 //VD Payment
 Route::get('/vd/payment/return', [VDPaymentController::class, 'handleReturnSuccess'])->name('vd.return');
@@ -542,4 +546,5 @@ use App\Http\Controllers\Voyager\QsProductStockImportController;
 Route::post('/admin/qs-products/upload-disabled', [QsProductStockImportController::class, 'uploadDisabledProducts'])
     ->name('admin.qs_products.upload_disabled')
     ->middleware(['web', 'auth', 'admin.user']);
+
 

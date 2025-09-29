@@ -6,9 +6,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use App\Models\KGenOrder;
+use App\Jobs\MonitorOrderStatus;
 
 class KGenOrderController extends Controller
 {
+    /**
+     * Monitor an order status with polling
+     *
+     * @param int|string $orderID
+     * @param int $maxAttempts
+     * @param int $pollInterval (seconds)
+     * @return KGenOrder
+     * @throws Exception
+     */
+
     public function store(Request $request)
     {
         if (!$request->has('variant_id')) {
@@ -25,6 +36,12 @@ class KGenOrderController extends Controller
                 "FORBIDDEN"
             );
         }
+
+            if(env('dpID') == '')
+        {
+        return kgenError("forbidden: param: admin user does not have access to DP: INVALID_DP_ID", "FORBIDDEN");
+        }
+
         if (!$product) {
             return kgenError(
                 "Record not found",
@@ -44,9 +61,50 @@ class KGenOrderController extends Controller
 
     public function placeOrder(Request $request)
     {
+       $validated = $request->validate([
+        'variantId' => 'required|string',
+        ]);
+
+           $dpValue = env('dpID');
+            $balanceResponse = Http::withHeaders([
+            'x-client-id'     => env('EXLR8_USER_ID'),
+            'x-client-secret' => env('EXLR8_USER_SECRET'),
+        ])->get(env('EXLR8_BASE_URL') . '/delivery-partners/' . $dpValue . '/wallet/balance');
+
+        if (!$balanceResponse->successful()) {
+            return back()->withErrors([
+                'error' => 'Unable to check wallet balance at the moment. Please try again later.',
+            ]);
+        }
+
+        $balanceData = $balanceResponse->json();
+        $availableBalance = $balanceData['balance'] ?? 0;
+
+         $priceResponse = Http::withHeaders([
+            'x-client-id' => env('EXLR8_USER_ID'),
+            'x-client-secret' => env('EXLR8_USER_SECRET'),
+        ])->get(env('EXLR8_BASE_URL') . '/products/delivery-partners/'. env('dpID'));
+
+           // dd($priceResponse->json());
+        if (!$priceResponse->successful()) {
+            return back()->withErrors([
+                'error' => 'Unable to fetch product price.',
+            ]);
+        }
+
+        $priceData = $priceResponse->json();
+        $productPrice = $priceData['variants']['price'] ?? 0;
+
+        if ($availableBalance < $productPrice) {
+            return back()->withErrors([
+                'error' => "Insufficient balance. Your wallet has {$availableBalance}, but the product costs {$productPrice}.",
+            ]);
+        }
+
         $validated = $request->validate([
             'variantId' => 'required|string',
         ]);
+        
 
         $dpValue = env('dpID');
 
@@ -106,7 +164,58 @@ class KGenOrderController extends Controller
             return back()->withErrors([
                 'error' => 'Unexpected response from recharge API.',
             ])->withInput();
+        }
     }
+
+    /**
+     * Handle order status actions
+     *
+     * @param Order $order
+     * @return void
+     */
+    function handleOrderStatus(Order $order): void
+    {
+        switch ($order->status) {
+            case 'PROCESSING':
+                Log::info('Order is pending confirmation');
+                // TODO: Show pending status to user (e.g., update DB flag or broadcast event)
+                break;
+
+            case 'CONFIRMED':
+                Log::info('Order confirmed, processing will begin');
+                // TODO: Update user interface (e.g., broadcast event or notification)
+                break;
+
+            case 'PROCESSING':
+                Log::info('Order is being processed');
+                // TODO: Continue monitoring (could re-dispatch MonitorOrderStatus job)
+                break;
+
+            case 'COMPLETED':
+                if ($order->fulfillment_status === 'FULFILLED') {
+                    Log::info('Order completed successfully');
+                    downloadOrderAssets($order);
+                    notifyCustomer($order);
+                } else {
+                    Log::warning('Order completed but fulfillment failed');
+                    handleFulfillmentFailure($order);
+                }
+                break;
+
+            case 'FAILED':
+                Log::error('Order failed');
+                handleOrderFailure($order);
+                break;
+
+            case 'CANCELLED':
+                Log::warning('Order was cancelled');
+                handleOrderCancellation($order);
+                break;
+
+            default:
+                Log::info("Order has unknown status: {$order->status}");
+                break;
+        }
     }
 
    /* public function placeMobileRechargeOrder(Request $request)
@@ -168,6 +277,7 @@ class KGenOrderController extends Controller
             ])->withInput();
     }
 }*/
+
 
     public function listOrders()
     {
@@ -274,6 +384,108 @@ class KGenOrderController extends Controller
                 'message' => $message,
             ]
         ], 402);
+    }
+
+     function monitorOrderStatus($orderID, $maxAttempts = 30, $pollInterval = 10)
+    {
+        $attempts = 0;
+
+        while ($attempts < $maxAttempts) {
+            $attempts++;
+
+            // Fetch order (adjust depending on your DB/model)
+            $order = KGenOrder::find($orderID);
+            MonitorOrderStatus::dispatch($orderID);
+
+            if (! $order) {
+                throw new Exception("Order not found: {$orderID}");
+            }
+
+            Log::info("Order {$orderID} status: {$order->status}/{$order->fulfillment_status}");
+
+            // ✅ Terminal success state
+            if ($order->status === "COMPLETED" && $order->fulfillment_status === "FULFILLED") {
+                return $order;
+            }
+
+            // ❌ Terminal failure states
+            if (in_array($order->status, ["FAILED", "CANCELLED"])) {
+                throw new Exception("Order {$order->status}: {$order->fulfillment_status}");
+            }
+
+            // Wait before retrying
+            sleep($pollInterval);
+        }
+
+        throw new Exception("Order monitoring timeout for Order ID: {$orderID}");
+    }
+
+    /**
+     * Download order assets if fulfilled
+     *
+     * @param Order $order
+     * @return array|null
+     * @throws \Exception
+     */
+    function downloadOrderAssets(Order $order): ?array
+    {
+        if ($order->fulfillment_status !== 'FULFILLED' || empty($order->asset_url)) {
+            return null;
+        }
+
+        try {
+            // Download the asset file
+            $fileContents = file_get_contents($order->asset_url);
+
+            if ($fileContents === false) {
+                throw new \Exception("Failed to download asset from {$order->asset_url}");
+            }
+
+            // Generate a filename (you can customize this)
+            $filename = "orders/{$order->id}/asset_" . time() . ".bin";
+
+            // Save file to storage/app/public/orders/... (adjust disk as needed)
+            Storage::disk('public')->put($filename, $fileContents);
+
+            $assetData = [
+                'file_path' => $filename,
+                'password' => $order->file_password,
+                'orderID' => $order->id,
+                'downloaded_at' => now()->toISOString(),
+            ];
+
+            // Process vouchers from line items
+            $vouchers = [];
+            foreach ($order->lineItems as $item) {
+                if (!empty($item->vouchers)) {
+                    $vouchers = array_merge($vouchers, $item->vouchers);
+                }
+            }
+
+            return [
+                'assetData' => $assetData,
+                'vouchers' => $vouchers,
+                'orderDetails' => $order,
+            ];
+        } catch (\Exception $e) {
+            Log::error("Error downloading order assets for Order {$order->id}: {$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    public function showAssets(Order $order)
+    {
+        $assetData = downloadOrderAssets($order); // Call the helper function
+
+        if (!$assetData) {
+            return view('kgen.order.assets')->with('message', 'No assets available for this order.');
+        }
+
+        return view('kgen.order.assets', [
+            'order' => $order,
+            'assetData' => $assetData['assetData'],
+            'vouchers' => $assetData['vouchers'],
+        ]);
     }
 
 }

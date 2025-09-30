@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Models\KgenProduct;
 
 class DeliveryPartnerController extends Controller
 {
@@ -144,5 +145,35 @@ class DeliveryPartnerController extends Controller
         'error' => 'Failed to fetch products from API. Check logs.'
     ]);
 }
+    public function fetchAndStoreProducts()
+    {
+        $response = Http::withHeaders([
+            'x-client-id' => env('EXLR8_USER_ID'),
+            'x-client-secret' => env('EXLR8_USER_SECRET'),
+        ])->get(env('EXLR8_BASE_URL') . '/products/delivery-partners/' . env('dpID'));
 
+        if ($response->successful()) {
+            $products = $response['products'];
+
+            foreach ($products as $product) {
+                KgenProduct::updateOrCreate(
+                    ['productID' => $product['productID']], // check uniqueness
+                    [
+                        'productName'            => $product['productName'],
+                        'productDisplayName'     => $product['productDisplayName'],
+                        'descriptionText'        => $product['descriptionText'],
+                        'redemptionInstructions' => $product['redemptionInstructions'],
+                        'termsAndConditions'     => $product['termsAndConditions'],
+                        'attachments'            => json_encode($product['attachments']),
+                        'categories'             => json_encode($product['categories']),
+                        'variants'               => json_encode($product['variants']),
+                    ]
+                );
+            }
+
+            return response()->json(['message' => 'Products stored successfully']);
+        }
+
+        return response()->json(['message' => 'Failed to fetch products'], 500);
+    }
 }

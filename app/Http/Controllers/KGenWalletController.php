@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Models\KGenWalletBalance;
 
 class KGenWalletController extends Controller
 {
@@ -34,6 +35,34 @@ class KGenWalletController extends Controller
         }
 
         return back()->withErrors(['error' => 'Failed to fetch wallet details']);
+    }
+
+    public function fetchAndStore()
+    {
+        $response = Http::withHeaders([
+            'x-client-id' => env('EXLR8_USER_ID'),
+            'x-client-secret' => env('EXLR8_USER_SECRET'),
+        ])->get(env('EXLR8_BASE_URL') . '/delivery-partners/' . env('dpID') . '/wallet/balance');
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            // Assuming response looks like: { "balance": 5000, "currency": "INR" }
+            KGenWalletBalance::create([
+                'balance'  => $data['balance'],
+                'currency' => $data['currency'] ?? null,
+            ]);
+
+            return response()->json(['message' => 'Wallet balance saved successfully']);
+        }
+
+        return response()->json(['message' => 'Failed to fetch wallet balance'], 500);
+    }
+
+    public function latest()
+    {
+        $latest = KGenWalletBalance::latest()->first();
+        return response()->json(['wallet_balance' => $latest]);
     }
 
     public function exportCsv(Request $request)

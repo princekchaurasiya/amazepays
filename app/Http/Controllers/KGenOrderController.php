@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use App\Models\KGenOrder;
+use App\Models\KgenProduct;
 use App\Jobs\MonitorOrderStatus;
 
 class KGenOrderController extends Controller
@@ -41,6 +42,8 @@ class KGenOrderController extends Controller
         {
         return kgenError("forbidden: param: admin user does not have access to DP: INVALID_DP_ID", "FORBIDDEN");
         }
+
+        $product = KgenProduct::latest()->first();
 
         if (!$product) {
             return kgenError(
@@ -395,7 +398,7 @@ class KGenOrderController extends Controller
 
             // Fetch order (adjust depending on your DB/model)
             $order = KGenOrder::find($orderID);
-            MonitorOrderStatus::dispatch($orderID);
+           // MonitorOrderStatus::dispatch($orderID);
 
             if (! $order) {
                 throw new Exception("Order not found: {$orderID}");
@@ -413,21 +416,37 @@ class KGenOrderController extends Controller
                 throw new Exception("Order {$order->status}: {$order->fulfillment_status}");
             }
 
+            //if order status is PROCESSING/CONFIRMED, run getorders API
+            if($order->status === "PROCESSING" OR $order->status === "CONFIRMED")
+            {
+                $response = Http::withHeaders([
+            'x-client-id' => env('EXLR8_USER_ID'),
+            'x-client-secret' => env('EXLR8_USER_SECRET'),
+            ])->get(env('EXLR8_BASE_URL') . '/orders/b2b/delivery-partners/{dpID}');
+            if ($response->successful()) {
+            // Single order fetch
+                if (isset($response['order'])) {
+                    return view('order-detail', [
+                        'order' => $response['order']
+                    ]);
+            }
+
+            // Multiple orders fetch
+            return view('orders-list', [
+                'orders' => $response['orders'] ?? [],
+            ]);
+                
+            }
+
             // Wait before retrying
             sleep($pollInterval);
         }
 
         throw new Exception("Order monitoring timeout for Order ID: {$orderID}");
-    }
+    } 
+}
 
-    /**
-     * Download order assets if fulfilled
-     *
-     * @param Order $order
-     * @return array|null
-     * @throws \Exception
-     */
-    function downloadOrderAssets(Order $order): ?array
+    public function downloadOrderAssets(KGenOrder $order): ?array
     {
         if ($order->fulfillment_status !== 'FULFILLED' || empty($order->asset_url)) {
             return null;
@@ -473,9 +492,10 @@ class KGenOrderController extends Controller
         }
     }
 
-    public function showAssets(Order $order)
+    // Ensure this method is inside the class
+    public function showAssets(KGenOrder $order)
     {
-        $assetData = downloadOrderAssets($order); // Call the helper function
+        $assetData = $this->downloadOrderAssets($order); // Call the helper function
 
         if (!$assetData) {
             return view('kgen.order.assets')->with('message', 'No assets available for this order.');
@@ -487,5 +507,98 @@ class KGenOrderController extends Controller
             'vouchers' => $assetData['vouchers'],
         ]);
     }
+
+    public function fetchProducts()
+    {
+        $response = Http::withHeaders([
+            'x-client-id' => env('EXLR8_USER_ID'),
+            'x-client-secret' => env('EXLR8_USER_SECRET'),
+        ])->get(env('EXLR8_BASE_URL') . '/products/delivery-partners/' . env('dpID'));
+
+        if ($response->successful()) {
+            // Extract products array from response
+            $products = $response['products'] ?? [];
+
+            // Optional: log or debug
+            \Log::info('Fetched products', ['count' => count($products)]);
+
+            return $products;
+        }
+
+        // Handle failure
+        \Log::error('Failed to fetch products', ['status' => $response->status()]);
+        return [];
+    }
+
+    public function sendTransactionMail($prepareMailDetails)
+    {
+        $recipientEmail = $prepareMailDetails["billing_email"] ?? null;
+        $recipientName = $prepareMailDetails["billing_name"] ?? null;
+
+        if (empty($recipientEmail) || !filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
+            Log::error("Transaction mail not sent: invalid or empty recipient email", [
+                'recipient_email' => $recipientEmail,
+                'recipient_name' => $recipientName,
+                'order_id' => $prepareMailDetails["order_id"] ?? 'N/A',
+                'prepare_mail_details' => $prepareMailDetails
+            ]);
+            return;
+        }
+
+        try {
+            Log::info("Attempting to send transaction mail", [
+                'recipient_email' => $recipientEmail,
+                'recipient_name' => $recipientName,
+                'order_id' => $prepareMailDetails["order_id"] ?? 'N/A'
+            ]);
+
+            // Generate invoice PDF
+            $pdf = PDF::loadView("layouts.invoice", $prepareMailDetails);
+
+            // Send mail with product details
+            Mail::send("layouts.mail", [
+                "prepareMailDetails" => $prepareMailDetails,
+                "pdf" => $pdf
+            ], function ($message) use ($prepareMailDetails, $pdf) {
+                $message->from(config("companyDefaultValues.sendMailFrom"), config("companyDefaultValues.company_name"))
+                    ->to($prepareMailDetails["billing_email"], $prepareMailDetails["billing_name"])
+                    ->subject(config("companyDefaultValues.default_subject"))
+                    ->attachData($pdf->output(), "invoice.pdf");
+            });
+
+            Log::info("Transaction mail sent successfully", [
+                'recipient_email' => $recipientEmail,
+                'recipient_name' => $recipientName,
+                'order_id' => $prepareMailDetails["order_id"] ?? 'N/A'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Failed to send transaction mail", [
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'recipient_email' => $recipientEmail,
+                'recipient_name' => $recipientName,
+                'order_id' => $prepareMailDetails["order_id"] ?? 'N/A',
+                'stack_trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+
+    public function sendTransactionMailWithProducts($billingEmail, $billingName)
+    {
+        $products = $this->fetchProducts(); // fetch product details from API
+
+        $prepareMailDetails = [
+            'billing_email' => $billingEmail,
+            'billing_name' => $billingName,
+            'order_id' => 'ORD-' . now()->timestamp,
+            'products' => $products,
+        ];
+
+        $this->sendTransactionMail($prepareMailDetails);
+    }
+
+
 
 }

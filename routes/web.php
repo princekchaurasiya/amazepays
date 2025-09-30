@@ -520,6 +520,9 @@ Route::get('/kgen-products', [DeliveryPartnerController::class, 'showproducts'])
 Route::get('/products/{productID}', [DeliveryPartnerController::class, 'getproductsbyID'])
     ->name('products.getById');
 
+// database
+Route::get('/fetch-products', [DeliveryPartnerController::class, 'fetchAndStoreProducts']);
+
 use App\Http\Controllers\KGenOrderController;
 
 Route::get('/kgen-place-order', [KGenOrderController::class, 'showForm'])->name('place-order.form');
@@ -531,11 +534,15 @@ Route::get('/get-kgenorders', [KGenOrderController::class, 'getOrders'])->name('
 Route::get('/order/{order}/assets', [KGenOrderController::class, 'showAssets'])->name('order.assets');
 Route::get('/order/{order}/download', [KGenOrderController::class, 'downloadAsset'])->name('order.download');
 
+Route::get('/order/{orderID}/monitor', [KGenOrderController::class, 'monitorOrder'])->name('order.monitor');
+
 use App\Http\Controllers\KGenWalletController;
 
-Route::get('/wallet', [KGenWalletController::class, 'wallet'])->name('wallet');
+Route::get('/kgen-wallet', [KGenWalletController::class, 'wallet'])->name('wallet');
 Route::get('/export-csv', [KGenWalletController::class, 'exportCsv'])->name('wallet.exportCsv');
 Route::get('/kgen/transactions', [KGenWalletController::class, 'index'])->name('kgen.transactions.index');
+Route::get('/kgen/wallet/fetch-balance', [KGenWalletController::class, 'fetchAndStore']);
+Route::get('/kgen/wallet/latest-balance', [KGenWalletController::class, 'latest']);
 
 //VD Payment
 Route::get('/vd/payment/return', [VDPaymentController::class, 'handleReturnSuccess'])->name('vd.return');

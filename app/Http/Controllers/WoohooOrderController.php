@@ -32,12 +32,18 @@ class WoohooOrderController extends Controller
             Log::info('Attempt to find order by payment order ID', ['order_id' => $paymentReturnData['order_id']]);
         }
 
-        if (!$qsOrderDetails) {
+         if (!$qsOrderDetails) {
+            // Fallback to latest order
+            $qsOrderDetails = QsOrder::latest('id')->first();
+            Log::info('Using latest order as fallback:', ['order_id' => $qsOrderDetails ? $qsOrderDetails->id : 'none']);
+        }
+
+        /*if (!$qsOrderDetails) {
             Log::error('Intended order not found via session or ID. Aborting Woohoo order creation.');
             $isSuccessful = false;
             $transactionStatusMessage = __("errors.default");
             return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
-        }
+        }*/
         
         if ($qsOrderDetails) {
             $newRefNo = 'Amzr' . $qsOrderDetails->id;

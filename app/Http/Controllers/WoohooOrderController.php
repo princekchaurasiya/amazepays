@@ -50,6 +50,10 @@ class WoohooOrderController extends Controller
             $qsOrderDetails->refno = $newRefNo;
             $qsOrderDetails->save();
             Log::info('Updated order with reference number:', ['refno' => $newRefNo]);
+            ProcessWoohooOrder::dispatch($qsOrderDetails->id);
+
+            $transactionStatusMessage = __("errors.processing");
+            $isSuccessful = true;
         }
         
         Log::info("Order details for Woohoo order creation:", $qsOrderDetails ? $qsOrderDetails->toArray() : 'No order found');

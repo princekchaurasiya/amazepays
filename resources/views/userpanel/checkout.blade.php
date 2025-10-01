@@ -765,10 +765,13 @@
                                                         <span>Payable Amount:</span>
                                                     </div>
                                                     <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font">
-                                                        <span>₹{{ $qsOrder->amount_payable_after_discount }}</span>
+                                                        <span>₹{{ $qsOrder->amount_payable_after_discount ?? $qsOrder->grand_payable_amount }}</span>
                                                     </div>
-                                                    <!-- Add hidden field for Payable Amount -->
-                                                    <input type="hidden" name="payable_amount" value="{{ $qsOrder->amount_payable_after_discount }}">
+                                                    <!-- Add hidden field for Payable Amount with fallback -->
+                                                    @php
+                                                        $payableAmountHidden = $qsOrder->amount_payable_after_discount ?? $qsOrder->grand_payable_amount ?? 0;
+                                                    @endphp
+                                                    <input type="hidden" name="payable_amount" value="{{ $payableAmountHidden }}">
                                                 </div>
                                             </div>
                                         </div>
@@ -790,7 +793,10 @@
                 <!-- UPI Payment -->
                 <form method="POST" action="{{ route('payment.upi') }}" id="upiPaymentForm">
                     @csrf
-                    <input type="hidden" name="payable_amount" value="{{ $qsOrder->amount_payable_after_discount }}">
+                    @php
+                        $upiPayableAmount = $qsOrder->amount_payable_after_discount ?? $qsOrder->grand_payable_amount ?? 0;
+                    @endphp
+                    <input type="hidden" name="payable_amount" value="{{ $upiPayableAmount }}">
                     <button type="submit" class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-success rounded-lg text-uppercase fw-300 ls-3">
                         Pay with UPI
                     </button>
@@ -830,7 +836,7 @@
                         billing_address_two: $('input[name="billing_address_two"]').val(),
                         billing_city: $('input[name="billing_city"]').val(),
                         billing_state: $('input[name="billing_state"]').val(),
-                        billing_country: $('input[name="billing_country"]').val(),
+                        billing_country: $('#billing_country').val(),
                         billing_gst_number: $('input[name="billing_gst_number"]').val(),
                         // Add other form fields as needed
                     };
@@ -854,16 +860,16 @@
 
                 function storeBillingInDatabase() {
                     var formData = {
-                        billing_name: $('input[name="billing_name"]').val(),
-                        billing_email: $('input[name="billing_email"]').val(),
-                        billing_tel: $('input[name="billing_tel"]').val(),
-                        billing_zip: $('input[name="billing_zip"]').val(),
-                        billing_address: $('input[name="billing_address"]').val(),
-                        billing_address_two: $('input[name="billing_address_two"]').val(),
-                        billing_city: $('input[name="billing_city"]').val(),
-                        billing_state: $('input[name="billing_state"]').val(),
-                        billing_country: $('input[name="billing_country"]').val(),
-                        billing_gst_number: $('input[name="billing_gst_number"]').val()
+                        billing_name: $('input[name="billing_name"]').val().trim(),
+                        billing_email: $('input[name="billing_email"]').val().trim(),
+                        billing_tel: $('input[name="billing_tel"]').val().trim(),
+                        billing_zip: $('input[name="billing_zip"]').val().trim(),
+                        billing_address: $('input[name="billing_address"]').val().trim(),
+                        billing_address_two: $('input[name="billing_address_two"]').val().trim(),
+                        billing_city: $('input[name="billing_city"]').val().trim(),
+                        billing_state: $('input[name="billing_state"]').val().trim(),
+                        billing_country: $('#billing_country').val(),
+                        billing_gst_number: $('input[name="billing_gst_number"]').val().trim()
                     };
 
                     $.ajax({
@@ -891,10 +897,11 @@
                 }
 
                 // Bind debouncedUpdateSessionData function to the input event of input fields
-                $('input[name="billing_name"], input[name="billing_email"], input[name="billing_tel"], input[name="billing_zip"], input[name="billing_address"], input[name="billing_address_two"], input[name="billing_city"], input[name="billing_state"], input[name="billing_country"], input[name="billing_gst_number"]')
-                    .on('input', function() {
+                $('input[name="billing_name"], input[name="billing_email"], input[name="billing_tel"], input[name="billing_zip"], input[name="billing_address"], input[name="billing_address_two"], input[name="billing_city"], input[name="billing_state"], input[name="billing_gst_number"]').
+                    on('input', function() {
                         debouncedUpdateSessionData();
                     });
+                $('#billing_country').on('change', function() { debouncedUpdateSessionData(); });
 
                 // Handle payment form submissions
                 $('#cardPaymentForm, #upiPaymentForm').submit(function(event) {

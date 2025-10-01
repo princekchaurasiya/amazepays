@@ -905,6 +905,12 @@
 
                 // Handle payment form submissions
                 $('#cardPaymentForm, #upiPaymentForm').submit(function(event) {
+                    // Normalize city/state fields to avoid trailing spaces causing issues
+                    var cityVal = $('input[name="billing_city"]').val();
+                    var stateVal = $('input[name="billing_state"]').val();
+                    if (typeof cityVal === 'string') { $('input[name="billing_city"]').val(cityVal.trim()); }
+                    if (typeof stateVal === 'string') { $('input[name="billing_state"]').val(stateVal.trim()); }
+
                     // First validate the billing form
                     if (!$('#checkoutForm').valid()) {
                         event.preventDefault();
@@ -912,6 +918,13 @@
                         $('html, body').animate({
                             scrollTop: 0
                         }, 500);
+                        return false;
+                    }
+                    // Validate payable amount presence
+                    var payable = parseFloat($(this).find('input[name="payable_amount"]').val());
+                    if (!payable || isNaN(payable) || payable <= 0) {
+                        event.preventDefault();
+                        alert('Unable to proceed: payable amount is invalid. Please refresh and try again.');
                         return false;
                     }
                     

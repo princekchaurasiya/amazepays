@@ -64,7 +64,7 @@
             document.getElementById('clock').textContent = secondsElapsed;
 
             // Check if elapsed time is 180 seconds
-            if (secondsElapsed === 180) {
+            if (secondsElapsed === 10) {
                 // Submit the form after 180 seconds
                 document.getElementById('redirectForm').submit();
             }

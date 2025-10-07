@@ -61,7 +61,7 @@
 
         function updateClock() {
             secondsElapsed++;
-            document.getElementById('clock').textContent = secondsElapsed;
+            //document.getElementById('clock').textContent = secondsElapsed;
 
             // Check if elapsed time is 180 seconds
             if (secondsElapsed === 10) {

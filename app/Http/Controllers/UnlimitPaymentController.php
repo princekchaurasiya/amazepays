@@ -184,14 +184,32 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
         }
 
         // Store return data in session for the redirect-to-woohoo blade
-        session([
-            'payment_return_data' => [
-                'payment_id' => $paymentId,
-                'order_id' => $orderId,
-                'status' => $status,
-                'return_time' => now()
-            ]
-        ]);
+        $orderId = (string) Str::uuid(); // Unlimit's UUID
+
+        // Create QsOrder linked to that UUID
+        $qsOrder = new QsOrder();
+        $qsOrder->user_id = Auth::id();
+        $qsOrder->grand_payable_amount = $request->input('payable_amount');
+        // ... set other order fields here ...
+        $qsOrder->merchant_order_id = $orderId; // Link the UUID
+        $qsOrder->save();
+        //Then store this internal ID in the session when the user returns
+        // Inside handleReturnSuccess()
+        $qsOrder = QsOrder::where('merchant_order_id', $orderId)->first;
+
+        if ($qsOrder) {
+    session([
+        'payment_return_data' => [
+            'payment_id' => $paymentId,
+            'order_id' => $qsOrder->id,  // ✅ use internal order ID now
+            'status' => $status,
+            'return_time' => now()
+        ]
+    ]);
+} else {
+    Log::error("No matching QsOrder found for merchant_order_id: " . $orderId);
+}
+
 
         // Return the redirect-to-woohoo view
         return view('woohoo.redirect-to-woohoo', [
@@ -199,6 +217,7 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
             'order_id' => $orderId,
             'status' => $status
         ]);
+
     }
 
     /**

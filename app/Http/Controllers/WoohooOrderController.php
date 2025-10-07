@@ -15,6 +15,8 @@ use App\Helpers\CommonHelper;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\URL;
+use App\Jobs\ProcessWoohooOrder;
+
 class WoohooOrderController extends Controller
 {
     public function createOrder(Request $request)

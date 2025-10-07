@@ -195,7 +195,7 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
         $qsOrder->save();
         //Then store this internal ID in the session when the user returns
         // Inside handleReturnSuccess()
-        $qsOrder = QsOrder::where('merchant_order_id', $orderId)->first;
+        $qsOrder = QsOrder::where('merchant_order_id', $orderId)->first();
 
         if ($qsOrder) {
     session([

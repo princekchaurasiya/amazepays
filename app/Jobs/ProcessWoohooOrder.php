@@ -1,4 +1,11 @@
+<?php
+
+namespace App\Jobs;
 use App\Models\QsOrder;
+use App\Models\Billing;
+use App\Http\Controllers\WoohooOrderController;
+use App\Helpers\CommonHelper;
+use App\Jobs;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -95,7 +102,7 @@ class ProcessWoohooOrder implements ShouldQueue
                     "dateAtClient" => $dateAtClient,
                     "signature" => $signature,
                 ])
-                ->post($absApiUrl, $requestBody);
+                ->post($absApiUrl, $requestBodyData);
 
             $responseData = $response->json();
 

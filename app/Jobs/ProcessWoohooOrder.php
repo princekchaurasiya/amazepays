@@ -5,7 +5,10 @@ use App\Models\QsOrder;
 use App\Models\Billing;
 use App\Http\Controllers\WoohooOrderController;
 use App\Helpers\CommonHelper;
+<<<<<<< HEAD
 use App\Jobs;
+=======
+>>>>>>> aac288f (change 1)
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -86,7 +89,7 @@ class ProcessWoohooOrder implements ShouldQueue
             "delivery_mode" => "API",
         ];
 
-        $requestBody = json_encode($requestBodyData);
+       $requestBody = json_encode($requestBodyData);
         $absApiUrl = "https://" . setting("api.woohoo_url") . "/rest/v3/orders";
         $clientSecret = setting("api.qs_clientSecret");
         $bearerToken = setting("api.bearer_token");
@@ -135,7 +138,11 @@ class ProcessWoohooOrder implements ShouldQueue
                     "dateAtClient" => $dateAtClient,
                     "signature" => $signature,
                 ])
+<<<<<<< HEAD
                 ->send('POST', $absApiUrl, ['body' => $requestBody]);
+=======
+                ->post($absApiUrl, $requestBodyData);
+>>>>>>> aac288f (change 1)
 
             $responseData = $response->json();
             $rawBody = $response->body();

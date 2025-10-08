@@ -18,9 +18,13 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\URL;
+<<<<<<< HEAD
 use Mail;
 use PDF;
 
+=======
+use App\Jobs\ProcessWoohooOrder;
+>>>>>>> aac288f (change 1)
 class WoohooOrderController extends Controller
 {
     public function createWoohooOrderRequest($qsOrderDetails, $payment)

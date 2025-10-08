@@ -18,7 +18,7 @@ class QsOrder extends Model
         'receiver_name', 'receiver_email', 'receiver_mobile', 'receiver_msg',
         'cards', 'order_cancel', 'order_payment', 'currency', 'additionalTxnFields',
         'grand_payable_amount', 'discounted_amount_value', 'amount_payable_after_discount',
-        'gst_number', 'country'
+        'gst_number', 'country','merchant_order_id'
     ];
 
     public function product()

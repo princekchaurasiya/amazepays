@@ -16,6 +16,7 @@ use Exception;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\URL;
 use App\Jobs\ProcessWoohooOrder;
+use App\Http\Controllers\UnlimitPaymentController;
 
 class WoohooOrderController extends Controller
 {
@@ -27,6 +28,30 @@ class WoohooOrderController extends Controller
         
         // Get order details strictly from session/ID; no latest-order fallback
         $qsOrderDetails = null;
+        $orderId = $qsOrderDetails->merchant_order_id; // or whatever you're using
+        $data = UnlimitPaymentController::getWoohooOrderData($orderId);
+
+        if (!$data || !$data['amount'] || !$data['sku'] || !$data['qty']) {
+            Log::error('Missing payment or product data for Woohoo order creation', ['order_id' => $orderId, 'data' => $data]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to process Woohoo order. Required data is missing.'
+            ], 422);
+        }
+
+        // Build Woohoo payload
+        $payload = [
+            'payments' => [
+                'amount' => $data['amount'],
+                'currency' => $data['currency']
+            ],
+            'products' => [
+                [
+                    'sku' => $data['sku'],
+                    'qty' => $data['qty']
+                ]
+            ]
+        ];
 
         if ($paymentReturnData && isset($paymentReturnData['order_id'])) {
             // Try to get order by payment order ID first

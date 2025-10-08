@@ -325,5 +325,27 @@ public function process(Request $request)
             ]);
         }
     }
+
+    public static function getWoohooOrderData($orderId)
+{
+    $payment = UnlimitPayment::where('order_id', $orderId)->first();
+    $qsOrder = QsOrder::where('merchant_order_id', $orderId)->first();
+
+    if (!$payment || !$qsOrder) {
+        Log::error('Unable to fetch Woohoo order data', [
+            'order_id' => $orderId,
+            'payment_found' => $payment ? true : false,
+            'order_found' => $qsOrder ? true : false,
+        ]);
+        return null;
+    }
+
+    return [
+        'amount' => $payment->amount,
+        'currency' => $payment->currency ?? 'INR',
+        'sku' => $qsOrder->product_sku ?? null,
+        'qty' => $qsOrder->quantity ?? 1,
+    ];
+}
 }
 

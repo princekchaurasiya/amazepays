@@ -28,7 +28,7 @@ class WoohooOrderController extends Controller
         
         // Get order details strictly from session/ID; no latest-order fallback
         $qsOrderDetails = null;
-        $orderId = $qsOrderDetails->merchant_order_id; // or whatever you're using
+        $orderId = $paymentReturnData['order_id'] ?? null;
         $data = UnlimitPaymentController::getWoohooOrderData($orderId);
 
         if (!$data || !$data['amount'] || !$data['sku'] || !$data['qty']) {

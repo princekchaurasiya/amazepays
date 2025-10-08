@@ -184,7 +184,7 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
         }
 
         // Store return data in session for the redirect-to-woohoo blade
-        $orderId = (string) Str::uuid(); // Unlimit's UUID
+        $orderId = $request->input('merchant_order_id'); // Unlimit's UUID
 
         // Create QsOrder linked to that UUID
         $qsOrder = new QsOrder();

@@ -91,10 +91,10 @@ class UPIPaymentController extends Controller
             'currency' => 'INR',
         ],
 
-        /*'return_urls' => [
+        'return_urls' => [
         'success_url' => route('unlimit.return'),
         'decline_url' => route('unlimit.return'),
-        ],*/
+        ],
         // Note: card_account.card was removed based on your earlier error for Payment Page mode
     ];
 

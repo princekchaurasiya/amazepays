@@ -329,7 +329,7 @@ public function process(Request $request)
     public static function getWoohooOrderData($orderId)
 {
     $payment = UnlimitPayment::where('order_id', $orderId)->first();
-    $qsOrder = QsOrder::where('merchant_order_id', $orderId)->first();
+    $qsOrder = QsOrder::find($orderId);
 
     if (!$payment || !$qsOrder) {
         Log::error('Unable to fetch Woohoo order data', [
@@ -343,7 +343,7 @@ public function process(Request $request)
     return [
         'amount' => $payment->amount,
         'currency' => $payment->currency ?? 'INR',
-        'sku' => $qsOrder->product_sku ?? null,
+        'sku' => $qsOrder->sku ?? null,
         'qty' => $qsOrder->quantity ?? 1,
     ];
 }

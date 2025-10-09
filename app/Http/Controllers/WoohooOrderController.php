@@ -30,7 +30,8 @@ class WoohooOrderController extends Controller
         $qsOrderDetails = null;
         $orderId = $paymentReturnData['order_id'] ?? null;
         $data = UnlimitPaymentController::getWoohooOrderData($orderId);
-
+        Log::info('Woohoo order data:', ['order_id' => $orderId, 'data' => $data]);
+        
         if (!$data || !$data['amount'] || !$data['sku'] || !$data['qty']) {
             Log::error('Missing payment or product data for Woohoo order creation', ['order_id' => $orderId, 'data' => $data]);
             return response()->json([

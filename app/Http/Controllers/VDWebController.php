@@ -77,6 +77,24 @@ class VDWebController extends Controller
     return $decrypted;
     }
     
+    function vd_decrypt($data, $secret_key, $secret_iv)
+    {
+        // Decode the base64 encoded string
+        $enc = base64_decode($data);
+
+        // Ensure key and IV are the correct length (AES-256 requires 32-byte key, 16-byte IV)
+        $key = substr(hash('sha256', $secret_key, true), 0, 32); // 256-bit key
+        $iv = substr(hash('sha256', $secret_iv, true), 0, 16);   // 128-bit IV
+
+        // Decrypt the data
+        $decrypted = openssl_decrypt($enc, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+
+        // Remove PKCS7 padding manually (optional, OpenSSL usually handles this)
+        $pad = ord($decrypted[strlen($decrypted) - 1]);
+        $decrypted = substr($decrypted, 0, -$pad);
+
+        return $decrypted;
+    }
 
     public function getBrandsFromToken()
     {
@@ -338,7 +356,8 @@ public function evcDetails(VDWebApiService $vdWebApiService)
     dd($response);
 
     //This is tp decrypt Data
-    $decryptedData = $this->decryptAES($response['data']);
+    //$decryptedData = $this->decryptAES($response['data']);
+    $decryptedData = $this->vd_decrypt($response['data'], env('AES_SECRET_KEY'), env('AES_IV'));
 
     return view('evc.success', [
     'orderId' => $response['order_id'],

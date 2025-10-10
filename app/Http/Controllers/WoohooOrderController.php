@@ -15,9 +15,6 @@ use App\Helpers\CommonHelper;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\URL;
-use App\Jobs\ProcessWoohooOrder;
-use App\Http\Controllers\UnlimitPaymentController;
-
 class WoohooOrderController extends Controller
 {
     public function createOrder(Request $request)
@@ -28,31 +25,6 @@ class WoohooOrderController extends Controller
         
         // Get order details strictly from session/ID; no latest-order fallback
         $qsOrderDetails = null;
-        $orderId = $paymentReturnData['order_id'] ?? null;
-        $data = UnlimitPaymentController::getWoohooOrderData($orderId);
-        Log::info('Woohoo order data:', ['order_id' => $orderId, 'data' => $data]);
-        
-        if (!$data || !$data['amount'] || !$data['sku'] || !$data['qty']) {
-            Log::error('Missing payment or product data for Woohoo order creation', ['order_id' => $orderId, 'data' => $data]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Unable to process Woohoo order. Required data is missing.'
-            ], 422);
-        }
-
-        // Build Woohoo payload
-        $payload = [
-            'payments' => [
-                'amount' => $data['amount'],
-                'currency' => $data['currency']
-            ],
-            'products' => [
-                [
-                    'sku' => $data['sku'],
-                    'qty' => $data['qty']
-                ]
-            ]
-        ];
 
         if ($paymentReturnData && isset($paymentReturnData['order_id'])) {
             // Try to get order by payment order ID first
@@ -61,34 +33,17 @@ class WoohooOrderController extends Controller
         }
 
         if (!$qsOrderDetails) {
-        return response()->json([
-            'success' => false,
-            'message' => "Order not found for payment order ID: {$paymentReturnData['order_id']}"
-        ], 404);
-    }
-
-         ##if (!$qsOrderDetails) {
-            // Fallback to latest order
-         #   $qsOrderDetails = QsOrder::latest('id')->first();
-          #  Log::info('Using latest order as fallback:', ['order_id' => $qsOrderDetails ? $qsOrderDetails->id : 'none']);
-        #}
-
-        /*if (!$qsOrderDetails) {
             Log::error('Intended order not found via session or ID. Aborting Woohoo order creation.');
             $isSuccessful = false;
             $transactionStatusMessage = __("errors.default");
             return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
-        }*/
+        }
         
         if ($qsOrderDetails) {
             $newRefNo = 'Amzr' . $qsOrderDetails->id;
             $qsOrderDetails->refno = $newRefNo;
             $qsOrderDetails->save();
             Log::info('Updated order with reference number:', ['refno' => $newRefNo]);
-            ProcessWoohooOrder::dispatch($qsOrderDetails->id);
-
-            $transactionStatusMessage = __("errors.processing");
-            $isSuccessful = true;
         }
         
         Log::info("Order details for Woohoo order creation:", $qsOrderDetails ? $qsOrderDetails->toArray() : 'No order found');

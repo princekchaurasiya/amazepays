@@ -170,7 +170,8 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
         // Log the return request for debugging
         Log::info('Payment return received', [
             'request_data' => $request->all(),
-            'headers' => $request->headers->all()
+            'headers' => $request->headers->all(),
+            'query' => $request->query()
         ]);
 
         // Get payment information from the request parameters
@@ -210,6 +211,22 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
     Log::error("No matching QsOrder found for merchant_order_id: " . $orderId);
 }
 
+ $paymentId = $request->input('payment_id');
+        $orderId = $request->input('merchant_order_id');
+        $status = $request->input('status');
+        $amount = $request->input('amount');
+
+        if ($paymentId && $orderId) {
+            $this->updatePaymentStatus($paymentId, $orderId, $status);
+            
+            // If payment is successful, you might want to trigger order creation
+            if ($status === 'success' || $status === 'approved') {
+                Log::info('Payment successful, ready for order creation', [
+                    'order_id' => $orderId,
+                    'payment_id' => $paymentId
+                ]);
+            }
+        }
 
         // Return the redirect-to-woohoo view
         return view('woohoo.redirect-to-woohoo', [

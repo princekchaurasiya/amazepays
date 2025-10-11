@@ -486,6 +486,152 @@ class WoohooOrderController extends Controller
             return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
         }
     }
+    /**
+     * Check transaction status for the redirect page (lightweight check)
+     */
+    public function checkTransactionStatus(Request $request)
+    {
+        try {
+            // Get payment return data from session
+            $paymentReturnData = session('payment_return_data');
+            
+            if (!$paymentReturnData || !isset($paymentReturnData['order_id'])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No payment data found'
+                ], 400);
+            }
+
+            // Get order details
+            $qsOrderDetails = QsOrder::where('id', $paymentReturnData['order_id'])->first();
+            
+            if (!$qsOrderDetails) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Order not found'
+                ], 404);
+            }
+
+            // Check if order is already completed
+            if ($qsOrderDetails->order_status === 'COMPLETE') {
+                return response()->json([
+                    'status' => 'complete',
+                    'message' => 'Transaction completed successfully'
+                ]);
+            }
+
+            // Check if order has a reference number and get status (lightweight check)
+            if ($qsOrderDetails->refno) {
+                // Use a lightweight status check instead of the full retry mechanism
+                $statusResponse = $this->getStatusByReferenceNumberLightweight($qsOrderDetails->refno);
+                
+                if ($statusResponse && $statusResponse['status'] === 'COMPLETE') {
+                    // Update order status
+                    $qsOrderDetails->order_status = 'COMPLETE';
+                    $qsOrderDetails->save();
+                    
+                    return response()->json([
+                        'status' => 'complete',
+                        'message' => 'Transaction completed successfully'
+                    ]);
+                } elseif ($statusResponse && $statusResponse['status'] === 'PROCESSING') {
+                    return response()->json([
+                        'status' => 'processing',
+                        'message' => 'Transaction is still processing'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'failed',
+                        'message' => 'Transaction failed'
+                    ]);
+                }
+            }
+
+            // If no reference number yet, still processing
+            return response()->json([
+                'status' => 'processing',
+                'message' => 'Transaction is still processing'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error checking transaction status: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error checking status'
+            ], 500);
+        }
+    }
+
+    /**
+     * Lightweight status check without retry mechanism for frontend polling
+     */
+    private function getStatusByReferenceNumberLightweight($refno)
+    {
+        try {
+            $requestHttpMethod = "GET";
+            $absApiUrl = "https://" . setting("api.woohoo_url") . "/rest/v3/order/" . $refno . "/status";
+            $clientSecret = setting("api.qs_clientSecret");
+            $bearerToken = setting("api.bearer_token");
+            $signature = CommonHelper::generateSignature("", $requestHttpMethod, $absApiUrl, $clientSecret);
+            $dateAtClient = Carbon::now()->toIso8601String();
+
+            Log::info("Lightweight status check for refno: $refno");
+            
+            $orderStatusResponse = Http::acceptJson()
+                ->timeout(10) // Short timeout for lightweight check
+                ->withHeaders([
+                    "Content-Type" => "application/json",
+                    "Authorization" => "Bearer " . $bearerToken,
+                    "Accept" => "*/*",
+                    "dateAtClient" => $dateAtClient,
+                    "signature" => $signature,
+                ])
+                ->get($absApiUrl);
+
+            if ($orderStatusResponse->successful()) {
+                $cardStatusApiResponseData = $orderStatusResponse->json();
+                Log::info("Lightweight status response:", ["response" => $cardStatusApiResponseData]);
+                
+                if (isset($cardStatusApiResponseData["status"])) {
+                    if ($cardStatusApiResponseData["status"] === "COMPLETE") {
+                        Log::info("Status check: COMPLETE");
+                        return $this->callCardActivation($cardStatusApiResponseData);
+                    } elseif ($cardStatusApiResponseData["status"] === "PROCESSING") {
+                        Log::info("Status check: PROCESSING");
+                        return [
+                            'status' => 'PROCESSING',
+                            'message' => 'Transaction is still processing'
+                        ];
+                    } else {
+                        Log::info("Status check: Other status - " . $cardStatusApiResponseData["status"]);
+                        return [
+                            'status' => $cardStatusApiResponseData["status"],
+                            'message' => 'Transaction status: ' . $cardStatusApiResponseData["status"]
+                        ];
+                    }
+                }
+            } else {
+                Log::warning("Status check API failed: " . $orderStatusResponse->status());
+                return [
+                    'status' => 'error',
+                    'message' => 'API call failed'
+                ];
+            }
+
+            return [
+                'status' => 'unknown',
+                'message' => 'Unknown status'
+            ];
+
+        } catch (\Exception $e) {
+            Log::error("Lightweight status check error: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Status check failed'
+            ];
+        }
+    }
+
     public function sendTransactionMail($prepareMailDetails)
     {
         $recipientEmail = $prepareMailDetails["billing_email"] ?? null;

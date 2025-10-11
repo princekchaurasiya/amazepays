@@ -295,7 +295,7 @@ Route::get('/unauthenticated', function () {
 
 
 Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'])->name('woohoo.createOrder');
-
+Route::get('/woohoo/check-status', [WoohooOrderController::class, 'checkTransactionStatus'])->name('woohoo.checkStatus');
 
 Route::get('/order-failure', function () {
     return view('order-failure'); // This will render the order-failure.blade.php view

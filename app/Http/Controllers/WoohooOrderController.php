@@ -112,7 +112,49 @@ class WoohooOrderController extends Controller
         $firstName = $parts[0] ?? '';
         $lastName = $parts[1] ?? '';
         $refno = $qsOrderDetails->refno;
-        $create_order_request_body_data = ["address" => ["firstname" => $firstName, "lastname" => $lastName, "email" => $billinginfo->billing_email, "telephone" => "+91" . $billinginfo->billing_tel, "line1" => $billinginfo->billing_address, "line2" => $billinginfo->billing_address_two, "city" => $billinginfo->billing_city, "region" => $billinginfo->billing_state, "country" => "IN", "postcode" => $billinginfo->billing_zip, "languages" => "Hindi", "billToThis" => true,], "billing" => ["firstname" => $firstName, "lastname" => $lastName, "email" => $billinginfo->billing_email, "telephone" => "+91" . $billinginfo->billing_tel, "line1" => $billinginfo->billing_address, "line2" => $billinginfo->billing_address_two, "city" => $billinginfo->billing_city, "region" => $billinginfo->billing_state, "country" => "IN", "postcode" => $billinginfo->billing_zip, "languages" => "Hindi", "billToThis" => true,], "payments" => [["code" => "svc", "amount" => $qsOrderDetails->grand_payable_amount],], "refno" => $refno, "products" => [["sku" => $qsOrderDetails->sku, "price" => $qsOrderDetails->denomination, "qty" => $qsOrderDetails->quantity, "currency" => "356"],], "syncOnly" => $qsOrderDetails->quantity > (int) env("SYNC_ONLY_THRESHOLD") ? false : true, "delivery_mode" => "API",];
+        $create_order_request_body_data = [
+            "address" => [
+                "firstname" => $firstName,
+                "lastname" => $lastName,
+                "email" => $billinginfo->billing_email,
+                "telephone" => "+91" . $billinginfo->billing_tel,
+                "line1" => $billinginfo->billing_address,
+                "line2" => $billinginfo->billing_address_two,
+                "city" => $billinginfo->billing_city,
+                "region" => $billinginfo->billing_state,
+                "country" => "IN",
+                "postcode" => $billinginfo->billing_zip,
+                "languages" => "Hindi",
+                "billToThis" => true,
+            ],
+            "billing" => [
+                "firstname" => $firstName,
+                "lastname" => $lastName,
+                "email" => $billinginfo->billing_email,
+                "telephone" => "+91" . $billinginfo->billing_tel,
+                "line1" => $billinginfo->billing_address,
+                "line2" => $billinginfo->billing_address_two,
+                "city" => $billinginfo->billing_city,
+                "region" => $billinginfo->billing_state,
+                "country" => "IN",
+                "postcode" => $billinginfo->billing_zip,
+                "languages" => "Hindi",
+                "billToThis" => true,
+            ],
+            "payments" => [[
+                "code" => "svc",
+                "amount" => (float) $qsOrderDetails->grand_payable_amount,
+            ]],
+            "refno" => $refno,
+            "products" => [[
+                "sku" => $qsOrderDetails->sku,
+                "price" => (float) $qsOrderDetails->denomination,
+                "qty" => (int) $qsOrderDetails->quantity,
+                "currency" => 356,
+            ]],
+            "syncOnly" => $qsOrderDetails->quantity > (int) env("SYNC_ONLY_THRESHOLD") ? false : true,
+            "delivery_mode" => "API",
+        ];
         Log::info("########\nWoohoo create order request body data is:\n" . print_r($create_order_request_body_data, true) . "\n#######");
         $requestBody = json_encode($create_order_request_body_data);
         $requestHttpMethod = "post";
@@ -122,17 +164,56 @@ class WoohooOrderController extends Controller
         $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         $dateAtClient = Carbon::now()->toIso8601String();
         Log::info("**************** Order Creation Api *************************\n");
+        // Debug log for bearer token expiry (masked, no secret exposure)
+        try {
+            if (is_string($bearerToken) && substr_count($bearerToken, '.') === 2) {
+                [$h, $p, $s] = explode('.', $bearerToken);
+                $payloadJson = json_decode(base64_decode(strtr($p, '-_', '+/')), true);
+                $expTs = $payloadJson['exp'] ?? null;
+                $iatTs = $payloadJson['iat'] ?? null;
+                $nowTs = time();
+                Log::info('Bearer token timing', [
+                    'now' => $nowTs,
+                    'iat' => $iatTs,
+                    'exp' => $expTs,
+                    'expires_in_sec' => $expTs ? ($expTs - $nowTs) : null,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('JWT timing decode failed');
+        }
         Log::info("Before hitting API, time is " . now() . "\n");
         try {
             Log::info("******* making  Create Order API request with the request body data is as follows ***********");
-            $createOrderResponse = Http::acceptJson()->timeout(10)->withHeaders(["Content-Type" => "application/json", "Authorization" => "Bearer " . $bearerToken, "Accept" => "*/*", "dateAtClient" => $dateAtClient, "signature" => $signature,])->send("POST", $absApiUrl, ["body" => $requestBody]);
-            Log::info("API Request body is:", ["url" => $absApiUrl, "method" => $requestHttpMethod, "headers" => ["Content-Type" => "application/json", "Authorization" => "Bearer " . $bearerToken, "Accept" => "*/*", "dateAtClient" => $dateAtClient, "signature" => $signature,], "data" => $requestBody,]);
+            $createOrderResponse = Http::acceptJson()->timeout(10)->withHeaders(["Content-Type" => "application/json", "Authorization" => "Bearer " . $bearerToken, "Accept" => "*/*", "User-Agent" => "Amazepays/1.0 (+https://amazepays.in)", "dateAtClient" => $dateAtClient, "signature" => $signature,])->send("POST", $absApiUrl, ["body" => $requestBody]);
+            Log::info("API Request body is:", [
+                "url" => $absApiUrl,
+                "method" => $requestHttpMethod,
+                "headers" => [
+                    "Content-Type" => "application/json",
+                    // mask token and signature in logs
+                    "Authorization" => "Bearer " . (is_string($bearerToken) && strlen($bearerToken) > 8 ? substr($bearerToken, 0, 4) . str_repeat('*', strlen($bearerToken) - 8) . substr($bearerToken, -4) : '****'),
+                    "Accept" => "*/*",
+                    "dateAtClient" => $dateAtClient,
+                    "signature" => is_string($signature) && strlen($signature) > 10 ? substr($signature, 0, 6) . str_repeat('*', strlen($signature) - 10) . substr($signature, -4) : '****',
+                ],
+                "data" => json_decode($requestBody, true),
+            ]);
             Log::info("********** We are hitting create order API to check response *******************\n");
             $responseData = $createOrderResponse->json();
             $headers = $createOrderResponse->headers();
-            $body = json_decode($createOrderResponse->body(), true);
+            $rawBody = $createOrderResponse->body();
+            $parsedBody = json_decode($rawBody, true);
             Log::info("Get Response from Woohoo server", ["response" => $responseData]);
-            Log::info("Woohoo API Response:", ["status_code" => $createOrderResponse->status(), "headers" => $headers, "body" => $body, "order_id" => $responseData["orderId"] ?? null, "amount" => $responseData["payments"][0]["balance"] ?? null,]);
+            // Log raw body if JSON parsing fails (e.g., HTML error page)
+            $bodyForLog = $parsedBody !== null ? $parsedBody : ["raw" => (is_string($rawBody) ? mb_substr($rawBody, 0, 2000) : $rawBody)];
+            Log::info("Woohoo API Response:", [
+                "status_code" => $createOrderResponse->status(),
+                "headers" => $headers,
+                "body" => $bodyForLog,
+                "order_id" => $responseData["orderId"] ?? null,
+                "amount" => $responseData["payments"][0]["balance"] ?? null,
+            ]);
             if ($createOrderResponse->successful()) {
                 Log::info("200 response received; now checking if the status is COMPLETE or PROCESSING");
                 $orderCreatedResponse = $createOrderResponse->json();
@@ -158,6 +239,9 @@ class WoohooOrderController extends Controller
                 //$this->sendOrderFailureMail($qsOrderDetails);
                 $statusCode = $createOrderResponse->status();
                 $response = json_decode($createOrderResponse->body(), true);
+                if ($response === null) {
+                    $response = ["raw" => (is_string($rawBody) ? mb_substr($rawBody, 0, 2000) : $rawBody)];
+                }
                 $errorResponse = $this->handleErrorResponse($statusCode, $response, $qsOrderDetails, $createOrderResponse);
                 return $errorResponse;
             }

@@ -140,6 +140,33 @@ class WoohooOrderController extends Controller
         $firstName = $parts[0] ?? '';
         $lastName = $parts[1] ?? '';
         $refno = $qsOrderDetails->refno;
+
+        // Normalize product and amount details with safe fallbacks
+        $checkoutData = session('checkout_data', []);
+        $normalizedSku = $qsOrderDetails->sku ?? ($checkoutData['sku'] ?? null);
+        $normalizedQuantity = (int) ($qsOrderDetails->quantity ?? ($checkoutData['quantity'] ?? 1));
+        $normalizedDenomination = (float) ($qsOrderDetails->denomination ?? ($checkoutData['denomination'] ?? 0));
+
+        // Prefer amount after discount; fallback to grand payable; last resort compute denom * qty
+        $normalizedAmount = (float) (
+            $qsOrderDetails->amount_payable_after_discount
+            ?? $qsOrderDetails->grand_payable_amount
+            ?? ($normalizedDenomination > 0 ? $normalizedDenomination * max(1, $normalizedQuantity) : 0)
+        );
+
+        if (empty($normalizedSku)) {
+            Log::warning('SKU missing for Woohoo order; attempting to proceed with available data', [
+                'order_id' => $qsOrderDetails->id ?? null,
+                'session_has_checkout_data' => !empty($checkoutData),
+            ]);
+        }
+        if ($normalizedDenomination <= 0) {
+            Log::warning('Denomination missing or invalid; computed amount may be used', [
+                'order_id' => $qsOrderDetails->id ?? null,
+                'quantity' => $normalizedQuantity,
+                'amount' => $normalizedAmount,
+            ]);
+        }
         $create_order_request_body_data = [
             "address" => [
                 "firstname" => $firstName,
@@ -171,16 +198,16 @@ class WoohooOrderController extends Controller
             ],
             "payments" => [[
                 "code" => "svc",
-                "amount" => (float) $qsOrderDetails->grand_payable_amount,
+                "amount" => (float) $normalizedAmount,
             ]],
             "refno" => $refno,
             "products" => [[
-                "sku" => $qsOrderDetails->sku,
-                "price" => (float) $qsOrderDetails->denomination,
-                "qty" => (int) $qsOrderDetails->quantity,
+                "sku" => $normalizedSku,
+                "price" => (float) $normalizedDenomination,
+                "qty" => (int) $normalizedQuantity,
                 "currency" => 356,
             ]],
-            "syncOnly" => $qsOrderDetails->quantity > (int) env("SYNC_ONLY_THRESHOLD") ? false : true,
+            "syncOnly" => $normalizedQuantity > (int) env("SYNC_ONLY_THRESHOLD") ? false : true,
             "delivery_mode" => "API",
         ];
         Log::info("########\nWoohoo create order request body data is:\n" . print_r($create_order_request_body_data, true) . "\n#######");

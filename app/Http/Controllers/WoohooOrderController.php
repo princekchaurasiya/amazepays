@@ -22,6 +22,13 @@ class WoohooOrderController extends Controller
         // Get payment return data from session
         $paymentReturnData = session('payment_return_data');
         Log::info('Payment return data from session:', $paymentReturnData);
+        Log::info('Full session data:', session()->all());
+        if (empty($paymentReturnData['order_id']) || empty($paymentReturnData['payment_id'])) {
+            Log::warning('Payment return data missing IDs', [
+                'order_id' => $paymentReturnData['order_id'] ?? null,
+                'payment_id' => $paymentReturnData['payment_id'] ?? null,
+            ]);
+        }
         
         // Get order details strictly from session/ID; no latest-order fallback
         $qsOrderDetails = null;
@@ -94,15 +101,36 @@ class WoohooOrderController extends Controller
             $transactionStatusMessage = __("errors.default");
             Log::error("No payment data found in session.");
         }
-        Log::info("Session before clearing: " . json_encode(Session::all()));
+        // Only clear session data if the transaction was successful
+        // Keep session data available for voucher API calls and other post-processing
+        if ($isSuccessful) {
+            Log::info("Transaction successful - keeping session data for voucher processing");
+        } else {
+            Log::info("Transaction failed - clearing session data");
+            Session::forget('payment_data');
+            Session::forget('checkout_data');
+            session()->forget('session_qs_order_id');
+            session()->forget('session_refno');
+        }
+        
+        return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
+    }
+
+    /**
+     * Clear session data after voucher processing is complete
+     */
+    public function clearSessionData()
+    {
+        Log::info("Clearing session data after voucher processing");
         Session::forget('payment_data');
         Session::forget('checkout_data');
         session()->forget('session_qs_order_id');
-        Log::info('session_qs_order_id after forget:', ['session_qs_order_id' => session('session_qs_order_id')]);
         session()->forget('session_refno');
-        Log::info('session_refno after forget:', ['session_refno' => session('session_refno')]);
-        return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
+        session()->forget('payment_return_data');
+        
+        return response()->json(['message' => 'Session data cleared successfully']);
     }
+
     public function createWoohooOrderRequest($qsOrderDetails)
     {
         Log::info("******* you are in create Woohoo Order function ***********");

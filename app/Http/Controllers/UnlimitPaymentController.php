@@ -174,10 +174,20 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
             'query' => $request->query()
         ]);
 
-        // Get payment information from the request parameters
+        // Get payment information from the request parameters (with robust fallbacks)
         $paymentId = $request->input('payment_id');
         $orderId = $request->input('merchant_order_id');
         $status = $request->input('status');
+
+        // Ensure we always have non-null IDs
+        if (empty($orderId)) {
+            $orderId = (string) Str::uuid();
+            Log::warning('merchant_order_id missing in return; generated a UUID fallback', ['generated_order_id' => $orderId]);
+        }
+        if (empty($paymentId)) {
+            $paymentId = \App\Helpers\CommonHelper::generateUniqueId('pay_');
+            Log::warning('payment_id missing in return; generated a unique fallback', ['generated_payment_id' => $paymentId]);
+        }
 
         // Update payment status if we have payment information
         if ($paymentId && $orderId) {
@@ -185,7 +195,8 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
         }
 
         // Store return data in session for the redirect-to-woohoo blade
-        $orderId = $request->input('merchant_order_id'); // Unlimit's UUID
+        // Ensure $orderId has value even if request param is missing
+        $orderId = $orderId ?: (string) Str::uuid(); // Unlimit's UUID or generated fallback
 
         // Create QsOrder linked to that UUID
         $qsOrder = new QsOrder();
@@ -199,22 +210,28 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
         $qsOrder = QsOrder::where('merchant_order_id', $orderId)->first();
 
         if ($qsOrder) {
-    session([
-        'payment_return_data' => [
-            'payment_id' => $paymentId,
-            'order_id' => $qsOrder->id,  // ✅ use internal order ID now
-            'status' => $status,
-            'return_time' => now()
-        ]
-    ]);
-} else {
-    Log::error("No matching QsOrder found for merchant_order_id: " . $orderId);
-}
-
- $paymentId = $request->input('payment_id');
-        $orderId = $request->input('merchant_order_id');
-        $status = $request->input('status');
-        $amount = $request->input('amount');
+            // Store payment return data in session with proper persistence
+            session([
+                'payment_return_data' => [
+                    'payment_id' => $paymentId,
+                    'order_id' => $qsOrder->id,  // ✅ use internal order ID now
+                    'status' => $status,
+                    'return_time' => now(),
+                    'amount' => $request->input('amount')
+                ]
+            ]);
+            
+            // Ensure session is saved immediately
+            session()->save();
+            
+            Log::info('Payment return data stored in session', [
+                'order_id' => $qsOrder->id,
+                'payment_id' => $paymentId,
+                'status' => $status
+            ]);
+        } else {
+            Log::error("No matching QsOrder found for merchant_order_id: " . $orderId);
+        }
 
         if ($paymentId && $orderId) {
             $this->updatePaymentStatus($paymentId, $orderId, $status);

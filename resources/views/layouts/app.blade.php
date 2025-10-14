@@ -19,7 +19,7 @@
             }
             /* Working time ribbon */
             .working-ribbon {
-                background:rgb(253, 13, 13);
+                background:rgb(253, 13, 13,0.5);
                 color: #fff;
                 width: 100%;
                 overflow: hidden;

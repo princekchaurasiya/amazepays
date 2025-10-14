@@ -132,6 +132,48 @@ class UnlimitPaymentController extends Controller
 Log::info('Payment Request', $data);
 Log::info('Payment Response', ['body' => $response->body(), 'status' => $response->status()]);
 
+    // Link merchant_order_id to an existing QsOrder from session, and hydrate fields
+    try {
+        $sessionOrderId = session('session_qs_order_id');
+        $checkoutData = session('checkout_data', []);
+        if (!empty($sessionOrderId)) {
+            $existingOrder = QsOrder::find($sessionOrderId);
+            if ($existingOrder) {
+                $existingOrder->merchant_order_id = $orderId;
+                // Fill sku/denomination/quantity if missing
+                if (empty($existingOrder->sku)) {
+                    $existingOrder->sku = $checkoutData['sku']
+                        ?? ($checkoutData['product']['sku'] ?? null)
+                        ?? ($checkoutData['qsProd']['sku'] ?? null);
+                }
+                if (empty($existingOrder->denomination) && isset($checkoutData['denomination'])) {
+                    $existingOrder->denomination = (float) $checkoutData['denomination'];
+                }
+                if (empty($existingOrder->quantity) && isset($checkoutData['quantity'])) {
+                    $existingOrder->quantity = (int) $checkoutData['quantity'];
+                }
+                // Prefer provided payable amount; otherwise compute
+                $computedAmount = ($existingOrder->denomination && $existingOrder->quantity)
+                    ? (float) ($existingOrder->denomination * $existingOrder->quantity)
+                    : null;
+                if (empty($existingOrder->grand_payable_amount)) {
+                    $existingOrder->grand_payable_amount = $payableAmount ?? ($checkoutData['grand_payable_amount'] ?? $computedAmount);
+                }
+                $existingOrder->save();
+                Log::info('Linked merchant_order_id to existing QsOrder', [
+                    'qs_order_id' => $existingOrder->id,
+                    'merchant_order_id' => $orderId,
+                    'sku' => $existingOrder->sku,
+                    'denomination' => $existingOrder->denomination,
+                    'quantity' => $existingOrder->quantity,
+                    'grand_payable_amount' => $existingOrder->grand_payable_amount,
+                ]);
+            }
+        }
+    } catch (\Throwable $e) {
+        Log::warning('Failed to link merchant_order_id to existing order', ['error' => $e->getMessage()]);
+    }
+
     //  return $response->json();
     $responseData = $response->json();
 
@@ -198,36 +240,79 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
         // Ensure $orderId has value even if request param is missing
         $orderId = $orderId ?: (string) Str::uuid(); // Unlimit's UUID or generated fallback
 
-        // Create QsOrder linked to that UUID and hydrate from session checkout data
-        $checkoutData = session('checkout_data', []);
+        // Prefer linking to an existing order created earlier in the flow
+        $linkedOrder = QsOrder::where('merchant_order_id', $orderId)->first();
+        if (!$linkedOrder) {
+            $sessionOrderId = session('session_qs_order_id');
+            if (!empty($sessionOrderId)) {
+                $linkedOrder = QsOrder::find($sessionOrderId);
+            }
+        }
 
-        $qsOrder = new QsOrder();
-        $qsOrder->user_id = Auth::id();
-        // try multiple shapes for sku from checkout_data
-        $qsOrder->sku = $checkoutData['sku']
-            ?? ($checkoutData['product']['sku'] ?? null)
-            ?? ($checkoutData['qsProd']['sku'] ?? null);
-        // denomination and quantity
-        $qsOrder->denomination = isset($checkoutData['denomination']) ? (float) $checkoutData['denomination'] : null;
-        $qsOrder->quantity = isset($checkoutData['quantity']) ? (int) $checkoutData['quantity'] : 1;
-        // compute grand payable if not provided by return
-        $computedAmount = ($qsOrder->denomination && $qsOrder->quantity)
-            ? (float) ($qsOrder->denomination * $qsOrder->quantity)
-            : null;
-        $qsOrder->grand_payable_amount = $request->input('payable_amount')
-            ?? ($checkoutData['grand_payable_amount'] ?? $computedAmount);
-        $qsOrder->order_status = 'Pending';
-        // Link the UUID from Unlimit
-        $qsOrder->merchant_order_id = $orderId;
-        $qsOrder->save();
+        if ($linkedOrder) {
+            // Update missing fields on the existing order
+            $checkoutData = session('checkout_data', []);
+            if (empty($linkedOrder->merchant_order_id)) {
+                $linkedOrder->merchant_order_id = $orderId;
+            }
+            if (empty($linkedOrder->sku)) {
+                $linkedOrder->sku = $checkoutData['sku']
+                    ?? ($checkoutData['product']['sku'] ?? null)
+                    ?? ($checkoutData['qsProd']['sku'] ?? null);
+            }
+            if (empty($linkedOrder->denomination) && isset($checkoutData['denomination'])) {
+                $linkedOrder->denomination = (float) $checkoutData['denomination'];
+            }
+            if (empty($linkedOrder->quantity) && isset($checkoutData['quantity'])) {
+                $linkedOrder->quantity = (int) $checkoutData['quantity'];
+            }
+            $computedAmount = ($linkedOrder->denomination && $linkedOrder->quantity)
+                ? (float) ($linkedOrder->denomination * $linkedOrder->quantity)
+                : null;
+            if (empty($linkedOrder->grand_payable_amount)) {
+                $linkedOrder->grand_payable_amount = $request->input('payable_amount')
+                    ?? ($checkoutData['grand_payable_amount'] ?? $computedAmount);
+            }
+            if (empty($linkedOrder->order_status)) {
+                $linkedOrder->order_status = 'Pending';
+            }
+            $linkedOrder->save();
 
-        Log::info('Created QsOrder from return + session checkout_data', [
-            'order_id' => $qsOrder->id,
-            'sku' => $qsOrder->sku,
-            'denomination' => $qsOrder->denomination,
-            'quantity' => $qsOrder->quantity,
-            'grand_payable_amount' => $qsOrder->grand_payable_amount,
-        ]);
+            Log::info('Updated existing QsOrder on return', [
+                'order_id' => $linkedOrder->id,
+                'merchant_order_id' => $linkedOrder->merchant_order_id,
+                'sku' => $linkedOrder->sku,
+                'denomination' => $linkedOrder->denomination,
+                'quantity' => $linkedOrder->quantity,
+                'grand_payable_amount' => $linkedOrder->grand_payable_amount,
+            ]);
+        } else {
+            // Create a new order only as a last resort
+            $checkoutData = session('checkout_data', []);
+            $qsOrder = new QsOrder();
+            $qsOrder->user_id = Auth::id();
+            $qsOrder->sku = $checkoutData['sku']
+                ?? ($checkoutData['product']['sku'] ?? null)
+                ?? ($checkoutData['qsProd']['sku'] ?? null);
+            $qsOrder->denomination = isset($checkoutData['denomination']) ? (float) $checkoutData['denomination'] : null;
+            $qsOrder->quantity = isset($checkoutData['quantity']) ? (int) $checkoutData['quantity'] : 1;
+            $computedAmount = ($qsOrder->denomination && $qsOrder->quantity)
+                ? (float) ($qsOrder->denomination * $qsOrder->quantity)
+                : null;
+            $qsOrder->grand_payable_amount = $request->input('payable_amount')
+                ?? ($checkoutData['grand_payable_amount'] ?? $computedAmount);
+            $qsOrder->order_status = 'Pending';
+            $qsOrder->merchant_order_id = $orderId;
+            $qsOrder->save();
+
+            Log::info('Created QsOrder from return + session checkout_data', [
+                'order_id' => $qsOrder->id,
+                'sku' => $qsOrder->sku,
+                'denomination' => $qsOrder->denomination,
+                'quantity' => $qsOrder->quantity,
+                'grand_payable_amount' => $qsOrder->grand_payable_amount,
+            ]);
+        }
         //Then store this internal ID in the session when the user returns
         // Inside handleReturnSuccess()
         $qsOrder = QsOrder::where('merchant_order_id', $orderId)->first();

@@ -93,7 +93,7 @@
                 @if(request()->routeIs('home'))
                 <div class="working-ribbon">
                     <div class="working-ribbon-inner">
-                        <span class="working-ribbon-text">Amazepays Working time: 10am to 6.30pm &nbsp; • &nbsp; Amazepays Working time: 10am to 6.30pm &nbsp; • &nbsp; Amazepays Working time: 10am to 6.30pm</span>
+                        <span class="working-ribbon-text">It takes 180 sec to process the voucher</span>
                     </div>
                 </div>
                 @endif

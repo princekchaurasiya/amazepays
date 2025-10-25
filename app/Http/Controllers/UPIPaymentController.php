@@ -61,7 +61,7 @@ class UPIPaymentController extends Controller
             ],
             'return_urls' => [
                 'success_url' => route('upi.return'),
-                'decline_url' => route('upi.return'),
+                'decline_url' => 'https://amazepay.toutle.in/',
             ],
         ];
 

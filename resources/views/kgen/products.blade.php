@@ -45,7 +45,12 @@
     <div class="row">
         @forelse($products ?? [] as $product)
             <div class="col-md-4 mb-4">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm position-relative">
+                    @if(($product['discount_percentage'] ?? 0) > 0)
+                        <div class="position-absolute" style="top:8px; right:8px; background:#e53935; color:#fff; padding:4px 8px; border-radius:4px; font-weight:600; font-size:12px;">
+                            {{ (int)($product['discount_percentage'] ?? 0) }}% off
+                        </div>
+                    @endif
                     {{-- Product Image --}}
                     <img src="{{ $product['attachments'][0] ?? 'https://via.placeholder.com/300x200' }}"
                          class="card-img-top"

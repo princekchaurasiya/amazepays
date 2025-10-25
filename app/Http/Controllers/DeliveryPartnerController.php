@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\KgenProduct;
+use App\Models\QsProduct;
 
 class DeliveryPartnerController extends Controller
 {
@@ -125,6 +126,32 @@ class DeliveryPartnerController extends Controller
                 ->values()
                 ->all();
         }
+
+        // ✅ Enrich with Voyager QS discount percentage by product name
+        $discountMap = QsProduct::whereNotNull('discount_percentage')
+            ->where('discount_percentage', '>', 0)
+            ->pluck('discount_percentage', 'name')
+            ->mapWithKeys(function ($discount, $name) {
+                $normalized = strtolower(trim((string) $name));
+                return $normalized !== '' ? [$normalized => (float) $discount] : [];
+            })
+            ->all();
+
+        $products = collect($products)->map(function ($product) use ($discountMap) {
+            $nameKeys = [
+                strtolower(trim((string) ($product['productDisplayName'] ?? ''))),
+                strtolower(trim((string) ($product['productName'] ?? ''))),
+            ];
+            $discount = 0;
+            foreach ($nameKeys as $key) {
+                if ($key !== '' && isset($discountMap[$key])) {
+                    $discount = $discountMap[$key];
+                    break;
+                }
+            }
+            $product['discount_percentage'] = $discount;
+            return $product;
+        })->all();
 
         // ✅ Always return the correct (filtered or not) list
         return view('kgen.products', [

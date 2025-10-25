@@ -3,152 +3,183 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\UnlimitPayment;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Client\RequestException;
-use App\Models\ApiToken;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use App\Models\QsOrder;
+use App\Models\UnlimitPayment;
 
 class UPIPaymentController extends Controller
 {
-
-
-     public function getToken()
+    /**
+     * Initiate Unlimit UPI payment and redirect customer to Unlimit Hosted Page
+     */
+    public function store(Request $request)
     {
-        $response = Http::asForm()
+        $payableAmount = $request->input('payable_amount');
+
+        // Acquire access token
+        $tokenResponse = Http::asForm()
             ->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode(env('UNLIMIT_CODE')),
             ])
-            ->post('https://psp.in.unlimit.com/api/auth/token', [
+            ->post('https://sandbox.in.unlimit.com/api/auth/token', [
                 'grant_type' => 'password',
                 'password' => env('UNLIMIT_SECRET_KEY'),
                 'terminal_code' => env('UNLIMIT_PUBLIC_KEY'),
             ]);
 
-        $data = $response->json();
-        //dd($data);
-
-    if (isset($data['access_token'])) {
-        ApiToken::create([
-            'access_token' => $data['access_token'],
-            'expires_at' => isset($data['expires_in']) 
-                ? Carbon::now()->addSeconds($data['expires_in']) 
-                : null,
-        ]);
-
-        return $data['access_token'];
-    }
-
-    // Log the error for debugging but return false instead of JSON response
-    Log::error('Token not received from Unlimit API (UPI)', [
-        'response' => $data,
-        'status_code' => $response->status()
-    ]);
-    
-    return false;
-}
-    public function store(Request $request)
-    {
-        //$discount = session('discounted_amount_value');
-        //return view('unlimitpayment', ['discount' => $discount]);
-        // Validate input
-      /*$validated = $request->validate([
-        'amount' => 'required|numeric|min:0.01',
-        'card_number' => 'required|string|digits_between:13,19',
-        'holder' => 'required|string|max:255',
-        'expiration' => 'required|string',
-        'cvv' => 'required|digits_between:3,4',
-    ]);*/
-
-    // 2. Get Unlimit token (internal call)
-    $token = $this->getToken();
-
-    if (!$token) {
-        // Return user-friendly error message instead of technical error
-        return redirect()->back()->with('error', 'Payment service is temporarily unavailable. Please try again later.');
-    }
-
-    // Generate current time with milliseconds and Z suffix in UTC
-    $now = Carbon::now('UTC');
-    $milliseconds = $now->format('v'); // milliseconds
-    $time = $now->format("Y-m-d\TH:i:s.") . $milliseconds . "Z";
-    $payableAmount = $request->input('payable_amount');
-
-    $data = [
-        'request' => [
-            'id' => (string) Str::uuid(),
-            'time' => $time,
-        ],
-        'merchant_order' => [
-            'id' => 'ad466842-4b74-4c18-9314-e3f8f15ed183',
-            'description' => "test",
-        ],
-        'payment_method' => 'upi',
-        'payment_data' => [ 
-            'amount' => $payableAmount,
-            'currency' => 'INR',
-        ],
-
-        'return_urls' => [
-        'success_url' => route('unlimit.return'),
-        'decline_url' => route('unlimit.return'),
-        ],
-        // Note: card_account.card was removed based on your earlier error for Payment Page mode
-    ];
-
-          /*$token = ApiToken::latest()->first();
-
-    if (!$token || ($token->expires_at && $token->expires_at->isPast())) {
-        return response()->json(['error' => 'Token expired or missing.'], 401);
-    }*/
-
-   try {
-   $response = Http::withHeaders([
-    'Authorization' => 'Bearer ' . $token,
-   //'Accept' => 'application/json',
-    'Content-Type' => 'application/json',
-])
-->post('https://psp.in.unlimit.com/api/payments', $data);
-
-Log::info('Payment Request', $data);
-Log::info('Payment Response', ['body' => $response->body(), 'status' => $response->status()]);
-
-    //  return $response->json();
-    $responseData = $response->json();
-
-    if (isset($responseData['redirect_url'])) {
-    return redirect()->away($responseData['redirect_url']);
+        $tokenJson = $tokenResponse->json();
+        if (!isset($tokenJson['access_token'])) {
+            Log::error('UPI: Token not received from Unlimit API', [
+                'response' => $tokenJson,
+                'status_code' => $tokenResponse->status(),
+            ]);
+            return back()->with('error', 'Payment service temporarily unavailable');
         }
 
+        $accessToken = $tokenJson['access_token'];
 
-} catch (RequestException $e) {
-    return response()->json([
-        'error' => 'HTTP request failed',
-        'message' => $e->getMessage(),
-        'response' => $e->response?->body(),
-    ], 500);
-}        
+        // Build Unlimit request (UPI)
+        $orderId = (string) Str::uuid();
+        $requestId = (string) Str::uuid();
+
+        $payload = [
+            'request' => [
+                'id' => $requestId,
+                'time' => now('UTC')->format('Y-m-d\\TH:i:s.v\\Z'),
+            ],
+            'merchant_order' => [
+                'id' => $orderId,
+                'description' => 'Gift Card Payment - ' . $orderId,
+            ],
+            'payment_method' => 'upi',
+            'payment_data' => [
+                'amount' => (float) $payableAmount,
+                'currency' => 'INR',
+            ],
+            'return_urls' => [
+                'success_url' => route('upi.return'),
+                'decline_url' => route('upi.return'),
+            ],
+        ];
+
+        try {
+            $resp = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $accessToken,
+                'Content-Type' => 'application/json',
+            ])->post('https://sandbox.in.unlimit.com/api/payments', $payload);
+
+            Log::info('UPI Payment Request', $payload);
+            Log::info('UPI Payment Response', ['body' => $resp->body(), 'status' => $resp->status()]);
+
+            $respJson = $resp->json();
+            if (isset($respJson['redirect_url'])) {
+                // Persist minimal ctx for callback fallback
+                session([
+                    'unlimit_ctx_upi' => [
+                        'merchant_order_id' => $orderId,
+                        'amount' => (float) $payableAmount,
+                        'initiated_at' => now(),
+                    ]
+                ]);
+                session()->save();
+
+                // Optional: persist a payment row for traceability
+                try {
+                    $payment = new UnlimitPayment();
+                    $payment->user_id = Auth::id();               // satisfy NOT NULL constraint
+                    $payment->order_id = $orderId;               // UUID we generated
+                    $payment->amount = (float) $payableAmount;    // existing column
+                    $payment->currency = 'INR';                   // existing column
+                    $payment->payment_mode = 'upi';               // existing column
+                    $payment->order_status = 'pending';           // existing column
+                    // Optionally stash redirect_url in a notes field for traceability
+                    $payment->billing_notes = isset($respJson['redirect_url']) ? $respJson['redirect_url'] : null;
+                    $payment->created_at = now();
+                    $payment->save();
+                } catch (\Throwable $e) {
+                    Log::warning('UPI: Failed to persist payment row', ['error' => $e->getMessage()]);
+                }
+
+                return redirect()->away($respJson['redirect_url']);
+            }
+
+            Log::error('UPI: No redirect URL in response', $respJson ?? []);
+            return back()->with('error', 'No redirect URL received from payment provider');
+        } catch (\Throwable $e) {
+            Log::error('UPI: Exception during initiate', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Unable to initiate payment');
+        }
     }
 
-    public function handleReturnSuccess(Request $request)
-{
-    return redirect()->route('payment.success')->with('success', 'Payment completed successfully.');
-}
-
-public function process(Request $request)
+    /**
+     * Handle customer redirect back from Unlimit for UPI
+     */
+    public function handleReturn(Request $request)
     {
-        // Get the payable amount from request
-        $payableAmount = $request->input('payable_amount');
+        $rawBody = $request->getContent();
+        $jsonBody = [];
+        try { $jsonBody = $rawBody ? json_decode($rawBody, true) ?: [] : []; } catch (\Throwable $e) { $jsonBody = []; }
 
-        // Debug or use the amount
-        // dd($payableAmount);
+        Log::info('UPI Return received', [
+            'method' => $request->method(),
+            'request_data' => $request->all(),
+            'json_body' => $jsonBody,
+            'headers' => $request->headers->all(),
+            'query' => $request->query(),
+            'raw' => $rawBody,
+        ]);
 
-        // Proceed with your custom logic (e.g., saving to DB, initiating a new payment method, etc.)
-        
-        return view('payment.success', ['amount' => $payableAmount]);
+        // Extract with aliases
+        $paymentId = $request->input('payment_id') ?? ($jsonBody['payment_id'] ?? $jsonBody['paymentId'] ?? null);
+        $merchantOrderId = $request->input('merchant_order_id') ?? ($jsonBody['merchant_order_id'] ?? $jsonBody['merchantOrderId'] ?? $jsonBody['order_id'] ?? null);
+        $status = $request->input('status') ?? ($jsonBody['status'] ?? $jsonBody['paymentStatus'] ?? $jsonBody['result'] ?? null);
+
+        $ctx = session('unlimit_ctx_upi', []);
+        if (empty($merchantOrderId)) { $merchantOrderId = $ctx['merchant_order_id'] ?? null; }
+        if (empty($paymentId)) { $paymentId = $ctx['payment_id'] ?? null; }
+
+        if (empty($merchantOrderId)) { $merchantOrderId = (string) Str::uuid(); }
+        if (empty($paymentId)) { $paymentId = \App\Helpers\CommonHelper::generateUniqueId('pay_'); }
+
+        // Link to internal order if present
+        $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
+        if (!$qsOrder) {
+            $sessionOrderId = session('session_qs_order_id');
+            if (!empty($sessionOrderId)) { $qsOrder = QsOrder::find($sessionOrderId); }
+        }
+
+        // Persist session snapshot for downstream flow
+        session(['payment_return_data' => [
+            'payment_id' => $paymentId,
+            'order_id' => $qsOrder?->id,
+            'status' => $status,
+            'return_time' => now(),
+            'amount' => $request->input('amount') ?? ($jsonBody['amount'] ?? ($ctx['amount'] ?? $qsOrder->grand_payable_amount ?? null))
+        ]]);
+        session()->save();
+
+        Log::info('UPI: payment_return_data stored', session('payment_return_data'));
+
+        return view('woohoo.redirect-to-woohoo', [
+            'payment_id' => $paymentId,
+            'order_id' => $merchantOrderId,
+            'status' => $status,
+        ]);
     }
 
+    /**
+     * Webhook for UPI (optional)
+     */
+    public function webhook(Request $request)
+    {
+        Log::info('UPI webhook received', [
+            'request_data' => $request->all(),
+            'headers' => $request->headers->all(),
+        ]);
+        return response()->json(['status' => 'ok']);
+    }
 }
 

@@ -344,7 +344,7 @@ Route::get('/payment', function () {
     return view('payment'); // This assumes the file is at resources/views/payment.blade.php
 });
 
-Route::get('/payment/return', [UnlimitPaymentController::class, 'handleReturnSuccess'])->name('unlimit.return');
+Route::match(['GET','POST'], '/payment/return', [UnlimitPaymentController::class, 'handleReturnSuccess'])->name('unlimit.return');
 
 // Unlimit webhook endpoint
 Route::post('/unlimit/webhook', [UnlimitPaymentController::class, 'webhook'])->name('unlimit.webhook');
@@ -378,6 +378,8 @@ Route::get('/admin/send-transaction-report/{id}', [TransactionReportController::
 //routes to UPI Payment
 use App\Http\Controllers\UPIPaymentController;
 Route::post('/payment/upi', [UPIPaymentController::class, 'store'])->name('payment.upi');
+Route::match(['GET','POST'], '/upi/return', [UPIPaymentController::class, 'handleReturn'])->name('upi.return');
+Route::post('/upi/webhook', [UPIPaymentController::class, 'webhook'])->name('upi.webhook');
 
 //routes to Net Banking Payment
 use App\Http\Controllers\NetBankPaymentController;

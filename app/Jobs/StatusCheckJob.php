@@ -130,7 +130,8 @@ class StatusCheckJob implements ShouldQueue
             $responseData = $response->json();
             if (isset($responseData['cards'])) {
                 $encryptedCards = encrypt(json_encode($responseData['cards']));
-                QsOrder::where('order_id', $orderId)->update(['cards' => $encryptedCards]);
+                // Update by Woohoo order id as that maps to remote order
+                QsOrder::where('woohoo_order_id', $orderId)->update(['cards' => $encryptedCards]);
             }
         }
     }

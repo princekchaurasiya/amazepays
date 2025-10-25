@@ -516,7 +516,36 @@ class WoohooOrderController extends Controller
         $financialYear = $this->getFinancialYear();
         $invoiceNumber = "FRB2C-" . $financialYear . "-" . $orderId;
         $invoiceDate = date("d-m-Y");
-        $cardsArray = json_decode(decrypt($order["cards"], env("ENCRYPTION_KEY")), true);
+
+        // Safely resolve cards; fetch from Woohoo if not yet available
+        $cardsArray = [];
+        try {
+            if (!empty($order["cards"])) {
+                $cardsArray = json_decode(decrypt($order["cards"], env("ENCRYPTION_KEY")), true) ?: [];
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Card decrypt failed; will attempt to fetch cards", ["error" => $e->getMessage()]);
+            $cardsArray = [];
+        }
+
+        if (empty($cardsArray)) {
+            try {
+                $woohooOrderId = $order["woohoo_order_id"] ?? null;
+                if ($woohooOrderId) {
+                    // Reuse activation fetch to retrieve cards
+                    $combined = $this->callCardActivation(["orderId" => $woohooOrderId, "status" => "COMPLETE"]);
+                    if (is_array($combined) && isset($combined["cards"]) && is_array($combined["cards"])) {
+                        $cardsArray = $combined["cards"]; 
+                        // Persist freshly fetched cards
+                        QsOrder::where("id", $orderId)->update([
+                            "cards" => encrypt(json_encode($cardsArray), env("ENCRYPTION_KEY")),
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::error("Failed to fetch cards after decrypt failure", ["error" => $e->getMessage(), "woohoo_order_id" => $order["woohoo_order_id"] ?? null]);
+            }
+        }
         
         log::info(888);
         QsOrder::where("id", $orderId)->update(["invoice_number" => $invoiceNumber]);

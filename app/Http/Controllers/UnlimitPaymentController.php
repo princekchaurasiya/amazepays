@@ -35,7 +35,7 @@ class UnlimitPaymentController extends Controller
             ->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode(env('UNLIMIT_CODE')),
             ])
-            ->post('https://psp.in.unlimit.com/api/auth/token', [
+            ->post('https://sandbox.in.unlimit.com/api/auth/token', [
                 'grant_type' => 'password',
                 'password' => env('UNLIMIT_SECRET_KEY'),
                 'terminal_code' => env('UNLIMIT_PUBLIC_KEY'),
@@ -127,7 +127,7 @@ class UnlimitPaymentController extends Controller
    //'Accept' => 'application/json',
     'Content-Type' => 'application/json',
 ])
-->post('https://psp.in.unlimit.com/api/payments', $data);
+->post('https://sandbox.in.unlimit.com/api/payments', $data);
 
 Log::info('Payment Request', $data);
 Log::info('Payment Response', ['body' => $response->body(), 'status' => $response->status()]);
@@ -380,17 +380,30 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
         $status = $request->input('status');
         $amount = $request->input('amount');
 
-        if ($paymentId && $orderId) {
-            $this->updatePaymentStatus($paymentId, $orderId, $status);
-            
-            // If payment is successful, you might want to trigger order creation
-            if ($status === 'success' || $status === 'approved') {
-                Log::info('Payment successful, ready for order creation', [
-                    'order_id' => $orderId,
-                    'payment_id' => $paymentId
-                ]);
-            }
+        if ($status === 'success' || $status === 'approved') {
+    Log::info('Payment successful, ready for order creation', [
+        'order_id' => $orderId,
+        'payment_id' => $paymentId
+    ]);
+
+    try {
+        $qsOrder = QsOrder::where('id', $orderId)->first();
+        if ($qsOrder) {
+            $woohooController = new \App\Http\Controllers\WoohooOrderController();
+            $woohooController->createWoohooOrderRequest($qsOrder);
+
+            Log::info('Woohoo order created via webhook', ['order_id' => $orderId]);
+        } else {
+            Log::warning('No matching QsOrder found for webhook order_id', ['order_id' => $orderId]);
         }
+    } catch (\Exception $e) {
+        Log::error('Woohoo order creation failed in webhook', [
+            'order_id' => $orderId,
+            'error' => $e->getMessage(),
+        ]);
+    }
+}
+
 
         return response()->json(['status' => 'success'], 200);
     }

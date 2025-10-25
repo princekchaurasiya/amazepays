@@ -109,7 +109,7 @@ class UnlimitPaymentController extends Controller
         ],
 
         'return_urls' => [
-            'success_url' => route('unlimit.return'),
+            'success_url' => route('woohoo.processing'),
             'decline_url' => 'https://amazepay.toutle.in/',
         ],
         // Note: card_account.card was removed based on your earlier error for Payment Page mode
@@ -353,11 +353,12 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
             }
         }
 
-        // Return the redirect-to-woohoo view
-        return view('woohoo.redirect-to-woohoo', [
+        // Return the processing-woohoo view
+        return view('woohoo.processing-woohoo', [
             'payment_id' => $paymentId,
             'order_id' => $orderId,
-            'status' => $status
+            'status' => $status,
+            'amount' => $request->input('amount') ?? $linkedOrder->grand_payable_amount ?? 0
         ]);
 
     }

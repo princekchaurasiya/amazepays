@@ -298,6 +298,12 @@ Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'
 Route::get('/woohoo/check-status', [WoohooOrderController::class, 'checkTransactionStatus'])->name('woohoo.checkStatus');
 Route::post('/woohoo/clear-session', [WoohooOrderController::class, 'clearSessionData'])->name('woohoo.clearSession');
 
+// Woohoo processing routes
+use App\Http\Controllers\WoohooProcessingController;
+Route::get('/woohoo/processing', [WoohooProcessingController::class, 'showProcessing'])->name('woohoo.processing');
+Route::get('/woohoo/processing/create-order', [WoohooProcessingController::class, 'createOrder'])->name('woohoo.processing.createOrder');
+Route::post('/woohoo/processing/create-order', [WoohooProcessingController::class, 'createOrder'])->name('woohoo.processing.createOrder.post');
+
 Route::get('/order-failure', function () {
     return view('order-failure'); // This will render the order-failure.blade.php view
 });

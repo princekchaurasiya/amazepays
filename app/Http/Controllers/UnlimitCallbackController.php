@@ -41,9 +41,16 @@ class UnlimitCallbackController extends Controller
             $status = $payload['transactions'][0]['status'] ?? null;
         }
 
+        // Log the raw status for debugging
+        Log::info('Raw status from Unlimit callback', [
+            'raw_status' => $status,
+            'merchant_order_id' => $merchantOrderId,
+            'payment_id' => $paymentId
+        ]);
+
         // Normalize status to a small set used internally
         $normalizedStatus = match (strtolower((string) $status)) {
-            'success', 'approved', 'processed', 'completed' => 'approved',
+            'success', 'approved', 'processed', 'completed' => 'completed',
             'declined', 'failed', 'error' => 'declined',
             'pending', 'in_progress', 'processing' => 'pending',
             default => (empty($status) ? 'pending' : strtolower($status)),
@@ -88,7 +95,7 @@ class UnlimitCallbackController extends Controller
                 $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
                 if ($qsOrder) {
                     if (isset($qsOrder->order_status)) {
-                        $qsOrder->order_status = $normalizedStatus === 'approved' ? 'Success' : ($normalizedStatus === 'declined' ? 'Failed' : 'Pending');
+                        $qsOrder->order_status = in_array($normalizedStatus, ['approved', 'completed']) ? 'Success' : ($normalizedStatus === 'declined' ? 'Failed' : 'Pending');
                     }
                     $qsOrder->save();
                 }

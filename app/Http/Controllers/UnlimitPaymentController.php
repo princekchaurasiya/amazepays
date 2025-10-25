@@ -110,7 +110,7 @@ class UnlimitPaymentController extends Controller
 
         'return_urls' => [
             'success_url' => route('unlimit.return'),
-            'decline_url' => route('unlimit.return'),
+            'decline_url' => 'https://amazepay.toutle.in/',
         ],
         // Note: card_account.card was removed based on your earlier error for Payment Page mode
     ];

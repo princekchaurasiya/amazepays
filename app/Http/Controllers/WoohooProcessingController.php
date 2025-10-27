@@ -42,6 +42,18 @@ class WoohooProcessingController extends Controller
             }
 
             // Check if payment was successful
+            // If status is null/empty, check the database for the actual payment status
+            if (empty($status)) {
+                $unlimitPayment = \App\Models\UnlimitPayment::where('order_id', $qsOrder->merchant_order_id)->first();
+                if ($unlimitPayment) {
+                    $status = $unlimitPayment->status ?? $unlimitPayment->order_status ?? 'pending';
+                    Log::info('Using database status for payment check', [
+                        'order_id' => $orderId,
+                        'db_status' => $status
+                    ]);
+                }
+            }
+            
             if (!in_array($status, ['success', 'approved', 'completed'])) {
                 Log::warning('Payment not successful, cannot create Woohoo order', [
                     'order_id' => $orderId,

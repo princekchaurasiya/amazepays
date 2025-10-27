@@ -19,6 +19,7 @@ class UnlimitPayment extends Model
         'tracking_id',
         'bank_ref_no',
         'order_status',
+        'status',
         'failure_message',
         'payment_mode',
         'card_name',
@@ -57,5 +58,6 @@ class UnlimitPayment extends Model
         'billing_notes',
         'trans_date',
         'bin_country',
+        'unlimit_response',
     ];
 }

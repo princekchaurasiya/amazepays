@@ -60,8 +60,8 @@ class UPIPaymentController extends Controller
                 'currency' => 'INR',
             ],
             'return_urls' => [
-                'success_url' => route('upi.return'),
-                'decline_url' => route('upi.return'),
+                'success_url' => route('woohoo.processing'),
+                'decline_url' => 'https://amazepay.toutle.in/',
             ],
         ];
 

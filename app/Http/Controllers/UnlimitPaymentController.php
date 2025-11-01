@@ -63,36 +63,72 @@ class UnlimitPaymentController extends Controller
     
     return false;
 }
-    public function store(Request $request)
-    {
-        //$discount = session('discounted_amount_value');
-        //return view('unlimitpayment', ['discount' => $discount]);
-        // Validate input
-      /*$validated = $request->validate([
-        'amount' => 'required|numeric|min:0.01',
-        'card_number' => 'required|string|digits_between:13,19',
-        'holder' => 'required|string|max:255',
-        'expiration' => 'required|string',
-        'cvv' => 'required|digits_between:3,4',
-    ]);*/
-
-    // 2. Get Unlimit token (internal call)
+   public function store(Request $request)
+{
     $token = $this->getToken();
 
     if (!$token) {
-        // Return user-friendly error message instead of technical error
         return redirect()->back()->with('error', 'Payment service is temporarily unavailable. Please try again later.');
     }
 
     // Generate current time with milliseconds and Z suffix in UTC
     $now = Carbon::now('UTC');
-    $milliseconds = $now->format('v'); // milliseconds
+    $milliseconds = $now->format('v');
     $time = $now->format("Y-m-d\TH:i:s.") . $milliseconds . "Z";
     $payableAmount = $request->input('payable_amount');
-    
-    // Generate unique order ID
+
+    // ✅ Generate unique Unlimit merchant order ID
     $orderId = (string) Str::uuid();
 
+    /**
+     * ✅ Step 1: Link merchant_order_id to QsOrder before making API call
+     */
+    try {
+        $sessionOrderId = session('session_qs_order_id');
+        $checkoutData = session('checkout_data', []);
+        if (!empty($sessionOrderId)) {
+            $existingOrder = QsOrder::find($sessionOrderId);
+            if ($existingOrder) {
+                // Link merchant_order_id so callbacks can find it later
+                $existingOrder->merchant_order_id = $orderId;
+
+                // Fill missing order details
+                $existingOrder->sku = $existingOrder->sku 
+                    ?? ($checkoutData['sku'] ?? ($checkoutData['product']['sku'] ?? null));
+                $existingOrder->denomination = $existingOrder->denomination 
+                    ?? (float) ($checkoutData['denomination'] ?? 0);
+                $existingOrder->quantity = $existingOrder->quantity 
+                    ?? (int) ($checkoutData['quantity'] ?? 1);
+                $existingOrder->grand_payable_amount = $existingOrder->grand_payable_amount 
+                    ?? ($payableAmount ?? ($checkoutData['grand_payable_amount'] ?? null));
+
+                $existingOrder->save();
+
+                Log::info('✅ Linked merchant_order_id to QsOrder before Unlimit API call', [
+                    'qs_order_id' => $existingOrder->id,
+                    'merchant_order_id' => $orderId,
+                    'sku' => $existingOrder->sku,
+                    'denomination' => $existingOrder->denomination,
+                    'quantity' => $existingOrder->quantity,
+                    'grand_payable_amount' => $existingOrder->grand_payable_amount,
+                ]);
+            } else {
+                Log::warning('⚠️ session_qs_order_id found but QsOrder missing', [
+                    'session_qs_order_id' => $sessionOrderId
+                ]);
+            }
+        } else {
+            Log::warning('⚠️ No session_qs_order_id found in store()');
+        }
+    } catch (\Throwable $e) {
+        Log::error('❌ Failed to link merchant_order_id before API call', [
+            'error' => $e->getMessage()
+        ]);
+    }
+
+    /**
+     * Step 2: Proceed with Unlimit payment request
+     */
     $data = [
         'request' => [
             'id' => (string) Str::uuid(),
@@ -103,109 +139,53 @@ class UnlimitPaymentController extends Controller
             'description' => "Gift Card Payment - " . $orderId,
         ],
         'payment_method' => 'bankcard',
-        'payment_data' => [ 
+        'payment_data' => [
             'amount' => $payableAmount,
             'currency' => 'INR',
         ],
-
         'return_urls' => [
             'success_url' => route('woohoo.processing'),
             'decline_url' => 'https://amazepay.toutle.in/',
         ],
-        // Note: card_account.card was removed based on your earlier error for Payment Page mode
     ];
 
-          /*$token = ApiToken::latest()->first();
-
-    if (!$token || ($token->expires_at && $token->expires_at->isPast())) {
-        return response()->json(['error' => 'Token expired or missing.'], 401);
-    }*/
-
-   try {
-   $response = Http::withHeaders([
-    'Authorization' => 'Bearer ' . $token,
-   //'Accept' => 'application/json',
-    'Content-Type' => 'application/json',
-])
-->post('https://sandbox.in.unlimit.com/api/payments', $data);
-
-Log::info('Payment Request', $data);
-Log::info('Payment Response', ['body' => $response->body(), 'status' => $response->status()]);
-
-    // Link merchant_order_id to an existing QsOrder from session, and hydrate fields
     try {
-        $sessionOrderId = session('session_qs_order_id');
-        $checkoutData = session('checkout_data', []);
-        if (!empty($sessionOrderId)) {
-            $existingOrder = QsOrder::find($sessionOrderId);
-            if ($existingOrder) {
-                $existingOrder->merchant_order_id = $orderId;
-                // Fill sku/denomination/quantity if missing
-                if (empty($existingOrder->sku)) {
-                    $existingOrder->sku = $checkoutData['sku']
-                        ?? ($checkoutData['product']['sku'] ?? null)
-                        ?? ($checkoutData['qsProd']['sku'] ?? null);
-                }
-                if (empty($existingOrder->denomination) && isset($checkoutData['denomination'])) {
-                    $existingOrder->denomination = (float) $checkoutData['denomination'];
-                }
-                if (empty($existingOrder->quantity) && isset($checkoutData['quantity'])) {
-                    $existingOrder->quantity = (int) $checkoutData['quantity'];
-                }
-                // Prefer provided payable amount; otherwise compute
-                $computedAmount = ($existingOrder->denomination && $existingOrder->quantity)
-                    ? (float) ($existingOrder->denomination * $existingOrder->quantity)
-                    : null;
-                if (empty($existingOrder->grand_payable_amount)) {
-                    $existingOrder->grand_payable_amount = $payableAmount ?? ($checkoutData['grand_payable_amount'] ?? $computedAmount);
-                }
-                $existingOrder->save();
-                Log::info('Linked merchant_order_id to existing QsOrder', [
-                    'qs_order_id' => $existingOrder->id,
-                    'merchant_order_id' => $orderId,
-                    'sku' => $existingOrder->sku,
-                    'denomination' => $existingOrder->denomination,
-                    'quantity' => $existingOrder->quantity,
-                    'grand_payable_amount' => $existingOrder->grand_payable_amount,
-                ]);
-            }
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+            'Content-Type' => 'application/json',
+        ])->post('https://sandbox.in.unlimit.com/api/payments', $data);
+
+        Log::info('Payment Request', $data);
+        Log::info('Payment Response', ['body' => $response->body(), 'status' => $response->status()]);
+
+        $responseData = $response->json();
+
+        if (isset($responseData['redirect_url'])) {
+            // ✅ Store payment info linked to correct QsOrder
+            $this->storePaymentInfo($request, $orderId, $responseData);
+            return redirect()->away($responseData['redirect_url']);
         }
-    } catch (\Throwable $e) {
-        Log::warning('Failed to link merchant_order_id to existing order', ['error' => $e->getMessage()]);
-    }
 
-    //  return $response->json();
-    $responseData = $response->json();
+        Log::error('No redirect URL in response', $responseData);
+        return response()->json(['error' => 'No redirect URL received', 'response' => $responseData], 400);
 
-    if (isset($responseData['redirect_url'])) {
-        // Store payment information before redirecting
-        $this->storePaymentInfo($request, $orderId, $responseData);
-        return redirect()->away($responseData['redirect_url']);
-    }
-
-    // If no redirect URL, handle the response accordingly
-    Log::error('No redirect URL in response', $responseData);
-    return response()->json(['error' => 'No redirect URL received', 'response' => $responseData], 400);
-
-} catch (RequestException $e) {
-
-    if (str_contains($e->getMessage(), 'cURL error 35')) {
-        Log::error('cURL error 35: Send failure: Connection was aborted');
+    } catch (RequestException $e) {
+        if (str_contains($e->getMessage(), 'cURL error 35')) {
+            Log::error('cURL error 35: Send failure: Connection was aborted');
+            return response()->json([
+                'error' => 'Connection aborted',
+                'message' => 'The connection to the payment provider was unexpectedly closed. Please try again shortly.',
+                'code' => 35
+            ], 503);
+        }
 
         return response()->json([
-            'error' => 'Connection aborted',
-            'message' => 'The connection to the payment provider was unexpectedly closed. Please try again shortly.',
-            'code' => 35
-        ], 503);
+            'error' => 'HTTP request failed',
+            'message' => $e->getMessage(),
+            'response' => $e->response?->body(),
+        ], 500);
     }
-
-    return response()->json([
-        'error' => 'HTTP request failed',
-        'message' => $e->getMessage(),
-        'response' => $e->response?->body(),
-    ], 500);
-}        
-    }
+}
 
     public function handleReturnSuccess(Request $request)
     {
@@ -302,7 +282,8 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
             $qsOrder->grand_payable_amount = $request->input('payable_amount')
                 ?? ($checkoutData['grand_payable_amount'] ?? $computedAmount);
             $qsOrder->order_status = 'Pending';
-            $qsOrder->merchant_order_id = $orderId;
+           $merchantOrderId = Str::uuid(); 
+           $qsOrder->merchant_order_id = $merchantOrderId;
             $qsOrder->save();
 
             Log::info('Created QsOrder from return + session checkout_data', [
@@ -322,7 +303,7 @@ Log::info('Payment Response', ['body' => $response->body(), 'status' => $respons
             session([
                 'payment_return_data' => [
                     'payment_id' => $paymentId,
-                    'order_id' => $qsOrder->id,  // ✅ use internal order ID now
+                    'order_id' => $merchantOrderId, 
                     'status' => $status,
                     'return_time' => now(),
                     'amount' => $request->input('amount')
@@ -425,32 +406,57 @@ public function process(Request $request)
     /**
      * Store payment information in the database
      */
-    private function storePaymentInfo(Request $request, $orderId, $responseData)
-    {
-        try {
-            $payment = new UnlimitPayment();
-            $payment->order_id = $orderId;
-            $payment->amount = $request->input('payable_amount');
-            $payment->currency = 'INR';
-            $payment->payment_method = 'bankcard';
-            $payment->status = 'pending';
-            $payment->unlimit_response = json_encode($responseData);
-            $payment->created_at = now();
-            $payment->save();
+  private function storePaymentInfo(Request $request, $merchantOrderId, $responseData)
+{
+    try {
+        $checkoutData = session('checkout_data', []);
+        $sessionOrderId = session('session_qs_order_id');
+        $existingOrder = $sessionOrderId ? QsOrder::find($sessionOrderId) : null;
 
-            Log::info('Payment information stored', [
-                'order_id' => $orderId,
-                'amount' => $request->input('payable_amount'),
-                'payment_id' => $payment->id
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to store payment information', [
-                'order_id' => $orderId,
-                'error' => $e->getMessage()
+        if (!$existingOrder) {
+            Log::warning('No existing QsOrder found in session for payment store', [
+                'session_qs_order_id' => $sessionOrderId
             ]);
         }
+
+        // Try to find an existing payment record linked to this QsOrder
+        $payment = UnlimitPayment::where('order_id', $existingOrder->id ?? null)->first();
+
+        if (!$payment) {
+            $payment = new UnlimitPayment();
+            $payment->order_id = $existingOrder->id ?? null; // ✅ internal order link
+            $payment->user_id = auth()->id();
+        }
+
+        // ✅ Always set the Unlimit merchant_order_id separately
+        $payment->merchant_order_id = $merchantOrderId;
+
+        $payment->amount = $request->input('payable_amount')
+            ?? ($checkoutData['grand_payable_amount'] ?? 0);
+        $payment->currency = 'INR';
+        $payment->payment_mode = $checkoutData['payment_mode'] ?? 'upi';
+        $payment->order_status = 'pending';
+        $payment->billing_notes = $responseData['redirect_url'] ?? null;
+        $payment->qty = $checkoutData['quantity'] ?? 1;
+        $payment->price = $checkoutData['denomination'] ?? $request->input('payable_amount');
+        $payment->sku = $checkoutData['sku'] ?? null;
+        $payment->unlimit_response = json_encode($responseData);
+
+        $payment->save();
+
+        Log::info('✅ Payment information stored or updated', [
+            'internal_order_id' => $payment->order_id,
+            'merchant_order_id' => $payment->merchant_order_id,
+            'payment_id' => $payment->id,
+        ]);
+    } catch (\Exception $e) {
+        Log::error('❌ Failed to store payment information', [
+            'merchant_order_id' => $merchantOrderId,
+            'error' => $e->getMessage(),
+        ]);
     }
+}
+
 
     /**
      * Update payment status when return is received
@@ -461,13 +467,13 @@ public function process(Request $request)
             $payment = UnlimitPayment::where('order_id', $orderId)->first();
             
             if ($payment) {
-                $payment->status = $status;
+               $payment->payment_status = $status;
                 $payment->updated_at = now();
                 $payment->save();
 
                 Log::info('Payment status updated', [
                     'order_id' => $orderId,
-                    'status' => $status,
+                    'payment_status' => $status,
                     'payment_id' => $payment->id
                 ]);
             } else {

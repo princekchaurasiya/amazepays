@@ -13,47 +13,45 @@ class UnlimitCallbackController extends Controller
 {
     public function handle(Request $request)
     {
-        // Raw JSON body (needed for signature validation already performed by middleware)
         $rawBody = $request->getContent();
         $payload = [];
+
         try {
             $payload = $rawBody ? json_decode($rawBody, true) ?: [] : [];
         } catch (\Throwable $e) {
             $payload = [];
         }
 
-        Log::info('Unlimit transaction processed callback', [
+        Log::info('Unlimit callback received', [
             'headers' => $request->headers->all(),
             'payload' => $payload,
         ]);
 
-        // Unlimit request format reference: https://integration.unlimit.com/api-reference/98kz48r47q7rc-request-format
-        // Typical keys: result/status, payment.id, merchant_order.id, payment_data.amount/currency, transactions[0].status
+        $merchantOrderId = data_get($payload, 'merchant_order.id')
+            ?? data_get($payload, 'merchantOrder.id')
+            ?? $request->input('merchant_order_id');
 
-        $merchantOrderId = $payload['merchant_order']['id']
-            ?? ($payload['merchantOrder']['id'] ?? $request->input('merchant_order_id'));
-        $paymentId = $payload['payment_data']['id']
-            ?? ($payload['payment']['id']
-            ?? ($payload['paymentId'] ?? $request->input('payment_id')));
+        $paymentId = data_get($payload, 'payment_data.id')
+            ?? data_get($payload, 'payment.id')
+            ?? data_get($payload, 'paymentId')
+            ?? $request->input('payment_id');
 
-        // Extract status from multiple possible locations in Unlimit callback
-        $status = $payload['payment_data']['status']
-            ?? $payload['result']
-            ?? $payload['status'] 
-            ?? $payload['transaction']['status'] 
-            ?? $payload['payment']['status']
-            ?? $payload['payment_status']
-            ?? $payload['transaction_status']
+        $status = data_get($payload, 'payment_data.status')
+            ?? data_get($payload, 'result')
+            ?? data_get($payload, 'status')
+            ?? data_get($payload, 'transaction.status')
+            ?? data_get($payload, 'payment.status')
+            ?? data_get($payload, 'payment_status')
+            ?? data_get($payload, 'transaction_status')
             ?? null;
-            
-        // If still no status, check transactions array
+
         if (!$status && !empty($payload['transactions']) && is_array($payload['transactions'])) {
-            $status = $payload['transactions'][0]['status'] ?? null;
+            $firstTx = $payload['transactions'][0] ?? [];
+            $status = is_array($firstTx) ? ($firstTx['status'] ?? null) : null;
         }
-        
-        // If still no status, check for any nested status fields
+
         if (!$status) {
-            foreach ($payload as $key => $value) {
+            foreach ($payload as $value) {
                 if (is_array($value) && isset($value['status'])) {
                     $status = $value['status'];
                     break;
@@ -61,47 +59,32 @@ class UnlimitCallbackController extends Controller
             }
         }
 
-        // Log the raw status for debugging
-        Log::info('Raw status from Unlimit callback', [
-            'raw_status' => $status,
-            'merchant_order_id' => $merchantOrderId,
-            'payment_id' => $paymentId,
-            'payload_keys' => array_keys($payload),
-            'full_payload' => $payload
-        ]);
-
-        // If status is still null, try to infer from other fields
         if (empty($status)) {
-            // Check if there are any success indicators in the payload
             $successIndicators = ['success', 'approved', 'completed', 'processed'];
             $failureIndicators = ['declined', 'failed', 'error', 'cancelled'];
-            
-            foreach ($payload as $key => $value) {
-                if (is_string($value) && in_array(strtolower($value), $successIndicators)) {
-                    $status = $value;
-                    break;
-                } elseif (is_string($value) && in_array(strtolower($value), $failureIndicators)) {
-                    $status = $value;
-                    break;
+            foreach ($payload as $value) {
+                if (is_string($value)) {
+                    $lower = strtolower($value);
+                    if (in_array($lower, $successIndicators) || in_array($lower, $failureIndicators)) {
+                        $status = $lower;
+                        break;
+                    }
                 }
             }
-            
-            // If still no status found, default to pending
             if (empty($status)) {
                 $status = 'pending';
                 Log::warning('No status found in Unlimit callback, defaulting to pending', [
+                    'merchant_order_id' => $merchantOrderId,
                     'payload' => $payload,
-                    'merchant_order_id' => $merchantOrderId
                 ]);
             }
         }
 
-        // Normalize status to a small set used internally
         $normalizedStatus = match (strtolower((string) $status)) {
             'success', 'approved', 'processed', 'completed' => 'completed',
             'declined', 'failed', 'error' => 'declined',
             'pending', 'in_progress', 'processing' => 'pending',
-            default => (empty($status) ? 'pending' : strtolower($status)),
+            default => strtolower((string) $status),
         };
 
         if (empty($merchantOrderId)) {
@@ -111,127 +94,129 @@ class UnlimitCallbackController extends Controller
 
         try {
             DB::transaction(function () use ($merchantOrderId, $paymentId, $normalizedStatus, $payload) {
-                // First find the QsOrder by merchant_order_id
                 $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
-                
-                if ($qsOrder) {
-                    Log::info('Found QsOrder for callback', [
-                        'qs_order_id' => $qsOrder->id,
+
+                // Fallback: if order not yet linked with merchant_order_id, try via payment tracking_id
+                if (!$qsOrder && $paymentId) {
+                    $paymentByTrack = UnlimitPayment::where('tracking_id', $paymentId)->first();
+                    if ($paymentByTrack) {
+                        $qsOrder = QsOrder::find($paymentByTrack->order_id);
+                        if ($qsOrder && empty($qsOrder->merchant_order_id)) {
+                            $qsOrder->merchant_order_id = $merchantOrderId;
+                            $qsOrder->save();
+
+                            Log::info('Linked merchant_order_id to QsOrder via tracking_id', [
+                                'qs_order_id' => $qsOrder->id,
+                                'merchant_order_id' => $merchantOrderId,
+                            ]);
+                        }
+                    }
+                }
+
+                if (!$qsOrder) {
+                    Log::warning('No QsOrder found or linkable for merchant_order_id', ['merchant_order_id' => $merchantOrderId]);
+                    return;
+                }
+
+                $merchantOrderId = $payload['merchant_order']['id'] ?? null;
+                $payment = UnlimitPayment::where('merchant_order_id', $merchantOrderId)->first();
+
+                if ($payment) {
+                    $payment->order_status = $normalizedStatus;
+                    $payment->payment_status = $payload['payment_data']['status'] ?? 'unknown'; // ✅ Updated
+                    $payment->tracking_id = $paymentId;
+                    $payment->currency = $payment->currency ?: ($payload['payment_data']['currency'] ?? $payload['payment']['currency'] ?? null);
+                    $payment->amount = $payment->amount ?: ($payload['payment_data']['amount'] ?? $payload['payment']['amount'] ?? null);
+                    $payment->unlimit_response = json_encode($payload);
+                    $payment->save();
+
+                    Log::info('UnlimitPayment updated from callback', [
+                        'payment_id' => $payment->id,
+                        'payment_status' => $payment->payment_status,
                         'merchant_order_id' => $merchantOrderId,
-                        'current_status' => $qsOrder->order_status
-                    ]);
-                    
-                    // Update UnlimitPayment using QsOrder's internal ID
-                    $payment = UnlimitPayment::where('order_id', $qsOrder->id)->first();
-                    if ($payment) {
-                        // Map to legacy columns if present
-                        if (isset($payment->order_status)) {
-                            $payment->order_status = $normalizedStatus;
-                        }
-                        if (isset($payment->status)) {
-                            $payment->status = $normalizedStatus;
-                        }
-                        if ($paymentId && isset($payment->tracking_id)) {
-                            $payment->tracking_id = $paymentId;
-                        }
-                        if (isset($payment->currency) && empty($payment->currency)) {
-                            $payment->currency = $payload['payment_data']['currency']
-                                ?? ($payload['payment']['currency'] ?? $payment->currency);
-                        }
-                        if (isset($payment->amount) && empty($payment->amount)) {
-                            $payment->amount = $payload['payment_data']['amount']
-                                ?? ($payload['payment']['amount'] ?? $payment->amount);
-                        }
-                        // Best-effort store raw payload if such column exists
-                        if (property_exists($payment, 'unlimit_response')) {
-                            $payment->unlimit_response = json_encode($payload);
-                        }
-                        $payment->save();
-                        
-                        Log::info('Updated UnlimitPayment with callback data', [
-                            'payment_id' => $payment->id,
-                            'status' => $normalizedStatus,
-                            'tracking_id' => $paymentId
-                        ]);
-                    } else {
-                        Log::warning('No UnlimitPayment found for QsOrder', [
-                            'qs_order_id' => $qsOrder->id
-                        ]);
-                    }
-                    
-                    // Update QsOrder status
-                    if (isset($qsOrder->order_status)) {
-                        $qsOrder->order_status = in_array($normalizedStatus, ['approved', 'completed']) ? 'Success' : ($normalizedStatus === 'declined' ? 'Failed' : 'Pending');
-                    }
-                    $qsOrder->save();
-                    
-                    Log::info('Updated QsOrder status', [
-                        'qs_order_id' => $qsOrder->id,
-                        'new_status' => $qsOrder->order_status
                     ]);
                 } else {
-                    Log::warning('No QsOrder found for merchant_order_id', [
-                        'merchant_order_id' => $merchantOrderId
-                    ]);
+                    Log::warning('No UnlimitPayment found for QsOrder', ['qs_order_id' => $qsOrder->id]);
                 }
+
+                $qsOrder->order_status = match ($normalizedStatus) {
+                    'completed' => 'Success',
+                    'declined' => 'Failed',
+                    default => 'Pending',
+                };
+                $qsOrder->save();
+
+                Log::info('QsOrder status updated', [
+                    'qs_order_id' => $qsOrder->id,
+                    'new_status' => $qsOrder->order_status,
+                ]);
             });
-            
-            // After transaction commits, check if we need to create Woohoo order
+
+            // After transaction, re-fetch order and payment directly
+            $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
+            $payment = $qsOrder ? UnlimitPayment::where('order_id', $qsOrder->id)->first() : null;
+
+ if ($payment) {
+                $normalizedStatus = strtoupper(trim((string) $status));
+    if (in_array($normalizedStatus, ['SUCCESS', 'APPROVED'])) {
+        $normalizedStatus = 'COMPLETED';
+    }
+
+    $payment->payment_status = $normalizedStatus;
+    $payment->save();
+
+    Log::info('✅ Payment status updated', [
+        'order_id' => $qsOrder->id ?? null,
+        'merchant_order_id' => $merchantOrderId,
+        'payment_status' => $normalizedStatus,
+    ]);
+
+    // ✅ Trigger Woohoo order only when payment COMPLETED
+    if ($normalizedStatus === 'COMPLETED') {
+        if ($qsOrder && !$qsOrder->woohoo_order_id) {
+
+            // Ensure refno is generated if missing
+            if (empty($qsOrder->refno)) {
+                $qsOrder->refno = 'Amz' . $qsOrder->id;
+                $qsOrder->save();
+            }
+
             try {
-                if (in_array($normalizedStatus, ['approved', 'completed'])) {
-                    $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
-                    if ($qsOrder && !$qsOrder->woohoo_order_id) {
-                        Log::info('Payment completed, triggering Woohoo order creation', [
-                            'merchant_order_id' => $merchantOrderId,
-                            'qs_order_id' => $qsOrder->id,
-                            'current_refno' => $qsOrder->refno
-                        ]);
-                        
-                        // Ensure refno is set (needed by Woohoo order creation)
-                        if (empty($qsOrder->refno)) {
-                            $qsOrder->refno = 'Amz' . $qsOrder->id;
-                            $qsOrder->save();
-                            Log::info('Set refno for QsOrder', [
-                                'qs_order_id' => $qsOrder->id,
-                                'refno' => $qsOrder->refno
+                Log::info('🚀 Triggering Woohoo order creation', [
+                    'qs_order_id' => $qsOrder->id,
+                    'merchant_order_id' => $merchantOrderId,
+                    'payment_status' => $normalizedStatus,
+                ]);
+                
+                $woohooController = new WoohooOrderController();
+                $woohooResult = $woohooController->createWoohooOrderRequest($qsOrder,$normalizedStatus);
+
+                            if (!empty($woohooResult['success'])) {
+                                Log::info('Woohoo order created successfully', [
+                                    'merchant_order_id' => $merchantOrderId,
+                                    'response' => $woohooResult,
+                                ]);
+                            } else {
+                                Log::warning('Woohoo order creation failed', [
+                                    'merchant_order_id' => $merchantOrderId,
+                                    'response' => $woohooResult,
+                                ]);
+                            }
+                        } catch (\Throwable $e) {
+                            Log::error('Exception during Woohoo order creation', [
+                                'error' => $e->getMessage(),
+                                'merchant_order_id' => $merchantOrderId,
                             ]);
                         }
-                        
-                        $woohooController = new WoohooOrderController();
-                        $woohooResult = $woohooController->createWoohooOrderRequest($qsOrder);
-                        
-                        if ($woohooResult && isset($woohooResult['success']) && $woohooResult['success']) {
-                            Log::info('Woohoo order created successfully via callback', [
-                                'merchant_order_id' => $merchantOrderId,
-                                'woohoo_response' => $woohooResult
-                            ]);
-                        } else {
-                            Log::warning('Woohoo order creation returned unsuccessful result', [
-                                'merchant_order_id' => $merchantOrderId,
-                                'woohoo_result' => $woohooResult
-                            ]);
-                        }
-                    } else {
-                        Log::info('Woohoo order already exists or payment not completed', [
-                            'qs_order_exists' => $qsOrder ? 'yes' : 'no',
-                            'woohoo_order_id' => $qsOrder ? $qsOrder->woohoo_order_id : 'N/A'
-                        ]);
                     }
                 }
-            } catch (\Throwable $woohooError) {
-                Log::error('Failed to create Woohoo order via callback', [
-                    'merchant_order_id' => $merchantOrderId,
-                    'error' => $woohooError->getMessage(),
-                    'trace' => $woohooError->getTraceAsString()
-                ]);
-                // Don't throw - we've logged the payment as successful
             }
         } catch (\Throwable $e) {
             Log::error('Failed to process Unlimit callback', [
                 'error' => $e->getMessage(),
                 'merchant_order_id' => $merchantOrderId,
             ]);
-            return response()->json(['error' => 'internal'], 500);
+            return response()->json(['status' => 'ok'], 200);
         }
 
         return response()->json(['status' => 'ok']);

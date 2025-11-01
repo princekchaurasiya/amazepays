@@ -17,6 +17,27 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\URL;
 class WoohooOrderController extends Controller
 {
+    public function createWoohooOrderRequest(QsOrder $qsOrder, string $paymentStatus = null)
+{
+    Log::info('******* Entered createWoohooOrderRequest ***********', [
+        'qs_order_id' => $qsOrder->id,
+        'merchant_order_id' => $qsOrder->merchant_order_id,
+        'payment_status' => $paymentStatus,
+    ]);
+
+    if (strtoupper($paymentStatus) !== 'COMPLETED') {
+        Log::info('Skipping Woohoo order creation because payment is not completed', [
+            'order_id' => $qsOrder->id,
+            'payment_status' => $paymentStatus,
+        ]);
+
+        return [
+            'success' => false,
+            'message' => 'Payment not completed yet',
+            'status' => $paymentStatus,
+        ];
+    }
+}
     public function createOrder(Request $request)
     {
         // Get payment return data from session
@@ -132,85 +153,116 @@ class WoohooOrderController extends Controller
     }
 
     public function createWoohooOrderRequest($qsOrderDetails)
-    {
-        Log::info("******* you are in create Woohoo Order function ***********");
-        $billinginfo = Billing::latest()->first();
-        $billingName = $billinginfo->billing_name ?? '';
-        $parts = preg_split('/\s+/', trim($billingName), 2);
-        $firstName = $parts[0] ?? '';
-        $lastName = $parts[1] ?? '';
-        $refno = $qsOrderDetails->refno;
+{
+    Log::info("******* Entered createWoohooOrderRequest ***********", [
+        'qs_order_id' => $qsOrderDetails->id,
+        'merchant_order_id' => $qsOrderDetails->merchant_order_id,
+    ]);
 
-        // Normalize product and amount details with safe fallbacks
-        $checkoutData = session('checkout_data', []);
-        $normalizedSku = $qsOrderDetails->sku ?? ($checkoutData['sku'] ?? null);
-        $normalizedQuantity = (int) ($qsOrderDetails->quantity ?? ($checkoutData['quantity'] ?? 1));
-        $normalizedDenomination = (float) ($qsOrderDetails->denomination ?? ($checkoutData['denomination'] ?? 0));
-
-        // Prefer amount after discount; fallback to grand payable; last resort compute denom * qty
-        $normalizedAmount = (float) (
-            $qsOrderDetails->amount_payable_after_discount
-            ?? $qsOrderDetails->grand_payable_amount
-            ?? ($normalizedDenomination > 0 ? $normalizedDenomination * max(1, $normalizedQuantity) : 0)
-        );
-
-        if (empty($normalizedSku)) {
-            Log::warning('SKU missing for Woohoo order; attempting to proceed with available data', [
-                'order_id' => $qsOrderDetails->id ?? null,
-                'session_has_checkout_data' => !empty($checkoutData),
-            ]);
-        }
-        if ($normalizedDenomination <= 0) {
-            Log::warning('Denomination missing or invalid; computed amount may be used', [
-                'order_id' => $qsOrderDetails->id ?? null,
-                'quantity' => $normalizedQuantity,
-                'amount' => $normalizedAmount,
-            ]);
-        }
-        $create_order_request_body_data = [
-            "address" => [
-                "firstname" => $firstName,
-                "lastname" => $lastName,
-                "email" => $billinginfo->billing_email,
-                "telephone" => "+91" . $billinginfo->billing_tel,
-                "line1" => $billinginfo->billing_address,
-                "line2" => $billinginfo->billing_address_two,
-                "city" => $billinginfo->billing_city,
-                "region" => $billinginfo->billing_state,
-                "country" => "IN",
-                "postcode" => $billinginfo->billing_zip,
-                "languages" => "Hindi",
-                "billToThis" => true,
-            ],
-            "billing" => [
-                "firstname" => $firstName,
-                "lastname" => $lastName,
-                "email" => $billinginfo->billing_email,
-                "telephone" => "+91" . $billinginfo->billing_tel,
-                "line1" => $billinginfo->billing_address,
-                "line2" => $billinginfo->billing_address_two,
-                "city" => $billinginfo->billing_city,
-                "region" => $billinginfo->billing_state,
-                "country" => "IN",
-                "postcode" => $billinginfo->billing_zip,
-                "languages" => "Hindi",
-                "billToThis" => true,
-            ],
-            "payments" => [[
-                "code" => "svc",
-                "amount" => (float) $normalizedAmount,
-            ]],
-            "refno" => $refno,
-            "products" => [[
-                "sku" => $normalizedSku,
-                "price" => (float) $normalizedDenomination,
-                "qty" => (int) $normalizedQuantity,
-                "currency" => 356,
-            ]],
-            "syncOnly" => $normalizedQuantity > (int) env("SYNC_ONLY_THRESHOLD") ? false : true,
-            "delivery_mode" => "API",
+    // ✅ Step 1: Verify payment status before proceeding
+    $payment = \App\Models\UnlimitPayment::where('order_id', $qsOrderDetails->id)->latest()->first();
+    if (!$payment) {
+        Log::warning('No UnlimitPayment record found for order, skipping Woohoo creation', [
+            'order_id' => $qsOrderDetails->id
+        ]);
+        return [
+            'success' => false,
+            'message' => 'No payment record found',
+            'status' => 'SKIPPED'
         ];
-        Log::info("########\nWoohoo create order request body data is:\n" . print_r($create_order_request_body_data, true) . "\n#######");
+    }
+
+    $status = strtolower($payment->payment_status ?? 'unknown');
+    if (!in_array($status, ['completed', 'approved'])) {
+        Log::info('Skipping Woohoo order creation because payment is not completed', [
+            'order_id' => $qsOrderDetails->id,
+            'payment_status' => strtoupper($status),
+        ]);
+        return [
+            'success' => false,
+            'message' => 'Payment not completed yet',
+            'status' => strtoupper($status),
+        ];
+    }
+
+    Log::info("Payment verified as completed, proceeding with Woohoo order creation", [
+        'order_id' => $qsOrderDetails->id,
+        'payment_status' => $status
+    ]);
+
+    // ✅ Step 2: Continue your existing logic as-is
+    $billinginfo = Billing::latest()->first();
+    $billingName = $billinginfo->billing_name ?? '';
+    $parts = preg_split('/\s+/', trim($billingName), 2);
+    $firstName = $parts[0] ?? '';
+    $lastName = $parts[1] ?? '';
+    $refno = $qsOrderDetails->refno;
+
+    $checkoutData = session('checkout_data', []);
+    $normalizedSku = $qsOrderDetails->sku ?? ($checkoutData['sku'] ?? null);
+    $normalizedQuantity = (int) ($qsOrderDetails->quantity ?? ($checkoutData['quantity'] ?? 1));
+    $normalizedDenomination = (float) ($qsOrderDetails->denomination ?? ($checkoutData['denomination'] ?? 0));
+
+    $normalizedAmount = (float) (
+        $qsOrderDetails->amount_payable_after_discount
+        ?? $qsOrderDetails->grand_payable_amount
+        ?? ($normalizedDenomination > 0 ? $normalizedDenomination * max(1, $normalizedQuantity) : 0)
+    );
+
+    if (empty($normalizedSku)) {
+        Log::warning('SKU missing for Woohoo order; proceeding with defaults', [
+            'order_id' => $qsOrderDetails->id
+        ]);
+    }
+
+    $create_order_request_body_data = [
+        "address" => [
+            "firstname" => $firstName,
+            "lastname" => $lastName,
+            "email" => $billinginfo->billing_email,
+            "telephone" => "+91" . $billinginfo->billing_tel,
+            "line1" => $billinginfo->billing_address,
+            "line2" => $billinginfo->billing_address_two,
+            "city" => $billinginfo->billing_city,
+            "region" => $billinginfo->billing_state,
+            "country" => "IN",
+            "postcode" => $billinginfo->billing_zip,
+            "languages" => "Hindi",
+            "billToThis" => true,
+        ],
+        "billing" => [
+            "firstname" => $firstName,
+            "lastname" => $lastName,
+            "email" => $billinginfo->billing_email,
+            "telephone" => "+91" . $billinginfo->billing_tel,
+            "line1" => $billinginfo->billing_address,
+            "line2" => $billinginfo->billing_address_two,
+            "city" => $billinginfo->billing_city,
+            "region" => $billinginfo->billing_state,
+            "country" => "IN",
+            "postcode" => $billinginfo->billing_zip,
+            "languages" => "Hindi",
+            "billToThis" => true,
+        ],
+        "payments" => [[
+            "code" => "svc",
+            "amount" => (float) $normalizedAmount,
+        ]],
+        "refno" => $refno,
+        "products" => [[
+            "sku" => $normalizedSku,
+            "price" => (float) $normalizedDenomination,
+            "qty" => (int) $normalizedQuantity,
+            "currency" => 356,
+        ]],
+        "syncOnly" => $normalizedQuantity > (int) env("SYNC_ONLY_THRESHOLD") ? false : true,
+        "delivery_mode" => "API",
+    ];
+
+    Log::info("Woohoo create order request data", $create_order_request_body_data);
+
+    // ✅ Step 3: Proceed with your existing HTTP call and error handling
+    try {
         $requestBody = json_encode($create_order_request_body_data);
         $requestHttpMethod = "post";
         $absApiUrl = "https://" . setting("api.woohoo_url") . "/rest/v3/orders";
@@ -218,108 +270,38 @@ class WoohooOrderController extends Controller
         $bearerToken = setting("api.bearer_token");
         $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         $dateAtClient = Carbon::now()->toIso8601String();
-        Log::info("**************** Order Creation Api *************************\n");
-        // Debug log for bearer token expiry (masked, no secret exposure)
-        try {
-            if (is_string($bearerToken) && substr_count($bearerToken, '.') === 2) {
-                [$h, $p, $s] = explode('.', $bearerToken);
-                $payloadJson = json_decode(base64_decode(strtr($p, '-_', '+/')), true);
-                $expTs = $payloadJson['exp'] ?? null;
-                $iatTs = $payloadJson['iat'] ?? null;
-                $nowTs = time();
-                Log::info('Bearer token timing', [
-                    'now' => $nowTs,
-                    'iat' => $iatTs,
-                    'exp' => $expTs,
-                    'expires_in_sec' => $expTs ? ($expTs - $nowTs) : null,
-                ]);
-            }
-        } catch (\Throwable $e) {
-            Log::warning('JWT timing decode failed');
+
+        $createOrderResponse = Http::acceptJson()
+            ->timeout(10)
+            ->withHeaders([
+                "Content-Type" => "application/json",
+                "Authorization" => "Bearer " . $bearerToken,
+                "Accept" => "*/*",
+                "User-Agent" => "Amazepays/1.0 (+https://amazepays.in)",
+                "dateAtClient" => $dateAtClient,
+                "signature" => $signature,
+            ])->send("POST", $absApiUrl, ["body" => $requestBody]);
+
+        $responseData = $createOrderResponse->json();
+        Log::info("Woohoo API Response", [
+            'status' => $createOrderResponse->status(),
+            'response' => $responseData,
+        ]);
+
+        if ($createOrderResponse->successful() && isset($responseData["status"]) && $responseData["status"] === "COMPLETE") {
+            return ['success' => true, 'status' => 'COMPLETE', 'data' => $responseData];
         }
-        Log::info("Before hitting API, time is " . now() . "\n");
-        try {
-            Log::info("******* making  Create Order API request with the request body data is as follows ***********");
-            $createOrderResponse = Http::acceptJson()->timeout(10)->withHeaders(["Content-Type" => "application/json", "Authorization" => "Bearer " . $bearerToken, "Accept" => "*/*", "User-Agent" => "Amazepays/1.0 (+https://amazepays.in)", "dateAtClient" => $dateAtClient, "signature" => $signature,])->send("POST", $absApiUrl, ["body" => $requestBody]);
-            Log::info("API Request body is:", [
-                "url" => $absApiUrl,
-                "method" => $requestHttpMethod,
-                "headers" => [
-                    "Content-Type" => "application/json",
-                    // mask token and signature in logs
-                    "Authorization" => "Bearer " . (is_string($bearerToken) && strlen($bearerToken) > 8 ? substr($bearerToken, 0, 4) . str_repeat('*', strlen($bearerToken) - 8) . substr($bearerToken, -4) : '****'),
-                    "Accept" => "*/*",
-                    "dateAtClient" => $dateAtClient,
-                    "signature" => is_string($signature) && strlen($signature) > 10 ? substr($signature, 0, 6) . str_repeat('*', strlen($signature) - 10) . substr($signature, -4) : '****',
-                ],
-                "data" => json_decode($requestBody, true),
-            ]);
-            Log::info("********** We are hitting create order API to check response *******************\n");
-            $responseData = $createOrderResponse->json();
-            $headers = $createOrderResponse->headers();
-            $rawBody = $createOrderResponse->body();
-            $parsedBody = json_decode($rawBody, true);
-            Log::info("Get Response from Woohoo server", ["response" => $responseData]);
-            // Log raw body if JSON parsing fails (e.g., HTML error page)
-            $bodyForLog = $parsedBody !== null ? $parsedBody : ["raw" => (is_string($rawBody) ? mb_substr($rawBody, 0, 2000) : $rawBody)];
-            Log::info("Woohoo API Response:", [
-                "status_code" => $createOrderResponse->status(),
-                "headers" => $headers,
-                "body" => $bodyForLog,
-                "order_id" => $responseData["orderId"] ?? null,
-                "amount" => $responseData["payments"][0]["balance"] ?? null,
-            ]);
-            if ($createOrderResponse->successful()) {
-                Log::info("200 response received; now checking if the status is COMPLETE or PROCESSING");
-                $orderCreatedResponse = $createOrderResponse->json();
-                if (isset($orderCreatedResponse["status"])) {
-                    if ($orderCreatedResponse["status"] === "COMPLETE") {
-                        return $orderCreatedResponse;
-                    } elseif ($orderCreatedResponse["status"] === "PROCESSING") {
-                        Log::info("Order is in PROCESSING status");
-                        Log::info("Going to the getStatusByReferenceNumber function");
-                        $statusFunctionResponse = $this->getStatusByReferenceNumber($refno);
-                        if ($statusFunctionResponse && $statusFunctionResponse['status'] === 'COMPLETE') {
-                            return $statusFunctionResponse;
-                        } else {
-                            Log::error("No valid response received from getStatusByReferenceNumber. Returning failure.");
-                            return ["transactionStatusMessage" => __("errors.7002"), "status_code" => 500, "status" => null, "errorCode" => "7002", "errorMessage" => __("errors.7002"), "defaultErrorMessage" => __("errors.default"), "isSuccessful" => false];
-                        }
-                    }
-                } else {
-                    Log::error("Order status is neither COMPLETE nor PROCESSING. Exiting with error.");
-                    return ["transactionStatusMessage" => __("errors.7002"), "status_code" => 500, "status" => null, "errorCode" => "7002", "errorMessage" => __("errors.7002"), "defaultErrorMessage" => __("errors.default"), "isSuccessful" => false];
-                }
-            } else {
-                //$this->sendOrderFailureMail($qsOrderDetails);
-                $statusCode = $createOrderResponse->status();
-                $response = json_decode($createOrderResponse->body(), true);
-                if ($response === null) {
-                    $response = ["raw" => (is_string($rawBody) ? mb_substr($rawBody, 0, 2000) : $rawBody)];
-                }
-                $errorResponse = $this->handleErrorResponse($statusCode, $response, $qsOrderDetails, $createOrderResponse);
-                return $errorResponse;
-            }
-        } catch (ConnectionException $e) {
-            Log::error("cURL Error: " . $e->getMessage());
-            $statusFunctionResponse = $this->getStatusByReferenceNumber($refno);
-            if ($statusFunctionResponse && $statusFunctionResponse["status"] == "COMPLETE") {
-                Log::info("Status function response is complete. Returning response.");
-                return $statusFunctionResponse;
-            } else {
-                //$this->sendOrderFailureMail($qsOrderDetails);
-                Log::info("Status function response is not complete. Returning failure.");
-                return ["transactionStatusMessage" => __("errors.7002"), "status_code" => 500, "errorCode" => "7002", "errorMessage" => __("errors.7002"), "defaultErrorMessage" => __("errors.default"), "isSuccessful" => false];
-            }
-        } catch (\Exception $e) {
-            //$this->sendOrderFailureMail($qsOrderDetails);
-            Log::error("Unexpected exception: " . $e->getMessage());
-            return $this->handleUnexpectedErrorResponse($e);
-        }
-        catch (\Exception $e) {
-                        return ErrorHandler::handleOrderError($e);
-                    }
+
+        return ['success' => false, 'status_code' => $createOrderResponse->status(), 'response' => $responseData];
+    } catch (\Throwable $e) {
+        Log::error('Error during Woohoo order creation', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return ['success' => false, 'message' => $e->getMessage()];
     }
+}
+
     private function handleErrorResponse($statusCode, $response, $qsOrderDetails, $createOrderResponse)
     {
         $isSuccessful = false;

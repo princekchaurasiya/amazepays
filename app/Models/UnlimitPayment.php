@@ -18,8 +18,8 @@ class UnlimitPayment extends Model
         'order_id',
         'tracking_id',
         'bank_ref_no',
+        'payment_status',
         'order_status',
-        'status',
         'failure_message',
         'payment_mode',
         'card_name',
@@ -60,4 +60,9 @@ class UnlimitPayment extends Model
         'bin_country',
         'unlimit_response',
     ];
+
+    public function order()
+    {
+        return $this->belongsTo(QsOrder::class, 'order_id', 'id');
+    }
 }

@@ -45,6 +45,46 @@ class UPIPaymentController extends Controller
         $orderId = (string) Str::uuid();
         $requestId = (string) Str::uuid();
 
+        /**
+         * ✅ Step 1: Link merchant_order_id to existing QsOrder before Unlimit API call
+         */
+        try {
+            $sessionOrderId = session('session_qs_order_id');
+            $checkoutData = session('checkout_data', []);
+            if (!empty($sessionOrderId)) {
+                $existingOrder = QsOrder::find($sessionOrderId);
+                if ($existingOrder) {
+                    $existingOrder->merchant_order_id = $orderId;
+                    $existingOrder->grand_payable_amount = $existingOrder->grand_payable_amount
+                        ?? $payableAmount
+                        ?? ($checkoutData['grand_payable_amount'] ?? null);
+                    $existingOrder->sku = $existingOrder->sku
+                        ?? ($checkoutData['sku'] ?? ($checkoutData['product']['sku'] ?? null));
+                    $existingOrder->denomination = $existingOrder->denomination
+                        ?? (float) ($checkoutData['denomination'] ?? 0);
+                    $existingOrder->quantity = $existingOrder->quantity
+                        ?? (int) ($checkoutData['quantity'] ?? 1);
+                    $existingOrder->save();
+
+                    Log::info('✅ Linked merchant_order_id to QsOrder (UPI)', [
+                        'qs_order_id' => $existingOrder->id,
+                        'merchant_order_id' => $orderId,
+                        'grand_payable_amount' => $existingOrder->grand_payable_amount,
+                    ]);
+                } else {
+                    Log::warning('⚠️ session_qs_order_id found but QsOrder missing', [
+                        'session_qs_order_id' => $sessionOrderId,
+                    ]);
+                }
+            } else {
+                Log::warning('⚠️ No session_qs_order_id found before UPI Unlimit call');
+            }
+        } catch (\Throwable $e) {
+            Log::error('❌ Failed to link merchant_order_id before UPI API call', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         $payload = [
             'request' => [
                 'id' => $requestId,
@@ -75,6 +115,7 @@ class UPIPaymentController extends Controller
             Log::info('UPI Payment Response', ['body' => $resp->body(), 'status' => $resp->status()]);
 
             $respJson = $resp->json();
+
             if (isset($respJson['redirect_url'])) {
                 // Persist minimal ctx for callback fallback
                 session([
@@ -86,21 +127,34 @@ class UPIPaymentController extends Controller
                 ]);
                 session()->save();
 
-                // Optional: persist a payment row for traceability
+                /**
+                 * ✅ Step 2: Persist (or update) UnlimitPayment record linked to this QsOrder
+                 */
                 try {
-                    $payment = new UnlimitPayment();
-                    $payment->user_id = Auth::id();               // satisfy NOT NULL constraint
-                    $payment->order_id = $orderId;               // UUID we generated
-                    $payment->amount = (float) $payableAmount;    // existing column
-                    $payment->currency = 'INR';                   // existing column
-                    $payment->payment_mode = 'upi';               // existing column
-                    $payment->order_status = 'pending';           // existing column
-                    // Optionally stash redirect_url in a notes field for traceability
-                    $payment->billing_notes = isset($respJson['redirect_url']) ? $respJson['redirect_url'] : null;
-                    $payment->created_at = now();
+                    $sessionOrderId = session('session_qs_order_id');
+                    $existingOrder = $sessionOrderId ? QsOrder::find($sessionOrderId) : null;
+
+                    $payment = UnlimitPayment::firstOrNew([
+                        'order_id' => $existingOrder?->id,
+                        'payment_mode' => 'upi',
+                    ]);
+
+                    $payment->user_id = Auth::id();
+                    $payment->merchant_order_id = $orderId;
+                    $payment->amount = (float) $payableAmount;
+                    $payment->currency = 'INR';
+                   $payment->payment_status = 'pending';
+                    $payment->billing_notes = $respJson['redirect_url'] ?? null;
+                    $payment->unlimit_response = json_encode($respJson);
                     $payment->save();
+
+                    Log::info('✅ UPI Payment stored/updated', [
+                        'payment_id' => $payment->id,
+                        'order_id' => $existingOrder?->id,
+                        'merchant_order_id' => $payment->merchant_order_id,
+                    ]);
                 } catch (\Throwable $e) {
-                    Log::warning('UPI: Failed to persist payment row', ['error' => $e->getMessage()]);
+                    Log::error('❌ Failed to store UPI payment info', ['error' => $e->getMessage()]);
                 }
 
                 return redirect()->away($respJson['redirect_url']);
@@ -117,69 +171,133 @@ class UPIPaymentController extends Controller
     /**
      * Handle customer redirect back from Unlimit for UPI
      */
-    public function handleReturn(Request $request)
-    {
-        $rawBody = $request->getContent();
+   public function handleReturn(Request $request)
+{
+    $rawBody = $request->getContent();
+    $jsonBody = [];
+    try {
+        $jsonBody = $rawBody ? json_decode($rawBody, true) ?: [] : [];
+    } catch (\Throwable $e) {
         $jsonBody = [];
-        try { $jsonBody = $rawBody ? json_decode($rawBody, true) ?: [] : []; } catch (\Throwable $e) { $jsonBody = []; }
+    }
 
-        Log::info('UPI Return received', [
-            'method' => $request->method(),
-            'request_data' => $request->all(),
-            'json_body' => $jsonBody,
-            'headers' => $request->headers->all(),
-            'query' => $request->query(),
-            'raw' => $rawBody,
-        ]);
+    Log::info('UPI Return received', [
+        'method' => $request->method(),
+        'request_data' => $request->all(),
+        'json_body' => $jsonBody,
+    ]);
 
-        // Extract with aliases
-        $paymentId = $request->input('payment_id') ?? ($jsonBody['payment_id'] ?? $jsonBody['paymentId'] ?? null);
-        $merchantOrderId = $request->input('merchant_order_id') ?? ($jsonBody['merchant_order_id'] ?? $jsonBody['merchantOrderId'] ?? $jsonBody['order_id'] ?? null);
-        $status = $request->input('status') ?? ($jsonBody['status'] ?? $jsonBody['paymentStatus'] ?? $jsonBody['result'] ?? null);
+    $paymentId = $request->input('payment_id')
+        ?? ($jsonBody['payment_id'] ?? $jsonBody['paymentId'] ?? null);
+    $merchantOrderId = $request->input('merchant_order_id')
+        ?? ($jsonBody['merchant_order_id'] ?? $jsonBody['merchantOrderId'] ?? $jsonBody['order_id'] ?? null);
+    $status = strtoupper($request->input('status')
+        ?? ($jsonBody['status'] ?? $jsonBody['paymentStatus'] ?? $jsonBody['result'] ?? null));
 
-        $ctx = session('unlimit_ctx_upi', []);
-        if (empty($merchantOrderId)) { $merchantOrderId = $ctx['merchant_order_id'] ?? null; }
-        if (empty($paymentId)) { $paymentId = $ctx['payment_id'] ?? null; }
+    $ctx = session('unlimit_ctx_upi', []);
+    if (empty($merchantOrderId)) $merchantOrderId = $ctx['merchant_order_id'] ?? (string) Str::uuid();
+    if (empty($paymentId)) $paymentId = \App\Helpers\CommonHelper::generateUniqueId('pay_' . uniqid());
 
-        if (empty($merchantOrderId)) { $merchantOrderId = (string) Str::uuid(); }
-        if (empty($paymentId)) { $paymentId = \App\Helpers\CommonHelper::generateUniqueId('pay_'); }
+    $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)->first()
+        ?? QsOrder::find(session('session_qs_order_id'));
 
-        // Link to internal order if present
-        $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
-        if (!$qsOrder) {
-            $sessionOrderId = session('session_qs_order_id');
-            if (!empty($sessionOrderId)) { $qsOrder = QsOrder::find($sessionOrderId); }
-        }
-
-        // Persist session snapshot for downstream flow
-        session(['payment_return_data' => [
+    // Store payment return data in session
+    session([
+        'payment_return_data' => [
             'payment_id' => $paymentId,
             'order_id' => $qsOrder?->id,
             'status' => $status,
             'return_time' => now(),
-            'amount' => $request->input('amount') ?? ($jsonBody['amount'] ?? ($ctx['amount'] ?? $qsOrder->grand_payable_amount ?? null))
-        ]]);
-        session()->save();
+            'amount' => $request->input('amount')
+                ?? ($jsonBody['amount'] ?? ($ctx['amount'] ?? $qsOrder->grand_payable_amount ?? null)),
+        ]
+    ]);
+    session()->save();
 
-        Log::info('UPI: payment_return_data stored', session('payment_return_data'));
+    // ✅ Update payment_status in DB
+    if ($qsOrder) {
+        $payment = UnlimitPayment::where('order_id', $qsOrder->id)->first();
+        if ($payment) {
+            $payment->payment_status = $status;
+            $payment->updated_at = now();
+            $payment->save();
 
-        return view('woohoo.redirect-to-woohoo', [
-            'payment_id' => $paymentId,
-            'order_id' => $merchantOrderId,
-            'status' => $status,
-        ]);
+            Log::info('✅ Updated UPI payment status', [
+                'order_id' => $qsOrder->id,
+                'merchant_order_id' => $merchantOrderId,
+                'payment_status' => $status,
+            ]);
+
+            // ✅ Trigger Woohoo API only if payment COMPLETED
+            if ($status === 'COMPLETED') {
+                try {
+                    $woohoo = new \App\Http\Controllers\WoohooOrderController();
+                    $woohoo->createWoohooOrderRequest($qsOrder);
+
+                    Log::info('🎉 Woohoo order triggered successfully after COMPLETED payment', [
+                        'merchant_order_id' => $merchantOrderId,
+                        'qs_order_id' => $qsOrder->id,
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('❌ Failed to trigger Woohoo after COMPLETED payment', [
+                        'error' => $e->getMessage(),
+                        'merchant_order_id' => $merchantOrderId,
+                    ]);
+                }
+            }
+        }
     }
+
+    return view('woohoo.redirect-to-woohoo', [
+        'payment_id' => $paymentId,
+        'order_id' => $merchantOrderId,
+        'status' => $status,
+    ]);
+}
+
 
     /**
      * Webhook for UPI (optional)
      */
-    public function webhook(Request $request)
-    {
-        Log::info('UPI webhook received', [
-            'request_data' => $request->all(),
-            'headers' => $request->headers->all(),
-        ]);
-        return response()->json(['status' => 'ok']);
+   public function webhook(Request $request)
+{
+    Log::info('UPI webhook received', [
+        'request_data' => $request->all(),
+        'headers' => $request->headers->all(),
+    ]);
+
+    $merchantOrderId = $request->input('merchant_order_id');
+    $status = strtoupper($request->input('status'));
+    
+    if ($merchantOrderId && $status) {
+        $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
+        if ($qsOrder) {
+            $payment = UnlimitPayment::where('order_id', $qsOrder->id)->first();
+            if ($payment) {
+                $payment->payment_status = $status;
+                $payment->updated_at = now();
+                $payment->save();
+            }
+
+            if ($status === 'COMPLETED') {
+                try {
+                    $woohoo = new \App\Http\Controllers\WoohooOrderController();
+                    $woohoo->createWoohooOrderRequest($qsOrder);
+                    Log::info('🎉 Woohoo order triggered via webhook', [
+                        'merchant_order_id' => $merchantOrderId,
+                        'qs_order_id' => $qsOrder->id,
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('❌ Woohoo trigger failed via webhook', [
+                        'error' => $e->getMessage(),
+                        'merchant_order_id' => $merchantOrderId,
+                    ]);
+                }
+            }
+        }
     }
+
+    return response()->json(['status' => 'ok']);
 }
 
+}

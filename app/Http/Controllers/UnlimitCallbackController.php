@@ -49,6 +49,51 @@ class UnlimitCallbackController extends Controller
             $firstTx = $payload['transactions'][0] ?? [];
             $status = is_array($firstTx) ? ($firstTx['status'] ?? null) : null;
         }
+        
+        // If still no status, check for any nested status fields
+        if (!$status) {
+            foreach ($payload as $key => $value) {
+                if (is_array($value) && isset($value['status'])) {
+                    $status = $value['status'];
+                    break;
+                }
+            }
+        }
+
+        // Log the raw status for debugging
+        Log::info('Raw status from Unlimit callback', [
+            'raw_status' => $status,
+            'merchant_order_id' => $merchantOrderId,
+            'payment_id' => $paymentId,
+            'payload_keys' => array_keys($payload),
+            'full_payload' => $payload
+        ]);
+
+        // If status is still null, try to infer from other fields
+        if (empty($status)) {
+            // Check if there are any success indicators in the payload
+            $successIndicators = ['success', 'approved', 'completed', 'processed'];
+            $failureIndicators = ['declined', 'failed', 'error', 'cancelled'];
+            
+            foreach ($payload as $key => $value) {
+                if (is_string($value) && in_array(strtolower($value), $successIndicators)) {
+                    $status = $value;
+                    break;
+                } elseif (is_string($value) && in_array(strtolower($value), $failureIndicators)) {
+                    $status = $value;
+                    break;
+                }
+            }
+            
+            // If still no status found, default to pending
+            if (empty($status)) {
+                $status = 'pending';
+                Log::warning('No status found in Unlimit callback, defaulting to pending', [
+                    'payload' => $payload,
+                    'merchant_order_id' => $merchantOrderId
+                ]);
+            }
+        }
 
         if (!$status) {
             foreach ($payload as $value) {

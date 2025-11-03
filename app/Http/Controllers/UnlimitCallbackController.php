@@ -45,9 +45,52 @@ class UnlimitCallbackController extends Controller
             ?? data_get($payload, 'transaction_status')
             ?? null;
 
+<<<<<<< HEAD
+=======
+        // Extract status from multiple possible locations in Unlimit callback
+        $status = $payload['result']
+            ?? $payload['status'] 
+            ?? $payload['transaction']['status'] 
+            ?? $payload['payment']['status']
+            ?? $payload['payment_status']
+            ?? $payload['transaction_status']
+            ?? null;
+            
+        // If still no status, check transactions array
+>>>>>>> 61470d8463fc364baf0f420b9917bb1c7810b24d
         if (!$status && !empty($payload['transactions']) && is_array($payload['transactions'])) {
             $firstTx = $payload['transactions'][0] ?? [];
             $status = is_array($firstTx) ? ($firstTx['status'] ?? null) : null;
+        }
+
+        if (!$status) {
+            foreach ($payload as $value) {
+                if (is_array($value) && isset($value['status'])) {
+                    $status = $value['status'];
+                    break;
+                }
+            }
+        }
+
+        if (empty($status)) {
+            $successIndicators = ['success', 'approved', 'completed', 'processed'];
+            $failureIndicators = ['declined', 'failed', 'error', 'cancelled'];
+            foreach ($payload as $value) {
+                if (is_string($value)) {
+                    $lower = strtolower($value);
+                    if (in_array($lower, $successIndicators) || in_array($lower, $failureIndicators)) {
+                        $status = $lower;
+                        break;
+                    }
+                }
+            }
+            if (empty($status)) {
+                $status = 'pending';
+                Log::warning('No status found in Unlimit callback, defaulting to pending', [
+                    'merchant_order_id' => $merchantOrderId,
+                    'payload' => $payload,
+                ]);
+            }
         }
         
         // If still no status, check for any nested status fields
@@ -95,36 +138,6 @@ class UnlimitCallbackController extends Controller
             }
         }
 
-        if (!$status) {
-            foreach ($payload as $value) {
-                if (is_array($value) && isset($value['status'])) {
-                    $status = $value['status'];
-                    break;
-                }
-            }
-        }
-
-        if (empty($status)) {
-            $successIndicators = ['success', 'approved', 'completed', 'processed'];
-            $failureIndicators = ['declined', 'failed', 'error', 'cancelled'];
-            foreach ($payload as $value) {
-                if (is_string($value)) {
-                    $lower = strtolower($value);
-                    if (in_array($lower, $successIndicators) || in_array($lower, $failureIndicators)) {
-                        $status = $lower;
-                        break;
-                    }
-                }
-            }
-            if (empty($status)) {
-                $status = 'pending';
-                Log::warning('No status found in Unlimit callback, defaulting to pending', [
-                    'merchant_order_id' => $merchantOrderId,
-                    'payload' => $payload,
-                ]);
-            }
-        }
-
         $normalizedStatus = match (strtolower((string) $status)) {
             'success', 'approved', 'processed', 'completed' => 'completed',
             'declined', 'failed', 'error' => 'declined',
@@ -158,9 +171,19 @@ class UnlimitCallbackController extends Controller
                     }
                 }
 
+<<<<<<< HEAD
                 if (!$qsOrder) {
                     Log::warning('No QsOrder found or linkable for merchant_order_id', ['merchant_order_id' => $merchantOrderId]);
                     return;
+=======
+                // Update related order if we track it by merchant_order_id
+                $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
+                if ($qsOrder) {
+                    if (isset($qsOrder->order_status)) {
+                        $qsOrder->order_status = in_array($normalizedStatus, ['approved', 'completed']) ? 'Success' : ($normalizedStatus === 'declined' ? 'Failed' : 'Pending');
+                    }
+                    $qsOrder->save();
+>>>>>>> 61470d8463fc364baf0f420b9917bb1c7810b24d
                 }
 
                 $merchantOrderId = $payload['merchant_order']['id'] ?? null;

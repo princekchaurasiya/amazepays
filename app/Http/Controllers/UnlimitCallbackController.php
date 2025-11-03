@@ -45,8 +45,6 @@ class UnlimitCallbackController extends Controller
             ?? data_get($payload, 'transaction_status')
             ?? null;
 
-<<<<<<< HEAD
-=======
         // Extract status from multiple possible locations in Unlimit callback
         $status = $payload['result']
             ?? $payload['status'] 
@@ -57,7 +55,6 @@ class UnlimitCallbackController extends Controller
             ?? null;
             
         // If still no status, check transactions array
->>>>>>> 61470d8463fc364baf0f420b9917bb1c7810b24d
         if (!$status && !empty($payload['transactions']) && is_array($payload['transactions'])) {
             $firstTx = $payload['transactions'][0] ?? [];
             $status = is_array($firstTx) ? ($firstTx['status'] ?? null) : null;
@@ -171,19 +168,9 @@ class UnlimitCallbackController extends Controller
                     }
                 }
 
-<<<<<<< HEAD
                 if (!$qsOrder) {
                     Log::warning('No QsOrder found or linkable for merchant_order_id', ['merchant_order_id' => $merchantOrderId]);
                     return;
-=======
-                // Update related order if we track it by merchant_order_id
-                $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
-                if ($qsOrder) {
-                    if (isset($qsOrder->order_status)) {
-                        $qsOrder->order_status = in_array($normalizedStatus, ['approved', 'completed']) ? 'Success' : ($normalizedStatus === 'declined' ? 'Failed' : 'Pending');
-                    }
-                    $qsOrder->save();
->>>>>>> 61470d8463fc364baf0f420b9917bb1c7810b24d
                 }
 
                 $merchantOrderId = $payload['merchant_order']['id'] ?? null;

@@ -23,14 +23,35 @@
     @if(!request()->filled('search'))
         <div class="list-group mb-4">
             @foreach($products as $product)
+                @php
+                    // Filter out out-of-stock variants for list view
+                    $availableVariants = collect($product['variants'] ?? [])->filter(function($variant) {
+                        $stockAvailable = $variant['stockAvailable'] ?? $variant['inStock'] ?? $variant['available'] ?? $variant['isAvailable'] ?? true;
+                        $stock = $variant['stock'] ?? $variant['quantity'] ?? null;
+                        
+                        if ($stock === 0 || $stockAvailable === false || $stockAvailable === 0) {
+                            return false;
+                        }
+                        
+                        if ($stockAvailable === true || ($stock !== null && $stock > 0)) {
+                            return true;
+                        }
+                        
+                        return true;
+                    })->values();
+                @endphp
                 <div class="list-group-item">
                     <h5>{{ $product['productDisplayName'] }} ({{ $product['productID'] }})</h5>
-                    @foreach($product['variants'] as $variant)
-                        <div>
-                            <strong>Variant:</strong> {{ $variant['variantDisplayName'] }} ({{ $variant['variantID'] }})<br>
-                            <strong>Price:</strong> {{ $variant['price'] }} / <strong>MRP:</strong> {{ $variant['mrp'] }}
-                        </div>
-                    @endforeach
+                    @if($availableVariants->isEmpty())
+                        <div class="text-muted">No variants available</div>
+                    @else
+                        @foreach($availableVariants as $variant)
+                            <div>
+                                <strong>Variant:</strong> {{ $variant['variantDisplayName'] }} ({{ $variant['variantID'] }})<br>
+                                <strong>Price:</strong> {{ $variant['price'] }} / <strong>MRP:</strong> {{ $variant['mrp'] }}
+                            </div>
+                        @endforeach
+                    @endif
                 </div>
             @endforeach
         </div>
@@ -65,19 +86,54 @@
                             {{ Str::limit($product['descriptionText'] ?? '', 100) }}
                         </p>
 
-                        @foreach($product['variants'] ?? [] as $variant)
-                            <div class="mb-2">
-                                <strong>{{ $variant['variantDisplayName'] ?? '-' }}</strong><br>
-                                MRP: <s>₹{{ $variant['mrp'] ?? '-' }}</s><br>
-                                <span class="text-success fw-bold">Price: ₹{{ $variant['price'] ?? '-' }}</span>
-                            </div>
-                        @endforeach
+                        @php
+                            // Filter out out-of-stock variants
+                            $availableVariants = collect($product['variants'] ?? [])->filter(function($variant) {
+                                // Check common stock availability fields
+                                $stockAvailable = $variant['stockAvailable'] ?? $variant['inStock'] ?? $variant['available'] ?? $variant['isAvailable'] ?? true;
+                                $stock = $variant['stock'] ?? $variant['quantity'] ?? null;
+                                
+                                // If stock is explicitly 0 or false, consider out of stock
+                                if ($stock === 0 || $stockAvailable === false || $stockAvailable === 0) {
+                                    return false;
+                                }
+                                
+                                // If stockAvailable is explicitly true or stock > 0, consider in stock
+                                if ($stockAvailable === true || ($stock !== null && $stock > 0)) {
+                                    return true;
+                                }
+                                
+                                // Default to showing if no stock info is available
+                                return true;
+                            })->values();
+                        @endphp
 
-                        <form action="{{ route('place-order.form') }}" method="GET">
-                            <input type="hidden" name="variantId" value="{{ $product['variants'][0]['variantID'] ?? '' }}">
-                            <input type="hidden" name="mrp" value="{{ $product['variants'][0]['mrp'] ?? '' }}">
-                            <button type="submit" class="btn btn-success w-100">Place Order</button>
-                        </form>
+                        @if($availableVariants->isEmpty())
+                            <div class="alert alert-warning mb-2">No variants available</div>
+                        @else
+                            <div class="mb-3">
+                                <strong>Select Variant:</strong>
+                                <div class="btn-group-vertical w-100 mt-2" role="group" id="variant-buttons-{{ $product['productID'] }}">
+                                    @foreach($availableVariants as $index => $variant)
+                                        <button type="button" 
+                                                class="btn btn-outline-primary variant-btn mb-2 {{ $index === 0 ? 'active' : '' }}"
+                                                data-variant-id="{{ $variant['variantID'] ?? '' }}"
+                                                data-mrp="{{ $variant['mrp'] ?? '' }}"
+                                                data-product-id="{{ $product['productID'] }}">
+                                            <strong>{{ $variant['variantDisplayName'] ?? '-' }}</strong><br>
+                                            <small>MRP: <s>₹{{ $variant['mrp'] ?? '-' }}</s> | 
+                                            Price: <span class="text-success fw-bold">₹{{ $variant['price'] ?? '-' }}</span></small>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <form action="{{ route('place-order.form') }}" method="GET" id="order-form-{{ $product['productID'] }}">
+                                <input type="hidden" name="variantId" id="variantId-{{ $product['productID'] }}" value="{{ $availableVariants[0]['variantID'] ?? '' }}">
+                                <input type="hidden" name="mrp" id="mrp-{{ $product['productID'] }}" value="{{ $availableVariants[0]['mrp'] ?? '' }}">
+                                <button type="submit" class="btn btn-success w-100">Place Order</button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -88,4 +144,35 @@
         @endforelse
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle variant button clicks
+    document.querySelectorAll('.variant-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const productId = this.getAttribute('data-product-id');
+            const variantId = this.getAttribute('data-variant-id');
+            const mrp = this.getAttribute('data-mrp');
+            
+            // Remove active class from all variant buttons for this product
+            document.querySelectorAll(`#variant-buttons-${productId} .variant-btn`).forEach(function(btn) {
+                btn.classList.remove('active');
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-primary');
+            });
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-primary');
+            
+            // Update form hidden inputs
+            document.getElementById(`variantId-${productId}`).value = variantId;
+            document.getElementById(`mrp-${productId}`).value = mrp;
+        });
+    });
+});
+</script>
+@endpush
 @endsection

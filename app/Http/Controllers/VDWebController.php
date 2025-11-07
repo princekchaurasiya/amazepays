@@ -150,6 +150,10 @@ class VDWebController extends Controller
     public function storeGetEvcRequest(Request $request)
 {
     // Validate and store the raw request
+    $token = $this->getToken();
+    $brands = $this->vdWebApiService->displayBrands($token);
+
+
     $data = $request->all();
 
     // Optionally validate inputs
@@ -192,6 +196,8 @@ class VDWebController extends Controller
         'pincode'        => $data['pincode'],
         'curr'           => $data['curr'],
     ]);
+
+    Log::info('Stored SKU code:', ['sku_code' => $stored->sku_code]);
 
     return response()->json([
         'message' => 'GetEVC request stored successfully',

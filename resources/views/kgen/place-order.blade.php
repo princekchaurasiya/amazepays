@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@auth
 <div class="container">
       <br/>
       @if(session('success'))
@@ -52,4 +53,33 @@
     </div>
 @endif
 </div>
+@else
+<div class="container py-5 text-center">
+    <h2 class="mb-3">Please log in to place an order</h2>
+    <p class="text-muted mb-4">An active account is required to submit orders.</p>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Modallogin">
+        Launch Login
+    </button>
+</div>
+@endauth
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    @guest
+    if (typeof $ !== 'undefined') {
+        const loginModal = $('#Modallogin');
+        if (loginModal.length) {
+            loginModal.modal({ backdrop: 'static', keyboard: false });
+            loginModal.modal('show');
+            loginModal.on('hide.bs.modal', function (event) {
+                if (!window.kgenLoginCompleted) {
+                    event.preventDefault();
+                }
+            });
+        }
+    }
+    @endguest
+});
+</script>
+@endpush
 @endsection

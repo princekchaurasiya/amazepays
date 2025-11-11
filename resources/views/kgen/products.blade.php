@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@auth
 <div class="container">
     <br/>
     <h1>Product Search</h1>
@@ -139,10 +140,34 @@
         @endforelse
     </div>
 </div>
+@else
+<div class="container py-5 text-center">
+    <h2 class="mb-3">Please log in to view products</h2>
+    <p class="text-muted mb-4">You need an active account to browse products and place orders.</p>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Modallogin">
+        Launch Login
+    </button>
+</div>
+@endauth
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    @guest
+    if (typeof $ !== 'undefined') {
+        const loginModal = $('#Modallogin');
+        if (loginModal.length) {
+            loginModal.modal({ backdrop: 'static', keyboard: false });
+            loginModal.modal('show');
+            loginModal.on('hide.bs.modal', function (event) {
+                if (!window.kgenLoginCompleted) {
+                    event.preventDefault();
+                }
+            });
+        }
+    }
+    @endguest
+
     // Handle variant button clicks
     document.querySelectorAll('.variant-btn').forEach(function(button) {
         button.addEventListener('click', function() {

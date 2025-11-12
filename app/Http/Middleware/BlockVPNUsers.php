@@ -15,7 +15,7 @@ class BlockVPNUsers
         //$ip = '104.244.72.115';
 
         // Skip local IPs
-        if ($ip === '127.0.0.1' || $ip === '::1') {
+        if ($ip === '127.0.0.1' || $ip === '::1' || $ip === '3.108.172.198') {
             return $next($request);
         }
 

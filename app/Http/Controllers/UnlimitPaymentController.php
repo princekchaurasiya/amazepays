@@ -145,6 +145,7 @@ class UnlimitPaymentController extends Controller
         ],
         'return_urls' => [
             'success_url' => route('woohoo.processing'),
+            //'success_url' => route('woohoo.redirect-to-woohoo'),
             'decline_url' => 'https://amazepay.toutle.in/',
         ],
     ];
@@ -467,13 +468,16 @@ public function process(Request $request)
             $payment = UnlimitPayment::where('order_id', $orderId)->first();
             
             if ($payment) {
-               $payment->payment_status = $status;
+                $normalizedStatus = strtolower($status);
+               $payment->payment_status = $normalizedStatus;
+               $payment->order_status = $normalizedStatus;
+                $payment->status_message = "Updated by webhook";
                 $payment->updated_at = now();
                 $payment->save();
 
                 Log::info('Payment status updated', [
                     'order_id' => $orderId,
-                    'payment_status' => $status,
+                    'payment_status' => $normalizedStatus,
                     'payment_id' => $payment->id
                 ]);
             } else {

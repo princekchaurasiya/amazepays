@@ -91,11 +91,11 @@
                 @include('layouts.partials.navbar')
                 <!-- navigation wrapper ends here -->
                 @if(request()->routeIs('home'))
-                <div class="working-ribbon">
+                <!--<div class="working-ribbon">
                     <div class="working-ribbon-inner">
-                        <span class="working-ribbon-text">It takes 180 sec to process the voucher</span>
+                        <span class="working-ribbon-text"></span>
                     </div>
-                </div>
+                </div>-->
                 @endif
             </div>
             <!-- header wrapper -->

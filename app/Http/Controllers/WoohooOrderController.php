@@ -76,6 +76,12 @@ class WoohooOrderController extends Controller
         ?? ($normalizedDenomination > 0 ? $normalizedDenomination * max(1, $normalizedQuantity) : 0)
     );
 
+    // Woohoo expects the original price; do not send discounted amounts.
+    $woohooPrice = (float) ($qsOrderDetails->price ?? 0);
+    if ($woohooPrice <= 0) {
+        $woohooPrice = $normalizedDenomination > 0 ? (float) $normalizedDenomination : $normalizedAmount;
+    }
+
     $create_order_request_body_data = [
                 "address" => [
             "firstname" => $firstName,
@@ -107,18 +113,22 @@ class WoohooOrderController extends Controller
         ],
         "payments" => [[
             "code" => "svc",
-            "amount" => (float) $normalizedAmount,
+            "amount" => $woohooPrice,
         ]],
         "refno" => $refno,
         "products" => [[
             "sku" => $normalizedSku,
-            "price" => (float) $normalizedDenomination,
+            "price" => $woohooPrice,
             "qty" => (int) $normalizedQuantity,
             "currency" => 356,
         ]],
         "syncOnly" => $normalizedQuantity > (int) env("SYNC_ONLY_THRESHOLD") ? false : true,
         "delivery_mode" => "API",
     ];
+
+    $woohooTimeout = (int) env('WOOHOO_ORDER_TIMEOUT', 30);
+    $woohooRetryAttempts = (int) env('WOOHOO_ORDER_RETRY_ATTEMPTS', 2);
+    $woohooRetryDelay = (int) env('WOOHOO_ORDER_RETRY_DELAY_MS', 1500);
 
     try {
         $requestBody = json_encode($create_order_request_body_data);
@@ -141,7 +151,10 @@ class WoohooOrderController extends Controller
 
 
         $createOrderResponse = Http::acceptJson()
-            ->timeout(10)
+            ->timeout($woohooTimeout)
+            ->retry($woohooRetryAttempts, $woohooRetryDelay, function ($exception) {
+                return $exception instanceof ConnectionException;
+            })
             ->withHeaders([
                 "Content-Type" => "application/json",
                 "Authorization" => "Bearer " . $bearerToken,
@@ -163,6 +176,13 @@ class WoohooOrderController extends Controller
         }
 
         return ['success' => false, 'status_code' => $createOrderResponse->status(), 'response' => $responseData];
+    } catch (ConnectionException $e) {
+        Log::error('Woohoo API connection issue during order creation', [
+            'error' => $e->getMessage(),
+            'retries' => $woohooRetryAttempts,
+            'timeout' => $woohooTimeout,
+        ]);
+        return ['success' => false, 'message' => 'Connection to Woohoo API timed out'];
     } catch (\Throwable $e) {
         Log::error('Error during Woohoo order creation', [
             'error' => $e->getMessage(),

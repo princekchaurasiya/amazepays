@@ -10,6 +10,10 @@ class VerifyUnlimitSignature
 {
     public function handle(Request $request, Closure $next)
     {
+        Log::info('Unlimit callback received:', [
+            'headers' => $request->headers->all(),
+            'body' => $request->getContent(),
+        ]);
         $signatureHeader = $request->header('Signature');
 
         if (!$signatureHeader) {

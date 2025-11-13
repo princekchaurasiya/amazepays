@@ -18,6 +18,7 @@ class UnlimitPayment extends Model
         'order_id',
         'tracking_id',
         'bank_ref_no',
+        'payment_status',
         'order_status',
         'failure_message',
         'payment_mode',
@@ -57,5 +58,11 @@ class UnlimitPayment extends Model
         'billing_notes',
         'trans_date',
         'bin_country',
+        'unlimit_response',
     ];
+
+    public function order()
+    {
+        return $this->belongsTo(QsOrder::class, 'order_id', 'id');
+    }
 }

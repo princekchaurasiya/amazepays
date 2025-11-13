@@ -295,7 +295,14 @@ Route::get('/unauthenticated', function () {
 
 
 Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'])->name('woohoo.createOrder');
+Route::get('/woohoo/check-status', [WoohooOrderController::class, 'checkTransactionStatus'])->name('woohoo.checkStatus');
+Route::post('/woohoo/clear-session', [WoohooOrderController::class, 'clearSessionData'])->name('woohoo.clearSession');
 
+// Woohoo processing routes
+use App\Http\Controllers\WoohooProcessingController;
+Route::get('/woohoo/processing', [WoohooProcessingController::class, 'showProcessing'])->name('woohoo.processing');
+Route::get('/woohoo/processing/create-order', [WoohooProcessingController::class, 'createOrder'])->name('woohoo.processing.createOrder');
+Route::post('/woohoo/processing/create-order', [WoohooProcessingController::class, 'createOrder'])->name('woohoo.processing.createOrder.post');
 
 Route::get('/order-failure', function () {
     return view('order-failure'); // This will render the order-failure.blade.php view
@@ -343,7 +350,7 @@ Route::get('/payment', function () {
     return view('payment'); // This assumes the file is at resources/views/payment.blade.php
 });
 
-Route::get('/payment/return', [UnlimitPaymentController::class, 'handleReturnSuccess'])->name('unlimit.return');
+Route::match(['GET','POST'], '/payment/return', [UnlimitPaymentController::class, 'handleReturnSuccess'])->name('unlimit.return');
 
 // Unlimit webhook endpoint
 Route::post('/unlimit/webhook', [UnlimitPaymentController::class, 'webhook'])->name('unlimit.webhook');
@@ -377,6 +384,8 @@ Route::get('/admin/send-transaction-report/{id}', [TransactionReportController::
 //routes to UPI Payment
 use App\Http\Controllers\UPIPaymentController;
 Route::post('/payment/upi', [UPIPaymentController::class, 'store'])->name('payment.upi');
+Route::match(['GET','POST'], '/upi/return', [UPIPaymentController::class, 'handleReturn'])->name('upi.return');
+Route::post('/upi/webhook', [UPIPaymentController::class, 'webhook'])->name('upi.webhook');
 
 //routes to Net Banking Payment
 use App\Http\Controllers\NetBankPaymentController;

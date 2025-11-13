@@ -15,5 +15,10 @@ class VerifyCsrfToken extends Middleware
         'response_ccavenue',
         'payment-cancel',
         '/payment/notify',
+        '/payment/return',
+        'api/unlimit/callback',
+        '/unlimit/webhook',
+        '/upi/return',
+        '/upi/webhook',
     ];
 }

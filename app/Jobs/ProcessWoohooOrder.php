@@ -71,15 +71,15 @@ class ProcessWoohooOrder implements ShouldQueue
                 "billToThis"=> true
             ],
             "payments" => [
-                ["code" => "svc", "amount" => $qsOrderDetails->grand_payable_amount]
+                ["code" => "svc", "amount" => (float) $qsOrderDetails->grand_payable_amount]
             ],
             "refno" => $refno,
             "products" => [
                 [
                     "sku" => $qsOrderDetails->sku,
-                    "price" => $qsOrderDetails->denomination,
-                    "qty" => $qsOrderDetails->quantity,
-                    "currency" => "356"
+                    "price" => (float) $qsOrderDetails->denomination,
+                    "qty" => (int) $qsOrderDetails->quantity,
+                    "currency" => 356
                 ]
             ],
             "syncOnly" => $qsOrderDetails->quantity > (int) env("SYNC_ONLY_THRESHOLD") ? false : true,
@@ -94,17 +94,56 @@ class ProcessWoohooOrder implements ShouldQueue
         $dateAtClient = Carbon::now()->toIso8601String();
 
         try {
+            // Debug log for bearer token expiry (masked)
+            try {
+                if (is_string($bearerToken) && substr_count($bearerToken, '.') === 2) {
+                    [$h, $p, $s] = explode('.', $bearerToken);
+                    $payloadJson = json_decode(base64_decode(strtr($p, '-_', '+/')), true);
+                    $expTs = $payloadJson['exp'] ?? null;
+                    $iatTs = $payloadJson['iat'] ?? null;
+                    $nowTs = time();
+                    Log::info('Bearer token timing (job)', [
+                        'now' => $nowTs,
+                        'iat' => $iatTs,
+                        'exp' => $expTs,
+                        'expires_in_sec' => $expTs ? ($expTs - $nowTs) : null,
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('JWT timing decode failed (job)');
+            }
+
+            // Log masked request details
+            Log::info("Woohoo Create Order - Request", [
+                'url' => $absApiUrl,
+                'method' => 'POST',
+                'headers' => [
+                    'Authorization' => 'Bearer ' . (is_string($bearerToken) && strlen($bearerToken) > 8 ? substr($bearerToken, 0, 4) . str_repeat('*', strlen($bearerToken) - 8) . substr($bearerToken, -4) : '****'),
+                    'signature' => is_string($signature) && strlen($signature) > 10 ? substr($signature, 0, 6) . str_repeat('*', strlen($signature) - 10) . substr($signature, -4) : '****',
+                    'dateAtClient' => $dateAtClient,
+                ],
+                'body' => $requestBodyData,
+            ]);
+
+            // Send exact JSON body that was signed
             $response = Http::acceptJson()->timeout(10)
                 ->withHeaders([
                     "Content-Type" => "application/json",
                     "Authorization" => "Bearer ".$bearerToken,
                     "Accept" => "*/*",
+                    "User-Agent" => "Amazepays/1.0 (+https://amazepays.in)",
                     "dateAtClient" => $dateAtClient,
                     "signature" => $signature,
                 ])
-                ->post($absApiUrl, $requestBodyData);
+                ->send('POST', $absApiUrl, ['body' => $requestBody]);
 
             $responseData = $response->json();
+            $rawBody = $response->body();
+            $parsedBody = json_decode($rawBody, true);
+            Log::info('Woohoo Create Order - Response', [
+                'status_code' => $response->status(),
+                'body' => $parsedBody !== null ? $parsedBody : ['raw' => (is_string($rawBody) ? mb_substr($rawBody, 0, 2000) : $rawBody)],
+            ]);
 
             if ($response->successful() && isset($responseData["status"])) {
                 if ($responseData["status"] === "COMPLETE") {

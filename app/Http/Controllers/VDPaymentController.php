@@ -10,6 +10,7 @@ use Illuminate\Http\Client\RequestException;
 use App\Models\ApiToken;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\CommonHelper;
 
 class VDPaymentController extends Controller
 {
@@ -137,6 +138,16 @@ public function handleReturnSuccess(Request $request)
         $orderId = $request->input('merchant_order_id');
         $status = $request->input('status');
 
+        // Fallbacks to ensure non-null IDs
+        if (empty($orderId)) {
+            $orderId = (string) \Illuminate\Support\Str::uuid();
+            Log::warning('VD: merchant_order_id missing in return; generated a UUID fallback', ['generated_order_id' => $orderId]);
+        }
+        if (empty($paymentId)) {
+            $paymentId = CommonHelper::generateUniqueId('pay_');
+            Log::warning('VD: payment_id missing in return; generated a unique fallback', ['generated_payment_id' => $paymentId]);
+        }
+
         // Update payment status if we have payment information
         if ($paymentId && $orderId) {
             $this->updatePaymentStatus($paymentId, $orderId, $status);
@@ -150,6 +161,15 @@ public function handleReturnSuccess(Request $request)
                 'status' => $status,
                 'return_time' => now()
             ]
+        ]);
+        
+        // Ensure session is saved immediately
+        session()->save();
+        
+        Log::info('VD Payment return data stored in session', [
+            'order_id' => $orderId,
+            'payment_id' => $paymentId,
+            'status' => $status
         ]);
 
         // Return the redirect-to-woohoo view

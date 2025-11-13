@@ -19,7 +19,7 @@
             }
             /* Working time ribbon */
             .working-ribbon {
-                background:rgb(253, 13, 13);
+                background:rgb(253, 13, 13,0.5);
                 color: #fff;
                 width: 100%;
                 overflow: hidden;
@@ -91,11 +91,11 @@
                 @include('layouts.partials.navbar')
                 <!-- navigation wrapper ends here -->
                 @if(request()->routeIs('home'))
-                <div class="working-ribbon">
+                <!--<div class="working-ribbon">
                     <div class="working-ribbon-inner">
-                        <span class="working-ribbon-text">Amazepays Working time: 10am to 6.30pm &nbsp; • &nbsp; Amazepays Working time: 10am to 6.30pm &nbsp; • &nbsp; Amazepays Working time: 10am to 6.30pm</span>
+                        <span class="working-ribbon-text"></span>
                     </div>
-                </div>
+                </div>-->
                 @endif
             </div>
             <!-- header wrapper -->

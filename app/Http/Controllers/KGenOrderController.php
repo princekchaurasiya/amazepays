@@ -110,6 +110,7 @@ class KGenOrderController extends Controller
         
 
         $dpValue = env('dpID');
+        $externalRefID = 'ORDER_' . strtoupper(Str::random(6));
 
         $response = Http::withHeaders([
             'x-client-id' => env('EXLR8_USER_ID'),
@@ -118,7 +119,7 @@ class KGenOrderController extends Controller
         ])->post(env('EXLR8_BASE_URL') . '/orders/b2b/direct-checkout', [
             'dpID' => $dpValue,
             'variantID' => $validated['variantId'],
-            'externalRefID' => 'ORDER_' . strtoupper(Str::random(6)), // Unique ID
+            'externalRefID' => $externalRefID, // Unique ID
         ]);
 
         //dd($response->json());
@@ -140,6 +141,13 @@ class KGenOrderController extends Controller
             $orderID = $data['orderID'];
             $vouchers = $data['lineItems'][0]['vouchers'] ?? [];
             $voucherdata =json_encode($vouchers);
+
+             KGenOrder::create([
+                'variant_id'   => $validated['variantId'],
+                'external_ref' => $externalRefID,
+                'mrp'          => $productPrice,
+                'api_response' => json_encode($data),
+            ]);
           // return back()->with('success', "Order placed successfully. Order ID: {$orderID} . Vouchers: " . json_encode($vouchers));
             return back()->with([
     'success'  => 'Order placed successfully',
@@ -153,6 +161,12 @@ class KGenOrderController extends Controller
                 'info' => 'Order is being processed. Please check status later.',
                 'orderId' => $data['orderID'],
             ]);*/
+             KGenOrder::create([
+                'variant_id'   => $validated['variantId'],
+                'external_ref' => $externalRefID,
+                'mrp'          => $productPrice,
+                'api_response' => json_encode($data),
+            ]);
               return back()->with('success', 'Order placed successfully');
 
         case 'FAILED':
@@ -165,7 +179,7 @@ class KGenOrderController extends Controller
         default:
             // unknown status
             return back()->withErrors([
-                'error' => 'Unexpected response from recharge API.',
+                'error' => 'Unexpected response from API.',
             ])->withInput();
         }
     }

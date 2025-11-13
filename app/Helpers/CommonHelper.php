@@ -3,6 +3,7 @@
 namespace App\Helpers;
 use App\Models\QsProduct;
 use TCG\Voyager\Facades\Voyager;
+use Illuminate\Support\Str;
 
 
 class CommonHelper
@@ -244,8 +245,20 @@ class CommonHelper
         return null;
     }
 
-
-
+    /**
+     * Generate a URL-safe unique varchar ID with optional prefix.
+     * Example outputs: pay_X7f3KJ2q9sBQwN1d, ord_Qs8mL0abCDe12fG
+     */
+    public static function generateUniqueId(string $prefix = '', int $maxLength = 24): string
+    {
+        $random = rtrim(strtr(base64_encode(random_bytes(16)), '+/', '-_'), '=');
+        $timePart = dechex((int) (microtime(true) * 1000));
+        $id = $prefix . $timePart . '_' . $random;
+        if ($maxLength > 0 && strlen($id) > $maxLength) {
+            $id = substr($id, 0, $maxLength);
+        }
+        return $id;
+    }
 }
 
 

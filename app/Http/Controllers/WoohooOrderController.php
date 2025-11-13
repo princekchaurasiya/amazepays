@@ -15,13 +15,195 @@ use App\Helpers\CommonHelper;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\URL;
+
 class WoohooOrderController extends Controller
 {
+    public function createWoohooOrderRequest($qsOrderDetails, string $paymentStatus = null)
+{
+    Log::info("******* Entered createWoohooOrderRequest ***********", [
+        'qs_order_id' => $qsOrderDetails->id,
+        'merchant_order_id' => $qsOrderDetails->merchant_order_id,
+        'payment_status_param' => $paymentStatus,
+    ]);
+
+    // ✅ Step 1: Determine final payment status
+    $status = strtoupper(trim($paymentStatus ?? 'UNKNOWN'));
+
+    // If not passed from callback, check DB as a fallback
+    if ($status === 'UNKNOWN' || empty($status)) {
+        $payment = \App\Models\UnlimitPayment::where('order_id', $qsOrderDetails->id)->latest()->first();
+        $status = strtoupper(trim($payment->payment_status ?? 'UNKNOWN'));
+        Log::info("Resolved payment status from DB fallback", [
+            'order_id' => $qsOrderDetails->id,
+            'resolved_status' => $status,
+        ]);
+    }
+
+    // ✅ Step 2: Only proceed if COMPLETED
+    if ($status !== 'COMPLETED') {
+        Log::info('Skipping Woohoo order creation because payment is not completed', [
+            'order_id' => $qsOrderDetails->id,
+            'payment_status' => $status,
+        ]);
+        return [
+            'success' => false,
+            'message' => 'Payment not completed yet',
+            'status' => $status,
+        ];
+    }
+
+    Log::info("Payment verified as COMPLETED, proceeding with Woohoo order creation", [
+        'order_id' => $qsOrderDetails->id,
+        'payment_status' => $status,
+    ]);
+
+    // ✅ Step 3: (Your existing Woohoo creation logic below — unchanged)
+    $billinginfo = Billing::latest()->first();
+    $billingName = $billinginfo->billing_name ?? '';
+    $parts = preg_split('/\s+/', trim($billingName), 2);
+    $firstName = $parts[0] ?? '';
+    $lastName = $parts[1] ?? '';
+    $refno = $qsOrderDetails->refno;
+
+    $checkoutData = session('checkout_data', []);
+    $normalizedSku = $qsOrderDetails->sku ?? ($checkoutData['sku'] ?? null);
+    $normalizedQuantity = (int) ($qsOrderDetails->quantity ?? ($checkoutData['quantity'] ?? 1));
+    $normalizedDenomination = (float) ($qsOrderDetails->denomination ?? ($checkoutData['denomination'] ?? 0));
+
+    $normalizedAmount = (float) (
+        $qsOrderDetails->amount_payable_after_discount
+        ?? $qsOrderDetails->grand_payable_amount
+        ?? ($normalizedDenomination > 0 ? $normalizedDenomination * max(1, $normalizedQuantity) : 0)
+    );
+
+    // Woohoo expects the original price; do not send discounted amounts.
+    $woohooPrice = (float) ($qsOrderDetails->price ?? 0);
+    if ($woohooPrice <= 0) {
+        $woohooPrice = $normalizedDenomination > 0 ? (float) $normalizedDenomination : $normalizedAmount;
+    }
+
+    $create_order_request_body_data = [
+                "address" => [
+            "firstname" => $firstName,
+            "lastname" => $lastName,
+            "email" => $billinginfo->billing_email,
+            "telephone" => "+91" . $billinginfo->billing_tel,
+            "line1" => $billinginfo->billing_address,
+            "line2" => $billinginfo->billing_address_two,
+            "city" => $billinginfo->billing_city,
+            "region" => $billinginfo->billing_state,
+            "country" => "IN",
+            "postcode" => $billinginfo->billing_zip,
+            "languages" => "Hindi",
+            "billToThis" => true,
+        ],
+        "billing" => [
+            "firstname" => $firstName,
+            "lastname" => $lastName,
+            "email" => $billinginfo->billing_email,
+            "telephone" => "+91" . $billinginfo->billing_tel,
+            "line1" => $billinginfo->billing_address,
+            "line2" => $billinginfo->billing_address_two,
+            "city" => $billinginfo->billing_city,
+            "region" => $billinginfo->billing_state,
+            "country" => "IN",
+            "postcode" => $billinginfo->billing_zip,
+            "languages" => "Hindi",
+            "billToThis" => true,
+        ],
+        "payments" => [[
+            "code" => "svc",
+            "amount" => $woohooPrice,
+        ]],
+        "refno" => $refno,
+        "products" => [[
+            "sku" => $normalizedSku,
+            "price" => $woohooPrice,
+            "qty" => (int) $normalizedQuantity,
+            "currency" => 356,
+        ]],
+        "syncOnly" => $normalizedQuantity > (int) env("SYNC_ONLY_THRESHOLD") ? false : true,
+        "delivery_mode" => "API",
+    ];
+
+    $woohooTimeout = (int) env('WOOHOO_ORDER_TIMEOUT', 30);
+    $woohooRetryAttempts = (int) env('WOOHOO_ORDER_RETRY_ATTEMPTS', 2);
+    $woohooRetryDelay = (int) env('WOOHOO_ORDER_RETRY_DELAY_MS', 1500);
+
+    try {
+        $requestBody = json_encode($create_order_request_body_data);
+        $requestHttpMethod = "post";
+        $absApiUrl = "https://" . setting("api.woohoo_url") . "/rest/v3/orders";
+        $clientSecret = setting("api.qs_clientSecret");
+        $bearerToken = setting("api.bearer_token");
+        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+        $dateAtClient = Carbon::now()->toIso8601String();
+
+        Log::info("🚀 Sending Woohoo order API request", [
+    'url' => $absApiUrl,
+    'headers' => [
+        'Authorization' => 'Bearer ' . substr($bearerToken, 0, 10) . '...', // partially masked
+        'signature' => $signature,
+        'dateAtClient' => $dateAtClient,
+    ],
+    'request_body' => $create_order_request_body_data,
+    ]);
+
+
+        $createOrderResponse = Http::acceptJson()
+            ->timeout($woohooTimeout)
+            ->retry($woohooRetryAttempts, $woohooRetryDelay, function ($exception) {
+                return $exception instanceof ConnectionException;
+            })
+            ->withHeaders([
+                "Content-Type" => "application/json",
+                "Authorization" => "Bearer " . $bearerToken,
+                "Accept" => "*/*",
+                "User-Agent" => "Amazepays/1.0 (+https://amazepays.in)",
+                "dateAtClient" => $dateAtClient,
+                "signature" => $signature,
+            ])
+            ->send("POST", $absApiUrl, ["body" => $requestBody]);
+
+        $responseData = $createOrderResponse->json();
+        Log::info("Woohoo API Response", [
+            'status' => $createOrderResponse->status(),
+            'response' => $responseData,
+        ]);
+
+        if ($createOrderResponse->successful() && isset($responseData["status"]) && $responseData["status"] === "COMPLETE") {
+            return ['success' => true, 'status' => 'COMPLETE', 'data' => $responseData];
+        }
+
+        return ['success' => false, 'status_code' => $createOrderResponse->status(), 'response' => $responseData];
+    } catch (ConnectionException $e) {
+        Log::error('Woohoo API connection issue during order creation', [
+            'error' => $e->getMessage(),
+            'retries' => $woohooRetryAttempts,
+            'timeout' => $woohooTimeout,
+        ]);
+        return ['success' => false, 'message' => 'Connection to Woohoo API timed out'];
+    } catch (\Throwable $e) {
+        Log::error('Error during Woohoo order creation', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return ['success' => false, 'message' => $e->getMessage()];
+    }
+}
+
     public function createOrder(Request $request)
     {
         // Get payment return data from session
         $paymentReturnData = session('payment_return_data');
         Log::info('Payment return data from session:', $paymentReturnData);
+        Log::info('Full session data:', session()->all());
+        if (empty($paymentReturnData['order_id']) || empty($paymentReturnData['payment_id'])) {
+            Log::warning('Payment return data missing IDs', [
+                'order_id' => $paymentReturnData['order_id'] ?? null,
+                'payment_id' => $paymentReturnData['payment_id'] ?? null,
+            ]);
+        }
         
         // Get order details strictly from session/ID; no latest-order fallback
         $qsOrderDetails = null;
@@ -94,93 +276,37 @@ class WoohooOrderController extends Controller
             $transactionStatusMessage = __("errors.default");
             Log::error("No payment data found in session.");
         }
-        Log::info("Session before clearing: " . json_encode(Session::all()));
+        // Only clear session data if the transaction was successful
+        // Keep session data available for voucher API calls and other post-processing
+        if ($isSuccessful) {
+            Log::info("Transaction successful - keeping session data for voucher processing");
+        } else {
+            Log::info("Transaction failed - clearing session data");
+            Session::forget('payment_data');
+            Session::forget('checkout_data');
+            session()->forget('session_qs_order_id');
+            session()->forget('session_refno');
+        }
+        
+        return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
+    }
+
+    /**
+     * Clear session data after voucher processing is complete
+     */
+    public function clearSessionData()
+    {
+        Log::info("Clearing session data after voucher processing");
         Session::forget('payment_data');
         Session::forget('checkout_data');
         session()->forget('session_qs_order_id');
-        Log::info('session_qs_order_id after forget:', ['session_qs_order_id' => session('session_qs_order_id')]);
         session()->forget('session_refno');
-        Log::info('session_refno after forget:', ['session_refno' => session('session_refno')]);
-        return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
+        session()->forget('payment_return_data');
+        
+        return response()->json(['message' => 'Session data cleared successfully']);
     }
-    public function createWoohooOrderRequest($qsOrderDetails)
-    {
-        Log::info("******* you are in create Woohoo Order function ***********");
-        $billinginfo = Billing::latest()->first();
-        $billingName = $billinginfo->billing_name ?? '';
-        $parts = preg_split('/\s+/', trim($billingName), 2);
-        $firstName = $parts[0] ?? '';
-        $lastName = $parts[1] ?? '';
-        $refno = $qsOrderDetails->refno;
-        $create_order_request_body_data = ["address" => ["firstname" => $firstName, "lastname" => $lastName, "email" => $billinginfo->billing_email, "telephone" => "+91" . $billinginfo->billing_tel, "line1" => $billinginfo->billing_address, "line2" => $billinginfo->billing_address_two, "city" => $billinginfo->billing_city, "region" => $billinginfo->billing_state, "country" => "IN", "postcode" => $billinginfo->billing_zip, "languages" => "Hindi", "billToThis" => true,], "billing" => ["firstname" => $firstName, "lastname" => $lastName, "email" => $billinginfo->billing_email, "telephone" => "+91" . $billinginfo->billing_tel, "line1" => $billinginfo->billing_address, "line2" => $billinginfo->billing_address_two, "city" => $billinginfo->billing_city, "region" => $billinginfo->billing_state, "country" => "IN", "postcode" => $billinginfo->billing_zip, "languages" => "Hindi", "billToThis" => true,], "payments" => [["code" => "svc", "amount" => $qsOrderDetails->grand_payable_amount],], "refno" => $refno, "products" => [["sku" => $qsOrderDetails->sku, "price" => $qsOrderDetails->denomination, "qty" => $qsOrderDetails->quantity, "currency" => "356"],], "syncOnly" => $qsOrderDetails->quantity > (int) env("SYNC_ONLY_THRESHOLD") ? false : true, "delivery_mode" => "API",];
-        Log::info("########\nWoohoo create order request body data is:\n" . print_r($create_order_request_body_data, true) . "\n#######");
-        $requestBody = json_encode($create_order_request_body_data);
-        $requestHttpMethod = "post";
-        $absApiUrl = "https://" . setting("api.woohoo_url") . "/rest/v3/orders";
-        $clientSecret = setting("api.qs_clientSecret");
-        $bearerToken = setting("api.bearer_token");
-        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
-        $dateAtClient = Carbon::now()->toIso8601String();
-        Log::info("**************** Order Creation Api *************************\n");
-        Log::info("Before hitting API, time is " . now() . "\n");
-        try {
-            Log::info("******* making  Create Order API request with the request body data is as follows ***********");
-            $createOrderResponse = Http::acceptJson()->timeout(10)->withHeaders(["Content-Type" => "application/json", "Authorization" => "Bearer " . $bearerToken, "Accept" => "*/*", "dateAtClient" => $dateAtClient, "signature" => $signature,])->send("POST", $absApiUrl, ["body" => $requestBody]);
-            Log::info("API Request body is:", ["url" => $absApiUrl, "method" => $requestHttpMethod, "headers" => ["Content-Type" => "application/json", "Authorization" => "Bearer " . $bearerToken, "Accept" => "*/*", "dateAtClient" => $dateAtClient, "signature" => $signature,], "data" => $requestBody,]);
-            Log::info("********** We are hitting create order API to check response *******************\n");
-            $responseData = $createOrderResponse->json();
-            $headers = $createOrderResponse->headers();
-            $body = json_decode($createOrderResponse->body(), true);
-            Log::info("Get Response from Woohoo server", ["response" => $responseData]);
-            Log::info("Woohoo API Response:", ["status_code" => $createOrderResponse->status(), "headers" => $headers, "body" => $body, "order_id" => $responseData["orderId"] ?? null, "amount" => $responseData["payments"][0]["balance"] ?? null,]);
-            if ($createOrderResponse->successful()) {
-                Log::info("200 response received; now checking if the status is COMPLETE or PROCESSING");
-                $orderCreatedResponse = $createOrderResponse->json();
-                if (isset($orderCreatedResponse["status"])) {
-                    if ($orderCreatedResponse["status"] === "COMPLETE") {
-                        return $orderCreatedResponse;
-                    } elseif ($orderCreatedResponse["status"] === "PROCESSING") {
-                        Log::info("Order is in PROCESSING status");
-                        Log::info("Going to the getStatusByReferenceNumber function");
-                        $statusFunctionResponse = $this->getStatusByReferenceNumber($refno);
-                        if ($statusFunctionResponse && $statusFunctionResponse['status'] === 'COMPLETE') {
-                            return $statusFunctionResponse;
-                        } else {
-                            Log::error("No valid response received from getStatusByReferenceNumber. Returning failure.");
-                            return ["transactionStatusMessage" => __("errors.7002"), "status_code" => 500, "status" => null, "errorCode" => "7002", "errorMessage" => __("errors.7002"), "defaultErrorMessage" => __("errors.default"), "isSuccessful" => false];
-                        }
-                    }
-                } else {
-                    Log::error("Order status is neither COMPLETE nor PROCESSING. Exiting with error.");
-                    return ["transactionStatusMessage" => __("errors.7002"), "status_code" => 500, "status" => null, "errorCode" => "7002", "errorMessage" => __("errors.7002"), "defaultErrorMessage" => __("errors.default"), "isSuccessful" => false];
-                }
-            } else {
-                //$this->sendOrderFailureMail($qsOrderDetails);
-                $statusCode = $createOrderResponse->status();
-                $response = json_decode($createOrderResponse->body(), true);
-                $errorResponse = $this->handleErrorResponse($statusCode, $response, $qsOrderDetails, $createOrderResponse);
-                return $errorResponse;
-            }
-        } catch (ConnectionException $e) {
-            Log::error("cURL Error: " . $e->getMessage());
-            $statusFunctionResponse = $this->getStatusByReferenceNumber($refno);
-            if ($statusFunctionResponse && $statusFunctionResponse["status"] == "COMPLETE") {
-                Log::info("Status function response is complete. Returning response.");
-                return $statusFunctionResponse;
-            } else {
-                //$this->sendOrderFailureMail($qsOrderDetails);
-                Log::info("Status function response is not complete. Returning failure.");
-                return ["transactionStatusMessage" => __("errors.7002"), "status_code" => 500, "errorCode" => "7002", "errorMessage" => __("errors.7002"), "defaultErrorMessage" => __("errors.default"), "isSuccessful" => false];
-            }
-        } catch (\Exception $e) {
-            //$this->sendOrderFailureMail($qsOrderDetails);
-            Log::error("Unexpected exception: " . $e->getMessage());
-            return $this->handleUnexpectedErrorResponse($e);
-        }
-        catch (\Exception $e) {
-                        return ErrorHandler::handleOrderError($e);
-                    }
-    }
+
+
     private function handleErrorResponse($statusCode, $response, $qsOrderDetails, $createOrderResponse)
     {
         $isSuccessful = false;
@@ -377,7 +503,36 @@ class WoohooOrderController extends Controller
         $financialYear = $this->getFinancialYear();
         $invoiceNumber = "FRB2C-" . $financialYear . "-" . $orderId;
         $invoiceDate = date("d-m-Y");
-        $cardsArray = json_decode(decrypt($order["cards"], env("ENCRYPTION_KEY")), true);
+
+        // Safely resolve cards; fetch from Woohoo if not yet available
+        $cardsArray = [];
+        try {
+            if (!empty($order["cards"])) {
+                $cardsArray = json_decode(decrypt($order["cards"], env("ENCRYPTION_KEY")), true) ?: [];
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Card decrypt failed; will attempt to fetch cards", ["error" => $e->getMessage()]);
+            $cardsArray = [];
+        }
+
+        if (empty($cardsArray)) {
+            try {
+                $woohooOrderId = $order["woohoo_order_id"] ?? null;
+                if ($woohooOrderId) {
+                    // Reuse activation fetch to retrieve cards
+                    $combined = $this->callCardActivation(["orderId" => $woohooOrderId, "status" => "COMPLETE"]);
+                    if (is_array($combined) && isset($combined["cards"]) && is_array($combined["cards"])) {
+                        $cardsArray = $combined["cards"]; 
+                        // Persist freshly fetched cards
+                        QsOrder::where("id", $orderId)->update([
+                            "cards" => encrypt(json_encode($cardsArray), env("ENCRYPTION_KEY")),
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::error("Failed to fetch cards after decrypt failure", ["error" => $e->getMessage(), "woohoo_order_id" => $order["woohoo_order_id"] ?? null]);
+            }
+        }
         
         log::info(888);
         QsOrder::where("id", $orderId)->update(["invoice_number" => $invoiceNumber]);
@@ -486,6 +641,152 @@ class WoohooOrderController extends Controller
             return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
         }
     }
+    /**
+     * Check transaction status for the redirect page (lightweight check)
+     */
+    public function checkTransactionStatus(Request $request)
+    {
+        try {
+            // Get payment return data from session
+            $paymentReturnData = session('payment_return_data');
+            
+            if (!$paymentReturnData || !isset($paymentReturnData['order_id'])) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'No payment data found'
+                ], 400);
+            }
+
+            // Get order details
+            $qsOrderDetails = QsOrder::where('id', $paymentReturnData['order_id'])->first();
+            
+            if (!$qsOrderDetails) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Order not found'
+                ], 404);
+            }
+
+            // Check if order is already completed
+            if ($qsOrderDetails->order_status === 'COMPLETE') {
+                return response()->json([
+                    'status' => 'complete',
+                    'message' => 'Transaction completed successfully'
+                ]);
+            }
+
+            // Check if order has a reference number and get status (lightweight check)
+            if ($qsOrderDetails->refno) {
+                // Use a lightweight status check instead of the full retry mechanism
+                $statusResponse = $this->getStatusByReferenceNumberLightweight($qsOrderDetails->refno);
+                
+                if ($statusResponse && $statusResponse['status'] === 'COMPLETE') {
+                    // Update order status
+                    $qsOrderDetails->order_status = 'COMPLETE';
+                    $qsOrderDetails->save();
+                    
+                    return response()->json([
+                        'status' => 'complete',
+                        'message' => 'Transaction completed successfully'
+                    ]);
+                } elseif ($statusResponse && $statusResponse['status'] === 'PROCESSING') {
+                    return response()->json([
+                        'status' => 'processing',
+                        'message' => 'Transaction is still processing'
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'failed',
+                        'message' => 'Transaction failed'
+                    ]);
+                }
+            }
+
+            // If no reference number yet, still processing
+            return response()->json([
+                'status' => 'processing',
+                'message' => 'Transaction is still processing'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error checking transaction status: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error checking status'
+            ], 500);
+        }
+    }
+
+    /**
+     * Lightweight status check without retry mechanism for frontend polling
+     */
+    private function getStatusByReferenceNumberLightweight($refno)
+    {
+        try {
+            $requestHttpMethod = "GET";
+            $absApiUrl = "https://" . setting("api.woohoo_url") . "/rest/v3/order/" . $refno . "/status";
+            $clientSecret = setting("api.qs_clientSecret");
+            $bearerToken = setting("api.bearer_token");
+            $signature = CommonHelper::generateSignature("", $requestHttpMethod, $absApiUrl, $clientSecret);
+            $dateAtClient = Carbon::now()->toIso8601String();
+
+            Log::info("Lightweight status check for refno: $refno");
+            
+            $orderStatusResponse = Http::acceptJson()
+                ->timeout(10) // Short timeout for lightweight check
+                ->withHeaders([
+                    "Content-Type" => "application/json",
+                    "Authorization" => "Bearer " . $bearerToken,
+                    "Accept" => "*/*",
+                    "dateAtClient" => $dateAtClient,
+                    "signature" => $signature,
+                ])
+                ->get($absApiUrl);
+
+            if ($orderStatusResponse->successful()) {
+                $cardStatusApiResponseData = $orderStatusResponse->json();
+                Log::info("Lightweight status response:", ["response" => $cardStatusApiResponseData]);
+                
+                if (isset($cardStatusApiResponseData["status"])) {
+                    if ($cardStatusApiResponseData["status"] === "COMPLETE") {
+                        Log::info("Status check: COMPLETE");
+                        return $this->callCardActivation($cardStatusApiResponseData);
+                    } elseif ($cardStatusApiResponseData["status"] === "PROCESSING") {
+                        Log::info("Status check: PROCESSING");
+                        return [
+                            'status' => 'PROCESSING',
+                            'message' => 'Transaction is still processing'
+                        ];
+                    } else {
+                        Log::info("Status check: Other status - " . $cardStatusApiResponseData["status"]);
+                        return [
+                            'status' => $cardStatusApiResponseData["status"],
+                            'message' => 'Transaction status: ' . $cardStatusApiResponseData["status"]
+                        ];
+                    }
+                }
+            } else {
+                Log::warning("Status check API failed: " . $orderStatusResponse->status());
+                return [
+                    'status' => 'error',
+                    'message' => 'API call failed'
+                ];
+            }
+
+            return [
+                'status' => 'unknown',
+                'message' => 'Unknown status'
+            ];
+
+        } catch (\Exception $e) {
+            Log::error("Lightweight status check error: " . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Status check failed'
+            ];
+        }
+    }
+
     public function sendTransactionMail($prepareMailDetails)
     {
         $recipientEmail = $prepareMailDetails["billing_email"] ?? null;

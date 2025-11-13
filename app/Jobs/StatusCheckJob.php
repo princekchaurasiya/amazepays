@@ -3,19 +3,15 @@
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Helpers\CommonHelper;
-use Carbon;
-use Illuminate\Support\Sleep;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-use QsOrder;
-use Exception;
+use App\Models\QsOrder;
 
 class StatusCheckJob implements ShouldQueue
 {
@@ -23,6 +19,7 @@ class StatusCheckJob implements ShouldQueue
 
     protected $refno;
     protected $data;
+    protected $orderId;
     /**
      * Create a new job instance.
      *
@@ -63,14 +60,12 @@ class StatusCheckJob implements ShouldQueue
                     Log::info("Attempt $attempt: Still in processing. Waiting for 40 seconds...");
                     sleep(40);
                 } else {
-                    return view('order.order-failed');
                     Log::error("Attempt $attempt: Job failed - Maximum number of status check attempts reached. API Time: {$apiTime}ms");
                     // Handle the failure, notify, or throw an exception as needed.
                     break; // Exit the loop as maximum attempts reached.
                 }
             } else {
-                return view('order.order-failed');
-                Log::error("Attempt $attempt: Unexpected status. API Time: {$apiTime}ms");
+                Log::error("Attempt $attempt: Unexpected status '{$status}'. API Time: {$apiTime}ms");
                 // Handle the unexpected status, notify, or throw an exception as needed.
                 break; // Exit the loop for an unexpected status.
             }
@@ -83,7 +78,7 @@ class StatusCheckJob implements ShouldQueue
         $clientSecret = setting('api.qs_clientSecret');
         $bearerToken = setting('api.bearer_token');
         $requestBody = '';
-        $dateAtClient = Carbon\Carbon::now()->toIso8601String();
+        $dateAtClient = Carbon::now()->toIso8601String();
         $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         $response = Http::acceptJson()
             ->withToken($bearerToken)
@@ -93,19 +88,17 @@ class StatusCheckJob implements ShouldQueue
             ])
             ->get($absApiUrl);
         // dd($response->status());
-        if ($response->status() == 200) {
-            $responseData = json_decode($response->getBody());
-            // dd($responseData);
-            if ($responseData->status === 'COMPLETE') {
+        if ($response->successful()) {
+            $responseData = $response->json();
+            $status = $responseData['status'] ?? null;
+            if ($status === 'COMPLETE') {
                 return 'COMPLETE';
-            } elseif ($responseData->status === 'PROCESSING') {
+            } elseif ($status === 'PROCESSING') {
                 return 'PROCESSING';
-            } else {
-                return view('order.order-failed');
             }
-        } else {
-            return view('order.order-failed');
+            return 'FAILED';
         }
+        return 'ERROR';
     }
 
     public function callCardActivation($orderId)
@@ -116,7 +109,7 @@ class StatusCheckJob implements ShouldQueue
         $absApiUrl = "$apiUrl/rest/v3/order/{$orderId}/cards";
         $requestBody = '';
         $requestHttpMethod = 'GET';
-        $dateAtClient = Carbon\Carbon::now()->toIso8601String();
+        $dateAtClient = Carbon::now()->toIso8601String();
         $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         $response = Http::acceptJson()
             ->withToken($bearerToken)
@@ -130,7 +123,8 @@ class StatusCheckJob implements ShouldQueue
             $responseData = $response->json();
             if (isset($responseData['cards'])) {
                 $encryptedCards = encrypt(json_encode($responseData['cards']));
-                QsOrder::where('order_id', $orderId)->update(['cards' => $encryptedCards]);
+                // Update by Woohoo order id as that maps to remote order
+                QsOrder::where('woohoo_order_id', $orderId)->update(['cards' => $encryptedCards]);
             }
         }
     }

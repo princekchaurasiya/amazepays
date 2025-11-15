@@ -434,7 +434,9 @@ class WoohooOrderController extends Controller
         log::info(777);
         $isSuccessful = false;
         Log::info("This is card response data: " . json_encode($orderCreatedResponse));
+        Log::info("About to update QS Order");
         $orderId = $this->updateQsOrder($orderCreatedResponse);
+        Log::info("QS Order updated successfully, orderId = " . $orderId);
         $order = QsOrder::join("unlimit_payment", "unlimit_payment.order_id", "=", "qs_orders.id")
             ->join("qs_products", "qs_products.sku", "=", "qs_orders.sku")
             ->where("qs_orders.id", $orderId)
@@ -606,9 +608,13 @@ class WoohooOrderController extends Controller
             "billing_tel" => $billingTelForSms,
         ];
         if ($order["delivery_mode"] == "both") {
+            Log::info("Calling Transaction Mail");
             $this->sendTransactionMail($prepareMailDetails);
+            Log::info("Calling Gift Mail");
             $this->sendGiftMail($prepareMailDetails, $cardsArray);
+            Log::info("Calling Transaction SMS");
             $this->sendTransactionalMessage($prepareSmsDetails);
+            Log::info("Calling Gift SMS");
             $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
         } elseif ($order["delivery_mode"] == "email") {
             $this->sendTransactionMail($prepareMailDetails);
@@ -632,13 +638,19 @@ class WoohooOrderController extends Controller
         if ($qsOrderUpdate) {
             $qsOrderUpdate->update(["woohoo_order_id" => $orderCreatedResponse["orderId"], "order_status" => $orderCreatedResponse["status"], "cards" => encrypt(json_encode($orderCreatedResponse["cards"]), env("ENCRYPTION_KEY")), "order_cancel" => json_encode($orderCreatedResponse["cancel"]), "order_payment" => isset($orderCreatedResponse["payments"]) ? json_encode($orderCreatedResponse["payments"]) : null, "currency" => json_encode($orderCreatedResponse["currency"]), "additionalTxnFields" => isset($orderCreatedResponse["additionalTxnFields"]) ? json_encode($orderCreatedResponse["additionalTxnFields"]) : null,]);
             $existingOrderSummary = OrderSummary::where('order_id', $qsOrderUpdate->id)->first();
+            if ($existingOrderSummary) {
             $existingOrderSummary->order_status = $orderCreatedResponse["status"];
             $existingOrderSummary->save();
+            } else {
+                    Log::warning("OrderSummary not found for order_id: " . $qsOrderUpdate->id);
+                }
             return $qsOrderUpdate->id;
         } else {
             $transactionStatusMessage = "Order with ID with referene number not found.";
             Log::error($transactionStatusMessage);
             return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
+            //Log::error("QS Order not found for refno: " . $orderCreatedResponse["refno"]);
+            //return false;
         }
     }
     /**

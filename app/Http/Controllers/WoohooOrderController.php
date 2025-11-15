@@ -231,6 +231,7 @@ class WoohooOrderController extends Controller
         Log::info("Order details for Woohoo order creation:", $qsOrderDetails ? $qsOrderDetails->toArray() : 'No order found');
         $isSuccessful = false;
         $transactionStatusMessage = __("errors.default");
+        $cardsArray = []; // Initialize cards array for voucher display
         
         if ($qsOrderDetails) {
             $orderCreatedResponse = $this->createWoohooOrderRequest($qsOrderDetails);
@@ -239,7 +240,34 @@ class WoohooOrderController extends Controller
                     $transactionStatusMessage = __("errors.201");
                     $isSuccessful = true;
                     log::info(111);
-                    $this->handleSuccessFullOrder($orderCreatedResponse);
+                    
+                    // Extract cards/voucher data from response for display
+                    // Handle nested structure: response may have 'data' key containing the actual Woohoo response
+                    if (isset($orderCreatedResponse["data"]) && is_array($orderCreatedResponse["data"])) {
+                        // Response structure: ['success' => true, 'status' => 'COMPLETE', 'data' => $responseData]
+                        if (isset($orderCreatedResponse["data"]["cards"]) && is_array($orderCreatedResponse["data"]["cards"])) {
+                            $cardsArray = $orderCreatedResponse["data"]["cards"];
+                            Log::info("Extracted cards from nested data structure", ['cards_count' => count($cardsArray)]);
+                        }
+                        // Also check if cards are at top level (in case structure varies)
+                        if (empty($cardsArray) && isset($orderCreatedResponse["cards"]) && is_array($orderCreatedResponse["cards"])) {
+                            $cardsArray = $orderCreatedResponse["cards"];
+                            Log::info("Extracted cards from top level", ['cards_count' => count($cardsArray)]);
+                        }
+                    } elseif (isset($orderCreatedResponse["cards"]) && is_array($orderCreatedResponse["cards"])) {
+                        // Direct structure: cards at top level
+                        $cardsArray = $orderCreatedResponse["cards"];
+                        Log::info("Extracted cards from direct structure", ['cards_count' => count($cardsArray)]);
+                    }
+                    
+                    // Transform response for handleSuccessFullOrder if needed (it expects direct structure)
+                    $responseForHandler = $orderCreatedResponse;
+                    if (isset($orderCreatedResponse["data"]) && is_array($orderCreatedResponse["data"])) {
+                        // Merge data into top level for handleSuccessFullOrder
+                        $responseForHandler = array_merge($orderCreatedResponse["data"], ['status' => $orderCreatedResponse["status"]]);
+                    }
+                    
+                    $this->handleSuccessFullOrder($responseForHandler);
                     log::info(333);
                 } elseif (isset($orderCreatedResponse["status_code"]) && $orderCreatedResponse["status_code"] == "400") {
                     try
@@ -288,7 +316,19 @@ class WoohooOrderController extends Controller
             session()->forget('session_refno');
         }
         
-        return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
+        // If cards are not yet available from response, try to get from database
+        if ($isSuccessful && empty($cardsArray) && isset($qsOrderDetails)) {
+            try {
+                $updatedOrder = QsOrder::find($qsOrderDetails->id);
+                if ($updatedOrder && !empty($updatedOrder->cards)) {
+                    $cardsArray = json_decode(decrypt($updatedOrder->cards, env("ENCRYPTION_KEY")), true) ?: [];
+                }
+            } catch (\Exception $e) {
+                Log::warning("Could not retrieve cards from database for display", ['error' => $e->getMessage()]);
+            }
+        }
+        
+        return view("order.order-status", compact("transactionStatusMessage", "isSuccessful", "cardsArray"));
     }
 
     /**

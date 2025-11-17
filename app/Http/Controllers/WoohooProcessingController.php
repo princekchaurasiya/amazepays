@@ -12,112 +12,134 @@ class WoohooProcessingController extends Controller
     /**
      * Process the Woohoo order creation after successful payment
      */
-    public function createOrder(Request $request)
-    {
-        try {
-            // Get order data from session (set by UnlimitPaymentController)
-            $paymentReturnData = session('payment_return_data');
-            
-            if (!$paymentReturnData) {
-                Log::warning('No payment return data found in session');
-                return redirect()->route('my-order')->with('error', 'No payment data found. Please contact support.');
+public function createOrder(Request $request)
+{
+    try {
+
+        // Get order data from session
+        $paymentReturnData = session('payment_return_data');
+
+        if (!$paymentReturnData) {
+            Log::warning('No payment return data found in session');
+            return redirect()->route('my-order')
+                ->with('error', 'No payment data found. Please contact support.');
+        }
+
+        $orderId = $paymentReturnData['order_id'];
+        $paymentId = $paymentReturnData['payment_id'];
+        $status = $paymentReturnData['status'];
+
+        Log::info('Processing Woohoo order creation', [
+            'order_id' => $orderId,
+            'payment_id' => $paymentId,
+            'status' => $status
+        ]);
+
+        // Find the QsOrder
+        $qsOrder = QsOrder::find($orderId);
+
+        if (!$qsOrder) {
+            Log::error('QsOrder not found for processing', ['order_id' => $orderId]);
+            return redirect()->route('my-order')
+                ->with('error', 'Order not found. Please contact support.');
+        }
+
+        // If status empty, fetch from DB
+        if (empty($status)) {
+
+            $unlimitPayment = \App\Models\UnlimitPayment::where('order_id', $qsOrder->merchant_order_id)->first();
+
+            if ($unlimitPayment) {
+                $status = $unlimitPayment->status ??
+                          $unlimitPayment->order_status ??
+                          'pending';
+
+                Log::info('Using database status for payment check', [
+                    'order_id' => $orderId,
+                    'db_status' => $status
+                ]);
             }
+        }
 
-            $orderId = $paymentReturnData['order_id'];
-            $paymentId = $paymentReturnData['payment_id'];
-            $status = $paymentReturnData['status'];
-
-            Log::info('Processing Woohoo order creation', [
+        // Reject if payment failed
+        if (!in_array($status, ['success', 'approved', 'completed'])) {
+            Log::warning('Payment not successful, cannot create Woohoo order', [
                 'order_id' => $orderId,
-                'payment_id' => $paymentId,
                 'status' => $status
             ]);
+            return redirect()->route('my-order')
+                ->with('error', 'Payment was not successful. Please try again.');
+        }
 
-            // Find the QsOrder
-            $qsOrder = QsOrder::find($orderId);
-            
-            if (!$qsOrder) {
-                Log::error('QsOrder not found for processing', ['order_id' => $orderId]);
-                return redirect()->route('my-order')->with('error', 'Order not found. Please contact support.');
-            }
+        // Prevent duplicate Woohoo order
+        if ($qsOrder->woohoo_order_id) {
+            Log::info('Woohoo order already exists', [
+                'order_id' => $orderId,
+                'woohoo_order_id' => $qsOrder->woohoo_order_id
+            ]);
+            return redirect()->route('my-order')
+                ->with('success', 'Your order is already being processed.');
+        }
 
-            // Check if payment was successful
-            // If status is null/empty, check the database for the actual payment status
-            if (empty($status)) 
-                {
-            $unlimitPayment = \App\Models\UnlimitPayment::where('order_id', $qsOrder->merchant_order_id)->first();
-                    if ($unlimitPayment) 
-                        {
-                        $status = $unlimitPayment->status ?? $unlimitPayment->order_status ?? 'pending';
-                        Log::info('Using database status for payment check', [
-                            'order_id' => $orderId,
-                            'db_status' => $status
-                        ]);
-                        }
-                }
+        // Create Woohoo order
+        $woohooController = new WoohooOrderController();
+        $woohooResult = $woohooController->createWoohooOrderRequest($qsOrder);
 
-            
-            if (!in_array($status, ['success', 'approved', 'completed'])) {
-                Log::warning('Payment not successful, cannot create Woohoo order', [
-                    'order_id' => $orderId,
-                    'status' => $status
-                ]);
-                return redirect()->route('my-order')->with('error', 'Payment was not successful. Please try again.');
-            }
+        if ($woohooResult['success']) {
 
-            // Check if Woohoo order already exists
-            if ($qsOrder->woohoo_order_id) {
-                Log::info('Woohoo order already exists', [
-                    'order_id' => $orderId,
-                    'woohoo_order_id' => $qsOrder->woohoo_order_id
-                ]);
-                return redirect()->route('my-order')->with('success', 'Your order is already being processed.');
-            }
+            // Process order
+            $woohooController->saveWoohooOrderResponse($qsOrder, $woohooResult);
+            $vouchers = $woohooController->fetchWoohooVouchers($qsOrder);
+            $woohooController->storeWoohooVouchers($qsOrder, $vouchers);
+            $woohooController->sendWoohooEmails($qsOrder, $vouchers);
 
-            // Create Woohoo order
-            $woohooController = new WoohooOrderController();
-            $woohooResult = $woohooController->createWoohooOrderRequest($qsOrder);
+            // Clear session
+            session()->forget('payment_return_data');
+            session()->forget('unlimit_ctx');
 
-            if ($woohooResult && isset($woohooResult['success']) && $woohooResult['success']) {
-                Log::info('Woohoo order created successfully', [
-                    'order_id' => $orderId,
-                    'woohoo_order_id' => $qsOrder->woohoo_order_id ?? 'N/A'
-                ]);
-
-                // Clear the session data
-                session()->forget('payment_return_data');
-                session()->forget('unlimit_ctx');
-
-                return redirect()->route('my-order')->with('success', 'Your order has been processed successfully! You will receive an email confirmation shortly.');
-            } else {
-                Log::error('Failed to create Woohoo order', [
-                    'order_id' => $orderId,
-                    'result' => $woohooResult
-                ]);
-
-                return redirect()->route('my-order')->with('error', 'There was an issue processing your order. Our team has been notified and will contact you shortly.');
-            }
-
-        } catch (\Exception $e) {
-            Log::error('Woohoo processing failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+            return view('woohoo.response', [
+                'order' => $qsOrder,
+                'woohoo' => $woohooResult,
+                'vouchers' => $vouchers
             ]);
 
-            return redirect()->route('my-order')->with('error', 'An unexpected error occurred. Please contact support with your order details.');
+        } else {
+
+            Log::error('Failed to create Woohoo order', [
+                'order_id' => $orderId,
+                'result' => $woohooResult
+            ]);
+
+            return view('woohoo.response', [
+                'order' => $qsOrder,
+                'woohoo' => $woohooResult,
+                'vouchers' => []
+            ]);
         }
+
+    } catch (\Exception $e) {
+
+        Log::error('Woohoo processing failed', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return redirect()->route('my-order')
+            ->with('error', 'An unexpected error occurred. Please contact support with your order details.');
     }
+}
+
 
     /**
      * Show processing status page
      */
     public function showProcessing(Request $request)
     {
-        $paymentReturnData = session('payment_return_data');
+       $paymentReturnData = session('payment_return_data');
         
         if (!$paymentReturnData) {
             return redirect()->route('my-order')->with('error', 'No payment data found.');
-        }
+       }
 
         return view('woohoo.processing-woohoo', [
             'payment_id' => $paymentReturnData['payment_id'] ?? 'N/A',

@@ -92,15 +92,27 @@ public function createOrder(Request $request)
                 ->with('error', 'Payment not successful.');
         }
 
+        Log::info("🔍 Checking woohoo_order_id before API call", [
+            "woohoo_order_id" => $qsOrder->woohoo_order_id
+        ]);
+
         // 4️⃣ Prevent duplicates
-        if ($qsOrder->woohoo_order_id) {
+       /* if ($qsOrder->woohoo_order_id) {
             return redirect()->route('my-order')
                 ->with('success', 'Order already processed.');
-        }
+        }*/
 
+        Log::info("🔥 Sending Woohoo order request", [
+            'qs_order_id'        => $qsOrder->id,
+            'merchant_order_id'  => $qsOrder->merchant_order_id,
+            'amount'             => $qsOrder->amount,
+            'email'              => $qsOrder->email,
+            'mobile'             => $qsOrder->mobile,
+            'woohoo_url'         => config('services.woohoo.create_order_url')
+        ]);
         // 5️⃣ Create Woohoo order
         $woohoo = new WoohooOrderController();
-        $result = $woohoo->createWoohooOrderRequest($qsOrder);
+        $result = $woohoo->createWoohooOrderRequest($qsOrder,$status);
 
         if ($result['success']) {
 

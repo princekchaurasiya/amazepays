@@ -350,7 +350,19 @@ Route::get('/payment', function () {
     return view('payment'); // This assumes the file is at resources/views/payment.blade.php
 });
 
-Route::match(['GET','POST'], '/payment/return', [UnlimitPaymentController::class, 'handleReturnSuccess'])->name('unlimit.return');
+// User comes back from Unlimit
+Route::get('/unlimit/return', [\App\Http\Controllers\WoohooProcessingController::class, 'handleReturn'])
+    ->name('unlimit.return');
+
+// Create Woohoo order after return stores session
+Route::get('/woohoo/create-order', [\App\Http\Controllers\WoohooProcessingController::class, 'createOrder'])
+    ->name('woohoo.createOrder');
+
+// Show processing page
+Route::get('/woohoo/process', [WoohooProcessingController::class, 'createOrder'])
+    ->name('woohoo.process');
+
+//Route::match(['GET','POST'], '/payment/return', [UnlimitPaymentController::class, 'handleReturnSuccess'])->name('unlimit.return');
 
 // Unlimit webhook endpoint
 Route::post('/unlimit/webhook', [UnlimitPaymentController::class, 'webhook'])->name('unlimit.webhook');
@@ -562,5 +574,25 @@ use App\Http\Controllers\Voyager\QsProductStockImportController;
 Route::post('/admin/qs-products/upload-disabled', [QsProductStockImportController::class, 'uploadDisabledProducts'])
     ->name('admin.qs_products.upload_disabled')
     ->middleware(['web', 'auth', 'admin.user']);
+
+
+use App\Http\Controllers\UnlimitController;
+
+Route::middleware(['auth'])->group(function() {
+    // Step 1: Checkout form submit
+    Route::post('/unlimit/checkout', [UnlimitController::class, 'checkout'])->name('unlimit.checkout');
+
+    // Step 2: Callback from Unlimit
+  //  Route::post('/unlimit/callback', [UnlimitController::class, 'callback'])->name('unlimit.callback');
+
+    // Step 3: Return URL after payment
+  Route::match(['get','post'], '/unlimit/return', [UnlimitController::class, 'return'])->name('unlimit.return');
+
+    // Optional: check payment status API
+    Route::get('/unlimit/status/{merchant_order_id}', [UnlimitController::class, 'checkTransactionStatus'])->name('unlimit.status');
+});
+
+
+
 
 

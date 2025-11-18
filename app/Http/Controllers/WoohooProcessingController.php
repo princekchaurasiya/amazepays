@@ -6,9 +6,52 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\QsOrder;
 use App\Http\Controllers\WoohooOrderController;
+use App\Models\UnlimitPayment;
 
 class WoohooProcessingController extends Controller
 {
+
+   public function handleReturn(Request $request)
+{
+    Log::info("🔄 Unlimit Return Hit", [
+        'query'    => $request->query(),
+        'full_url' => $request->fullUrl(),
+    ]);
+
+    $merchantOrderId = $request->query('merchant_order_id');
+    $status          = $request->query('status');
+
+    if (!$merchantOrderId) {
+        Log::error("❌ Missing merchant_order_id in return URL");
+        return "Invalid return data.";
+    }
+
+    // Fetch payment from DB
+    $payment = UnlimitPayment::where('merchant_order_id', $merchantOrderId)->first();
+
+    if (!$payment) {
+        Log::error("❌ No payment found for merchant_order_id (return)", [
+            'merchant_order_id' => $merchantOrderId
+        ]);
+        return "Unable to verify payment. Please contact support.";
+    }
+
+    // Update payment status
+    $payment->payment_status = $status;
+    $payment->save();
+
+    Log::info("✅ Payment updated via RETURN page", [
+        'merchant_order_id' => $merchantOrderId,
+        'status' => $status
+    ]);
+
+    // Redirect user to Woohoo/Success UI
+    return view("woohoo.processing-woohoo", [
+        "amount" => $payment->amount,
+        "merchant_order_id" => $merchantOrderId,
+        "status" => $status
+    ]);
+}
     /**
      * Process the Woohoo order creation after successful payment
      */
@@ -17,26 +60,25 @@ public function createOrder(Request $request)
     try {
 
         // Get order data from session
-        $paymentReturnData = session('payment_return_data');
+       // $paymentReturnData = session('payment_return_data');
 
-        if (!$paymentReturnData) {
+       /* if (!$paymentReturnData) {
             Log::warning('No payment return data found in session');
             return redirect()->route('my-order')
                 ->with('error', 'No payment data found. Please contact support.');
         }
 
         $orderId = $paymentReturnData['order_id'];
-        $paymentId = $paymentReturnData['payment_id'];
         $status = $paymentReturnData['status'];
 
         Log::info('Processing Woohoo order creation', [
             'order_id' => $orderId,
-            'payment_id' => $paymentId,
             'status' => $status
-        ]);
+        ]);*/
 
         // Find the QsOrder
-        $qsOrder = QsOrder::find($orderId);
+        $merchantOrderId = UnlimitPayment::where('order_id', $orderId)->value('merchant_order_id');
+        $qsOrder = QsOrder::find($merchantOrderId);
 
         if (!$qsOrder) {
             Log::error('QsOrder not found for processing', ['order_id' => $orderId]);
@@ -142,10 +184,11 @@ public function createOrder(Request $request)
        }
 
         return view('woohoo.processing-woohoo', [
-            'payment_id' => $paymentReturnData['payment_id'] ?? 'N/A',
             'order_id' => $paymentReturnData['order_id'] ?? 'N/A',
             'status' => $paymentReturnData['status'] ?? 'Processing',
             'amount' => $paymentReturnData['amount'] ?? 0
         ]);
     }
+
+
 }

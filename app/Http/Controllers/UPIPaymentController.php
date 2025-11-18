@@ -10,6 +10,7 @@ use Illuminate\Http\Client\RequestException;
 use App\Models\ApiToken;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Models\QsOrder;
 
 class UPIPaymentController extends Controller
 {
@@ -75,6 +76,7 @@ class UPIPaymentController extends Controller
     $milliseconds = $now->format('v'); // milliseconds
     $time = $now->format("Y-m-d\TH:i:s.") . $milliseconds . "Z";
     $payableAmount = $request->input('payable_amount');
+    $merchantOrderId = (string) Str::uuid();
 
     $data = [
         'request' => [
@@ -82,8 +84,8 @@ class UPIPaymentController extends Controller
             'time' => $time,
         ],
         'merchant_order' => [
-            'id' => 'ad466842-4b74-4c18-9314-e3f8f15ed183',
-            'description' => "test",
+            'id' => $merchantOrderId,
+            'description' => "Unlimit transaction",
         ],
         'payment_method' => 'upi',
         'payment_data' => [ 
@@ -92,8 +94,8 @@ class UPIPaymentController extends Controller
         ],
 
         'return_urls' => [
-        'success_url' => route('unlimit.return'),
-        'decline_url' => route('unlimit.return'),
+        'success_url' => 'http://127.0.0.1:8000/unlimit/return?merchant_order_id={merchant_order_id}&status={status}',
+        'decline_url' => 'https://amazepays.in/unlimit/return?merchant_order_id={merchant_order_id}&payment_id={payment_id}&status={status}',
         ],
         // Note: card_account.card was removed based on your earlier error for Payment Page mode
     ];
@@ -103,6 +105,34 @@ class UPIPaymentController extends Controller
     if (!$token || ($token->expires_at && $token->expires_at->isPast())) {
         return response()->json(['error' => 'Token expired or missing.'], 401);
     }*/
+
+ 
+
+$order = QsOrder::create([
+    'woohoo_order_id' => 'WH-' . Str::upper(Str::random(6)),
+    'order_status' => 'INITIATED',
+    'denomination' => $payableAmount,
+    'sender_first_name' => 'UPI User',
+    'sender_email' => 'upi@example.com',
+    'sender_phone_no' => '0000000000',
+    'sender_address_1' => 'N/A',
+    'sender_city' => 'N/A',
+    'sender_state' => 'N/A',
+    'sender_post_code' => 'N/A',
+    'sku' => 'UPI_PAYMENT',
+    'grand_payable_amount' => $payableAmount,
+    'amount_payable_after_discount' => $payableAmount,
+    'currency' => 'INR',
+    'merchant_order_id' => $merchantOrderId,
+]);
+
+       UnlimitPayment::create([
+    'merchant_order_id' => $merchantOrderId,
+    'user_id' => auth()->id(),
+    'amount' => $payableAmount,
+    'status' => 'pending'
+    ]);
+
 
    try {
    $response = Http::withHeaders([

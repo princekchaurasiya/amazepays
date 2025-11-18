@@ -59,6 +59,8 @@ class UnlimitPayment extends Model
         'trans_date',
         'bin_country',
         'unlimit_response',
+         'merchant_order_id',
+         'raw_callback',
     ];
 
     public function order()

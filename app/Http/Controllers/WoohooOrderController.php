@@ -696,80 +696,49 @@ class WoohooOrderController extends Controller
     /**
      * Check transaction status for the redirect page (lightweight check)
      */
-    public function checkTransactionStatus(Request $request)
-    {
-        try {
-            // Get payment return data from session
-            $paymentReturnData = session('payment_return_data');
-            
-            if (!$paymentReturnData || !isset($paymentReturnData['order_id'])) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'No payment data found'
-                ], 400);
-            }
-
-            // Get order details
-            $qsOrderDetails = QsOrder::where('id', $paymentReturnData['order_id'])->first();
-            
-            if (!$qsOrderDetails) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Order not found'
-                ], 404);
-            }
-
-            // Check if order is already completed
-            if ($qsOrderDetails->order_status === 'COMPLETE') {
-                return response()->json([
-                    'status' => 'complete',
-                    'message' => 'Transaction completed successfully'
-                ]);
-            }
-
-            // Check if order has a reference number and get status (lightweight check)
-            if ($qsOrderDetails->refno) {
-                // Use a lightweight status check instead of the full retry mechanism
-                $statusResponse = $this->getStatusByReferenceNumberLightweight($qsOrderDetails->refno);
-                
-                if ($statusResponse && $statusResponse['status'] === 'COMPLETE') {
-                    // Update order status
-                    $qsOrderDetails->order_status = 'COMPLETE';
-                    $qsOrderDetails->save();
-                    
-                    return response()->json([
-                        'status' => 'complete',
-                        'message' => 'Transaction completed successfully'
-                    ]);
-                } elseif ($statusResponse && $statusResponse['status'] === 'PROCESSING') {
-                    return response()->json([
-                        'status' => 'processing',
-                        'message' => 'Transaction is still processing'
-                    ]);
-                } else {
-                    return response()->json([
-                        'status' => 'failed',
-                        'message' => 'Transaction failed'
-                    ]);
-                }
-            }
-
-            // If no reference number yet, still processing
-            return response()->json([
-                'status' => 'processing',
-                'message' => 'Transaction is still processing'
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error checking transaction status: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error checking status'
-            ], 500);
-        }
+   public function checkTransactionStatus(Request $request)
+{
+    $merchantOrderId = $request->query('merchant_order_id');
+    if (!$merchantOrderId) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Merchant order ID missing. Contact support.'
+        ], 400);
     }
 
-    /**
+    $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
+    if (!$qsOrder) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Order not found in DB. Contact support.'
+        ], 404);
+    }
+
+    // If order already complete
+    if ($qsOrder->order_status === 'COMPLETE') {
+        return response()->json([
+            'status' => 'complete',
+            'message' => 'Payment completed successfully'
+        ]);
+    }
+
+    // Fetch latest status from Unlimit API if needed
+    $statusResponse = $this->getStatusByReferenceNumberLightweight($qsOrder->refno);
+    if ($statusResponse['status'] === 'COMPLETED') {
+        $qsOrder->order_status = 'COMPLETE';
+        $qsOrder->save();
+        return response()->json([
+            'status' => 'complete',
+            'message' => 'Payment completed successfully'
+        ]);
+    }
+
+    return response()->json([
+        'status' => 'processing',
+        'message' => 'Payment is still processing'
+    ]);
+}
+ /**
      * Lightweight status check without retry mechanism for frontend polling
      */
     private function getStatusByReferenceNumberLightweight($refno)

@@ -63,7 +63,6 @@ public function createOrder(Request $request)
        // $paymentReturnData = session('payment_return_data');
 
        /* if (!$paymentReturnData) {
-            Log::warning('No payment return data found in session');
             return redirect()->route('my-order')
                 ->with('error', 'No payment data found. Please contact support.');
         }
@@ -75,6 +74,8 @@ public function createOrder(Request $request)
             'order_id' => $orderId,
             'status' => $status
         ]);*/
+
+        $orderId = $request->query('merchant_order_id');
 
         // Find the QsOrder
         $merchantOrderId = UnlimitPayment::where('order_id', $orderId)->value('merchant_order_id');

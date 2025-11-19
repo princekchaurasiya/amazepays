@@ -112,7 +112,7 @@ public function createOrder(Request $request)
         ]);
         // 5️⃣ Create Woohoo order
         $woohoo = new WoohooOrderController();
-        $result = $woohoo->createWoohooOrderRequest($qsOrder,$status);
+        $result = $woohoo->createWoohooOrderRequest($qsOrder,$payment);
 
         if ($result['success']) {
 

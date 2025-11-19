@@ -18,39 +18,47 @@ use Illuminate\Support\Facades\URL;
 
 class WoohooOrderController extends Controller
 {
-    public function createWoohooOrderRequest($qsOrderDetails, string $paymentStatus = null)
+    public function createWoohooOrderRequest($qsOrderDetails,$payment)
 {
     Log::info("******* Entered createWoohooOrderRequest ***********", [
         'qs_order_id' => $qsOrderDetails->id,
         'merchant_order_id' => $qsOrderDetails->merchant_order_id,
-        'payment_status_param' => $paymentStatus,
+        'payment_status_param' => $payment->payment_status ?? null
     ]);
 
-    // ✅ Step 1: Determine final payment status
-    $status = strtoupper(trim($paymentStatus ?? 'UNKNOWN'));
+    // Use DB payment status
+    $resolvedStatus = strtolower($payment->payment_status);
 
-    // If not passed from callback, check DB as a fallback
-    if ($status === 'UNKNOWN' || empty($status)) {
-        $payment = \App\Models\UnlimitPayment::where('order_id', $qsOrderDetails->id)->latest()->first();
-        $status = strtoupper(trim($payment->payment_status ?? 'UNKNOWN'));
-        Log::info("Resolved payment status from DB fallback", [
-            'order_id' => $qsOrderDetails->id,
-            'resolved_status' => $status,
-        ]);
-    }
+    Log::info("Resolved payment status", [
+        "order_id" => $qsOrderDetails->id,
+        "resolved_status" => $resolvedStatus
+    ]);
 
-    // ✅ Step 2: Only proceed if COMPLETED
-    if ($status !== 'COMPLETED') {
-        Log::info('Skipping Woohoo order creation because payment is not completed', [
-            'order_id' => $qsOrderDetails->id,
-            'payment_status' => $status,
+    if (!in_array($resolvedStatus, ['success','completed','approved'])) {
+        Log::info("Skipping Woohoo order creation because payment is not completed", [
+            "order_id" => $qsOrderDetails->id,
+            "payment_status" => $resolvedStatus
         ]);
+
         return [
             'success' => false,
             'message' => 'Payment not completed yet',
-            'status' => $status,
+            'status' => 'FAILED'
         ];
     }
+
+    $validStatuses = ['completed', 'success', 'approved'];
+    $normalizedStatus = strtolower(trim($resolvedStatus));
+        if (!in_array($normalizedStatus, $validStatuses)) {
+            Log::info("Woohoo blocked payment status", [
+                'order_id' => $qsOrder->id,
+                'payment_status' => $resolvedStatus,
+            ]);
+            return[
+            'success' => false,
+            'message' => 'Payment not completed yet'
+            ];
+        }
 
     Log::info("Payment verified as COMPLETED, proceeding with Woohoo order creation", [
         'order_id' => $qsOrderDetails->id,

@@ -94,7 +94,7 @@ class UPIPaymentController extends Controller
         ],
 
         'return_urls' => [
-        'success_url' => 'http://127.0.0.1:8000/unlimit/return?merchant_order_id={merchant_order_id}&status={status}',
+        'success_url' => 'http://amazepays.in/unlimit/return?merchant_order_id={merchant_order_id}&status={status}',
         'decline_url' => 'https://amazepays.in/unlimit/return?merchant_order_id={merchant_order_id}&payment_id={payment_id}&status={status}',
         ],
         // Note: card_account.card was removed based on your earlier error for Payment Page mode
@@ -112,14 +112,6 @@ $order = QsOrder::create([
     'woohoo_order_id' => 'WH-' . Str::upper(Str::random(6)),
     'order_status' => 'INITIATED',
     'denomination' => $payableAmount,
-    'sender_first_name' => 'UPI User',
-    'sender_email' => 'upi@example.com',
-    'sender_phone_no' => '0000000000',
-    'sender_address_1' => 'N/A',
-    'sender_city' => 'N/A',
-    'sender_state' => 'N/A',
-    'sender_post_code' => 'N/A',
-    'sku' => 'UPI_PAYMENT',
     'grand_payable_amount' => $payableAmount,
     'amount_payable_after_discount' => $payableAmount,
     'currency' => 'INR',

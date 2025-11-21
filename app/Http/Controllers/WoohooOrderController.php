@@ -203,7 +203,7 @@ class WoohooOrderController extends Controller
     public function createOrder(Request $request)
     {
         // Get payment return data from session
-        $paymentReturnData = session('payment_return_data');
+       /* $paymentReturnData = session('payment_return_data');
         Log::info('Payment return data from session:', $paymentReturnData);
         Log::info('Full session data:', session()->all());
         if (empty($paymentReturnData['order_id']) || empty($paymentReturnData['payment_id'])) {
@@ -211,16 +211,35 @@ class WoohooOrderController extends Controller
                 'order_id' => $paymentReturnData['order_id'] ?? null,
                 'payment_id' => $paymentReturnData['payment_id'] ?? null,
             ]);
-        }
-        
-        // Get order details strictly from session/ID; no latest-order fallback
-        $qsOrderDetails = null;
+        }*/
+        $merchantOrderId = $request->merchant_order_id;
+         Log::info("Merchant Order Id from request",['merchant_order_id' => $merchantOrderId]);
+        $paymentRecord = UnlimitPayment::where('merchant_order_id', $merchantOrderId)->first();
 
-        if ($paymentReturnData && isset($paymentReturnData['order_id'])) {
+        if (!$paymentRecord) {
+        Log::error("UnlimitPayment record not found", ['merchant_order_id' => $merchantOrderId]);
+        return view("order.order-status", [
+            "transactionStatusMessage" => __("errors.default"),
+            "isSuccessful" => false
+        ]);
+    }
+
+        if (!$paymentRecord || $paymentRecord->payment_status !== 'Success') {
+            $isSuccessful = false;
+            $transactionStatusMessage = __("errors.default");
+            return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
+            }
+        
+        $qsOrderDetails = QsOrder::where('id', $merchantOrderId)->first();
+
+        // Get order details strictly from session/ID; no latest-order fallback
+       /* $qsOrderDetails = null;
+
+        if ($merchantOrderId && isset($merchantOrderId)) {
             // Try to get order by payment order ID first
-            $qsOrderDetails = QsOrder::where('id', $paymentReturnData['order_id'])->first();
-            Log::info('Attempt to find order by payment order ID', ['order_id' => $paymentReturnData['order_id']]);
-        }
+            $qsOrderDetails = QsOrder::where('id', $merchantOrderId)->first();
+            Log::info('Attempt to find order by payment order ID', ['order_id' => $merchantOrderId]);
+        }*/
 
         if (!$qsOrderDetails) {
             Log::error('Intended order not found via session or ID. Aborting Woohoo order creation.');
@@ -236,7 +255,7 @@ class WoohooOrderController extends Controller
             Log::info('Updated order with reference number:', ['refno' => $newRefNo]);
         }
         
-        Log::info("Order details for Woohoo order creation:", $qsOrderDetails ? $qsOrderDetails->toArray() : 'No order found');
+        //Log::info("Order details for Woohoo order creation:", $qsOrderDetails ? $qsOrderDetails->toArray() : 'No order found');
         $isSuccessful = false;
         $transactionStatusMessage = __("errors.default");
         $cardsArray = []; // Initialize cards array for voucher display
@@ -312,9 +331,8 @@ class WoohooOrderController extends Controller
             $transactionStatusMessage = __("errors.default");
             Log::error("No payment data found in session.");
         }
-        // Only clear session data if the transaction was successful
-        // Keep session data available for voucher API calls and other post-processing
-        if ($isSuccessful) {
+
+       /* if ($isSuccessful) {
             Log::info("Transaction successful - keeping session data for voucher processing");
         } else {
             Log::info("Transaction failed - clearing session data");
@@ -322,7 +340,7 @@ class WoohooOrderController extends Controller
             Session::forget('checkout_data');
             session()->forget('session_qs_order_id');
             session()->forget('session_refno');
-        }
+        }*/
         
         // If cards are not yet available from response, try to get from database
         if ($isSuccessful && empty($cardsArray) && isset($qsOrderDetails)) {

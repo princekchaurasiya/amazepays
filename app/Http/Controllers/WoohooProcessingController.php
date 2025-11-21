@@ -62,8 +62,7 @@ public function createOrder(Request $request)
         // 1️⃣ Find the latest completed Unlimit callback for this user
         $payment = UnlimitPayment::where('user_id', auth()->id())
                     ->orderBy('id', 'DESC')
-                    ->first();
-
+                  ->first();
         if (!$payment) {
             return redirect()->route('my-order')
                 ->with('error', 'No payment found. Please contact support.');
@@ -78,7 +77,9 @@ public function createOrder(Request $request)
         ]);
 
         // 2️⃣ Fetch QsOrder
-        $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
+        $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)
+                  ->orderBy('id', 'ASC')
+                  ->first();
 
         if (!$qsOrder) {
             Log::error("QsOrder not found", ['merchant_order_id' => $merchantOrderId]);
@@ -102,6 +103,12 @@ public function createOrder(Request $request)
                 ->with('success', 'Order already processed.');
         }*/
 
+        $billing = Billing::where('order_id', $qsOrder->id)->first();
+
+        $qsOrder->email = $billing->billing_email ?? null;
+        $qsOrder->mobile = $billing->billing_tel ?? null;
+        $qsOrder->billing_name = $billing->billing_name ?? null;
+
         Log::info("🔥 Sending Woohoo order request", [
             'qs_order_id'        => $qsOrder->id,
             'merchant_order_id'  => $qsOrder->merchant_order_id,
@@ -110,21 +117,35 @@ public function createOrder(Request $request)
             'mobile'             => $qsOrder->mobile,
             'woohoo_url'         => config('services.woohoo.create_order_url')
         ]);
+
+        $rows = QsOrder::orderBy('id', 'desc')->take(2)->get();
+        if ($rows->count() < 2) {
+                $merged = $rows->first();
+            } else {
+                $newer  = $rows[0]; // most recent
+                $older  = $rows[1]; // previous
+
+                // Create merged result
+                $merged = clone $newer;
+
+                foreach ($merged->getAttributes() as $key => $value) {
+                    if (is_null($value) || $value === '') {
+                        $merged->$key = $older->$key ?? $value;
+                    }
+                }
+            }
+
         // 5️⃣ Create Woohoo order
         $woohoo = new WoohooOrderController();
-        $result = $woohoo->createWoohooOrderRequest($qsOrder,$payment);
+        
+        $result = $woohoo->createOrder($qsOrder);
 
         if ($result['success']) {
-
-            $woohoo->saveWoohooOrderResponse($qsOrder, $result);
-            $vouchers = $woohoo->fetchWoohooVouchers($qsOrder);
-            $woohoo->storeWoohooVouchers($qsOrder, $vouchers);
-            $woohoo->sendWoohooEmails($qsOrder, $vouchers);
 
             return view('woohoo.response', [
                 'order' => $qsOrder,
                 'woohoo' => $result,
-                'vouchers' => $vouchers
+                'vouchers' => []
             ]);
         }
 

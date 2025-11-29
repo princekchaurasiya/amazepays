@@ -7,6 +7,7 @@ use App\Models\QsOrder;
 use App\Models\QsProduct;
 use App\Models\OrderSummary;
 use App\Models\UnlimitPayment;
+use App\Models\Billing;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
@@ -189,6 +190,14 @@ class ProductPageController extends Controller
             $grandPayableAmount = $request->quantity * $request->denomination;
         }
 
+        session(['selected_product' => [
+            'denomination' => $request->denomination,
+            'quantity' => $request->quantity,
+            'sku' => $product->sku,
+            'price' => $product->price,
+        ]]);
+        Log::info('Selected product stored in session', session('selected_product'));
+
         // Create a new order since all validations passed
         Log::info('Creating a new order for user:', ['user_id' => Auth::id()]);
 
@@ -262,6 +271,17 @@ class ProductPageController extends Controller
         $requestData = $request->all();
         session()->put('checkout_data', $requestData);
         Log::info('Checkout data stored in session.');
+        
+        $billing = new Billing();
+        $billing->billing_name = $request->billing_name;
+        $billing->billing_email = $request->billing_email;
+        $billing->billing_tel = $request->billing_tel;
+        $billing->billing_address = $request->billing_address;
+        $billing->billing_address_two = $request->billing_address_two;
+        $billing->billing_city = $request->billing_city;
+        $billing->billing_state = $request->billing_state;
+        $billing->billing_zip = $request->billing_zip;
+        $billing->save();
         return response()->json(['message' => 'Session data updated successfully']);
     }
 

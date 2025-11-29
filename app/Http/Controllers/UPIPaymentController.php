@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\RequestException;
 use App\Models\ApiToken;
+use App\Models\Billing;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\QsOrder;
@@ -107,24 +108,40 @@ class UPIPaymentController extends Controller
     }*/
 
  
+$prod = session('selected_product');
+ 
 
-$order = QsOrder::create([
-    'woohoo_order_id' => 'WH-' . Str::upper(Str::random(6)),
-    'order_status' => 'INITIATED',
-    'denomination' => $payableAmount,
-    'grand_payable_amount' => $payableAmount,
-    'amount_payable_after_discount' => $payableAmount,
-    'currency' => 'INR',
-    'merchant_order_id' => $merchantOrderId,
-]);
+ $existingOrderId = session('session_qs_order_id');
 
-       UnlimitPayment::create([
-    'merchant_order_id' => $merchantOrderId,
-    'user_id' => auth()->id(),
-    'amount' => $payableAmount,
-    'status' => 'pending'
-    ]);
+    if (!$existingOrderId) {
+        return response()->json([
+            'error' => 'No existing order found in session.'
+        ], 400);
+    }
 
+    // Fetch the existing order
+    $order = QsOrder::find($existingOrderId);
+
+    if (!$order) {
+        return response()->json(['error' => 'Order not found'], 404);
+    }
+
+    // Update the order instead of creating new one
+    $order->woohoo_order_id = 'WH-' . Str::upper(Str::random(6));
+    $order->order_status = 'INITIATED';
+    $order->merchant_order_id = $merchantOrderId;
+    $order->save();
+
+
+    /** UPDATE UnlimitPayment instead of create */
+    $payment = UnlimitPayment::where('order_id', $existingOrderId)->first();
+
+    if ($payment) {
+        $payment->merchant_order_id = $merchantOrderId;
+        $payment->amount = $payableAmount;
+        $payment->payment_status = 'pending';
+        $payment->save();
+    }
 
    try {
    $response = Http::withHeaders([

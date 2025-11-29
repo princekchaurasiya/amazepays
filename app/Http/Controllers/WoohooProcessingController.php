@@ -171,7 +171,7 @@ public function createOrder(Request $request)
      */
     public function showProcessing(Request $request)
     {
-       $paymentReturnData = session('payment_return_data');
+       /*$paymentReturnData = session('payment_return_data');
         
         if (!$paymentReturnData) {
             return redirect()->route('my-order')->with('error', 'No payment data found.');
@@ -181,6 +181,23 @@ public function createOrder(Request $request)
             'order_id' => $paymentReturnData['order_id'] ?? 'N/A',
             'status' => $paymentReturnData['status'] ?? 'Processing',
             'amount' => $paymentReturnData['amount'] ?? 0
+        ]);*/
+
+            $merchantOrderId = $request->merchant_order_id;
+            if (!$merchantOrderId) {
+            return redirect()->route('my-order')->with('error', 'Missing payment reference.');
+        }
+
+        $payment = UnlimitPayment::where('merchant_order_id', $merchantOrderId)->first();
+
+        if (!$payment) {
+            return redirect()->route('my-order')->with('error', 'Payment record not found.');
+        }
+
+        return view('woohoo.processing-woohoo', [
+            'order_id' => $payment->order_id,
+            'status' => $payment->payment_status ?? 'Processing',
+            'amount' => $payment->amount ?? 0
         ]);
     }
 

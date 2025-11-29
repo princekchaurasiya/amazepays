@@ -5,6 +5,7 @@
 @section('content')
 @php
     use App\Helpers\CommonHelper;
+    use Illuminate\Support\Str;
 @endphp
 
     {{-- Banner Section --}}
@@ -205,6 +206,104 @@
 
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- KGen Products Section --}}
+            @if (!empty($kgenProducts))
+                <div class="row mt-5">
+                    <div class="col-lg-12">
+                        <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">
+                            Featured KGen Products
+                        </h1>
+                        <hr class="normalhr">
+
+                        <div class="row">
+                            @foreach ($kgenProducts as $product)
+                                @php
+                                    $availableVariants = collect($product['variants'] ?? [])->filter(function ($variant) {
+                                        $stockAvailable = $variant['stockAvailable'] ?? $variant['inStock'] ?? $variant['available'] ?? $variant['isAvailable'] ?? true;
+                                        $stock = $variant['stock'] ?? $variant['quantity'] ?? null;
+
+                                        if ($stock === 0 || $stockAvailable === false || $stockAvailable === 0) {
+                                            return false;
+                                        }
+
+                                        if ($stockAvailable === true || ($stock !== null && $stock > 0)) {
+                                            return true;
+                                        }
+
+                                        return true;
+                                    })->values();
+
+                                    $primaryVariant = $availableVariants->first();
+                                    $discountPercentage = (float)($product['discount_percentage'] ?? 0);
+                                    $variantMrp = $primaryVariant ? (float)($primaryVariant['mrp'] ?? 0) : 0;
+                                    $variantPrice = $primaryVariant ? (float)($primaryVariant['price'] ?? $variantMrp) : 0;
+                                    $priceSource = $variantMrp > 0 ? $variantMrp : $variantPrice;
+                                    $effectivePrice = $primaryVariant
+                                        ? ($discountPercentage > 0
+                                            ? round($priceSource * (1 - ($discountPercentage / 100)), 2)
+                                            : $variantPrice)
+                                        : null;
+                                @endphp
+                                <div class="col-lg-3 col-md-4 col-6 mb-4">
+                                    <div class="card kgen-card h-100 shadow-sm position-relative">
+                                        @if ($discountPercentage > 0)
+                                            <span class="badge bg-danger position-absolute kgen-badge">
+                                                {{ (int) $discountPercentage }}% Off
+                                            </span>
+                                        @endif
+
+                                        <img src="{{ $product['attachments'][0] ?? 'https://via.placeholder.com/300x200' }}"
+                                            class="card-img-top kgen-card-image"
+                                            alt="{{ $product['productDisplayName'] ?? 'KGen Product' }}">
+
+                                        <div class="card-body d-flex flex-column">
+                                            <h5 class="card-title">{{ $product['productDisplayName'] ?? 'Unnamed' }}</h5>
+                                            <p class="text-muted small mb-2">
+                                                Category: {{ $product['categories'][0]['categoryName'] ?? 'Uncategorized' }}
+                                            </p>
+                                            <p class="kgen-card-desc">
+                                                {{ Str::limit($product['descriptionText'] ?? '', 90) }}
+                                            </p>
+
+                                            @if ($primaryVariant)
+                                                <div class="kgen-card-pricing mb-3">
+                                                    <small class="text-muted d-block">
+                                                        Variant: {{ $primaryVariant['variantDisplayName'] ?? '-' }}
+                                                    </small>
+                                                    <div class="d-flex flex-column">
+                                                        @if ($variantMrp > 0)
+                                                            <span class="text-muted text-decoration-line-through">
+                                                                ₹{{ number_format($variantMrp, 2) }}
+                                                            </span>
+                                                        @endif
+                                                        <span class="fw-bold text-success fs-5">
+                                                            ₹{{ number_format($effectivePrice ?? $variantPrice, 2) }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <div class="alert alert-warning py-2 mb-3">No variants available</div>
+                                            @endif
+
+                                            <a href="{{ route('products', ['search' => $product['productDisplayName'] ?? $product['productID'] ?? null]) }}"
+                                                class="btn btn-primary w-100 mt-auto">
+                                                View on KGen
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <a href="{{ route('products') }}" class="btn btn-outline-primary px-4">
+                                Browse all KGen products
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -645,6 +744,33 @@ Explore more Gift Cards & Vouchers
         font-size: 48px;
         font-weight: bold;
         margin-top: 1rem;
+    }
+
+    .kgen-card-image {
+        height: 180px;
+        object-fit: cover;
+    }
+
+    .kgen-card {
+        border: none;
+        border-radius: 12px;
+    }
+
+    .kgen-card-desc {
+        min-height: 60px;
+        color: #4b4b4b;
+    }
+
+    .kgen-card-pricing span {
+        line-height: 1.2;
+    }
+
+    .kgen-badge {
+        top: 12px;
+        right: 12px;
+        font-size: 0.75rem;
+        padding: 6px 10px;
+        border-radius: 12px;
     }
 </style>
 @endpush

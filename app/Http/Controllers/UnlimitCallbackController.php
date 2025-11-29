@@ -28,7 +28,6 @@ class UnlimitCallbackController extends Controller
             $merchantOrderId = $payload['merchant_order']['id'] ?? null;
             $paymentId       = $payload['payment_data']['id'] ?? null;
             $rawStatus       = $payload['payment_data']['status'] ?? null;
-            $amount          = $payload['payment_data']['amount'] ?? null;
             $currency        = $payload['payment_data']['currency'] ?? 'INR';
 
             Log::info("Raw status from callback", [
@@ -73,11 +72,7 @@ class UnlimitCallbackController extends Controller
                 $payment->status_message  = json_encode($payload);
                 $payment->currency        = $currency;
                 $payment->updated_at      = now();
-
-                // store amount ONLY if provided
-                if (!empty($amount)) {
-                    $payment->amount = $amount;
-                }
+                
 
                 $payment->save();
 
@@ -88,24 +83,25 @@ class UnlimitCallbackController extends Controller
 
             } else {
 
-                // Create NEW payment record
-                $payment = UnlimitPayment::create([
-                    'user_id'            => $order?->user_id ?? 0,     // NEVER NULL
-                    'order_id'           => $order?->id ?? null,
-                    'merchant_order_id'  => $merchantOrderId,
-                    'tracking_id'        => $paymentId,
-                    'amount'             => $amount,
-                    'currency'           => $currency,
-                    'payment_status'     => $status,
-                    'status_message'     => json_encode($payload),
-                    'created_at'         => now(),
-                    'updated_at'         => now(),
-                ]);
+            $payment = UnlimitPayment::where('merchant_order_id', $merchantOrderId)->first();
 
-                Log::info("🆕 Payment created", [
-                    'payment_id' => $payment->id,
+            if (!$payment) {
+                Log::error("No existing payment found for merchant_order_id in callback", [
                     'merchant_order_id' => $merchantOrderId
                 ]);
+                return response()->json(['error' => 'Payment mismatch'], 400);
+            }
+
+            $woohooAmount = $order->denomination;
+
+            $payment->update([
+                'tracking_id'    => $paymentId,
+                'currency'       => $currency,
+                'amount'         => $woohooAmount,
+                'payment_status' => $status,
+                'status_message' => json_encode($payload),
+            ]);
+
             }
 
             /**

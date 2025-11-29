@@ -41,42 +41,25 @@
                         return true;
                     })->values();
                 @endphp
-                @php
-                    // Filter out out-of-stock variants for list view
-                    $availableVariants = collect($product['variants'] ?? [])->filter(function($variant) {
-                        $stockAvailable = $variant['stockAvailable'] ?? $variant['inStock'] ?? $variant['available'] ?? $variant['isAvailable'] ?? true;
-                        $stock = $variant['stock'] ?? $variant['quantity'] ?? null;
-                        
-                        if ($stock === 0 || $stockAvailable === false || $stockAvailable === 0) {
-                            return false;
-                        }
-                        
-                        if ($stockAvailable === true || ($stock !== null && $stock > 0)) {
-                            return true;
-                        }
-                        
-                        return true;
-                    })->values();
-                @endphp
                 <div class="list-group-item">
                     <h5>{{ $product['productDisplayName'] }} ({{ $product['productID'] }})</h5>
                     @if($availableVariants->isEmpty())
                         <div class="text-muted">No variants available</div>
                     @else
                         @foreach($availableVariants as $variant)
+                            @php
+                                $discountPercentage = (float)($product['discount_percentage'] ?? 0);
+                                $mrpValue = (float)($variant['mrp'] ?? 0);
+                                $basePrice = (float)($variant['price'] ?? $mrpValue);
+                                $priceSource = $mrpValue > 0 ? $mrpValue : $basePrice;
+                                $effectivePrice = $discountPercentage > 0
+                                    ? round($priceSource * (1 - ($discountPercentage / 100)), 2)
+                                    : $basePrice;
+                            @endphp
                             <div>
                                 <strong>Variant:</strong> {{ $variant['variantDisplayName'] }} ({{ $variant['variantID'] }})<br>
-                                <strong>Price:</strong> {{ $variant['price'] }} / <strong>MRP:</strong> {{ $variant['mrp'] }}
-                            </div>
-                        @endforeach
-                    @endif
-                    @if($availableVariants->isEmpty())
-                        <div class="text-muted">No variants available</div>
-                    @else
-                        @foreach($availableVariants as $variant)
-                            <div>
-                                <strong>Variant:</strong> {{ $variant['variantDisplayName'] }} ({{ $variant['variantID'] }})<br>
-                                <strong>Price:</strong> {{ $variant['price'] }} / <strong>MRP:</strong> {{ $variant['mrp'] }}
+                                <strong>MRP:</strong> ₹{{ number_format($mrpValue ?: $basePrice, 2) }} |
+                                <strong>Discounted:</strong> <span class="text-success fw-bold">₹{{ number_format($effectivePrice, 2) }}</span>
                             </div>
                         @endforeach
                     @endif
@@ -143,54 +126,23 @@
                                 <strong>Select Variant:</strong>
                                 <div class="btn-group-vertical w-100 mt-2" role="group" id="variant-buttons-{{ $product['productID'] }}">
                                     @foreach($availableVariants as $index => $variant)
+                                        @php
+                                            $discountPercentage = (float)($product['discount_percentage'] ?? 0);
+                                            $mrpValue = (float)($variant['mrp'] ?? 0);
+                                            $basePrice = (float)($variant['price'] ?? $mrpValue);
+                                            $priceSource = $mrpValue > 0 ? $mrpValue : $basePrice;
+                                            $effectivePrice = $discountPercentage > 0
+                                                ? round($priceSource * (1 - ($discountPercentage / 100)), 2)
+                                                : $basePrice;
+                                        @endphp
                                         <button type="button" 
                                                 class="btn btn-outline-primary variant-btn mb-2 {{ $index === 0 ? 'active' : '' }}"
                                                 data-variant-id="{{ $variant['variantID'] ?? '' }}"
                                                 data-mrp="{{ $variant['mrp'] ?? '' }}"
                                                 data-product-id="{{ $product['productID'] }}">
                                             <strong>{{ $variant['variantDisplayName'] ?? '-' }}</strong><br>
-                                            <small>MRP: <s>₹{{ $variant['mrp'] ?? '-' }}</s> | 
-                                            Price: <span class="text-success fw-bold">₹{{ $variant['price'] ?? '-' }}</span></small>
-                                        </button>
-                                    @endforeach
-                                </div>
-                        @php
-                            // Filter out out-of-stock variants
-                            $availableVariants = collect($product['variants'] ?? [])->filter(function($variant) {
-                                // Check common stock availability fields
-                                $stockAvailable = $variant['stockAvailable'] ?? $variant['inStock'] ?? $variant['available'] ?? $variant['isAvailable'] ?? true;
-                                $stock = $variant['stock'] ?? $variant['quantity'] ?? null;
-                                
-                                // If stock is explicitly 0 or false, consider out of stock
-                                if ($stock === 0 || $stockAvailable === false || $stockAvailable === 0) {
-                                    return false;
-                                }
-                                
-                                // If stockAvailable is explicitly true or stock > 0, consider in stock
-                                if ($stockAvailable === true || ($stock !== null && $stock > 0)) {
-                                    return true;
-                                }
-                                
-                                // Default to showing if no stock info is available
-                                return true;
-                            })->values();
-                        @endphp
-
-                        @if($availableVariants->isEmpty())
-                            <div class="alert alert-warning mb-2">No variants available</div>
-                        @else
-                            <div class="mb-3">
-                                <strong>Select Variant:</strong>
-                                <div class="btn-group-vertical w-100 mt-2" role="group" id="variant-buttons-{{ $product['productID'] }}">
-                                    @foreach($availableVariants as $index => $variant)
-                                        <button type="button" 
-                                                class="btn btn-outline-primary variant-btn mb-2 {{ $index === 0 ? 'active' : '' }}"
-                                                data-variant-id="{{ $variant['variantID'] ?? '' }}"
-                                                data-mrp="{{ $variant['mrp'] ?? '' }}"
-                                                data-product-id="{{ $product['productID'] }}">
-                                            <strong>{{ $variant['variantDisplayName'] ?? '-' }}</strong><br>
-                                            <small>MRP: <s>₹{{ $variant['mrp'] ?? '-' }}</s> | 
-                                            Price: <span class="text-success fw-bold">₹{{ $variant['price'] ?? '-' }}</span></small>
+                                            <small>MRP: <s>₹{{ number_format($mrpValue ?: $basePrice, 2) }}</s> | 
+                                            Discounted: <span class="text-success fw-bold">₹{{ number_format($effectivePrice, 2) }}</span></small>
                                         </button>
                                     @endforeach
                                 </div>

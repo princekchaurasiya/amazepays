@@ -8,6 +8,7 @@ use App\Models\Home; // Import the Home model
 use App\Models\AmazepayCategory;
 use App\Models\AmazepayBrand;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class HomePageController extends Controller
@@ -68,7 +69,18 @@ class HomePageController extends Controller
             }
 
             // Return the view with the fetched data
-            return view('layouts/homepage.index', compact('slides', 'homeSettings', 'allProducts', 'categories', 'brands', 'priorityProducts', 'noPriorityProducts')); // Pass data to the view
+            $kgenProducts = $this->fetchKgenProducts();
+
+            return view('layouts/homepage.index', compact(
+                'slides',
+                'homeSettings',
+                'allProducts',
+                'categories',
+                'brands',
+                'priorityProducts',
+                'noPriorityProducts',
+                'kgenProducts'
+            )); // Pass data to the view
         } catch (\Exception $e) {
             Log::error('Error fetching data in homePage method', ['error' => $e->getMessage()]);
             // Handle the exception as needed, e.g., return an error view or message
@@ -91,5 +103,79 @@ class HomePageController extends Controller
         }
 
         return null; // Return null if no slug is found
+    }
+
+    /**
+     * Fetch a curated list of KGen products for the homepage card view.
+     */
+    private function fetchKgenProducts(int $limit = 8): array
+    {
+        try {
+            $baseUrl = env('EXLR8_BASE_URL');
+            $partnerId = env('dpID');
+            $clientId = env('EXLR8_USER_ID');
+            $clientSecret = env('EXLR8_USER_SECRET');
+
+            if (!$baseUrl || !$partnerId || !$clientId || !$clientSecret) {
+                Log::warning('Missing KGen credentials for homepage');
+                return [];
+            }
+
+            $response = Http::timeout(10)
+                ->withHeaders([
+                    'x-client-id' => $clientId,
+                    'x-client-secret' => $clientSecret,
+                ])
+                ->get(rtrim($baseUrl, '/') . '/products/delivery-partners/' . $partnerId);
+
+            if (!$response->successful()) {
+                Log::error('Failed to fetch KGen products for homepage', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+                return [];
+            }
+
+            $products = collect($response->json('products', []));
+            if ($products->isEmpty()) {
+                return [];
+            }
+
+            $discountMap = QsProduct::whereNotNull('discount_percentage')
+                ->where('discount_percentage', '>', 0)
+                ->pluck('discount_percentage', 'name')
+                ->mapWithKeys(function ($discount, $name) {
+                    $normalized = strtolower(trim((string) $name));
+                    return $normalized !== '' ? [$normalized => (float) $discount] : [];
+                });
+
+            return $products
+                ->map(function ($product) use ($discountMap) {
+                    $nameCandidates = [
+                        strtolower(trim((string) ($product['productDisplayName'] ?? ''))),
+                        strtolower(trim((string) ($product['productName'] ?? ''))),
+                    ];
+
+                    $discount = 0;
+                    foreach ($nameCandidates as $candidate) {
+                        if ($candidate !== '' && $discountMap->has($candidate)) {
+                            $discount = $discountMap->get($candidate);
+                            break;
+                        }
+                    }
+
+                    $product['discount_percentage'] = $discount;
+
+                    return $product;
+                })
+                ->take($limit)
+                ->values()
+                ->all();
+        } catch (\Throwable $th) {
+            Log::error('Unexpected error fetching KGen products', [
+                'error' => $th->getMessage(),
+            ]);
+            return [];
+        }
     }
 }

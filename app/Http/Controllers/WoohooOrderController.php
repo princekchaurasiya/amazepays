@@ -418,6 +418,12 @@ class WoohooOrderController extends Controller
                 $orderStatusResponse = Http::acceptJson()->withHeaders(["Content-Type" => "application/json", "Authorization" => "Bearer " . $bearerToken, "Accept" => "*/*", "dateAtClient" => $dateAtClient, "signature" => $signature,])->get($absApiUrl);
                 if ($orderStatusResponse->successful()) {
                     $cardStatusApiResponseData = $orderStatusResponse->json();
+                    
+                    // Normalise response to array if it's an object to prevent stdClass errors
+                    if (is_object($cardStatusApiResponseData)) {
+                        $cardStatusApiResponseData = json_decode(json_encode($cardStatusApiResponseData), true);
+                    }
+                    
                     Log::info("Response from Woohoo server:", ["response" => $cardStatusApiResponseData]);
                     if (isset($cardStatusApiResponseData["status"])) {
                         if ($cardStatusApiResponseData["status"] === "COMPLETE") {
@@ -455,7 +461,18 @@ class WoohooOrderController extends Controller
     public function callCardActivation($cardStatusApiResponseData)
     {
         Log::info("********** We are hitting card activation API by reference number *******************\n");
-        $orderId = $cardStatusApiResponseData["orderId"];
+        
+        // Normalise input to array to prevent stdClass errors
+        if (is_object($cardStatusApiResponseData)) {
+            $cardStatusApiResponseData = json_decode(json_encode($cardStatusApiResponseData), true);
+        }
+        
+        $orderId = $cardStatusApiResponseData["orderId"] ?? null;
+        if (!$orderId) {
+            Log::error("callCardActivation: orderId missing from input data");
+            return ["transactionStatusMessage" => __("errors.7002"), "status_code" => 500, "errorCode" => "7002", "errorMessage" => __("errors.7002"), "defaultErrorMessage" => __("errors.default"), "isSuccessful" => false,];
+        }
+        
         $clientSecret = setting("api.qs_clientSecret");
         $bearerToken = setting("api.bearer_token");
         $apiUrl = "https://" . setting("api.woohoo_url");
@@ -469,6 +486,17 @@ class WoohooOrderController extends Controller
             if ($activatedCardApiResponse->successful()) {
                 Log::info("Card activation successful.");
                 $activatedCardApiResponseData = $activatedCardApiResponse->json();
+                
+                // Ensure response is an array, not stdClass
+                if (is_object($activatedCardApiResponseData)) {
+                    $activatedCardApiResponseData = json_decode(json_encode($activatedCardApiResponseData), true);
+                }
+                
+                // Ensure input is also an array for array_merge
+                if (!is_array($cardStatusApiResponseData)) {
+                    $cardStatusApiResponseData = json_decode(json_encode($cardStatusApiResponseData), true);
+                }
+                
                 $combinedData = array_merge($cardStatusApiResponseData, $activatedCardApiResponseData);
                 return $combinedData;
             } else {
@@ -575,8 +603,10 @@ class WoohooOrderController extends Controller
         // Safely resolve cards; fetch from Woohoo if not yet available
         $cardsArray = [];
         try {
-            if (!empty($order["cards"])) {
-                $cardsArray = json_decode(decrypt($order["cards"], env("ENCRYPTION_KEY")), true) ?: [];
+            // Handle both Eloquent models and stdClass safely using property access
+            $encryptedCards = $order->cards ?? null;
+            if (!empty($encryptedCards)) {
+                $cardsArray = json_decode(decrypt($encryptedCards, env("ENCRYPTION_KEY")), true) ?: [];
             }
         } catch (\Throwable $e) {
             Log::warning("Card decrypt failed; will attempt to fetch cards", ["error" => $e->getMessage()]);
@@ -585,20 +615,50 @@ class WoohooOrderController extends Controller
 
         if (empty($cardsArray)) {
             try {
-                $woohooOrderId = $order["woohoo_order_id"] ?? null;
+                // Use object property access, not array access, to prevent stdClass errors
+                $woohooOrderId = $order->woohoo_order_id ?? null;
                 if ($woohooOrderId) {
                     // Reuse activation fetch to retrieve cards
                     $combined = $this->callCardActivation(["orderId" => $woohooOrderId, "status" => "COMPLETE"]);
-                    if (is_array($combined) && isset($combined["cards"]) && is_array($combined["cards"])) {
-                        $cardsArray = $combined["cards"]; 
-                        // Persist freshly fetched cards
-                        QsOrder::where("id", $orderId)->update([
-                            "cards" => encrypt(json_encode($cardsArray), env("ENCRYPTION_KEY")),
-                        ]);
+                    
+                    // Normalise response to array if it's an object (defensive programming)
+                    if (is_object($combined)) {
+                        $combined = json_decode(json_encode($combined), true);
+                    }
+                    
+                    // Check if cards exist and extract them safely
+                    if (is_array($combined)) {
+                        // Handle both 'cards' array and flat card fields
+                        if (isset($combined["cards"]) && is_array($combined["cards"])) {
+                            $cardsArray = $combined["cards"];
+                        } elseif (isset($combined["cardnumber"]) || isset($combined["cardpin"])) {
+                            // Handle flat card fields (cardnumber, cardpin, etc.)
+                            $singleCard = [
+                                'cardNumber'      => $combined['cardnumber'] ?? $combined['cardNumber'] ?? null,
+                                'cardPin'         => $combined['cardpin'] ?? $combined['cardPin'] ?? null,
+                                'amount'          => $combined['amount'] ?? null,
+                                'activationCode'  => $combined['activation_code'] ?? $combined['activationCode'] ?? null,
+                                'activationUrl'   => $combined['activation_url'] ?? $combined['activationUrl'] ?? null,
+                                'validity'        => $combined['validity'] ?? null,
+                            ];
+                            if (!empty($singleCard['cardNumber']) || !empty($singleCard['cardPin'])) {
+                                $cardsArray = [$singleCard];
+                            }
+                        }
+                        
+                        // Persist freshly fetched cards if we have any
+                        if (!empty($cardsArray)) {
+                            QsOrder::where("id", $orderId)->update([
+                                "cards" => encrypt(json_encode($cardsArray), env("ENCRYPTION_KEY")),
+                            ]);
+                        }
                     }
                 }
             } catch (\Throwable $e) {
-                Log::error("Failed to fetch cards after decrypt failure", ["error" => $e->getMessage(), "woohoo_order_id" => $order["woohoo_order_id"] ?? null]);
+                Log::error("Failed to fetch cards after decrypt failure", [
+                    "error"            => $e->getMessage(),
+                    "woohoo_order_id"  => $order->woohoo_order_id ?? null,
+                ]);
             }
         }
         
@@ -699,24 +759,91 @@ class WoohooOrderController extends Controller
     }
     public function updateQsOrder($orderCreatedResponse)
     {
+        $qsOrderId = session('session_qsorder_id');
+        $refno = session('session_refno');
+
+        Log::info("Reference number", ['ref_no' => $refno, 'qs_order_id' => $qsOrderId]);
+        Log::info("Cache order data", ['order_data' => $orderCreatedResponse]);
+
         $isSuccessful = false;
+
+        // Normalise Woohoo response so we can safely treat it as an array
+        // This fixes "Cannot use object of type stdClass as array" error
+        if (is_object($orderCreatedResponse)) {
+            $orderCreatedResponse = json_decode(json_encode($orderCreatedResponse), true);
+        }
+
+        if (!is_array($orderCreatedResponse)) {
+            Log::error('updateQsOrder called with invalid response type', [
+                'type' => gettype($orderCreatedResponse),
+            ]);
+            $transactionStatusMessage = "Invalid order response format received from Woohoo.";
+            return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
+        }
+
+        // Build cards payload – handle both legacy 'cards' array and flat single-card fields
+        $cardsPayload = [];
+
+        if (isset($orderCreatedResponse['cards']) && is_array($orderCreatedResponse['cards'])) {
+            // Normal Woohoo structure: array of cards already present
+            $cardsPayload = $orderCreatedResponse['cards'];
+        } else {
+            // Some responses return a single card as flat fields (e.g. cardnumber, cardpin, etc.)
+            $singleCard = [
+                'cardNumber'      => $orderCreatedResponse['cardnumber']       ?? $orderCreatedResponse['cardNumber'] ?? null,
+                'cardPin'         => $orderCreatedResponse['cardpin']          ?? $orderCreatedResponse['cardPin'] ?? null,
+                'amount'          => $orderCreatedResponse['amount']           ?? null,
+                'activationCode'  => $orderCreatedResponse['activation_code']   ?? $orderCreatedResponse['activationCode'] ?? null,
+                'activationUrl'   => $orderCreatedResponse['activation_url']   ?? $orderCreatedResponse['activationUrl'] ?? null,
+                'validity'        => $orderCreatedResponse['validity']         ?? null,
+            ];
+
+            // Only push if we have at least a card number or pin to avoid storing an empty card
+            if (!empty($singleCard['cardNumber']) || !empty($singleCard['cardPin'])) {
+                $cardsPayload[] = $singleCard;
+            }
+        }
+
         $qsOrderUpdate = QsOrder::where("refno", $orderCreatedResponse["refno"])->first();
         if ($qsOrderUpdate) {
-            $qsOrderUpdate->update(["woohoo_order_id" => $orderCreatedResponse["orderId"], "order_status" => $orderCreatedResponse["status"], "cards" => encrypt(json_encode($orderCreatedResponse["cards"]), env("ENCRYPTION_KEY")), "order_cancel" => json_encode($orderCreatedResponse["cancel"]), "order_payment" => isset($orderCreatedResponse["payments"]) ? json_encode($orderCreatedResponse["payments"]) : null, "currency" => json_encode($orderCreatedResponse["currency"]), "additionalTxnFields" => isset($orderCreatedResponse["additionalTxnFields"]) ? json_encode($orderCreatedResponse["additionalTxnFields"]) : null,]);
+            $updateData = [
+                "woohoo_order_id" => $orderCreatedResponse["orderId"],
+                "order_status" => $orderCreatedResponse["status"],
+            ];
+
+            // Only add cards if we have card data to store
+            if (!empty($cardsPayload)) {
+                $updateData["cards"] = encrypt(json_encode($cardsPayload), env("ENCRYPTION_KEY"));
+            }
+
+            // Add optional fields if they exist
+            if (isset($orderCreatedResponse["cancel"])) {
+                $updateData["order_cancel"] = json_encode($orderCreatedResponse["cancel"]);
+            }
+            if (isset($orderCreatedResponse["payments"])) {
+                $updateData["order_payment"] = json_encode($orderCreatedResponse["payments"]);
+            }
+            if (isset($orderCreatedResponse["currency"])) {
+                $updateData["currency"] = json_encode($orderCreatedResponse["currency"]);
+            }
+            if (isset($orderCreatedResponse["additionalTxnFields"])) {
+                $updateData["additionalTxnFields"] = json_encode($orderCreatedResponse["additionalTxnFields"]);
+            }
+
+            $qsOrderUpdate->update($updateData);
+
             $existingOrderSummary = OrderSummary::where('order_id', $qsOrderUpdate->id)->first();
             if ($existingOrderSummary) {
-            $existingOrderSummary->order_status = $orderCreatedResponse["status"];
-            $existingOrderSummary->save();
+                $existingOrderSummary->order_status = $orderCreatedResponse["status"];
+                $existingOrderSummary->save();
             } else {
-                    Log::warning("OrderSummary not found for order_id: " . $qsOrderUpdate->id);
-                }
+                Log::warning("OrderSummary not found for order_id: " . $qsOrderUpdate->id);
+            }
             return $qsOrderUpdate->id;
         } else {
             $transactionStatusMessage = "Order with ID with referene number not found.";
             Log::error($transactionStatusMessage);
             return view("order.order-status", compact("transactionStatusMessage", "isSuccessful"));
-            //Log::error("QS Order not found for refno: " . $orderCreatedResponse["refno"]);
-            //return false;
         }
     }
     /**
@@ -792,6 +919,12 @@ class WoohooOrderController extends Controller
 
             if ($orderStatusResponse->successful()) {
                 $cardStatusApiResponseData = $orderStatusResponse->json();
+                
+                // Normalise response to array if it's an object to prevent stdClass errors
+                if (is_object($cardStatusApiResponseData)) {
+                    $cardStatusApiResponseData = json_decode(json_encode($cardStatusApiResponseData), true);
+                }
+                
                 Log::info("Lightweight status response:", ["response" => $cardStatusApiResponseData]);
                 
                 if (isset($cardStatusApiResponseData["status"])) {

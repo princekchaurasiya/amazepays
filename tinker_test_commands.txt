@@ -1,0 +1,87 @@
+// ============================================
+// Copy and paste these commands into Laravel Tinker
+// Run: php artisan tinker
+// ============================================
+
+// Test 1: Simulate the stdClass error scenario
+$woohooResponse = (object) [
+    'refno' => 'Amzr123',
+    'orderId' => 'WOOHOO456',
+    'status' => 'COMPLETE',
+    'cardnumber' => '1234567890',
+    'cardpin' => '1234',
+    'amount' => 1000,
+];
+
+// This will FAIL with "Cannot use object of type stdClass as array"
+try {
+    $refno = $woohooResponse["refno"];
+    echo "ERROR: Should not reach here!\n";
+} catch (\Error $e) {
+    echo "✓ Caught error: " . $e->getMessage() . "\n";
+}
+
+// Test 2: The FIX - Normalize to array
+if (is_object($woohooResponse)) {
+    $woohooResponseArray = json_decode(json_encode($woohooResponse), true);
+}
+echo "Type after normalization: " . gettype($woohooResponseArray) . "\n";
+echo "Can access refno: " . $woohooResponseArray["refno"] . "\n";
+echo "Can access cardnumber: " . $woohooResponseArray["cardnumber"] . "\n";
+
+// Test 3: Extract cards from flat fields (your actual use case)
+$cardsPayload = [];
+if (isset($woohooResponseArray['cards']) && is_array($woohooResponseArray['cards'])) {
+    $cardsPayload = $woohooResponseArray['cards'];
+} else {
+    $singleCard = [
+        'cardNumber' => $woohooResponseArray['cardnumber'] ?? null,
+        'cardPin' => $woohooResponseArray['cardpin'] ?? null,
+        'amount' => $woohooResponseArray['amount'] ?? null,
+    ];
+    if (!empty($singleCard['cardNumber']) || !empty($singleCard['cardPin'])) {
+        $cardsPayload[] = $singleCard;
+    }
+}
+echo "Cards extracted: " . json_encode($cardsPayload) . "\n";
+
+// Test 4: Test with actual order from database
+$order = \App\Models\QsOrder::first();
+if ($order) {
+    echo "\nTesting with real order (ID: " . $order->id . "):\n";
+    
+    // Object access (works)
+    $woohooId = $order->woohoo_order_id ?? null;
+    echo "woohoo_order_id (object): " . ($woohooId ?? 'null') . "\n";
+    
+    // Array access (may fail if order is stdClass, but Eloquent models support it)
+    try {
+        $woohooId2 = $order["woohoo_order_id"] ?? null;
+        echo "woohoo_order_id (array): " . ($woohooId2 ?? 'null') . "\n";
+    } catch (\Error $e) {
+        echo "Array access failed: " . $e->getMessage() . "\n";
+    }
+}
+
+// Test 5: Simulate callCardActivation response
+$apiResponse = (object) [
+    'cards' => [
+        ['cardNumber' => '9876543210', 'cardPin' => '5678']
+    ]
+];
+
+// Normalize before accessing
+if (is_object($apiResponse)) {
+    $apiResponseArray = json_decode(json_encode($apiResponse), true);
+}
+
+if (is_array($apiResponseArray) && isset($apiResponseArray["cards"])) {
+    echo "\n✓ Successfully extracted cards from API response\n";
+    echo "Cards: " . json_encode($apiResponseArray["cards"]) . "\n";
+}
+
+echo "\n=== All tests complete ===\n";
+
+
+
+

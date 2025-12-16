@@ -592,7 +592,13 @@ Route::middleware(['auth'])->group(function() {
     Route::get('/unlimit/status/{merchant_order_id}', [UnlimitController::class, 'checkTransactionStatus'])->name('unlimit.status');
 });
 
+// Kgen Payment Routes
+Route::get('/kgen-payment/initiate', [KGenPaymentController::class, 'initiate'])->name('kgen.payment.initiate');
+Route::get('/kgen-payment/success/{orderId}', [KGenPaymentController::class, 'handleReturnSuccess'])->name('kgen.payment.success');
+Route::get('/kgen-payment/failed/{orderId}', [KGenPaymentController::class, 'handleReturnFailed'])->name('kgen.payment.failed');
 
-
+// Order Status Routes
+Route::get('/kgen-order/success/{orderId}', [KGenOrderController::class, 'showSuccess'])->name('kgen.order.success');
+Route::get('/kgen-order/failed/{orderId}', [KGenOrderController::class, 'showFailed'])->name('kgen.order.failed');
 
 

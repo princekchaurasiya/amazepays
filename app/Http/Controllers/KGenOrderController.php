@@ -161,10 +161,11 @@ class KGenOrderController extends Controller
                 'info' => 'Order is being processed. Please check status later.',
                 'orderId' => $data['orderID'],
             ]);*/
-             KGenOrder::create([
+             $pendingOrder = KGenOrder::create([
                 'variant_id'   => $validated['variantId'],
                 'external_ref' => $externalRefID,
                 'mrp'          => $productPrice,
+                'payable_amount' => $productPrice,
                 'api_response' => json_encode($data),
             ]);
               return back()->with('success', 'Order placed successfully');
@@ -182,6 +183,21 @@ class KGenOrderController extends Controller
                 'error' => 'Unexpected response from API.',
             ])->withInput();
         }
+
+          // Store order details in session for payment callback
+    session([
+        'pending_order_id' => $pendingOrder->id,
+        'variant_id' => $validated['variantId'],
+        'payable_amount' => $price['amount']
+    ]);
+
+    // Redirect to payment controller
+    return redirect()->route('kgen.payment.initiate', [
+        'order_id' => $pendingOrder->id,
+        'amount' => $price['amount'],
+        'variant_id' => $validated['variantId']
+    ]);
+
     }
 
     /**
@@ -613,6 +629,16 @@ class KGenOrderController extends Controller
         $this->sendTransactionMail($prepareMailDetails);
     }
 
+    public function showSuccess($orderId)
+{
+    $order = KGenOrder::findOrFail($orderId);
+    return view('kgen.order-success', compact('order'));
+}
 
+public function showFailed($orderId)
+{
+    $order = KGenOrder::findOrFail($orderId);
+    return view('kgen.order-failed', compact('order'));
+}
 
 }

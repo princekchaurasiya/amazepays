@@ -48,6 +48,7 @@ use App\Http\Controllers\{
     AuthController,
     VDPaymentController,
     DeliveryPartnerController,
+    KGenPaymentController,
 };
 
 /*

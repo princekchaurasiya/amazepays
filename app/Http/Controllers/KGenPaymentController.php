@@ -11,6 +11,7 @@ use App\Models\ApiToken;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\CommonHelper;
+use App\Models\KGenOrder;
 
 class KGenPaymentController extends Controller
 {
@@ -20,7 +21,7 @@ class KGenPaymentController extends Controller
             ->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode(env('UNLIMIT_CODE')),
             ])
-            ->post('https://psp.in.unlimit.com/api/auth/token', [
+            ->post('https://sandbox.in.unlimit.com/api/auth/token', [
                 'grant_type' => 'password',
                 'password' => env('UNLIMIT_SECRET_KEY'),
                 'terminal_code' => env('UNLIMIT_PUBLIC_KEY'),
@@ -51,17 +52,10 @@ public function initiate(Request $request)
         $payableAmount = $request->input('amount');
         $variantId = $request->input('variant_id');
 
+        Log::info('Session variables:', ['orderid' => $orderId, 'amount' => $payableAmount, 'variantId' => $variantId]);
+
         if (!$orderId || !$payableAmount || !$variantId) {
             return back()->withErrors(['error' => 'Missing order details']);
-        }
-
-        // Validate pending order exists
-        $order = KGenOrder::where('id', $orderId)
-            ->where('status', 'PENDING_PAYMENT')
-            ->first();
-
-        if (!$order) {
-            return back()->withErrors(['error' => 'Invalid or already processed order']);
         }
 
         $token = $this->getToken();
@@ -96,7 +90,7 @@ public function initiate(Request $request)
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $token,
                 'Content-Type' => 'application/json',
-            ])->post('https://psp.in.unlimit.com/api/payments', $data);
+            ])->post('https://sandbox.in.unlimit.com/api/payments', $data);
 
             Log::info('KGen Payment initiated', [
                 'order_id' => $orderId,
@@ -168,15 +162,10 @@ public function handleReturnSuccess(Request $request, $orderId)
                 'status' => $status === 'SUCCESS' ? 'PAID' : 'PAYMENT_FAILED',
                 'payment_status' => $status
             ]);
-
-            // Trigger actual order placement if payment successful
-            if ($status === 'SUCCESS') {
-                $this->processPaidOrder($order);
-            }
         }
 
         UnlimitPayment::where('order_id', $orderId)
-            ->update(['status' => $status]);
+            ->update(['payment_status' => $status]);
     }
 
     private function processPaidOrder(KGenOrder $order)
@@ -195,5 +184,36 @@ public function handleReturnSuccess(Request $request, $orderId)
             'status' => $data['status'] ?? 'PROCESSED'
         ]);
     }
+
+    private function generatePaymentTime(): string
+    {
+        $now = Carbon::now('UTC');
+        $milliseconds = $now->format('v'); // 3-digit milliseconds
+        $time = $now->format("Y-m-d\TH:i:s.") . $milliseconds . "Z";
+        return $time;
+    }
+
+    private function placeExternalOrder(string $dpId, string $variantId, string $externalRefId)
+{
+    $response = Http::withHeaders([
+        'x-client-id' => env('EXLR8_USER_ID'),
+        'x-client-secret' => env('EXLR8_USER_SECRET'),
+        'Content-Type' => 'application/json',
+    ])->post(env('EXLR8_BASE_URL') . '/orders/b2b/direct-checkout', [
+        'dpID' => $dpId,
+        'variantID' => $variantId,
+        'externalRefID' => $externalRefId,
+    ]);
+
+    Log::info('External order API called', [
+        'dpId' => $dpId,
+        'variantId' => $variantId,
+        'externalRefId' => $externalRefId,
+        'status' => $response->status(),
+        'response' => $response->json()
+    ]);
+
+    return $response;
+}
 
 }

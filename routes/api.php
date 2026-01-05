@@ -40,3 +40,22 @@ Route::post('/unlimit/callback', [UnlimitCallbackController::class, 'handle'])
 
 //use App\Http\Controllers\UnlimitController;
  //Route::post('/unlimit/callback', [UnlimitController::class, 'callback'])->middleware('verify.unlimit.signature');
+
+use App\Http\Controllers\WalletController;
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/wallet/deposit', [WalletController::class, 'deposit']);
+    Route::get('/wallet/balance', [WalletController::class, 'balance']);
+    Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
+    Route::post('/wallet/debit', [WalletController::class, 'debit']);
+});
+
+use App\Http\Controllers\Admin\WalletTransactionController;
+Route::middleware(['auth:sanctum', 'is.admin'])->group(function () {
+    Route::get('/admin/wallet/transactions', [WalletTransactionController::class, 'index']);
+});
+
+Route::middleware(['auth:sanctum', 'is.admin'])->get(
+    '/admin/wallet/transactions/export',
+    [WalletTransactionController::class, 'exportCsv']
+);

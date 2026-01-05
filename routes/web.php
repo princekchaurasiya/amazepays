@@ -601,5 +601,3 @@ Route::get('/kgen-payment/failed/{orderId}', [KGenPaymentController::class, 'han
 // Order Status Routes
 Route::get('/kgen-order/success/{orderId}', [KGenOrderController::class, 'showSuccess'])->name('kgen.order.success');
 Route::get('/kgen-order/failed/{orderId}', [KGenOrderController::class, 'showFailed'])->name('kgen.order.failed');
-
-

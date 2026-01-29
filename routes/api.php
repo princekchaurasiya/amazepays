@@ -25,7 +25,8 @@ Route::middleware('api')->group(function () {
         Route::get('single', [AuthenticationController::class, 'singleProductDetails']);
     });
 
-    Route::get('/orders', [AthenaGiftCardController::class, 'getOrder']);
+    // Lysto API routes removed - moved to admin-only access
+    // Route::get('/orders', [AthenaGiftCardController::class, 'getOrder']); // Now available at /admin/lysto/orders (admin-only)
     // Add more API routes as needed within the 'api' middleware group
 });
 
@@ -35,19 +36,26 @@ Route::get('/products/{id}', [ProductController::class, 'show']); // Single prod
 
 use App\Http\Controllers\UnlimitCallbackController;
 
-Route::post('/unlimit/callback', [UnlimitCallbackController::class, 'handle'])
-    ->middleware('verify.unlimit.signature');
+// SECURITY: Rate limit and verify signature for payment gateway callbacks
+Route::middleware(['throttle:payment-callbacks', 'verify.unlimit.signature'])->group(function () {
+    Route::post('/unlimit/callback', [UnlimitCallbackController::class, 'handle']);
+});
 
 //use App\Http\Controllers\UnlimitController;
  //Route::post('/unlimit/callback', [UnlimitController::class, 'callback'])->middleware('verify.unlimit.signature');
 
 use App\Http\Controllers\WalletController;
+use App\Http\Controllers\ProductPageController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/wallet/deposit', [WalletController::class, 'deposit']);
     Route::get('/wallet/balance', [WalletController::class, 'balance']);
     Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
     Route::post('/wallet/debit', [WalletController::class, 'debit']);
+    
+    // Checkout billing cache endpoints (cache-based, no session, faster than DB)
+    Route::post('/checkout/billing/update', [ProductPageController::class, 'updateBillingCache']);
+    Route::get('/checkout/billing/{orderId}', [ProductPageController::class, 'getBillingCache']);
 });
 
 use App\Http\Controllers\Admin\WalletTransactionController;

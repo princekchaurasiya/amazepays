@@ -13,9 +13,11 @@ class AddThumbnailToAmazepayCategoriesTable extends Migration
      */
     public function up()
     {
-        Schema::table('amazepay_categories', function (Blueprint $table) {
-            $table->string('thumbnail')->nullable()->after('slug'); // Add 'thumbnail' column after 'slug'
-        });
+        if (Schema::hasTable('amazepay_categories') && !Schema::hasColumn('amazepay_categories', 'thumbnail')) {
+            Schema::table('amazepay_categories', function (Blueprint $table) {
+                $table->string('thumbnail')->nullable()->after('slug'); // Add 'thumbnail' column after 'slug'
+            });
+        }
     }
 
     /**

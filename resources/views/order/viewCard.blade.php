@@ -43,12 +43,19 @@
                                                 <img src="{{ $productImage }}" alt="{{ $order->product->name ?? 'Product Image' }}" class="img-fluid">
                                             </p>
                                         @endif
-                                        <p class="mb-0">Card Number: <b>{{ $card->cardNumber }}</b></p>
-                                        <p class="mb-0">Card Pin: <b>{{ $card->cardPin }}</b></p>
+                                        <p class="mb-0">Card Number: <b>{{ $card['cardNumber'] ?? $card['cardnumber'] ?? 'N/A' }}</b></p>
+                                        <p class="mb-0">Card Pin: <b>{{ $card['cardPin'] ?? $card['cardpin'] ?? 'N/A' }}</b></p>
+                                        @if(!empty($card['validity']))
                                         <p class="mb-0">Validity:
-                                            <b>{{ \Carbon\Carbon::parse($card->validity)->format('d/m/y') }}</b>
+                                            <b>{{ \Carbon\Carbon::parse($card['validity'])->format('d/m/y') }}</b>
                                         </p>
-                                        <p class="mb-0">Activation Code: <b>{{ $card->activationCode }}</b></p>
+                                        @endif
+                                        @if(!empty($card['activationCode'] ?? $card['activation_code'] ?? null))
+                                        <p class="mb-0">Activation Code: <b>{{ $card['activationCode'] ?? $card['activation_code'] }}</b></p>
+                                        @endif
+                                        @if(!empty($card['amount']))
+                                        <p class="mb-0">Amount: <b>₹{{ number_format($card['amount'], 2) }}</b></p>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

@@ -13,9 +13,11 @@ class AddMobileToContactsTable extends Migration
      */
     public function up()
     {
-        Schema::table('contact_us', function (Blueprint $table) {
-            $table->string('contact_number', 15)->nullable()->after('email');
-        });
+        if (Schema::hasTable('contact_us') && !Schema::hasColumn('contact_us', 'contact_number')) {
+            Schema::table('contact_us', function (Blueprint $table) {
+                $table->string('contact_number', 15)->nullable()->after('email');
+            });
+        }
     }
 
     /**

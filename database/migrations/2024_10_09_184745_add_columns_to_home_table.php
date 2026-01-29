@@ -13,18 +13,37 @@ class AddColumnsToHomeTable extends Migration
      */
     public function up()
     {
-        Schema::table('home', function (Blueprint $table) {
-            $table->boolean('section_brand_status')->default(1); // Column for section brand status
-            $table->boolean('section_hot_deal_status')->default(1); // Column for section hot deal status
-            $table->boolean('section_category_status')->default(1); // Column for section category status
-            $table->boolean('section_other_deal_status')->default(1); // Column for section other deal status
-
-            $table->string('section_banner_title')->nullable(); // Column for section banner title
-            $table->string('section_brand_title')->nullable(); // Column for section brand title
-            $table->string('section_hot_deal_title')->nullable(); // Column for section hot deal title
-            $table->string('section_category_title')->nullable(); // Column for section category title
-            $table->string('section_other_deal_title')->nullable(); // Column for section other deal title
-        });
+        if (Schema::hasTable('home')) {
+            Schema::table('home', function (Blueprint $table) {
+                if (!Schema::hasColumn('home', 'section_brand_status')) {
+                    $table->boolean('section_brand_status')->default(1); // Column for section brand status
+                }
+                if (!Schema::hasColumn('home', 'section_hot_deal_status')) {
+                    $table->boolean('section_hot_deal_status')->default(1); // Column for section hot deal status
+                }
+                if (!Schema::hasColumn('home', 'section_category_status')) {
+                    $table->boolean('section_category_status')->default(1); // Column for section category status
+                }
+                if (!Schema::hasColumn('home', 'section_other_deal_status')) {
+                    $table->boolean('section_other_deal_status')->default(1); // Column for section other deal status
+                }
+                if (!Schema::hasColumn('home', 'section_banner_title')) {
+                    $table->string('section_banner_title')->nullable(); // Column for section banner title
+                }
+                if (!Schema::hasColumn('home', 'section_brand_title')) {
+                    $table->string('section_brand_title')->nullable(); // Column for section brand title
+                }
+                if (!Schema::hasColumn('home', 'section_hot_deal_title')) {
+                    $table->string('section_hot_deal_title')->nullable(); // Column for section hot deal title
+                }
+                if (!Schema::hasColumn('home', 'section_category_title')) {
+                    $table->string('section_category_title')->nullable(); // Column for section category title
+                }
+                if (!Schema::hasColumn('home', 'section_other_deal_title')) {
+                    $table->string('section_other_deal_title')->nullable(); // Column for section other deal title
+                }
+            });
+        }
     }
 
     /**

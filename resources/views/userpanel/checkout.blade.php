@@ -17,13 +17,6 @@
                 </div>
             @endif
 
-            @if (session('error'))
-                <div class="alert alert-danger">
-                    {{ session('error') }}
-                </div>
-            @endif
-
-
             <h2 class="text-grey-900 fw-400 display1-size mb-4 pb-3 text-center">Checkout</h2>
 
 
@@ -767,11 +760,7 @@
                                                     <div class="col-md-6 col-sm-4 col-xs-3 amount mont-font">
                                                         <span>₹{{ $qsOrder->amount_payable_after_discount ?? $qsOrder->grand_payable_amount }}</span>
                                                     </div>
-                                                    <!-- Add hidden field for Payable Amount with fallback -->
-                                                    @php
-                                                        $payableAmountHidden = $qsOrder->amount_payable_after_discount ?? $qsOrder->grand_payable_amount ?? 0;
-                                                    @endphp
-                                                    <input type="hidden" name="payable_amount" value="{{ $payableAmountHidden }}">
+                                                    <!-- SECURITY: Removed hidden payable_amount input - amount is validated from database in controller -->
                                                 </div>
                                             </div>
                                         </div>
@@ -793,10 +782,8 @@
                 <!-- UPI Payment -->
                 <form method="POST" action="{{ route('payment.upi') }}" id="upiPaymentForm">
                     @csrf
-                    @php
-                        $upiPayableAmount = $qsOrder->amount_payable_after_discount ?? $qsOrder->grand_payable_amount ?? 0;
-                    @endphp
-                    <input type="hidden" name="payable_amount" value="{{ $upiPayableAmount }}">
+                    <!-- SECURITY: Removed hidden payable_amount input - backend will calculate from database using order_id -->
+                    <input type="hidden" name="order_id" value="{{ $qsOrder->id }}">
                     <button type="submit" class="mont-font w-100 p-3 mt-3 mb-3 font-xsss text-center text-white bg-success rounded-lg text-uppercase fw-300 ls-3">
                         Pay with UPI
                     </button>
@@ -920,14 +907,10 @@
                         }, 500);
                         return false;
                     }
-                    // Validate payable amount presence
-                    var payable = parseFloat($(this).find('input[name="payable_amount"]').val());
-                    if (!payable || isNaN(payable) || payable <= 0) {
-                        event.preventDefault();
-                        alert('Unable to proceed: payable amount is invalid. Please refresh and try again.');
-                        return false;
-                    }
-                    
+                    // Backend now always calculates payable amount from the order in DB,
+                    // so we don't rely on any client-side hidden payable_amount field here.
+                    // Just ensure billing data is stored before redirecting to payment.
+
                     // Update session data and store billing before payment
                     updateSessionData();
                     storeBillingInDatabase();

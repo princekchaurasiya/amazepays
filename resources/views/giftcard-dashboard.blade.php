@@ -34,8 +34,9 @@
     <div id="giftcardResult" class="result-box"></div>
 
     <script>
+        // Updated to use admin-only routes
         async function getGiftCards() {
-            const res = await fetch('/giftcards');
+            const res = await fetch('{{ route("admin.lysto.giftcards") }}');
             const data = await res.json();
 
             document.getElementById('giftcardResult').innerText = JSON.stringify(data);
@@ -47,7 +48,7 @@
 
             try 
             {
-            const res = await fetch(`/giftcards/${id}/skus`);
+            const res = await fetch(`{{ url('/admin/lysto/giftcards') }}/${id}/skus`);
             if (!res.ok) {
             const errorText = await res.text(); // read once
             console.error('Error response:', errorText);
@@ -92,7 +93,7 @@
     if (merchantId) params.append('merchant_order_request_id', merchantId);
 
     try {
-        const res = await fetch(`/orders?${params.toString()}`);
+        const res = await fetch(`{{ route("admin.lysto.orders") }}?${params.toString()}`);
         const data = await res.json();
 
         if (res.ok) {
@@ -108,7 +109,7 @@
 
 
         async function getWalletBalance() {
-            const res = await fetch('/wallet-balance');
+            const res = await fetch('{{ route("admin.lysto.wallet-balance") }}');
             const data = await res.json();
 
             document.getElementById('walletResult').innerText = `Wallet Balance: ₹${data.balance}`;

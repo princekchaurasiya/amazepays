@@ -13,14 +13,22 @@ class AlterPostNullableFieldsTable extends Migration
      */
     public function up()
     {
-        $platform = \DB::getDoctrineSchemaManager()->getDatabasePlatform();
-        $platform->registerDoctrineTypeMapping('enum', 'string');
+        if (Schema::hasTable('posts')) {
+            $platform = \DB::getDoctrineSchemaManager()->getDatabasePlatform();
+            $platform->registerDoctrineTypeMapping('enum', 'string');
 
-        Schema::table('posts', function (Blueprint $table) {
-            $table->text('excerpt')->nullable()->change();
-            $table->text('meta_description')->nullable()->change();
-            $table->text('meta_keywords')->nullable()->change();
-        });
+            Schema::table('posts', function (Blueprint $table) {
+                if (Schema::hasColumn('posts', 'excerpt')) {
+                    $table->text('excerpt')->nullable()->change();
+                }
+                if (Schema::hasColumn('posts', 'meta_description')) {
+                    $table->text('meta_description')->nullable()->change();
+                }
+                if (Schema::hasColumn('posts', 'meta_keywords')) {
+                    $table->text('meta_keywords')->nullable()->change();
+                }
+            });
+        }
     }
 
     /**

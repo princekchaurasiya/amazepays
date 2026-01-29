@@ -12,11 +12,13 @@ class AddUnlimitResponseToUnlimitPaymentTable extends Migration
      * @return void
      */
     public function up()
-{
-    Schema::table('unlimit_payment', function (Blueprint $table) {
-        $table->longText('unlimit_response')->nullable()->after('billing_notes');
-    });
-}
+    {
+        if (Schema::hasTable('unlimit_payment') && !Schema::hasColumn('unlimit_payment', 'unlimit_response')) {
+            Schema::table('unlimit_payment', function (Blueprint $table) {
+                $table->longText('unlimit_response')->nullable()->after('billing_notes');
+            });
+        }
+    }
 
 public function down()
 {

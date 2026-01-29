@@ -100,8 +100,12 @@ class CCAvenueController extends Controller
                 'billing_gst_number' => 'nullable|max:15',
             ], $messages);
 
-            // Log request data for debugging
-            Log::info('Process payment request', $request->all());
+            // SECURITY: Log minimal info (no sensitive data like passwords, tokens)
+            Log::info('Process payment request', [
+                'user_id' => Auth::id(),
+                'order_id' => session('session_qs_order_id'),
+                'ip_address' => $request->ip()
+            ]);
 
             // Update user details
             $user = Auth::user();
@@ -295,7 +299,40 @@ class CCAvenueController extends Controller
         try {
             $qsOrder = QsOrder::where('id', $sessionId)->firstOrFail();
             Log::info('qsorder is this', $qsOrder->toArray());
-            $updateData = ['sender_first_name' => $request->billing_name ?? $qsOrder->sender_first_name, 'sender_email' => $request->billing_email ?? $qsOrder->sender_email, 'sender_phone_no' => $request->billing_tel ?? $qsOrder->sender_phone_no, 'sender_post_code' => $request->billing_zip ?? $qsOrder->sender_post_code, 'sender_address_1' => $request->billing_address ?? $qsOrder->sender_address_1, 'sender_address_2' => $request->billing_address_two ?? $qsOrder->sender_address_2, 'sender_city' => $request->billing_city ?? $qsOrder->sender_city, 'sender_state' => $request->billing_state ?? $qsOrder->sender_state, 'sku' => $request->has('sku') ? $request->sku : $qsOrder->sku, 'amount_payable_after_discount' => $request->has('amount') ? $request->amount : $qsOrder->amount_payable_after_discount, 'discounted_amount_value' => $request->has('quantity') && $request->has('denomination') && $request->has('amount') ? round($request->quantity * $request->denomination - $request->amount, 3) : $qsOrder->discounted_amount_value, 'gst_number' => $request->billing_gst_number ?? $qsOrder->gst_number ?: 'Unregistered', 'country' => $request->billing_country ?? $qsOrder->country,];
+            
+            // SECURITY: Never update amount, discount, denomination, or quantity from request
+            // These values are calculated on the backend and stored in the database
+            // Only allow updating billing/sender information
+            $updateData = [
+                'sender_first_name' => $request->billing_name ?? $qsOrder->sender_first_name,
+                'sender_email' => $request->billing_email ?? $qsOrder->sender_email,
+                'sender_phone_no' => $request->billing_tel ?? $qsOrder->sender_phone_no,
+                'sender_post_code' => $request->billing_zip ?? $qsOrder->sender_post_code,
+                'sender_address_1' => $request->billing_address ?? $qsOrder->sender_address_1,
+                'sender_address_2' => $request->billing_address_two ?? $qsOrder->sender_address_2,
+                'sender_city' => $request->billing_city ?? $qsOrder->sender_city,
+                'sender_state' => $request->billing_state ?? $qsOrder->sender_state,
+                'gst_number' => $request->billing_gst_number ?? $qsOrder->gst_number ?: 'Unregistered',
+                'country' => $request->billing_country ?? $qsOrder->country,
+                // SECURITY: Do not update these fields from request - use database values only
+                // 'sku' => $qsOrder->sku, // Keep original SKU
+                // 'amount_payable_after_discount' => $qsOrder->amount_payable_after_discount, // Keep original amount
+                // 'discounted_amount_value' => $qsOrder->discounted_amount_value, // Keep original discount
+            ];
+            
+            // Log any attempt to modify financial data
+            if ($request->has('amount') || $request->has('quantity') || $request->has('denomination')) {
+                Log::warning('⚠️ Attempt to modify financial data via CCAvenue updateQsOrder', [
+                    'order_id' => $qsOrder->id,
+                    'user_id' => $qsOrder->user_id,
+                    'ip_address' => $request->ip(),
+                    'requested_amount' => $request->input('amount'),
+                    'requested_quantity' => $request->input('quantity'),
+                    'requested_denomination' => $request->input('denomination'),
+                    'database_amount' => $qsOrder->amount_payable_after_discount,
+                ]);
+            }
+            
             $qsOrder->update($updateData);
 
 

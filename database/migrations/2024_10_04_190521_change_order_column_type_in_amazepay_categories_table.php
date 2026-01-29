@@ -13,10 +13,12 @@ class ChangeOrderColumnTypeInAmazepayCategoriesTable extends Migration
      */
     public function up()
     {
-        Schema::table('amazepay_categories', function (Blueprint $table) {
-            // Change the order column from integer to decimal(5,2)
-            $table->decimal('order', 5, 2)->change();
-        });
+        if (Schema::hasTable('amazepay_categories') && Schema::hasColumn('amazepay_categories', 'order')) {
+            Schema::table('amazepay_categories', function (Blueprint $table) {
+                // Change the order column from integer to decimal(5,2)
+                $table->decimal('order', 5, 2)->change();
+            });
+        }
     }
 
     /**

@@ -4,7 +4,7 @@
 <div class="container">
     <h2>Select Brand to Sync & View Stores</h2>
 
-    <form method="POST" action="{{ route('stores.sync') }}">
+    <form method="POST" action="{{ route('admin.stores.sync') }}">
         @csrf
         <div class="form-group">
             <label for="brand_code">Brand</label>

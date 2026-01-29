@@ -10,6 +10,20 @@
 @endphp
     <div class="dashboard-wrapper bg-greylight">
         <div class="container">
+            @if(session('error'))
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-danger mt-3 mb-3">
+                            {{ session('error') }}
+                            @if(session('contact_info'))
+                                <hr class="my-2">
+                                <p class="mb-1"><i class="fa fa-envelope mr-2"></i>{{ session('contact_info.email') }}</p>
+                                <p class="mb-0"><i class="fa fa-phone mr-2"></i>{{ session('contact_info.phone') }}</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
             <div class="row">
                 <div class="col-lg-3 d-none d-lg-block">
                     <div class="dashboard-nav bg-white rounded-lg shadow-xs sticky-top-changed">
@@ -36,15 +50,23 @@
                             @if ($orderItem->refno)
                                 <?php
                                 $images = json_decode($orderItem->images, true);
-                                $isClickable = $orderItem->order_status == 'COMPLETE' && !empty($orderItem->woohoo_order_id);
+                                $orderStatus = strtoupper($orderItem->order_status);
+                                
+                                // Order is clickable if it has woohoo_order_id (has card details)
+                                // COMPLETE and PAID orders with woohoo_order_id are clickable
+                                // PENDING and FAILED orders are NOT clickable
+                                $isClickable = !empty($orderItem->woohoo_order_id) && in_array($orderStatus, ['COMPLETE', 'PAID']);
                                 $linkAttributes = $isClickable ? 'href="' . route('view-card-details', ['orderId' => $orderItem->woohoo_order_id]) . '"' : '';
+                                
+                                // Determine if order should be faded (PENDING, FAILED, or orders without woohoo_order_id)
+                                $isFaded = !$isClickable && !in_array($orderStatus, ['COMPLETE', 'PAID']);
                                 ?>
 
                                 <a {!! $linkAttributes !!} 
-                                    class="order-link {{ !$isClickable ? 'disabled-link' : '' }}"
+                                    class="order-link {{ !$isClickable ? 'disabled-link' : '' }} {{ $isFaded ? 'faded-order' : '' }}"
                                     style="{{ !$isClickable ? 'pointer-events: none;' : '' }}">
                                     <div class="outer-order-wrapper-div">
-                                        <div class="card product-card">
+                                        <div class="card product-card {{ $isFaded ? 'faded-order-card' : '' }}">
                                             <div class="card-body my-order-card-body">
                                                 <div class="row">
                                                     <div class="col-lg-4">
@@ -67,7 +89,10 @@
                                                     <div class="col-lg-4 ml-auto text-lg-right mt-3 mt-lg-0">
                                                         <h2>
                                                             <span
-                                                                class="{{ $orderItem->order_status == 'COMPLETE' ? 'text-success' : 'text-danger' }} font-weight-bold">
+                                                                class="{{ 
+                                                                    in_array(strtoupper($orderItem->order_status), ['COMPLETE', 'PAID']) ? 'text-success' : 
+                                                                    (strtoupper($orderItem->order_status) === 'PENDING' ? 'text-warning' : 'text-danger') 
+                                                                }} font-weight-bold">
                                                                 Order {{ ucfirst(strtolower($orderItem->order_status)) }}
                                                             </span>
                                                         </h2>
@@ -104,5 +129,15 @@
     .disabled-link {
         background-color: #f0f0f0 !important;
         opacity: 0.6;
+    }
+    
+    /* Fade PENDING, PAID, and FAILED orders */
+    .faded-order {
+        opacity: 0.7;
+        filter: grayscale(20%);
+    }
+    
+    .faded-order .card {
+        background-color: #f8f9fa;
     }
 </style>

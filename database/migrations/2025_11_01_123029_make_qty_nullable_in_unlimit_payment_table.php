@@ -13,9 +13,11 @@ class MakeQtyNullableInUnlimitPaymentTable extends Migration
      */
     public function up()
     {
-        Schema::table('unlimit_payment', function (Blueprint $table) {
-             $table->integer('qty')->nullable()->change();
-        });
+        if (Schema::hasTable('unlimit_payment') && Schema::hasColumn('unlimit_payment', 'qty')) {
+            Schema::table('unlimit_payment', function (Blueprint $table) {
+                $table->integer('qty')->nullable()->change();
+            });
+        }
     }
 
     /**

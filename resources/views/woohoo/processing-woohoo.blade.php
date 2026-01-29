@@ -39,7 +39,13 @@
 
 <script>
     setTimeout(function(){
-        window.location.href = "{{ route('woohoo.processing.createOrder') }}";
+        var merchantOrderId = "{{ $merchant_order_id ?? session('merchant_order_id', '') }}";
+        if (merchantOrderId) {
+            window.location.href = "{{ route('woohoo.process') }}?merchant_order_id=" + merchantOrderId;
+        } else {
+            console.error('Merchant order ID not found');
+            window.location.href = "{{ route('my-order') }}";
+        }
     }, 3000);
 </script>
 </body>

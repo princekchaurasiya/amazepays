@@ -13,9 +13,11 @@ class AddSkuLimitsToQsProductsTable extends Migration
      */
     public function up()
     {
-        Schema::table('qs_products', function (Blueprint $table) {
-            $table->integer('sku_limits')->nullable()->after('sku'); // Adding sku_limits column
-        });
+        if (Schema::hasTable('qs_products') && !Schema::hasColumn('qs_products', 'sku_limits')) {
+            Schema::table('qs_products', function (Blueprint $table) {
+                $table->integer('sku_limits')->nullable()->after('sku'); // Adding sku_limits column
+            });
+        }
     }
 
     /**

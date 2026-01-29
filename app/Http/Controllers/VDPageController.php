@@ -20,9 +20,6 @@ class VDPageController extends Controller
         $formData = $request->all();
         session(['giftCardFormValues' => $formData]);
 
-        Log::info('Saving gift card form values');
-        Log::info('Form Data:', $formData);
-
         return response()->json(['status' => 'success']);
     }
 
@@ -45,7 +42,6 @@ class VDPageController extends Controller
 
         // Retrieve the checkout session data if available
         $checkoutData = session('checkout_data', []);
-        Log::info('Retrieved checkout data from session: ', $checkoutData);
 
          $rules = [
             'denomination' => [
@@ -75,16 +71,102 @@ class VDPageController extends Controller
 
             //Log::info('Total purchases this month:', ['total' => $totalPurchasesThisMonth]);
 
-             // Calculate the grand payable amount for the current order
-           // $grandPayableAmount = $request->quantity * $request->denomination;
+            // SECURITY: Fetch Brand to validate denomination and get discount from database only
+            $brand = null;
+            $discountPercentage = 0;
+            
+            if ($request->vd_brand_code) {
+                // Find Brand by brand_code (primary lookup)
+                $brand = Brand::where('brand_code', $request->vd_brand_code)->first();
+                
+                // If not found, try to find QsProduct as fallback
+                if (!$brand) {
+                    $product = QsProduct::where('name', 'like', '%' . $request->vd_brand_code . '%')
+                        ->orWhere('sku', $request->vd_brand_code)
+                        ->first();
+                }
+            }
+            
+            // SECURITY: Validate denomination against Brand/Product price range
+            if ($brand) {
+                $minPrice = $brand->min_price ?? 0;
+                $maxPrice = $brand->max_price ?? 999999;
+                
+                if ($request->denomination < $minPrice || $request->denomination > $maxPrice) {
+                    Log::warning('VD Denomination out of range', [
+                        'denomination' => $request->denomination,
+                        'min_price' => $minPrice,
+                        'max_price' => $maxPrice,
+                        'brand_code' => $request->vd_brand_code,
+                    ]);
+                    return back()->withErrors([
+                        'denomination' => "The denomination must be between ₹{$minPrice} and ₹{$maxPrice}."
+                    ])->withInput();
+                }
+                
+                // SECURITY: Get discount from Brand database only, never from request
+                $discountPercentage = (float) ($brand->discount ?? 0);
+            } elseif (isset($product) && $product) {
+                // SECURITY: Fallback to QsProduct - MUST validate denomination against product price range
+                // CRITICAL: Don't skip denomination validation when using QsProduct fallback
+                $product->price = json_decode($product->price);
+                $priceData = (array) $product->price;
+                $priceType = $priceData['type'] ?? 'RANGE';
+                
+                if ($priceType === 'SLAB') {
+                    $denominations = $priceData['denominations'] ?? [];
+                    if (!in_array((string) $request->denomination, $denominations)) {
+                        Log::warning('VD Denomination not in SLAB list (QsProduct fallback)', [
+                            'denomination' => $request->denomination,
+                            'allowed' => $denominations,
+                            'brand_code' => $request->vd_brand_code,
+                        ]);
+                        return back()->withErrors([
+                            'denomination' => 'Invalid denomination value. Allowed values are: ' . implode(', ', $denominations)
+                        ])->withInput();
+                    }
+                } elseif ($priceType === 'RANGE') {
+                    $minPrice = $priceData['min'] ?? $product->minPrice ?? 0;
+                    $maxPrice = $priceData['max'] ?? $product->maxPrice ?? 999999;
+                    
+                    if ($request->denomination < $minPrice || $request->denomination > $maxPrice) {
+                        Log::warning('VD Denomination out of range (QsProduct fallback)', [
+                            'denomination' => $request->denomination,
+                            'min_price' => $minPrice,
+                            'max_price' => $maxPrice,
+                            'brand_code' => $request->vd_brand_code,
+                        ]);
+                        return back()->withErrors([
+                            'denomination' => "The denomination must be between ₹{$minPrice} and ₹{$maxPrice}."
+                        ])->withInput();
+                    }
+                }
+                
+                // SECURITY: Get discount from QsProduct database only, never from request
+                $discountPercentage = (float) ($product->discount_percentage ?? 0);
+            } else {
+                Log::warning('VD Brand/Product not found', [
+                    'brand_code' => $request->vd_brand_code,
+                ]);
+                return back()->withErrors([
+                    'vd_brand_code' => 'Invalid brand code. Please select a valid brand.'
+                ])->withInput();
+            }
+            
+            // SECURITY: Calculate grand payable amount on backend only
+            $grandPayableAmount = $request->quantity * $request->denomination;
             //Log::info('Calculated grand payable amount:', ['amount' => $grandPayableAmount]);
 
-            // Create a new order since all validations passed
-        Log::info('Creating a new order for user:', ['user_id' => Auth::id()]);
+            // SECURITY: Calculate discount and final amount on backend only
+        $discountAmount = $grandPayableAmount * ($discountPercentage / 100);
+        $totalPayableAmountAfterDiscount = $grandPayableAmount - $discountAmount;
+        
+        // Create a new order since all validations passed
+        // SECURITY: Store discount percentage from database, not from request
         $order = QsOrder::create([
             'user_id' => Auth::id(),
             'vd_brand_code' => $request->vd_brand_code,
-            'vd_discount' => $request->vd_discount,
+            'vd_discount' => $discountPercentage, // Store database value, not request value
             'denomination' => $request->denomination,
             'quantity' => $request->quantity,
             'gift_send_option' => $request->gift_send_option,
@@ -93,15 +175,10 @@ class VDPageController extends Controller
             'receiver_mobile' => $request->receiver_mobile,
             'receiver_msg' => $request->receiver_msg,
             'grand_payable_amount' => $grandPayableAmount,
+            'discounted_amount_value' => $discountAmount,
+            'amount_payable_after_discount' => $totalPayableAmountAfterDiscount,
+            'order_status' => 'Pending',
         ]);
-        $discountPercentage = $product->discount_percentage;
-        $discountAmount = $grandPayableAmount * ($discountPercentage / 100);
-        $totalPayableAmountAfterDiscount = $grandPayableAmount - $discountAmount;
-        $order->discounted_amount_value = $discountAmount;
-        $order->amount_payable_after_discount = $totalPayableAmountAfterDiscount;
-        $order->order_status = 'Pending';
-        $order->save();
-        Log::info('Order created successfully', ['order_id' => $order->id]);
 
         $payment = new UnlimitPayment();
         $payment->order_id = $order->id;
@@ -116,6 +193,7 @@ class VDPageController extends Controller
         $orderSummary = new OrderSummary();
         $orderSummary->order_id = $order->id;
         $orderSummary->payment_id = $payment->id;
+        $orderSummary->payment_gateway = 'unlimit'; // Specify payment gateway
         $orderSummary->product_name = $order->product_name;
         $orderSummary->payment_status = $payment->order_status; // payment status
         $orderSummary->order_status = $order->order_status; // Assuming `order_status` exists in QsOrder

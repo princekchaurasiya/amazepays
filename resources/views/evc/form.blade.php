@@ -4,7 +4,7 @@
 <div class="container">
     <h2>Check EVC Status</h2>
 
-    <form method="POST" action="{{ route('evc.status') }}">
+    <form method="POST" action="{{ route('admin.evc.status') }}">
         @csrf
         <div class="form-group">
             <label>Order ID</label>
@@ -18,7 +18,7 @@
 
         <button class="btn btn-primary mt-3">Check Status</button>
     </form>
-    <form method="POST" action="{{ route('evc.activated') }}">
+    <form method="POST" action="{{ route('admin.evc.activated') }}">
         @csrf
         <div class="form-group">
             <label>Order ID</label>

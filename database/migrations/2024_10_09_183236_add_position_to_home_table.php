@@ -13,9 +13,11 @@ class AddPositionToHomeTable extends Migration
      */
     public function up()
     {
-        Schema::table('home', function (Blueprint $table) {
-            $table->integer('position')->nullable()->default(0); // Add position column
-        });
+        if (Schema::hasTable('home') && !Schema::hasColumn('home', 'position')) {
+            Schema::table('home', function (Blueprint $table) {
+                $table->integer('position')->nullable()->default(0); // Add position column
+            });
+        }
     }
 
     /**

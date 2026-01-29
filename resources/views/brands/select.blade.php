@@ -4,7 +4,7 @@
 <div class="container">
     <h2>Select Brand to View Stores</h2>
 
-    <form action="{{ route('stores.fetch') }}" method="POST">
+    <form action="{{ route('admin.stores.fetch') }}" method="POST">
         @csrf
         <div class="form-group">
             <label for="brand_code">Choose Brand:</label>

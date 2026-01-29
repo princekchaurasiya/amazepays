@@ -123,14 +123,30 @@ class UnlimitPaymentController extends Controller
 
     /**
      * 🔹 Helper to store initial payment info before redirecting
+     * SECURITY: Validates amount against order database
      */
     private function storePaymentInfo(Request $request, $orderId, $responseData)
     {
         try {
+            // SECURITY: If order_id is numeric, validate amount against order
+            $amount = null;
+            if (is_numeric($orderId)) {
+                $order = QsOrder::where('id', $orderId)->first();
+                if ($order) {
+                    // Use amount from database, not request
+                    $amount = (float) ($order->amount_payable_after_discount ?? $order->grand_payable_amount ?? 0);
+                }
+            }
+            
+            // Fallback to request amount if order not found (for UUID-based orders)
+            if ($amount === null) {
+                $amount = (float) ($request->input('payable_amount') ?? 0);
+            }
+            
             $payment = new UnlimitPayment();
             $payment->order_id = $orderId;
             $payment->merchant_order_id = $responseData['merchant_order_id'] ?? $orderId;
-            $payment->amount = $request->input('payable_amount');
+            $payment->amount = $amount; // Use validated amount
             $payment->currency = 'INR';
             $payment->payment_method = 'bankcard';
             $payment->payment_status = 'pending';
@@ -140,6 +156,7 @@ class UnlimitPaymentController extends Controller
 
             Log::info('💾 Payment information stored', [
                 'order_id' => $orderId,
+                'amount' => $amount,
                 'payment_id' => $payment->id
             ]);
         } catch (Exception $e) {

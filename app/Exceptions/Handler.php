@@ -59,15 +59,70 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $exception)
     {
         $message = $exception->getMessage();
+        
         // Check if it's an authentication or validation exception
         if ($exception instanceof AuthenticationException || $exception instanceof ValidationException) {
             return parent::render($request, $exception);
         }
 
+        // Check if request is from admin panel - keep errors in admin
+        $isAdminRequest = $request->is('admin/*') || $request->is('voyager/*');
+        
+        // Check if it's a database exception - show user-friendly error
+        if ($exception instanceof \Illuminate\Database\QueryException || 
+            $exception instanceof \PDOException ||
+            str_contains($message, 'Base table or view not found') ||
+            str_contains($message, 'Table') && str_contains($message, "doesn't exist")) {
+            
+            // Log the actual error for debugging
+            \Illuminate\Support\Facades\Log::error('Database Error', [
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine()
+            ]);
+            
+            // Show user-friendly error page
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'We are experiencing some technical difficulties. Please try again later.'
+                ], 500);
+            }
+            
+            // If admin request, show admin error page, otherwise show public error page
+            if ($isAdminRequest) {
+                return response()->view('errors.admin-500', [
+                    'exception' => $exception
+                ], 500);
+            }
+            
+            return response()->view('errors.500', [], 500);
+        }
+
         // Check if it's a general exception (not specifically handled)
         if (!($exception instanceof \Symfony\Component\HttpKernel\Exception\HttpException)) {
-            $errorMessage = $exception->getMessage();
-            return response()->view('userpanel.wentWrong', ['errorMessage' => $errorMessage], 500);
+            // Log the error
+            \Illuminate\Support\Facades\Log::error('Application Error', [
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'trace' => $exception->getTraceAsString()
+            ]);
+            
+            // Show user-friendly error page instead of exposing error details
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'We are experiencing some technical difficulties. Please try again later.'
+                ], 500);
+            }
+            
+            // If admin request, show admin error page, otherwise show public error page
+            if ($isAdminRequest) {
+                return response()->view('errors.admin-500', [
+                    'exception' => $exception
+                ], 500);
+            }
+            
+            return response()->view('errors.500', [], 500);
         }
 
         if (str_contains($message, 'Address in mailbox given [] does not comply with RFC 2822, 3.6.2.') || 

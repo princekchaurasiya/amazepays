@@ -6,7 +6,7 @@
     <br/>
     <h2>Store List</h2>
 
-    <form method="GET" class="row mb-4" action="{{ route('stores.filter') }}">
+    <form method="GET" class="row mb-4" action="{{ route('admin.stores.filter') }}">
         <div class="col-md-3">
         <label>Search Store</label>
         <input type="text" name="search" class="form-control" value="{{ $filters['search'] ?? '' }}" placeholder="e.g. Amazon">
@@ -78,7 +78,7 @@
 
         <div class="col-md-3">
             <label>&nbsp;</label>
-            <a href="{{ route('stores.filter') }}" class="btn btn-secondary form-control">Reset</a>
+            <a href="{{ route('admin.stores.filter') }}" class="btn btn-secondary form-control">Reset</a>
         </div>
     </div>
 

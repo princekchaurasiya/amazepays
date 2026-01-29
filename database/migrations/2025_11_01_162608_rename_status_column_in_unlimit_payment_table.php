@@ -13,11 +13,11 @@ class RenameStatusColumnInUnlimitPaymentTable extends Migration
      */
     public function up()
     {
-        Schema::table('unlimit_payment', function (Blueprint $table) {
-             if (Schema::hasColumn('unlimit_payment', 'status')) {
+        if (Schema::hasTable('unlimit_payment') && Schema::hasColumn('unlimit_payment', 'status') && !Schema::hasColumn('unlimit_payment', 'payment_status')) {
+            Schema::table('unlimit_payment', function (Blueprint $table) {
                 $table->renameColumn('status', 'payment_status');
-            }
-        });
+            });
+        }
     }
 
     /**

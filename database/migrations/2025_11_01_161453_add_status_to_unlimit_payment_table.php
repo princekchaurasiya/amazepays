@@ -13,9 +13,11 @@ class AddStatusToUnlimitPaymentTable extends Migration
      */
     public function up()
     {
-        Schema::table('unlimit_payment', function (Blueprint $table) {
-            $table->string('status')->nullable()->after('order_status');
-        });
+        if (Schema::hasTable('unlimit_payment') && !Schema::hasColumn('unlimit_payment', 'status')) {
+            Schema::table('unlimit_payment', function (Blueprint $table) {
+                $table->string('status')->nullable()->after('order_status');
+            });
+        }
     }
 
     /**

@@ -13,11 +13,19 @@ class AddCgstSgstIgstToQsProductsTable extends Migration
      */
     public function up()
     {
-        Schema::table('qs_products', function (Blueprint $table) {
-            $table->decimal('CGST', 8, 2)->nullable()->after('discount_percentage');
-            $table->decimal('SGST', 8, 2)->nullable()->after('CGST');
-            $table->decimal('IGST', 8, 2)->nullable()->after('SGST');
-        });
+        if (Schema::hasTable('qs_products')) {
+            Schema::table('qs_products', function (Blueprint $table) {
+                if (!Schema::hasColumn('qs_products', 'CGST')) {
+                    $table->decimal('CGST', 8, 2)->nullable()->after('discount_percentage');
+                }
+                if (!Schema::hasColumn('qs_products', 'SGST')) {
+                    $table->decimal('SGST', 8, 2)->nullable()->after('CGST');
+                }
+                if (!Schema::hasColumn('qs_products', 'IGST')) {
+                    $table->decimal('IGST', 8, 2)->nullable()->after('SGST');
+                }
+            });
+        }
     }
 
     /**

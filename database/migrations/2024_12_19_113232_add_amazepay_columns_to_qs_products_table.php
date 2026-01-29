@@ -13,11 +13,19 @@ class AddAmazepayColumnsToQsProductsTable extends Migration
      */
     public function up()
     {
-        Schema::table('qs_products', function (Blueprint $table) {
-            $table->text('amazepay_how_to_redeem')->nullable()->after('show_product'); // Replace 'existing_column_name' with the appropriate column.
-            $table->text('amazepay_t_and_c')->nullable()->after('amazepay_how_to_redeem');
-            $table->text('amazepay_product_description')->nullable()->after('amazepay_t_and_c');
-        });
+        if (Schema::hasTable('qs_products')) {
+            Schema::table('qs_products', function (Blueprint $table) {
+                if (!Schema::hasColumn('qs_products', 'amazepay_how_to_redeem')) {
+                    $table->text('amazepay_how_to_redeem')->nullable()->after('show_product');
+                }
+                if (!Schema::hasColumn('qs_products', 'amazepay_t_and_c')) {
+                    $table->text('amazepay_t_and_c')->nullable()->after('amazepay_how_to_redeem');
+                }
+                if (!Schema::hasColumn('qs_products', 'amazepay_product_description')) {
+                    $table->text('amazepay_product_description')->nullable()->after('amazepay_t_and_c');
+                }
+            });
+        }
     }
 
     /**

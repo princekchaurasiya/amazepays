@@ -13,9 +13,11 @@ class AddMerchantOrderIdToQsOrdersTable extends Migration
      */
     public function up()
     {
-        Schema::table('qs_orders', function (Blueprint $table) {
-        $table->uuid('merchant_order_id')->nullable()->unique();
-        });
+        if (Schema::hasTable('qs_orders') && !Schema::hasColumn('qs_orders', 'merchant_order_id')) {
+            Schema::table('qs_orders', function (Blueprint $table) {
+                $table->uuid('merchant_order_id')->nullable()->unique();
+            });
+        }
     }
 
     /**

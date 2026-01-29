@@ -53,14 +53,74 @@ public function store(Request $request)
         return response()->json(['error' => 'Token not available'], 401);
     }
 
+    // SECURITY: Validate payable_amount from request
+    $request->validate([
+        'payable_amount' => 'required|numeric|min:0.01|max:999999',
+    ]);
+    
+    $payableAmount = (float) $request->input('payable_amount');
+    $orderId = null;
+    
+    // SECURITY: If order_id is provided, validate amount against order
+    if ($request->has('order_id') && $request->order_id) {
+        $order = \App\Models\QsOrder::where('id', $request->order_id)
+            ->where('user_id', auth()->id())
+            ->first();
+        
+        if ($order) {
+            // CRITICAL: Never fall back to 0 or denomination alone - calculate from denomination * quantity if needed
+            if ($order->amount_payable_after_discount !== null) {
+                $expectedAmount = (float) $order->amount_payable_after_discount;
+            } elseif ($order->grand_payable_amount !== null) {
+                $expectedAmount = (float) $order->grand_payable_amount;
+            } else {
+                // Fallback: calculate from denomination * quantity (never use denomination alone or 0)
+                $quantity = (int) ($order->quantity ?? 1);
+                $expectedAmount = (float) ($order->denomination ?? 0) * $quantity;
+                
+                Log::warning('⚠️ VD Payment: Using calculated amount from denomination * quantity', [
+                    'order_id' => $order->id,
+                    'denomination' => $order->denomination,
+                    'quantity' => $quantity,
+                    'calculated_amount' => $expectedAmount
+                ]);
+            }
+            
+            $amountDifference = abs($payableAmount - $expectedAmount);
+            
+            if ($amountDifference > 0.01) {
+                Log::error('❌ VD Payment amount mismatch - potential tampering', [
+                    'order_id' => $order->id,
+                    'user_id' => auth()->id(),
+                    'expected_amount' => $expectedAmount,
+                    'received_amount' => $payableAmount,
+                    'difference' => $amountDifference,
+                    'ip_address' => $request->ip()
+                ]);
+                return back()->with('error', 'Payment amount mismatch. Please try again.');
+            }
+            
+            // Use order amount from database (more secure)
+            $payableAmount = $expectedAmount;
+            $orderId = (string) $order->id;
+        } else {
+            Log::warning('VD Payment: Order not found or unauthorized', [
+                'order_id' => $request->order_id,
+                'user_id' => auth()->id(),
+            ]);
+            return back()->with('error', 'Order not found or unauthorized.');
+        }
+    }
+    
+    // Generate unique order ID if not set (EVC flow or new order)
+    if (!$orderId) {
+        $orderId = (string) Str::uuid();
+    }
+    
     // Generate current time with milliseconds and Z suffix in UTC
     $now = Carbon::now('UTC');
     $milliseconds = $now->format('v'); // milliseconds
     $time = $now->format("Y-m-d\TH:i:s.") . $milliseconds . "Z";
-    $payableAmount = $request->input('payable_amount');
-    
-    // Generate unique order ID
-    $orderId = (string) Str::uuid();
     $request_ref_no = (string) Str::uuid();
 
     $data = [

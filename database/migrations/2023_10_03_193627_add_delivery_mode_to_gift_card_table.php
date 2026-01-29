@@ -13,9 +13,11 @@ class AddDeliveryModeToGiftCardTable extends Migration
      */
      public function up()
     {
-        Schema::table('gift_card', function (Blueprint $table) {
-            $table->string('delivery_mode')->nullable();
-        });
+        if (Schema::hasTable('gift_card') && !Schema::hasColumn('gift_card', 'delivery_mode')) {
+            Schema::table('gift_card', function (Blueprint $table) {
+                $table->string('delivery_mode')->nullable();
+            });
+        }
     }
 
     /**

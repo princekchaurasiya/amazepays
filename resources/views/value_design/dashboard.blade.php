@@ -11,12 +11,11 @@
         <h1 class="mb-4 text-center">Value Design API Dashboard</h1>
 
         <div class="d-grid gap-3 col-6 mx-auto">
-            <a href="{{ url('/fetchbrands') }}" class="btn btn-primary btn-lg">1. Fetch Brands</a>
-            <a href="{{ url('/vdbrands') }}" class="btn btn-secondary btn-lg">2. Show Brands</a>
-            <a href="{{ url('/stores/filter') }}" class="btn btn-info btn-lg text-white">3. Filter Stores</a>
-            <a href="{{ url('/evc/request') }}" class="btn btn-info btn-lg text-white">4. Get EVC Request</a>
-            <a href="{{ url('/evc/form') }}" class="btn btn-info btn-lg text-white">5. Get EVC Status</a>
-            <a href="{{ url('/vdwalletbalance') }}" class="btn btn-info btn-lg text-white">6. Get Wallet Balance</a>
+            <a href="{{ route('admin.api.index') }}" class="btn btn-primary btn-lg">1. API Management (Fetch Brands, Sync Stores, Wallet Balance)</a>
+            <a href="{{ route('admin.vd.brands') }}" class="btn btn-secondary btn-lg">2. Show Brands</a>
+            <a href="{{ route('admin.stores.filter') }}" class="btn btn-info btn-lg text-white">3. Filter Stores</a>
+            <a href="{{ route('admin.evc.request') }}" class="btn btn-info btn-lg text-white">4. Get EVC Request</a>
+            <a href="{{ route('admin.evc.form') }}" class="btn btn-info btn-lg text-white">5. Get EVC Status</a>
             
         </div>
     </div>

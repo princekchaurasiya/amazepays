@@ -13,12 +13,22 @@ class AddIsBlockedToUsersTable extends Migration
      */
     public function up()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->boolean('is_blocked')->default(false);
-            $table->boolean('can_transact')->default(true);
-            $table->json('restricted_features')->nullable();
-            $table->text('restriction_reason')->nullable();
-        });
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                if (!Schema::hasColumn('users', 'is_blocked')) {
+                    $table->boolean('is_blocked')->default(false);
+                }
+                if (!Schema::hasColumn('users', 'can_transact')) {
+                    $table->boolean('can_transact')->default(true);
+                }
+                if (!Schema::hasColumn('users', 'restricted_features')) {
+                    $table->json('restricted_features')->nullable();
+                }
+                if (!Schema::hasColumn('users', 'restriction_reason')) {
+                    $table->text('restriction_reason')->nullable();
+                }
+            });
+        }
     }
 
     /**

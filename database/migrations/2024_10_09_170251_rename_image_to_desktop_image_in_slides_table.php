@@ -13,9 +13,11 @@ class RenameImageToDesktopImageInSlidesTable extends Migration
      */
     public function up()
     {
-        Schema::table('slides', function (Blueprint $table) {
-            $table->renameColumn('image', 'desktop_image');
-        });
+        if (Schema::hasTable('slides') && Schema::hasColumn('slides', 'image') && !Schema::hasColumn('slides', 'desktop_image')) {
+            Schema::table('slides', function (Blueprint $table) {
+                $table->renameColumn('image', 'desktop_image');
+            });
+        }
     }
 
     /**

@@ -119,7 +119,7 @@
             </div>
         </div>
     </div>
-<p> <a href="{{ url('/stores/filter') }}" class="btn btn-info btn-lg text-white">See Stores</a>
+<p> <a href="{{ route('admin.stores.filter') }}" class="btn btn-info btn-lg text-white">See Stores</a>
 
     <h4>Important Instructions</h4>
     <ul class="list-group mb-4">

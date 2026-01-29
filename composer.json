@@ -52,7 +52,17 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
-        ]
+        ],
+        "test": "phpunit",
+        "test:unit": "phpunit --testsuite=Unit",
+        "test:feature": "phpunit --testsuite=Feature",
+        "test:woohoo": "php artisan woohoo:test-all",
+        "test:woohoo-order": "php artisan woohoo:test-order",
+        "test:woohoo-catalog": "php artisan woohoo:test-catalog",
+        "test:woohoo-status": "php artisan woohoo:test-status",
+        "test:woohoo-fetch-cards": "php artisan woohoo:test-fetch-cards",
+        "test:wallet": "phpunit --filter WalletTest",
+        "test:api": "phpunit --filter ApiTest"
     },
     "extra": {
         "laravel": {

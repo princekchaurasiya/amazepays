@@ -25,22 +25,27 @@ class HomePageController extends Controller
                 ->orderByRaw('IFNULL(secondary_priority, 999999) ASC') // Then by secondary_priority (NULL treated as highest as well)
                 ->get();
 
-            // Log product data for debugging
-            foreach($allProducts as $product) {
-                Log::info('Product Image Data', [
-                    'product_id' => $product->id,
-                    'sku' => $product->sku,
-                    'custom_image' => $product->custom_image,
-                    'images' => $product->images
-                ]);
-
-                $product->currency = json_decode($product->currency);
-                $product->price = json_decode($product->price);
-                $product->images = json_decode($product->images);
-            }
+            // No need to manually decode - model accessors handle it automatically
+            // price, currency, and images are automatically decoded by QsProduct model accessors
 
             // Fetch home settings including priority_product_to_show
             $homeSettings = Home::first();
+            
+            // If no home settings exist, create default settings or use defaults
+            if (!$homeSettings) {
+                $homeSettings = new Home();
+                $homeSettings->section_banner_status = false;
+                $homeSettings->section_brand_status = false;
+                $homeSettings->section_hot_deal_status = false;
+                $homeSettings->section_category_status = false;
+                $homeSettings->section_other_deal_status = false;
+                $homeSettings->section_brand_title = 'Popular Brands';
+                $homeSettings->section_hot_deal_title = 'Hot Deals';
+                $homeSettings->section_category_title = 'Categories';
+                $homeSettings->section_other_deal_title = 'Other Deals';
+                $homeSettings->priority_product_to_show = 10;
+            }
+            
             $priorityProductLimit = $homeSettings->priority_product_to_show ?? 10; // Default to 10 if not set
 
             // Split the products into two groups: priority and no priority
@@ -63,12 +68,11 @@ class HomePageController extends Controller
                 ->orderByRaw('priority IS NULL ASC') // Ensure null priorities are last
                 ->get();
 
-            // Retrieve slugs for slides
-            foreach ($slides as $slide) {
-                $slide->slug = $this->getSlug($slide);
-            }
+            // Retrieve slugs for slides (optimized to avoid N+1 queries)
+            $this->loadSlugsForSlides($slides);
 
             // Return the view with the fetched data
+            // Fetch KGen products asynchronously or with shorter timeout to avoid blocking
             $kgenProducts = $this->fetchKgenProducts();
 
             return view('layouts/homepage.index', compact(
@@ -88,21 +92,43 @@ class HomePageController extends Controller
         }
     }
 
-    // Method to retrieve the slug
-    private function getSlug($slide)
+    // Optimized method to load slugs for all slides at once (prevents N+1 queries)
+    private function loadSlugsForSlides($slides)
     {
-        if ($slide->product_id) {
-            $product = QsProduct::find($slide->product_id);
-            return $product ? $product->slug : null;
-        } elseif ($slide->category_id) {
-            $category = AmazepayCategory::find($slide->category_id);
-            return $category ? $category->slug : null;
-        } elseif ($slide->brand_id) {
-            $brand = AmazepayBrand::find($slide->brand_id);
-            return $brand ? $brand->slug : null;
+        // Collect all IDs
+        $productIds = [];
+        $categoryIds = [];
+        $brandIds = [];
+        
+        foreach ($slides as $slide) {
+            if ($slide->product_id) {
+                $productIds[] = $slide->product_id;
+            }
+            if ($slide->category_id) {
+                $categoryIds[] = $slide->category_id;
+            }
+            if ($slide->brand_id) {
+                $brandIds[] = $slide->brand_id;
+            }
         }
-
-        return null; // Return null if no slug is found
+        
+        // Fetch all at once
+        $products = !empty($productIds) ? QsProduct::whereIn('id', array_unique($productIds))->pluck('slug', 'id')->toArray() : [];
+        $categories = !empty($categoryIds) ? AmazepayCategory::whereIn('id', array_unique($categoryIds))->pluck('slug', 'id')->toArray() : [];
+        $brands = !empty($brandIds) ? AmazepayBrand::whereIn('id', array_unique($brandIds))->pluck('slug', 'id')->toArray() : [];
+        
+        // Assign slugs
+        foreach ($slides as $slide) {
+            if ($slide->product_id && isset($products[$slide->product_id])) {
+                $slide->slug = $products[$slide->product_id];
+            } elseif ($slide->category_id && isset($categories[$slide->category_id])) {
+                $slide->slug = $categories[$slide->category_id];
+            } elseif ($slide->brand_id && isset($brands[$slide->brand_id])) {
+                $slide->slug = $brands[$slide->brand_id];
+            } else {
+                $slide->slug = null;
+            }
+        }
     }
 
     /**
@@ -117,11 +143,11 @@ class HomePageController extends Controller
             $clientSecret = env('EXLR8_USER_SECRET');
 
             if (!$baseUrl || !$partnerId || !$clientId || !$clientSecret) {
-                Log::warning('Missing KGen credentials for homepage');
+                // KGen credentials not configured - silently return empty array
                 return [];
             }
 
-            $response = Http::timeout(10)
+            $response = Http::timeout(3) // Reduced timeout to prevent long waits
                 ->withHeaders([
                     'x-client-id' => $clientId,
                     'x-client-secret' => $clientSecret,

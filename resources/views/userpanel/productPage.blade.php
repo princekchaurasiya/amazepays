@@ -11,6 +11,14 @@
         <div class="container-fluid">
             <div class="row">
 
+                @php
+                    // Determine selected gift send option, preferring old input, then session, default to buy_for_self
+                    $selectedGiftSendOption = old(
+                        'gift_send_option',
+                        session('giftCardFormValues.gift_send_option', 'buy_for_self'),
+                    );
+                @endphp
+
                 <form action="{{ route('checkoutPage', ['slug' => $productDetails['url']]) }}" method="POST"
                     id="giftCardPageForm">
                     {{ csrf_field() }}
@@ -132,7 +140,7 @@
                                             <div class="custom-control mr-4 custom-radio">
                                                 <input type="radio" class="custom-control-input gift-option"
                                                     id="sendAsGiftRadio" name="gift_send_option" value="send_as_gift"
-                                                    {{ old('gift_send_option', 'send_as_gift') == 'send_as_gift' ? 'checked' : '' }}>
+                                                    {{ $selectedGiftSendOption == 'send_as_gift' ? 'checked' : '' }}>
                                                 <label
                                                     class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
                                                     for="sendAsGiftRadio">
@@ -142,7 +150,7 @@
                                             <div class="custom-control mr-0 custom-radio">
                                                 <input type="radio" class="custom-control-input gift-option"
                                                     id="buyForSelfRadio" name="gift_send_option" value="buy_for_self"
-                                                    {{ old('gift_send_option', 'send_as_gift') == 'buy_for_self' ? 'checked' : '' }}>
+                                                    {{ $selectedGiftSendOption == 'buy_for_self' ? 'checked' : '' }}>
                                                 <label
                                                     class="custom-control-label small-size fw-500 text-grey-900 font-xssss"
                                                     for="buyForSelfRadio">
@@ -152,7 +160,8 @@
                                         </div>
                                     </div>
 
-                                    <div class="row justify-content-center mt-4 gifting-details" style="display: block;">
+                                    <div
+                                        class="row justify-content-center mt-4 gifting-details {{ $selectedGiftSendOption === 'send_as_gift' ? '' : 'd-none' }}">
                                         <h6 class="mb-3 fw-600 font-xss mt-2">Gifting Details</h6>
                                         <div class="row"> <!-- Added .row to group the .col-lg-* elements -->
                                             <div class="col-12 col-lg-3 receiver-name">

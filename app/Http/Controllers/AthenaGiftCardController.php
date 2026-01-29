@@ -33,52 +33,52 @@ class AthenaGiftCardController extends Controller
 
     public function showGiftcards()
 {
+    // View removed - now returns JSON only (admin-only route)
     $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . env('LYSTO_API_KEY'),
             'partnerid' => env('LYSTO_PARTNER_ID'),
-        ])->get('https://stagedistapi.lysto.io/api/v1/giftcards'); // Replace with actual URL
+        ])->get('https://stagedistapi.lysto.io/api/v1/giftcards');
     $data = $response->json();
     if ($data['status'] === 200) {
-        return view('giftcards', ['giftcards' => $data['giftcards']]);
+        return response()->json($data);
     } else {
-        abort(500, 'Failed to fetch giftcards');
+        return response()->json(['error' => 'Failed to fetch giftcards'], 500);
     }
 }
 
 public function showGiftcards2($id)
 {
+    // View removed - now returns JSON only (admin-only route)
+    // This method appears to be duplicate/unused - keeping for backward compatibility
     try {
-    $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . env('LYSTO_API_KEY'),
-            'partnerid' => env('LYSTO_PARTNER_ID'),
-        ])->get('https://stagedistapi.lysto.io/api/v1/giftcards/{$id}/skus'); // Replace with actual URL
-    $data = $response->json();
-    Log::info('API Response:', [
-    'status' => $response->status(),
-    'body' => $response->body(),
-]);
-    dd($data);
-    if ($data['status'] === 200) {
-        return view('giftcard-details', ['skus' => $skus, 'giftcardId' => $id]);
-    } else {
-        abort(500, 'Failed to fetch giftcards');
-    }
+        $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . env('LYSTO_API_KEY'),
+                'partnerid' => env('LYSTO_PARTNER_ID'),
+            ])->get('https://stagedistapi.lysto.io/api/v1/giftcards/' . $id . '/skus');
+        $data = $response->json();
+        Log::info('API Response:', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
+        if ($data['status'] === 200) {
+            return response()->json($data);
+        } else {
+            return response()->json(['error' => 'Failed to fetch giftcards'], 500);
+        }
     } catch (\Exception $e) {
-        \Log::error('Exception while fetching SKUs', [
+        Log::error('Exception while fetching SKUs', [
             'message' => $e->getMessage(),
         ]);
-        abort(500, 'Internal server error');
+        return response()->json(['error' => 'Internal server error'], 500);
     }
-
 }
 
     public function getSkus($giftcard_id)
     {
+        // View removed - now returns JSON only (admin-only route)
         try {
             $response = $this->giftCardService->getSkusByGiftCardId($giftcard_id);
-            //return response()->json($response['skus']);
-             $skus = $response['skus'];
-            return view('giftcard-details', ['skus' => $skus, 'giftcardId' => $giftcard_id]);
+            return response()->json($response);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -86,10 +86,15 @@ public function showGiftcards2($id)
 
     public function purchaseView(Request $request)
 {
+    // View removed - purchase should be done via API only
+    // This method now returns JSON with purchase form data
     $giftcardId = $request->query('giftcard_id');
     $skuId = $request->query('sku_id');
-    // You may fetch additional SKU or giftcard data if needed
-    return view('giftcard-purchase', compact('giftcardId', 'skuId'));
+    return response()->json([
+        'giftcard_id' => $giftcardId,
+        'sku_id' => $skuId,
+        'message' => 'Use POST /admin/lysto/giftcard/purchase to purchase gift cards'
+    ]);
 }
 
     public function purchase(Request $request)
@@ -116,9 +121,12 @@ public function showGiftcards2($id)
         ];
 
         $response = $this->giftCardService->purchaseGiftCard($payload);
-        return view('giftcard.success', [
+        // View removed - now returns JSON only (admin-only route)
+        return response()->json([
+            'success' => true,
             'gift_code' => $response['gift_code'],
             'order_id'  => $response['order_id'],
+            'message' => 'Gift card purchased successfully'
         ]);
 
     } catch (\Exception $e) {

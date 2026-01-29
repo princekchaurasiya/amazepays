@@ -99,16 +99,6 @@
                 @endif
             </div>
             <!-- header wrapper -->
-            @if(session('error'))
-                <div class="alert alert-danger">
-                    {{ session('error') }}
-                    @if(session('contact_info'))
-                        <hr class="my-2">
-                        <p class="mb-1"><i class="fa fa-envelope mr-2"></i>{{ session('contact_info.email') }}</p>
-                        <p class="mb-0"><i class="fa fa-phone mr-2"></i>{{ session('contact_info.phone') }}</p>
-                    @endif
-                </div>
-            @endif
             @yield('content')
             <!-- footer wrapper -->
             @include('layouts.partials.footer')
@@ -1485,10 +1475,11 @@ else if (data.status == 400 && data.errors) {
         @stack('scripts')
         
         <!-- Value Design Brands Loader - Only load on home page -->
-        @if(request()->routeIs('home') || request()->is('/'))
+        {{-- Commented out - Value Design gift cards not needed for now --}}
+        {{-- @if(request()->routeIs('home') || request()->is('/'))
             <link rel="stylesheet" href="{{ asset('css/vd-brands.css') }}">
             <script src="{{ asset('js/vd-brands-loader.js') }}"></script>
-        @endif
+        @endif --}}
         </div>
 
     <!-- Error Modal -->

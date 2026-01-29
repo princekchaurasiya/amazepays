@@ -13,9 +13,11 @@ class AlterAccessTokenColumnInApiTokensTable extends Migration
      */
     public function up()
     {
-        Schema::table('api_tokens', function (Blueprint $table) {
-            $table->longText('access_token')->change();
-        });
+        if (Schema::hasTable('api_tokens') && Schema::hasColumn('api_tokens', 'access_token')) {
+            Schema::table('api_tokens', function (Blueprint $table) {
+                $table->longText('access_token')->change();
+            });
+        }
     }
 
     /**

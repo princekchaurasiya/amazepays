@@ -201,6 +201,6 @@ return [
     |
     */
 
-    'same_site' => null,
+    'same_site' => 'lax', // Use 'lax' to allow cookies on cross-site GET redirects (like payment gateways)
 
 ];

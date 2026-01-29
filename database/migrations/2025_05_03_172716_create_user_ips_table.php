@@ -13,12 +13,14 @@ class CreateUserIpsTable extends Migration
      */
     public function up()
     {
-        Schema::create('user_ips', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->string('ip_address', 45);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('user_ips')) {
+            Schema::create('user_ips', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('user_id')->nullable();
+                $table->string('ip_address', 45);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

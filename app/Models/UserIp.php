@@ -12,4 +12,14 @@ class UserIp extends Model
         'user_id',
         'ip_address',
     ];
+
+    /**
+     * Relationships
+     */
+
+    // User who owns this IP
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

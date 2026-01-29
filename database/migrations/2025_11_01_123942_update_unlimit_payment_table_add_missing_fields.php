@@ -13,14 +13,28 @@ class UpdateUnlimitPaymentTableAddMissingFields extends Migration
      */
     public function up()
     {
-        Schema::table('unlimit_payment', function (Blueprint $table) {
-             $table->integer('qty')->default(1)->change();
-            $table->decimal('price', 10, 2)->nullable()->change();
-            $table->string('sku')->nullable();
-            $table->string('merchant_order_id')->nullable();
-            $table->string('payment_mode')->nullable()->change();
-            $table->string('order_status')->nullable()->change();
-        });
+        if (Schema::hasTable('unlimit_payment')) {
+            Schema::table('unlimit_payment', function (Blueprint $table) {
+                if (Schema::hasColumn('unlimit_payment', 'qty')) {
+                    $table->integer('qty')->default(1)->change();
+                }
+                if (Schema::hasColumn('unlimit_payment', 'price')) {
+                    $table->decimal('price', 10, 2)->nullable()->change();
+                }
+                if (!Schema::hasColumn('unlimit_payment', 'sku')) {
+                    $table->string('sku')->nullable();
+                }
+                if (!Schema::hasColumn('unlimit_payment', 'merchant_order_id')) {
+                    $table->string('merchant_order_id')->nullable();
+                }
+                if (Schema::hasColumn('unlimit_payment', 'payment_mode')) {
+                    $table->string('payment_mode')->nullable()->change();
+                }
+                if (Schema::hasColumn('unlimit_payment', 'order_status')) {
+                    $table->string('order_status')->nullable()->change();
+                }
+            });
+        }
     }
 
     /**

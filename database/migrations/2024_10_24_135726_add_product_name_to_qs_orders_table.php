@@ -13,9 +13,11 @@ class AddProductNameToQsOrdersTable extends Migration
      */
     public function up()
     {
-        Schema::table('qs_orders', function (Blueprint $table) {
-            $table->string('product_name')->nullable()->after('refno');
-        });
+        if (Schema::hasTable('qs_orders') && !Schema::hasColumn('qs_orders', 'product_name')) {
+            Schema::table('qs_orders', function (Blueprint $table) {
+                $table->string('product_name')->nullable()->after('refno');
+            });
+        }
     }
 
     /**

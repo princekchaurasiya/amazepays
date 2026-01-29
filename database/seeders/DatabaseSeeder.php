@@ -13,15 +13,29 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // $this->call([
-        //     DataTypesTableSeeder::class,
-        //     DataRowsTableSeeder::class,
-        //     MenusTableSeeder::class,
-        //     MenuItemsTableSeeder::class,
-        //     RolesTableSeeder::class,
-        //     PermissionsTableSeeder::class,
-        //     PermissionRoleTableSeeder::class,
-        //     SettingsTableSeeder::class,
-        // ]);
+        $this->call([
+            // Voyager Core Seeders
+            RolesTableSeeder::class,
+            PermissionsTableSeeder::class,
+            DataTypesTableSeeder::class,
+            DataRowsTableSeeder::class,
+            MenusTableSeeder::class,
+            MenuItemsTableSeeder::class,
+            PermissionRoleTableSeeder::class,
+            SettingsTableSeeder::class,
+            
+            // API Settings (from backup)
+            ApiSettingsSeeder::class,
+            
+            // Application BREAD and Menus
+            ApplicationBreadSeeder::class,
+            AdminMenuSeeder::class,
+            
+            // Users
+            UserSeeder::class,
+            
+            // QS Categories (for API integration)
+            QsCategorySeeder::class,
+        ]);
     }
 }

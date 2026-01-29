@@ -7,7 +7,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('k_gen_orders', function (Blueprint $table) {
+        if (Schema::hasTable('k_gen_orders')) {
+            Schema::table('k_gen_orders', function (Blueprint $table) {
             // User relationship
             if (!Schema::hasColumn('k_gen_orders', 'user_id')) {
                 $table->foreignId('user_id')
@@ -44,7 +45,8 @@ return new class extends Migration
             
             // Indexes
             $table->index(['user_id', 'status', 'created_at']);
-        });
+            });
+        }
     }
 
     public function down(): void

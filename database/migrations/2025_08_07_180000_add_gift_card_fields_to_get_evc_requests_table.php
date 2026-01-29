@@ -13,16 +13,34 @@ class AddGiftCardFieldsToGetEvcRequestsTable extends Migration
      */
     public function up()
     {
-        Schema::table('get_evc_requests', function (Blueprint $table) {
-            $table->string('gift_send_option')->nullable();
-            $table->string('delivery_mode')->nullable();
-            $table->string('receiver_name')->nullable();
-            $table->string('receiver_email')->nullable();
-            $table->string('receiver_mobile')->nullable();
-            $table->text('receiver_msg')->nullable();
-            $table->decimal('vd_discount', 5, 2)->nullable();
-            $table->string('vd_brand_code')->nullable();
-        });
+        if (Schema::hasTable('get_evc_requests')) {
+            Schema::table('get_evc_requests', function (Blueprint $table) {
+                if (!Schema::hasColumn('get_evc_requests', 'gift_send_option')) {
+                    $table->string('gift_send_option')->nullable();
+                }
+                if (!Schema::hasColumn('get_evc_requests', 'delivery_mode')) {
+                    $table->string('delivery_mode')->nullable();
+                }
+                if (!Schema::hasColumn('get_evc_requests', 'receiver_name')) {
+                    $table->string('receiver_name')->nullable();
+                }
+                if (!Schema::hasColumn('get_evc_requests', 'receiver_email')) {
+                    $table->string('receiver_email')->nullable();
+                }
+                if (!Schema::hasColumn('get_evc_requests', 'receiver_mobile')) {
+                    $table->string('receiver_mobile')->nullable();
+                }
+                if (!Schema::hasColumn('get_evc_requests', 'receiver_msg')) {
+                    $table->text('receiver_msg')->nullable();
+                }
+                if (!Schema::hasColumn('get_evc_requests', 'vd_discount')) {
+                    $table->decimal('vd_discount', 5, 2)->nullable();
+                }
+                if (!Schema::hasColumn('get_evc_requests', 'vd_brand_code')) {
+                    $table->string('vd_brand_code')->nullable();
+                }
+            });
+        }
     }
 
     /**

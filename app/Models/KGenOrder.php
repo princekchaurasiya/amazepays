@@ -33,18 +33,46 @@ class KGenOrder extends Model
     ];
 
     /**
-     * Relationship to User
+     * Relationships
      */
+
+    // User who placed the order
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    // Product ordered (if variant_id is stored and relates to KgenProduct)
+    public function product()
+    {
+        return $this->belongsTo(KgenProduct::class, 'variant_id', 'productID');
+    }
+
     /**
-     * Scope for user orders
+     * Scopes
      */
+
+    // Scope for user orders
     public function scopeForUser($query, $userId)
     {
         return $query->where('user_id', $userId);
+    }
+
+    // Scope for completed orders
+    public function scopeCompleted($query)
+    {
+        return $query->where('fulfillment_status', 'fulfilled');
+    }
+
+    // Scope for pending orders
+    public function scopePending($query)
+    {
+        return $query->where('fulfillment_status', 'pending');
+    }
+
+    // Scope for paid orders
+    public function scopePaid($query)
+    {
+        return $query->where('payment_status', 'paid');
     }
 }

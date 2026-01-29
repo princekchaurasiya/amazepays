@@ -194,24 +194,16 @@ class CommonHelper
 
     public static function getProductImage($product)
     {
-        // Log the input for debugging
-        \Log::info('GetProductImage Input:', [
-            'product_type' => is_object($product) ? 'object' : (is_array($product) ? 'array' : 'unknown'),
-            'product_data' => $product
-        ]);
-
         // Case 1: If $product is an array
         if (is_array($product)) {
             // Check for custom_image first
             if (!empty($product['custom_image']) && $product['custom_image'] !== 'null' && $product['custom_image'] !== 'undefined') {
-                \Log::info('Using custom_image from array:', ['image' => $product['custom_image']]);
                 return asset('storage/' . $product['custom_image']);
             }
             
             // If no custom_image, try images
             if (!empty($product['images'])) {
                 $images = is_string($product['images']) ? json_decode($product['images'], true) : $product['images'];
-                \Log::info('Decoded images from array:', ['images' => $images]);
                 
                 if (is_array($images) && !empty($images['small']) && $images['small'] !== 'null' && $images['small'] !== 'undefined') {
                     return $images['small'];
@@ -224,14 +216,12 @@ class CommonHelper
         elseif (is_object($product)) {
             // Check for custom_image first
             if (!empty($product->custom_image) && $product->custom_image !== 'null' && $product->custom_image !== 'undefined') {
-                \Log::info('Using custom_image from object:', ['image' => $product->custom_image]);
                 return asset('storage/' . $product->custom_image);
             }
             
             // If no custom_image, try images
             if (!empty($product->images)) {
                 $images = is_string($product->images) ? json_decode($product->images, true) : $product->images;
-                \Log::info('Decoded images from object:', ['images' => $images]);
                 
                 if (is_array($images) && !empty($images['small']) && $images['small'] !== 'null' && $images['small'] !== 'undefined') {
                     return $images['small'];
@@ -241,7 +231,6 @@ class CommonHelper
             }
         }
 
-        \Log::info('No valid image found, returning null');
         return null;
     }
 

@@ -46,9 +46,70 @@ class User extends \TCG\Voyager\Models\User
         'email_verified_at' => 'datetime',
     ];
 
+    /**
+     * Relationships
+     */
+    
+    // Wallet relationship
     public function wallet()
     {
         return $this->hasOne(Wallet::class);
+    }
+
+    // Wallet transactions through wallet
+    public function walletTransactions()
+    {
+        return $this->hasManyThrough(WalletTransaction::class, Wallet::class);
+    }
+
+    // QS Orders (Woohoo orders)
+    public function qsOrders()
+    {
+        return $this->hasMany(QsOrder::class);
+    }
+
+    // KGen Orders
+    public function kgenOrders()
+    {
+        return $this->hasMany(KGenOrder::class);
+    }
+
+    // CC Avenue Payments
+    public function ccAvenuePayments()
+    {
+        return $this->hasMany(CcAvenuePayment::class);
+    }
+
+    // Unlimit Payments
+    public function unlimitPayments()
+    {
+        return $this->hasMany(UnlimitPayment::class);
+    }
+
+    // All payments (union of both payment gateways)
+    public function payments()
+    {
+        // This returns a collection, not a relationship
+        // Use this in controllers when you need all payments
+        return $this->ccAvenuePayments->merge($this->unlimitPayments);
+    }
+
+    // OTPs
+    public function otps()
+    {
+        return $this->hasMany(Otp::class);
+    }
+
+    // Email verification codes
+    public function emailVerificationCodes()
+    {
+        return $this->hasMany(EmailVerificationCode::class);
+    }
+
+    // User IPs
+    public function userIps()
+    {
+        return $this->hasMany(UserIp::class);
     }
 
     protected static function booted()

@@ -21,13 +21,6 @@ class CheckUserTransactionStatus
         if (Auth::check()) {
             $user = Auth::user();
             
-            // Log attempt for debugging
-            Log::info('Transaction attempt by user:', [
-                'user_id' => $user->id,
-                'is_blocked' => $user->is_blocked,
-                'can_transact' => $user->can_transact,
-                'route' => $request->route()->getName()
-            ]);
 
             if ($user->is_blocked || !$user->can_transact) {
                 Log::warning('Blocked user attempted transaction:', [

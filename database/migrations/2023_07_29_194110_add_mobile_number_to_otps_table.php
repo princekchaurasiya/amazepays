@@ -13,9 +13,11 @@ class AddMobileNumberToOtpsTable extends Migration
      */
     public function up()
     {
-        Schema::table('otps', function (Blueprint $table) {
-            $table->string('mobile_number')->after('user_id');
-        });
+        if (Schema::hasTable('otps') && !Schema::hasColumn('otps', 'mobile_number')) {
+            Schema::table('otps', function (Blueprint $table) {
+                $table->string('mobile_number')->after('user_id');
+            });
+        }
     }
 
     /**

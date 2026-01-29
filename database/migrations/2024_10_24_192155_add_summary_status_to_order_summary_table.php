@@ -13,9 +13,11 @@ class AddSummaryStatusToOrderSummaryTable extends Migration
      */
     public function up()
     {
-        Schema::table('order_summary', function (Blueprint $table) {
-            $table->string('summary_status')->nullable(); // Add this line
-        });
+        if (Schema::hasTable('order_summary') && !Schema::hasColumn('order_summary', 'summary_status')) {
+            Schema::table('order_summary', function (Blueprint $table) {
+                $table->string('summary_status')->nullable(); // Add this line
+            });
+        }
     }
 
     /**

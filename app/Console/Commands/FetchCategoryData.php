@@ -28,7 +28,17 @@ class FetchCategoryData extends Command
             $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
             Log::info('Category Request:', ['url' => $absApiUrl, 'method' => $requestHttpMethod, 'data' => ['dateAtClient' => $dateAtClient, 'signature' => $signature,],]);
-            $category_resp = Http::acceptJson()->withToken($bearerToken)->withHeaders(['dateAtClient' => $dateAtClient, 'signature' => $signature,])->get($absApiUrl);
+            
+            // Use same headers as other Woohoo API calls to avoid CDN blocking
+            $category_resp = Http::acceptJson()
+                ->withToken($bearerToken)
+                ->withHeaders([
+                    'dateAtClient' => $dateAtClient,
+                    'signature' => $signature,
+                    'Accept' => '*/*',
+                    'User-Agent' => 'Amazepays/1.0 (+https://amazepays.in)',
+                ])
+                ->get($absApiUrl);
             Log::info('Category Response:', ['status_code' => $category_resp->status(), 'data' => $category_resp->json(),]);
             if ($category_resp->status() == 200) {
                 $category_resp = $category_resp->json($key = null);

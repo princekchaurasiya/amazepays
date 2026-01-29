@@ -85,6 +85,22 @@ Route::group(['prefix' => 'admin'], function () {
         Route::view('/upload-document', 'documentUpload');
         event(new RoutingAdmin());
 
+        // API Management Routes
+        Route::get('/api-management', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'index'])->name('admin.api.index');
+        Route::post('/api-management/generate-bearer-token', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'generateBearerToken'])->name('admin.api.generate-bearer-token');
+        Route::post('/api-management/fetch-category', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'fetchCategoryData'])->name('admin.api.fetch-category');
+        Route::post('/api-management/fetch-product-list', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'fetchProductList'])->name('admin.api.fetch-product-list');
+        Route::post('/api-management/fetch-product-data', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'fetchProductData'])->name('admin.api.fetch-product-data');
+        Route::post('/api-management/fetch-kgen-products', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'fetchKgenProducts'])->name('admin.api.fetch-kgen-products');
+        Route::post('/api-management/fetch-featured-kgen-products', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'fetchFeaturedKgenProducts'])->name('admin.api.fetch-featured-kgen-products');
+        Route::post('/api-management/fetch-vd-brands', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'fetchVDBrands'])->name('admin.api.fetch-vd-brands');
+        Route::post('/api-management/sync-vd-stores', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'syncVDStores'])->name('admin.api.sync-vd-stores');
+        Route::post('/api-management/get-vd-wallet-balance', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'getVDWalletBalance'])->name('admin.api.get-vd-wallet-balance');
+        Route::post('/api-management/fetch-kgen-wallet-balance', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'fetchKGenWalletBalance'])->name('admin.api.fetch-kgen-wallet-balance');
+        Route::post('/api-management/fetch-lysto-gift-cards', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'fetchLystoGiftCards'])->name('admin.api.fetch-lysto-gift-cards');
+        Route::post('/api-management/get-lysto-wallet-balance', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'getLystoWalletBalance'])->name('admin.api.get-lysto-wallet-balance');
+        Route::get('/api-management/export-user-payment-details', [\App\Http\Controllers\Voyager\VoyagerApiController::class, 'exportUserPaymentDetails'])->name('admin.api.export-user-payment-details');
+
         Route::post('/upload-data', [DocumentController::class, 'uploadData'])->name('uploadData');
 
         Route::get('download-product-details', [ProductDetailsExportController::class, 'export'])->name('download-product-details');
@@ -208,7 +224,8 @@ Route::post('/verify-register-otp', [OtpVerificationController::class, 'register
 Route::get('/invoice', function () {
     return view('layouts.invoice');
 })->name('invoice');
-Route::get('/export', [PaymentDetailsExportController::class, 'export']);
+// OLD EXPORT ROUTE - REMOVED
+// Route::get('/export', [PaymentDetailsExportController::class, 'export']); // Now part of joined export in API Management
 Route::get('/error', [ErrorController::class, 'handleError'])->name('error');
 
 Route::post('/save-contact', [ContactUsController::class, 'saveContact'])->name('save-contact');
@@ -235,7 +252,6 @@ Route::fallback(function () {
             $directory = dirname($fullPath);
             if (!file_exists($directory)) {
                 mkdir($directory, 0755, true);
-                Log::info('Created directory', ['directory' => $directory]);
             }
 
             // Return a 404 response with helpful information
@@ -351,13 +367,17 @@ Route::get('/payment', function () {
     return view('payment'); // This assumes the file is at resources/views/payment.blade.php
 });
 
-// User comes back from Unlimit
-Route::get('/unlimit/return', [\App\Http\Controllers\WoohooProcessingController::class, 'handleReturn'])
-    ->name('unlimit.return');
+// SECURITY: Rate limit payment return URLs
+// This handles payment returns from Unlimit gateway and updates payment status
+Route::middleware(['throttle:payments'])->group(function () {
+    // User comes back from Unlimit - handles both GET and POST
+    Route::match(['get', 'post'], '/unlimit/return', [\App\Http\Controllers\WoohooProcessingController::class, 'handleReturn'])
+        ->name('unlimit.return');
+});
 
-// Create Woohoo order after return stores session
-Route::get('/woohoo/create-order', [\App\Http\Controllers\WoohooProcessingController::class, 'createOrder'])
-    ->name('woohoo.createOrder');
+// Create Woohoo order after return stores session (duplicate route removed - using woohoo.processing.createOrder instead)
+// Route::get('/woohoo/create-order', [\App\Http\Controllers\WoohooProcessingController::class, 'createOrder'])
+//     ->name('woohoo.createOrder');
 
 // Show processing page
 Route::get('/woohoo/process', [WoohooProcessingController::class, 'createOrder'])
@@ -365,8 +385,11 @@ Route::get('/woohoo/process', [WoohooProcessingController::class, 'createOrder']
 
 //Route::match(['GET','POST'], '/payment/return', [UnlimitPaymentController::class, 'handleReturnSuccess'])->name('unlimit.return');
 
-// Unlimit webhook endpoint
-Route::post('/unlimit/webhook', [UnlimitPaymentController::class, 'webhook'])->name('unlimit.webhook');
+// SECURITY: Rate limit and verify signature for webhooks
+Route::middleware(['throttle:payment-callbacks', 'verify.unlimit.signature'])->group(function () {
+    // Unlimit webhook endpoint
+    Route::post('/unlimit/webhook', [UnlimitPaymentController::class, 'webhook'])->name('unlimit.webhook');
+});
 
 Route::get('/payment/success', function () {
     return view('payment.success');
@@ -396,9 +419,18 @@ Route::get('/admin/send-transaction-report/{id}', [TransactionReportController::
 
 //routes to UPI Payment
 use App\Http\Controllers\UPIPaymentController;
-Route::post('/payment/upi', [UPIPaymentController::class, 'store'])->name('payment.upi');
-Route::match(['GET','POST'], '/upi/return', [UPIPaymentController::class, 'handleReturn'])->name('upi.return');
-Route::post('/upi/webhook', [UPIPaymentController::class, 'webhook'])->name('upi.webhook');
+// SECURITY: Require authentication and rate limiting for payment routes
+Route::middleware(['auth', 'web', 'throttle:payments'])->group(function () {
+    Route::post('/payment/upi', [UPIPaymentController::class, 'store'])->name('payment.upi');
+});
+// SECURITY: Rate limit payment return URLs (can be accessed without auth initially)
+Route::middleware(['throttle:payments'])->group(function () {
+    Route::match(['GET','POST'], '/upi/return', [UPIPaymentController::class, 'handleReturn'])->name('upi.return');
+});
+// SECURITY: Rate limit and verify signature for webhooks
+Route::middleware(['throttle:payment-callbacks', 'verify.unlimit.signature'])->group(function () {
+    Route::post('/upi/webhook', [UPIPaymentController::class, 'webhook'])->name('upi.webhook');
+});
 
 //routes to Net Banking Payment
 use App\Http\Controllers\NetBankPaymentController;
@@ -416,72 +448,64 @@ Route::get('/admin/invoices/{id}/create-invoice', [\App\Http\Controllers\Invoice
     return view('userpanel/about');
 })->middleware('block.vpn');*/
 
-use App\Exports\UsersExport;
-use Maatwebsite\Excel\Facades\Excel;
-
-Route::get('/export-users', function () {
-    return Excel::download(new UsersExport, 'users_report.xlsx');
-})->name('export.users');
-
-
-use App\Http\Controllers\ExcelMergeController2;
-
-Route::get('/admin/excel-merge', [ExcelMergeController2::class, 'showForm'])->name('excel.form')->middleware('admin.user');
-Route::post('/admin/excel-merge', [ExcelMergeController2::class, 'merge'])->name('excel.merge')->middleware('admin.user');
+// OLD EXPORT ROUTES - REMOVED
+// These have been consolidated into a single "Export User & Payment Details" button in Admin Panel -> API Management
+// The new export joins Users and Payment Details by email, eliminating the need for separate exports and Excel merge
+// 
+// Removed routes:
+// - /export-users (UsersExport) - Now part of joined export
+// - /export-payments (PaymentsExport) - Now part of joined export  
+// - /export (PaymentDetailsExport) - Now part of joined export
+// - /admin/excel-merge (ExcelMergeController2) - No longer needed, join is done in code
 
 use App\Http\Controllers\UnlimitExportController;
-Route::get('/export-unlimit-payments', [UnlimitExportController::class, 'exportPayments']);
+// OLD EXPORT ROUTE - REMOVED
+// Route::get('/export-unlimit-payments', [UnlimitExportController::class, 'exportPayments']); // This fetches from API and stores, not an export - kept for reference
 
-use App\Http\Controllers\PaymentExportController;
+// OLD EXPORT ROUTE - REMOVED
+// use App\Http\Controllers\PaymentExportController;
+// Route::get('/export-payments', [PaymentExportController::class, 'export'])->name('payments.export'); // Now part of joined export in API Management
 
-Route::get('/export-payments', [PaymentExportController::class, 'export'])->name('payments.export');
+//Value design APIs - MOVED TO ADMIN PANEL
+// All Value Design API operations are now available in Admin Panel -> API Management
+// The following routes have been removed as they were exposed to normal users:
+// - /vdweb/token, /vdweb/brands, value-design/brands
+// - /fetchbrands (GET and POST)
+// - /brands/select, /stores/fetch, /stores/select, /stores/sync, /stores/export
+// - /vddashboard, /vdbrands
+// - /evc/store-request, /evc/request, /evc/decrypt-store, /evc-req, /evc-details
+// - /evc/status, /evc/form, /vdwalletbalance, /evc/get-activated
 
-//Value design APIs
-Route::get('/vdweb/token', [VDWebController::class, 'getToken']);
-Route::get('/vdweb/brands', [VDWebController::class, 'getBrandsFromToken']);
-Route::get('value-design/brands',[VDWebController::class,'displayBrands']);
-Route::get('/fetchbrands', function () {
-    return view('fetchbrands'); // or any basic page/form
-});
-Route::post('/fetchbrands', [StoreBrandsController::class, 'getAndStoreBrands']);
+// Admin-only Value Design routes (view pages moved to admin)
 use App\Http\Controllers\BrandExportController;
-
-Route::get('/admin/brands/export', [BrandExportController::class, 'export'])->name('brands.export');
-
-//Route::get('/brands/decrypt-sync', [VDAESdecrptController2::class, 'handleEncryptedPayload']);
-
 use App\Http\Controllers\StoreController;
 
-Route::get('/brands/select', [StoreController::class, 'showBrandSelection'])->name('brands.select');
-Route::post('/stores/fetch', [StoreController::class, 'fetchStoresForBrand'])->name('stores.fetch');
-
-Route::get('/stores/select', [StoreController::class, 'showForm'])->name('stores.form');
-Route::post('/stores/sync', [StoreController::class, 'syncAndShow'])->name('stores.sync');
-Route::get('/stores/filter', [StoreController::class, 'filterStores'])->name('stores.filter');
-Route::get('/stores/export', [StoreController::class, 'exportStores'])->name('stores.export');
-
-Route::get('/vddashboard', function () {
-    return view('value_design.dashboard');
+Route::group(['middleware' => ['admin.user']], function () {
+    // Brand export (already admin-only)
+    Route::get('/admin/brands/export', [BrandExportController::class, 'export'])->name('brands.export');
+    
+    // Store management views (moved from public to admin)
+    Route::get('/admin/stores/filter', [StoreController::class, 'filterStores'])->name('admin.stores.filter');
+    Route::get('/admin/stores/select', [StoreController::class, 'showForm'])->name('admin.stores.form');
+    Route::post('/admin/stores/fetch', [StoreController::class, 'fetchStoresForBrand'])->name('admin.stores.fetch');
+    Route::post('/admin/stores/sync', [StoreController::class, 'syncAndShow'])->name('admin.stores.sync');
+    Route::get('/admin/stores/export', [StoreController::class, 'exportStores'])->name('admin.stores.export');
+    
+    // Value Design view pages (moved from public to admin)
+    Route::get('/admin/vd/brands', [VDWebController::class, 'showBrands'])->name('admin.vd.brands');
+    Route::get('/admin/vd/dashboard', function () {
+        return view('value_design.dashboard');
+    })->name('admin.vd.dashboard');
+    
+    // EVC operations (moved from public to admin)
+    Route::get('/admin/evc/request', [VDWebController::class, 'requestEvc'])->name('admin.evc.request');
+    Route::post('/admin/evc/store-request', [VDWebController::class, 'storeGetEvcRequest'])->name('admin.evc.store-request');
+    Route::post('/admin/evc/decrypt-store', [VDWebController::class, 'decryptAndStoreEvc'])->name('admin.evc.decrypt-store');
+    Route::post('/admin/evc/status', [VDWebController::class, 'VDgetEvcStatus'])->name('admin.evc.status');
+    Route::view('/admin/evc/form', 'evc.form')->name('admin.evc.form');
+    Route::get('/admin/evc-details/{orderId}/{requestRefNo}', [VDWebController::class,'evcDetails'])->name('admin.evc.details');
+    Route::post('/admin/evc/get-activated', [VDWebController::class, 'VDgetActivatedEvc'])->name('admin.evc.activated');
 });
-
-Route::get('/vdbrands', [VDWebController::class, 'showBrands'])->name('brands.index');
-Route::post('/evc/store-request', [VDWebController::class, 'storeGetEvcRequest']);
-Route::get('/evc/request', [VDWebController::class, 'requestEvc'])->name('evc.request');
-Route::post('/evc/decrypt-store', [VDWebController::class, 'decryptAndStoreEvc']);
-Route::post('/evc-req', [VDWebController::class, 'showEvcDetails'])->name('request.evc');
-Route::get('/evc-details/{orderId}/{requestRefNo}', [VDWebController::class,'evcDetails'])->name('evc.details');
-
-
-//Route::post('/evc/status', [VDWebController::class, 'getEvcStatus'])->name('evc.status');
-
-Route::post('/evc/status', [VDWebController::class, 'VDgetEvcStatus'])->name('evc.status');
-
-Route::view('/evc/form', 'evc.form');
-
-Route::get('/vdwalletbalance', [VDWebController::class, 'getWalletBalance']);
-
-Route::post('/evc/get-activated', [VDWebController::class, 'VDgetActivatedEvc'])
-     ->name('evc.activated');
 
 use App\Http\Controllers\GetEvcRequestController;
 
@@ -490,24 +514,23 @@ Route::post('/get-evc-request', [GetEvcRequestController::class, 'store']);
 
 //Value Design Orders
 Route::get('/my-vdorder', [MyOrderController::class, 'displayValueDesignOrder'])->name('my-vdorder');
-//Lysto API Integration
+//Lysto (Athena Gift Card) API Integration - MOVED TO ADMIN PANEL
+// All Lysto API operations are now available in Admin Panel -> API Management
+// The following routes have been removed as they were exposed to normal users:
+// - /giftcards, /giftcards/{giftcard_id}/skus, /orders, /wallet-balance
+// - /giftcards2, /giftcard/purchase/view, /giftcard/purchase, /dashboard
 
-Route::get('/giftcards', [AthenaGiftCardController::class, 'index']);
-Route::get('/giftcards/{giftcard_id}/skus', [AthenaGiftCardController::class, 'getSkus'])->name('giftcards.show');
-
-//Route::view('/purchase-form', 'giftcard-purchase');
-
-Route::get('/orders', [AthenaGiftCardController::class, 'getOrder']);
-
-Route::get('/wallet-balance', [AthenaGiftCardController::class, 'getWalletBalance']);
-
-Route::view('/dashboard', 'giftcard-dashboard');
-
-Route::get('/giftcards2', [AthenaGiftcardController::class, 'showGiftcards'])->name('giftcards.index');
-//Route::get('/giftcards2/{id}', [AthenaGiftcardController::class, 'showGiftcards2'])->name('giftcards.show');
-
-Route::get('/giftcard/purchase/view', [AthenaGiftCardController::class, 'purchaseView'])->name('giftcard.purchase.view');
-Route::post('/giftcard/purchase', [AthenaGiftCardController::class, 'purchase'])->name('giftcard.purchase');
+// Admin-only Lysto routes
+Route::group(['middleware' => ['admin.user']], function () {
+    Route::get('/admin/lysto/giftcards', [AthenaGiftCardController::class, 'index'])->name('admin.lysto.giftcards');
+    Route::get('/admin/lysto/giftcards/{giftcard_id}/skus', [AthenaGiftCardController::class, 'getSkus'])->name('admin.lysto.giftcards.show');
+    Route::get('/admin/lysto/orders', [AthenaGiftCardController::class, 'getOrder'])->name('admin.lysto.orders');
+    Route::get('/admin/lysto/wallet-balance', [AthenaGiftCardController::class, 'getWalletBalance'])->name('admin.lysto.wallet-balance');
+    Route::get('/admin/lysto/giftcards2', [AthenaGiftCardController::class, 'showGiftcards'])->name('admin.lysto.giftcards2.index');
+    Route::get('/admin/lysto/giftcard/purchase/view', [AthenaGiftCardController::class, 'purchaseView'])->name('admin.lysto.giftcard.purchase.view');
+    Route::post('/admin/lysto/giftcard/purchase', [AthenaGiftCardController::class, 'purchase'])->name('admin.lysto.giftcard.purchase');
+    Route::view('/admin/lysto/dashboard', 'giftcard-dashboard')->name('admin.lysto.dashboard');
+});
 
 
 //Unlimit redirect
@@ -525,11 +548,18 @@ Route::post('/vd-update-session-data', [VDPageController::class, 'updateSessionD
    Route::match(['get', 'post'], '/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckoutPage');
    Route::post('/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckout.store');
 
-// VD Home API routes
+// VD Home API routes - MOVED TO ADMIN PANEL
+// All VD API operations are now available in Admin Panel -> API Management
 use App\Http\Controllers\VDHomeController;
+
+// Home brands endpoint - kept public for homepage display (customer-facing)
 Route::get('/api/vd-brands/home', [VDHomeController::class, 'getVDBrandsForHome'])->name('vd.brands.home');
-Route::post('/api/vd-brands/clear-cache', [VDHomeController::class, 'clearVDBrandsCache'])->name('vd.brands.clear-cache');
-Route::get('/api/vd-brands/test-connection', [VDHomeController::class, 'testVDConnection'])->name('vd.brands.test-connection');
+
+// Admin-only VD API routes
+Route::group(['middleware' => ['admin.user']], function () {
+    Route::post('/admin/api/vd-brands/clear-cache', [VDHomeController::class, 'clearVDBrandsCache'])->name('admin.vd.brands.clear-cache');
+    Route::get('/admin/api/vd-brands/test-connection', [VDHomeController::class, 'testVDConnection'])->name('admin.vd.brands.test-connection');
+});
 
 
 // KGEN API
@@ -542,8 +572,8 @@ Route::get('/kgen-products', [DeliveryPartnerController::class, 'showproducts'])
 Route::get('/products/{productID}', [DeliveryPartnerController::class, 'getproductsbyID'])
     ->name('products.getById');
 
-// database
-Route::get('/fetch-products', [DeliveryPartnerController::class, 'fetchAndStoreProducts']);
+// database - MOVED TO ADMIN PANEL
+// Route::get('/fetch-products', [DeliveryPartnerController::class, 'fetchAndStoreProducts']); // Now available in Admin Panel -> API Management
 
 use App\Http\Controllers\KGenOrderController;
 
@@ -558,13 +588,21 @@ Route::get('/order/{order}/download', [KGenOrderController::class, 'downloadAsse
 
 Route::get('/order/{orderID}/monitor', [KGenOrderController::class, 'monitorOrder'])->name('order.monitor');
 
+// KGen Wallet routes - MOVED TO ADMIN PANEL
+// All KGen wallet operations are now available in Admin Panel -> API Management
+// The following routes have been removed as they were exposed to normal users:
+// - /kgen-wallet, /kgen/wallet/fetch-balance, /kgen/wallet/latest-balance
+// - /kgen/transactions, /export-csv
+
+// Admin-only KGen Wallet routes
 use App\Http\Controllers\KGenWalletController;
 
-Route::get('/kgen-wallet', [KGenWalletController::class, 'wallet'])->name('wallet');
-Route::get('/export-csv', [KGenWalletController::class, 'exportCsv'])->name('wallet.exportCsv');
-Route::get('/kgen/transactions', [KGenWalletController::class, 'index'])->name('kgen.transactions.index');
-Route::get('/kgen/wallet/fetch-balance', [KGenWalletController::class, 'fetchAndStore']);
-Route::get('/kgen/wallet/latest-balance', [KGenWalletController::class, 'latest']);
+Route::group(['middleware' => ['admin.user']], function () {
+    Route::get('/admin/kgen/wallet', [KGenWalletController::class, 'wallet'])->name('admin.kgen.wallet');
+    Route::get('/admin/kgen/wallet/export-csv', [KGenWalletController::class, 'exportCsv'])->name('admin.kgen.wallet.exportCsv');
+    Route::get('/admin/kgen/transactions', [KGenWalletController::class, 'index'])->name('admin.kgen.transactions.index');
+    Route::get('/admin/kgen/wallet/latest-balance', [KGenWalletController::class, 'latest'])->name('admin.kgen.wallet.latest');
+});
 
 //VD Payment
 Route::get('/vd/payment/return', [VDPaymentController::class, 'handleReturnSuccess'])->name('vd.return');
@@ -586,8 +624,11 @@ Route::middleware(['auth'])->group(function() {
     // Step 2: Callback from Unlimit
   //  Route::post('/unlimit/callback', [UnlimitController::class, 'callback'])->name('unlimit.callback');
 
-    // Step 3: Return URL after payment
-  Route::match(['get','post'], '/unlimit/return', [UnlimitController::class, 'return'])->name('unlimit.return');
+    // Step 3: Return URL after payment - REMOVED: Using WoohooProcessingController::handleReturn instead (line 356)
+    // This route was causing conflicts - payment status updates are handled by WoohooProcessingController
+  //  Route::middleware(['throttle:payments'])->group(function () {
+  //      Route::match(['get','post'], '/unlimit/return', [UnlimitController::class, 'return'])->name('unlimit.return');
+  //  });
 
     // Optional: check payment status API
     Route::get('/unlimit/status/{merchant_order_id}', [UnlimitController::class, 'checkTransactionStatus'])->name('unlimit.status');

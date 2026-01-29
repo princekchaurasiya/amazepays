@@ -22,6 +22,7 @@ class Kernel extends HttpKernel
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
          \App\Http\Middleware\BlockVPNUsers::class,
+        \App\Http\Middleware\ForceHttps::class, // SECURITY: Force HTTPS for payment routes
     ];
 
     /**
@@ -67,6 +68,7 @@ class Kernel extends HttpKernel
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'check.transaction' => \App\Http\Middleware\CheckUserTransactionStatus::class,
         'verify.unlimit.signature' => \App\Http\Middleware\VerifyUnlimitSignature::class,
+        'force.https' => \App\Http\Middleware\ForceHttps::class,
         //'block.vpn' => \App\Http\Middleware\BlockVPNUsers::class,
     ];
 }

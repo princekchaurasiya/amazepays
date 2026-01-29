@@ -13,9 +13,11 @@ class AddCustomImageToQsProductsTable extends Migration
      */
     public function up()
     {
-        Schema::table('qs_products', function (Blueprint $table) {
-            $table->string('custom_image')->nullable()->after('images'); // Adding custom_image column
-        });
+        if (Schema::hasTable('qs_products') && !Schema::hasColumn('qs_products', 'custom_image')) {
+            Schema::table('qs_products', function (Blueprint $table) {
+                $table->string('custom_image')->nullable()->after('images'); // Adding custom_image column
+            });
+        }
     }
 
     /**

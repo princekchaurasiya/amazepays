@@ -20,7 +20,14 @@ class ProductSlugController extends Controller
                 return view('errors.404');
             }
 
+            // Access attributes first to trigger model accessors (auto-decode JSON fields)
+            // Then convert to array - this ensures price, currency, images are properly decoded
             $productDetails = $product->toArray();
+            
+            // Override with accessor values to ensure JSON fields are decoded
+            $productDetails['price'] = $product->price;
+            $productDetails['images'] = $product->images;
+            $productDetails['currency'] = $product->currency;
 
             // Decode howToUse safely from `cpg`
             $decodedHowToUse = !empty($productDetails['amazepay_how_to_redeem'])
@@ -28,10 +35,6 @@ class ProductSlugController extends Controller
             : (!empty($productDetails['cpg'])
                 ? $this->parseHowToUse($productDetails['cpg'])
                 : 'No how to redeem available.');
-
-
-            $productDetails['price'] = isset($productDetails['price']) ? json_decode($productDetails['price']) : null;
-            $productDetails['images'] = isset($productDetails['images']) ? json_decode($productDetails['images']) : [];
 
             $descriptionData = !empty($productDetails['amazepay_product_description'])
     ? CommonHelper::extractDescription($productDetails['amazepay_product_description'])

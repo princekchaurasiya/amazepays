@@ -12,11 +12,13 @@ class AddSecondaryPriorityToQsProductsTable extends Migration
      * @return void
      */
     public function up()
-{
-    Schema::table('qs_products', function (Blueprint $table) {
-        $table->decimal('secondary_priority', 5, 2)->nullable()->after('priority');
-    });
-}
+    {
+        if (Schema::hasTable('qs_products') && !Schema::hasColumn('qs_products', 'secondary_priority')) {
+            Schema::table('qs_products', function (Blueprint $table) {
+                $table->decimal('secondary_priority', 5, 2)->nullable()->after('priority');
+            });
+        }
+    }
 
 
     /**

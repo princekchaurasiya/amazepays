@@ -13,10 +13,11 @@ class AlterReportTypeColumnOnTransactionReportsTable extends Migration
      */
     public function up()
     {
-        Schema::table('transaction_reports', function (Blueprint $table) 
-        {
-            $table->text('report_type')->change();
-        });
+        if (Schema::hasTable('transaction_reports') && Schema::hasColumn('transaction_reports', 'report_type')) {
+            Schema::table('transaction_reports', function (Blueprint $table) {
+                $table->text('report_type')->change();
+            });
+        }
     }
 
     /**

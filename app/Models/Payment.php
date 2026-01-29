@@ -38,4 +38,20 @@ class Payment extends Model
         'amount' => 'decimal:2',
         'original_amount' => 'decimal:2',
     ];
+
+    /**
+     * Relationships
+     */
+
+    // User who made the payment (if user_id exists in table)
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    // Order associated with payment (if order_id exists)
+    public function order()
+    {
+        return $this->belongsTo(QsOrder::class, 'merchant_order_id', 'merchant_order_id');
+    }
 }

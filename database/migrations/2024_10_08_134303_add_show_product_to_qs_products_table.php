@@ -13,10 +13,12 @@ class AddShowProductToQsProductsTable extends Migration
      */
     public function up()
     {
-        Schema::table('qs_products', function (Blueprint $table) {
-            // Add a boolean column to show or hide the product
-            $table->boolean('show_product')->default(true)->after('priority');
-        });
+        if (Schema::hasTable('qs_products') && !Schema::hasColumn('qs_products', 'show_product')) {
+            Schema::table('qs_products', function (Blueprint $table) {
+                // Add a boolean column to show or hide the product
+                $table->boolean('show_product')->default(true)->after('priority');
+            });
+        }
     }
 
     /**

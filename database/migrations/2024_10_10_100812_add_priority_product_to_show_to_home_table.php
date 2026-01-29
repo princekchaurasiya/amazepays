@@ -13,9 +13,11 @@ class AddPriorityProductToShowToHomeTable extends Migration
      */
     public function up()
     {
-        Schema::table('home', function (Blueprint $table) {
-            $table->integer('priority_product_to_show')->default(10); // Default value 10 or whatever you'd like
-        });
+        if (Schema::hasTable('home') && !Schema::hasColumn('home', 'priority_product_to_show')) {
+            Schema::table('home', function (Blueprint $table) {
+                $table->integer('priority_product_to_show')->default(10); // Default value 10 or whatever you'd like
+            });
+        }
     }
 
     /**

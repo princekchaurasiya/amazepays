@@ -59,5 +59,17 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
         });
+
+        // SECURITY: Rate limiting for payment endpoints - prevent abuse
+        RateLimiter::for('payments', function (Request $request) {
+            // Limit to 10 payment attempts per minute per user/IP
+            return Limit::perMinute(10)->by(optional($request->user())->id ?: $request->ip());
+        });
+
+        // SECURITY: Stricter rate limiting for payment callbacks/webhooks
+        RateLimiter::for('payment-callbacks', function (Request $request) {
+            // Limit to 30 callbacks per minute per IP (webhooks from payment gateway)
+            return Limit::perMinute(30)->by($request->ip());
+        });
     }
 }

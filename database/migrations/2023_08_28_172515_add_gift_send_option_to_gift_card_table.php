@@ -13,9 +13,11 @@ class AddGiftSendOptionToGiftCardTable extends Migration
      */
     public function up()
     {
-        Schema::table('gift_card', function (Blueprint $table) {
-            $table->string('gift_send_option')->nullable();
-        });
+        if (Schema::hasTable('gift_card') && !Schema::hasColumn('gift_card', 'gift_send_option')) {
+            Schema::table('gift_card', function (Blueprint $table) {
+                $table->string('gift_send_option')->nullable();
+            });
+        }
     }
 
     /**
@@ -25,8 +27,10 @@ class AddGiftSendOptionToGiftCardTable extends Migration
      */
     public function down()
     {
-        Schema::table('gift_card', function (Blueprint $table) {
-            //
-        });
+        if (Schema::hasTable('gift_card') && Schema::hasColumn('gift_card', 'gift_send_option')) {
+            Schema::table('gift_card', function (Blueprint $table) {
+                $table->dropColumn('gift_send_option');
+            });
+        }
     }
 }

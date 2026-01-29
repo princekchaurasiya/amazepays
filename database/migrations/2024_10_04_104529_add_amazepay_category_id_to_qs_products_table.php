@@ -13,14 +13,19 @@ class AddAmazepayCategoryIdToQsProductsTable extends Migration
      */
     public function up()
     {
-        Schema::table('qs_products', function (Blueprint $table) {
-            // Adding the new column for amazepay_categories
-            $table->unsignedBigInteger('amazepay_category_id')->nullable()->after('qs_category_id');
+        if (Schema::hasTable('qs_products') && !Schema::hasColumn('qs_products', 'amazepay_category_id')) {
+            Schema::table('qs_products', function (Blueprint $table) {
+                // Adding the new column for amazepay_categories
+                $table->unsignedBigInteger('amazepay_category_id')->nullable()->after('qs_category_id');
+            });
 
-            // Adding the foreign key constraint
-            $table->foreign('amazepay_category_id')->references('id')->on('amazepay_categories')->onDelete('cascade');
-
-        });
+            // Adding the foreign key constraint only if referenced table exists
+            if (Schema::hasTable('amazepay_categories')) {
+                Schema::table('qs_products', function (Blueprint $table) {
+                    $table->foreign('amazepay_category_id')->references('id')->on('amazepay_categories')->onDelete('cascade');
+                });
+            }
+        }
     }
 
     /**

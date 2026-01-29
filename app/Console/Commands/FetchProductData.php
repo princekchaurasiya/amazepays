@@ -23,7 +23,7 @@ class FetchProductData extends Command
 
     public function handle()
 {
-    $skus = QsProduct::pluck('sku');
+    $skus = QsProduct::whereNotNull('sku')->where('sku', '!=', '')->pluck('sku');
     try {
         foreach ($skus as $sku) {
             try {
@@ -37,23 +37,56 @@ class FetchProductData extends Command
                 $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
                 $dateAtClient = Carbon::now()->toIso8601String();
 
+                // Use same headers as other Woohoo API calls to avoid CDN blocking
                 $products_resp = Http::acceptJson()
                     ->withToken($bearerToken)
-                    ->withHeaders(['dateAtClient' => $dateAtClient, 'signature' => $signature])
+                    ->withHeaders([
+                        'dateAtClient' => $dateAtClient,
+                        'signature' => $signature,
+                        'Accept' => '*/*',
+                        'User-Agent' => 'Amazepays/1.0 (+https://amazepays.in)',
+                    ])
                     ->get($absApiUrl);
 
                 Log::info('Product Request:', ['url' => $absApiUrl]);
+                
+                $statusCode = $products_resp->status();
+                $prdtDetails = $products_resp->json();
+                
                 Log::info('Product Response:', [
-                    'status_code' => $products_resp->status(),
-                    'data' => $products_resp->json(),
+                    'status_code' => $statusCode,
+                    'data' => $prdtDetails,
                 ]);
 
-                $prdtDetails = $products_resp->json();
+                // Check if the response was successful (200) and contains valid data
+                if ($statusCode !== 200) {
+                    $errorMessage = "Failed to fetch product data for SKU: $sku. Status Code: $statusCode";
+                    $this->warn($errorMessage);
+                    Log::warning($errorMessage, [
+                        'sku' => $sku,
+                        'status_code' => $statusCode,
+                        'response_body' => $products_resp->body()
+                    ]);
+                    
+                    // Auto-delete products that consistently fail to fetch (403, 404, 410, etc.)
+                    if (in_array($statusCode, [403, 404, 410, 451])) {
+                        $deleted = QsProduct::where('sku', $sku)->delete();
+                        if ($deleted) {
+                            $this->warn("Auto-deleted product with SKU: $sku (Status: $statusCode - Product unavailable)");
+                            Log::warning("Auto-deleted product with SKU: $sku", [
+                                'status_code' => $statusCode,
+                                'reason' => 'Product unavailable or access denied'
+                            ]);
+                        }
+                    }
+                    
+                    continue; // Skip to the next SKU if request failed
+                }
 
                 // Check if the response is valid and contains 'name'
                 if (!isset($prdtDetails['name'])) {
-                    $this->error("Missing 'name' for SKU: $sku");
-                    Log::error("Missing 'name' in response for SKU: $sku", ['response' => $prdtDetails]);
+                    $this->warn("Missing 'name' in response for SKU: $sku");
+                    Log::warning("Missing 'name' in response for SKU: $sku", ['response' => $prdtDetails]);
                     continue; // Skip to the next SKU if 'name' is missing
                 }
 

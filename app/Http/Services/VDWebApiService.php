@@ -50,17 +50,45 @@ class VDWebApiService
     }
 
         if ($response->successful()) {
-            $encryptedToken = $response->json('token');
+            $responseData = $response->json();
+            $encryptedToken = $responseData['token'] ?? null;
+
+            // Check if token exists in response and is a non-empty string
+            if (empty($encryptedToken) || !is_string($encryptedToken) || trim($encryptedToken) === '') {
+                Log::error('VDWebApiService: Token not found or invalid in API response', [
+                    'response_status' => $response->status(),
+                    'response_body' => $response->body(),
+                    'response_json' => $responseData,
+                    'token_value' => $encryptedToken,
+                    'token_type' => gettype($encryptedToken)
+                ]);
+                return false;
+            }
 
             try {
                 $decryptedToken = $this->decryptAES($encryptedToken);
+                return $decryptedToken;
+            } catch (\TypeError $e) {
+                Log::error('VDWebApiService: Token decryption type error', [
+                    'error' => $e->getMessage(),
+                    'encrypted_token' => $encryptedToken,
+                    'encrypted_token_type' => gettype($encryptedToken),
+                    'encrypted_token_length' => is_string($encryptedToken) ? strlen($encryptedToken) : 'N/A'
+                ]);
+                return false;
             } catch (\Exception $e) {
-                $decryptedToken = 'Decryption failed: ' . $e->getMessage();
+                Log::error('VDWebApiService: Token decryption failed', [
+                    'error' => $e->getMessage(),
+                    'encrypted_token_length' => strlen($encryptedToken)
+                ]);
+                return false;
             }
-
-            return $decryptedToken;
         } else {
-            return response()->json(['error' => 'Token request failed', 'details' => $response->body()], 500);
+            Log::error('VDWebApiService: Token API request failed', [
+                'status_code' => $response->status(),
+                'response_body' => $response->body()
+            ]);
+            return false;
         }
     }
     public function getEncryptedPayload($token)

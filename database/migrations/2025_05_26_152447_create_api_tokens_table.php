@@ -13,12 +13,14 @@ class CreateApiTokensTable extends Migration
      */
     public function up()
     {
-        Schema::create('api_tokens', function (Blueprint $table) {
-            $table->id();
-            $table->longText('access_token');
-            $table->timestamp('expires_at')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('api_tokens')) {
+            Schema::create('api_tokens', function (Blueprint $table) {
+                $table->id();
+                $table->longText('access_token');
+                $table->timestamp('expires_at')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

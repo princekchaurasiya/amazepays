@@ -3,18 +3,38 @@ $(document).ready(function() {
 
     PageScroll();
 
-    $(window).scroll(function(){
-        if ($(this).scrollTop() > 10) {
-           $('.scroll-header').addClass('scroll-acitve');
-        } else {
-           $('.scroll-header').removeClass('scroll-acitve');
+    // Optimized scroll handler with throttling to prevent forced reflows
+    let scrollTimeout;
+    $(window).on('scroll', function(){
+        // Throttle scroll events using requestAnimationFrame
+        if (scrollTimeout) {
+            cancelAnimationFrame(scrollTimeout);
         }
+        scrollTimeout = requestAnimationFrame(function() {
+            const scrollTop = $(window).scrollTop();
+            const $scrollHeader = $('.scroll-header');
+            if (scrollTop > 10) {
+                $scrollHeader.addClass('scroll-acitve');
+            } else {
+                $scrollHeader.removeClass('scroll-acitve');
+            }
+        });
     });
 
-    // Loading Box (Preloader)
+    // Loading Box (Preloader) - Optimized to use CSS transitions instead of jQuery fade
     function handlePreloader() {
-        if ($('.preloader').length > 0) {
-            $('.preloader').delay(200).fadeOut(500);
+        const $preloader = $('.preloader');
+        if ($preloader.length > 0) {
+            // Use CSS transition instead of jQuery fadeOut for better performance
+            setTimeout(function() {
+                $preloader.css({
+                    'opacity': '0',
+                    'transition': 'opacity 0.5s ease-out'
+                });
+                setTimeout(function() {
+                    $preloader.hide();
+                }, 500);
+            }, 200);
         }
     }
 

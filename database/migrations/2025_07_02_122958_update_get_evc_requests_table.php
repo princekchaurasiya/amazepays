@@ -13,10 +13,12 @@ class UpdateGetEvcRequestsTable extends Migration
      */
 public function up(): void
 {
-    Schema::table('get_evc_requests', function (Blueprint $table) {
-        // Use 'receipt_no' with underscore to match column name
-        $table->string('receipt_no')->nullable(); // or remove nullable() if required
-    });
+    if (Schema::hasTable('get_evc_requests') && !Schema::hasColumn('get_evc_requests', 'receipt_no')) {
+        Schema::table('get_evc_requests', function (Blueprint $table) {
+            // Use 'receipt_no' with underscore to match column name
+            $table->string('receipt_no')->nullable(); // or remove nullable() if required
+        });
+    }
 }
 
 public function down(): void

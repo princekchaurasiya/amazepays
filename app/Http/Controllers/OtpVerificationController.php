@@ -47,7 +47,6 @@ class OtpVerificationController extends Controller
 
 
                 Auth::login($user);
-                Log::info('Login successful for user', ['user_id' => $user->id]);
 
                 return response()->json([
                     'status' => 'success',
@@ -87,7 +86,6 @@ class OtpVerificationController extends Controller
                 ]);
 
                 Auth::login($user); // Automatically log in the user after registration
-                Log::info('Registration and login successful for user', ['user_id' => $user->id]);
                 return redirect()->intended(url()->previous());
             }
 

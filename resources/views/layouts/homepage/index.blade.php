@@ -9,19 +9,38 @@
 @endphp
 
     {{-- Banner Section --}}
-    @if ($homeSettings->section_banner_status)
+    @if ($homeSettings && $homeSettings->section_banner_status)
         @include('layouts.partials.banner')
+    @endif
+
+    {{-- Setup Required Message for Admins --}}
+    @if ((!$categories || $categories->isEmpty()) && (!$allProducts || $allProducts->isEmpty()))
+        <div class="container mt-5 mb-5">
+            <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading"><i class="fa fa-info-circle"></i> Setup Required</h4>
+                <p>Welcome! To get started with your homepage, please configure the following:</p>
+                <ul>
+                    <li><strong>Categories:</strong> Add product categories via the admin panel</li>
+                    <li><strong>Brands:</strong> Add brands to showcase on the homepage</li>
+                    <li><strong>Products:</strong> Import or add products to your catalog</li>
+                    <li><strong>Home Settings:</strong> Configure homepage sections and banners</li>
+                    <li><strong>Slides:</strong> Add banner slides for the carousel</li>
+                </ul>
+                <hr>
+                <p class="mb-0">Please visit the <a href="/admin" class="alert-link">Admin Panel</a> to complete the setup.</p>
+            </div>
+        </div>
     @endif
 
     <div class="product-wrapper pt-5 pb-5">
         <div class="container-fluid">
 
             {{-- Brand Section --}}
-            @if ($homeSettings->section_brand_status)
+            @if ($homeSettings && $homeSettings->section_brand_status && $brands && $brands->isNotEmpty())
                 <div class="row justify-content-center">
                     <div class="col-lg-10">
                         <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">
-                            {{ $homeSettings->section_brand_title }}
+                            {{ $homeSettings->section_brand_title ?? 'Popular Brands' }}
                         </h1>
                         <hr class="normalhr">
 
@@ -55,11 +74,11 @@
             @endif
 
             {{-- Hot Deal Section --}}
-            @if ($homeSettings->section_hot_deal_status)
+            @if ($homeSettings && $homeSettings->section_hot_deal_status && $priorityProducts && $priorityProducts->isNotEmpty())
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">
-                            {{ $homeSettings->section_hot_deal_title }}
+                            {{ $homeSettings->section_hot_deal_title ?? 'Hot Deals' }}
                         </h1>
                         <hr class="normalhr">
 
@@ -107,11 +126,11 @@
             @endif
 
             {{-- Category Section --}}
-            @if ($homeSettings->section_category_status)
+            @if ($homeSettings && $homeSettings->section_category_status && $categories && $categories->isNotEmpty())
                 <div class="row justify-content-center mt-5">
                     <div class="col-lg-10">
                         <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">
-                            {{ $homeSettings->section_category_title }}
+                            {{ $homeSettings->section_category_title ?? 'Categories' }}
                         </h1>
                         <hr class="normalhr">
 
@@ -142,11 +161,11 @@
             @endif
 
             {{-- Other Deal Section --}}
-            @if ($homeSettings->section_other_deal_status)
+            @if ($homeSettings && $homeSettings->section_other_deal_status && $noPriorityProducts && $noPriorityProducts->isNotEmpty())
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">
-                            {{ $homeSettings->section_other_deal_title }}
+                            {{ $homeSettings->section_other_deal_title ?? 'Other Deals' }}
                         </h1>
                         <hr class="normalhr">
 
@@ -214,13 +233,13 @@
             {{-- KGen Products Section --}}
             @if (!empty($kgenProducts))
                 <div class="row mt-5">
-                    <div class="col-lg-12">
+                    <div class="col-12">
                         <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">
                             Featured KGen Products
                         </h1>
                         <hr class="normalhr">
 
-                        <div class="row">
+                        <div class="row g-3 justify-content-center mx-0">
                             @foreach ($kgenProducts as $product)
                                 @php
                                     $availableVariants = collect($product['variants'] ?? [])->filter(function ($variant) {
@@ -249,8 +268,8 @@
                                             : $variantPrice)
                                         : null;
                                 @endphp
-                                <div class="col-lg-3 col-md-4 col-6 mb-4">
-                                    <div class="card kgen-card h-100 shadow-sm position-relative">
+                                <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-4 px-2">
+                                    <div class="card kgen-card h-100 shadow-sm position-relative overflow-hidden">
                                         @if ($discountPercentage > 0)
                                             <span class="badge bg-danger position-absolute kgen-badge">
                                                 {{ (int) $discountPercentage }}% Off
@@ -259,7 +278,8 @@
 
                                         <img src="{{ $product['attachments'][0] ?? 'https://via.placeholder.com/300x200' }}"
                                             class="card-img-top kgen-card-image"
-                                            alt="{{ $product['productDisplayName'] ?? 'KGen Product' }}">
+                                            alt="{{ $product['productDisplayName'] ?? 'KGen Product' }}"
+                                            style="width: 100%; height: 180px; object-fit: cover;">
 
                                         <div class="card-body d-flex flex-column">
                                             <h5 class="card-title">{{ $product['productDisplayName'] ?? 'Unnamed' }}</h5>
@@ -331,7 +351,12 @@
 @php
 use App\Models\HomepageSection;
 
-$section = HomepageSection::where('section_name', 'hero')->first();
+try {
+    $section = HomepageSection::where('section_name', 'hero')->first();
+} catch (\Exception $e) {
+    // If table doesn't exist or any error, just set section to null
+    $section = null;
+}
 @endphp
 
 @if($section && $section->status)
@@ -370,10 +395,8 @@ Explore more Gift Cards & Vouchers
 @endsection
 @push('scripts')
     <script>
-        $(document).ready(function() {
-
-
-
+        // Deferred carousel initialization function to prevent blocking and forced reflows
+        function initializeCarousels() {
             $('.category-slick-slider').slick({
                 slidesToShow: 8, // Desktop
                 slidesToScroll: 1, // Scroll 3 slides at a time
@@ -425,9 +448,13 @@ Explore more Gift Cards & Vouchers
                     }
                 }]
             });
+        }
 
-
-
+        $(document).ready(function() {
+            // Defer carousel initialization to prevent blocking and forced reflows
+            requestAnimationFrame(function() {
+                initializeCarousels();
+            });
 
             $('.operator').select2({
                 placeholder: "Select Operator"
@@ -754,6 +781,19 @@ Explore more Gift Cards & Vouchers
     .kgen-card {
         border: none;
         border-radius: 12px;
+        max-width: 100%;
+        overflow: hidden;
+    }
+    
+    .kgen-card .card-body {
+        overflow: hidden;
+        word-wrap: break-word;
+    }
+    
+    .kgen-card .card-title {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
     }
 
     .kgen-card-desc {

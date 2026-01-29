@@ -13,7 +13,8 @@ class KGenOrders extends Migration
      */
     public function up()
     {
-        Schema::create('k_gen_orders', function (Blueprint $table) {
+        if (!Schema::hasTable('k_gen_orders')) {
+            Schema::create('k_gen_orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')
                   ->nullable()
@@ -31,7 +32,8 @@ class KGenOrders extends Migration
             $table->json('vouchers')->nullable();
             $table->timestamps();
             $table->index(['user_id', 'status', 'created_at']);
-        });
+            });
+        }
     }
 
     /**

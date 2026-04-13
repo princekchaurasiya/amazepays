@@ -94,18 +94,11 @@
     </div>
     <div class="card-body">
         @if($order->api_response)
-            @php
-                $apiData = json_decode($order->api_response, true);
-                $voucherCode = $apiData['lineItems'][0]['vouchers'][0]['voucherCode'] ?? 'N/A';
-                $voucherPin = $apiData['lineItems'][0]['vouchers'][0]['voucherPin'] ?? 'N/A';
-                $expires = $apiData['lineItems'][0]['vouchers'][0]['expirationDate'] ?? 'N/A';
-            @endphp
-            
             <div class="row mb-4 p-4 border rounded bg-light">
                 <div class="col-md-3 text-center">
                     <i class="fas fa-ticket-alt fa-4x text-success mb-3"></i>
                     <div class="voucher-code fs-3 fw-bold text-primary mb-2">
-                        {{ $voucherCode }}
+                        {{ $order->voucher_code }}
                     </div>
                     <small class="text-muted">Voucher Code</small>
                 </div>
@@ -116,7 +109,7 @@
                                 <div class="card-body text-center p-3">
                                     <i class="fas fa-key fa-2x text-danger mb-2"></i>
                                     <h6 class="text-danger">PIN</h6>
-                                    <div class="fs-5 fw-bold text-dark">{{ $voucherPin }}</div>
+                                    <div class="fs-5 fw-bold text-dark">{{ $order->voucher_pin }}</div>
                                 </div>
                             </div>
                         </div>
@@ -125,7 +118,7 @@
                                 <div class="card-body text-center p-3">
                                     <i class="fas fa-calendar fa-2x text-warning mb-2"></i>
                                     <h6>Expires</h6>
-                                    <div class="fs-6">{{ $expires }}</div>
+                                    <div class="fs-6">{{ $order->voucher_expiration_date }}</div>
                                 </div>
                             </div>
                         </div>

@@ -3,10 +3,6 @@
     Amazepay | Exclusive Gift Cards & Vouchers for Every Occasion
 @endsection
 @section('content')
-@php
-    use App\Helpers\CommonHelper;
-    use Illuminate\Support\Str;
-@endphp
 
     {{-- Banner Section --}}
     @if ($homeSettings && $homeSettings->section_banner_status)
@@ -27,252 +23,106 @@
                     <li><strong>Slides:</strong> Add banner slides for the carousel</li>
                 </ul>
                 <hr>
-                <p class="mb-0">Please visit the <a href="/admin" class="alert-link">Admin Panel</a> to complete the setup.</p>
+                <p class="mb-0">Please visit the <a href="{{ url('/panel') }}" class="alert-link">Admin Panel</a> to complete the setup.</p>
             </div>
         </div>
     @endif
 
-    <div class="product-wrapper pt-5 pb-5">
-        <div class="container-fluid">
+    <div class="product-wrapper py-8 md:py-10">
+        <div class="mx-auto max-w-7xl px-4">
 
-            {{-- Brand Section --}}
+            {{-- Popular brands (Hubble-style grid) --}}
             @if ($homeSettings && $homeSettings->section_brand_status && $brands && $brands->isNotEmpty())
-                <div class="row justify-content-center">
-                    <div class="col-lg-10">
-                        <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">
-                            {{ $homeSettings->section_brand_title ?? 'Popular Brands' }}
-                        </h1>
-                        <hr class="normalhr">
-
-                        <div class="row mt-5 mb-5 justify-content-center mx-0 gx-0">
-
-
-                            <div class="brand-slick-slider">
-                                @foreach ($brands as $brand)
-                                    <div class="col-lg-1 mx-auto col-3">
-                                        <a href="{{ route('brands.show', ['slug' => $brand->slug]) }}">
-                                            <div class="shop-category-circle">
-                                                @if (!empty($brand->logo) && $brand->logo !== 'null' && $brand->logo !== 'undefined')
-                                                    <img src="{{ Voyager::image($brand->logo) }}"
-                                                        alt="{{ $brand->name }}" class="shop-category-circle-image img-fluid">
-                                                @else
-                                                    <div class="no-image-placeholder">
-                                                        <span>{{ substr($brand->name, 0, 1) }}</span>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                            <p class="text-center text-black mt-2">{{ $brand->name }}</p>
-                                        </a>
-                                    </div>
-                                @endforeach
+                <section id="storefront-section-brands" class="mb-12 scroll-mt-28" aria-labelledby="home-brands-heading">
+                    <p id="home-brands-heading" class="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                        {{ $homeSettings->section_brand_title ?? __('storefront.popular_brands') }}
+                    </p>
+                    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 g-3">
+                        @foreach ($brands as $brand)
+                            <div class="col">
+                                <x-brand-card
+                                    :brand="$brand"
+                                    :discount="isset($brandMaxDiscounts) ? ($brandMaxDiscounts[$brand->id] ?? null) : null" />
                             </div>
-
-
-                        </div>
+                        @endforeach
                     </div>
-                </div>
+                </section>
             @endif
 
-            {{-- Hot Deal Section --}}
+            {{-- Hot deals --}}
             @if ($homeSettings && $homeSettings->section_hot_deal_status && $priorityProducts && $priorityProducts->isNotEmpty())
-                <div class="row">
-                    <div class="col-lg-12">
-                        <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">
-                            {{ $homeSettings->section_hot_deal_title ?? 'Hot Deals' }}
-                        </h1>
-                        <hr class="normalhr">
-
-                        <div class="row justify-content-center">
-                            <div class="col-12 col-lg-10">
-                                <div class="row">
-
-                                    @foreach ($priorityProducts as $product)
-                                    @if ($product->slug)
-                                    <div class="col-lg-3 col-6">
-                                        <div class="product-wrapper-image">
-                                            <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center position-relative">
-                                                @php
-                                                    $productImage = CommonHelper::getProductImage($product);
-                                                @endphp
-                                                @if (!empty($productImage))
-                                                    <img src="{{ $productImage }}" alt="product-image" class="w-100 mt-4">
-                                                @else
-                                                    <div class="no-product-image">
-                                                        <span>{{ substr($product->name, 0, 1) }}</span>
-                                                    </div>
-                                                @endif
-                                                @if (!empty($product->out_of_stock) && $product->out_of_stock)
-                                                    <span class="stock-badge">Out of stock</span>
-                                                @endif
-                                            </a>
-                                            <hr>
-                                            <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
-                                                <p class="text-center fw-600 mt-3 produtName">{{ ucwords($product->name) }}</p>
-                                            </a>
-                                            @if ($product->discount_percentage > 0)
-                                                <div class="ribbon">
-                                                    <span>{{ $product->discount_percentage }}% off</span>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    @endif
-                                    @endforeach
-                                </div>
+                <section id="storefront-section-hot" class="mb-12 scroll-mt-28" aria-labelledby="home-hot-heading">
+                    <p id="home-hot-heading" class="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                        {{ $homeSettings->section_hot_deal_title ?? __('storefront.hot_deals') }}
+                    </p>
+                    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
+                        @foreach ($priorityProducts as $product)
+                            <div class="col">
+                                <x-product-card :product="$product" />
                             </div>
-                        </div>
+                        @endforeach
                     </div>
-                </div>
+                </section>
             @endif
 
-            {{-- Category Section --}}
+            {{-- Category tiles (optional; header already lists categories — use for “explore more”) --}}
             @if ($homeSettings && $homeSettings->section_category_status && $categories && $categories->isNotEmpty())
-                <div class="row justify-content-center mt-5">
-                    <div class="col-lg-10">
-                        <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">
-                            {{ $homeSettings->section_category_title ?? 'Categories' }}
-                        </h1>
-                        <hr class="normalhr">
-
-                        <div class="row mt-5 mb-5 justify-content-center mx-0 gx-0">
-                            <div class="category-slick-slider">
-                                @foreach ($categories as $category)
-                                    <div class="col-lg-1 mx-auto col-3">
-                                        <a href="{{ route('categories.show', ['slug' => $category->slug]) }}">
-                                            <div class="shop-category-circle">
-                                                @if (!empty($category->thumbnail) && $category->thumbnail !== 'null' && $category->thumbnail !== 'undefined')
-                                                    <img src="{{ Voyager::image($category->thumbnail) }}"
-                                                        alt="{{ $category->name }}" class="shop-category-circle-image img-fluid">
-                                                @else
-                                                    <div class="no-image-placeholder">
-                                                        <span>{{ substr($category->name, 0, 1) }}</span>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                            <p class="text-center text-black mt-2">{{ $category->name }}</p>
-                                        </a>
-
-                                    </div>
-                                @endforeach
+                <section id="storefront-section-categories" class="mb-12 scroll-mt-28" aria-labelledby="home-cat-heading">
+                    <p id="home-cat-heading" class="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                        {{ $homeSettings->section_category_title ?? __('storefront.categories') }}
+                    </p>
+                    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
+                        @foreach ($categories as $category)
+                            <div class="col">
+                                <a href="{{ route('categories.show', ['slug' => $category->slug]) }}"
+                                    class="flex flex-col items-center rounded-2xl bg-white p-4 text-center shadow-sm ring-1 ring-gray-100 transition hover:ring-brand-500/25">
+                                    <span class="mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-gray-50 ring-1 ring-gray-100">
+                                        @if (!empty($category->thumbnail) && $category->thumbnail !== 'null')
+                                            <img src="{{ Storage::url($category->thumbnail) }}" alt="" class="h-full w-full object-cover">
+                                        @else
+                                            <span class="text-lg font-bold text-brand-600">{{ strtoupper(substr($category->name, 0, 1)) }}</span>
+                                        @endif
+                                    </span>
+                                    <span class="text-sm font-medium text-gray-900 line-clamp-2">{{ $category->name }}</span>
+                                </a>
                             </div>
-                        </div>
+                        @endforeach
                     </div>
-                </div>
+                </section>
             @endif
 
-            {{-- Other Deal Section --}}
+            {{-- More deals --}}
             @if ($homeSettings && $homeSettings->section_other_deal_status && $noPriorityProducts && $noPriorityProducts->isNotEmpty())
-                <div class="row">
-                    <div class="col-lg-12">
-                        <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">
-                            {{ $homeSettings->section_other_deal_title ?? 'Other Deals' }}
-                        </h1>
-                        <hr class="normalhr">
-
-                        <div class="row justify-content-center">
-                            <div class="col-12 col-lg-10">
-                                <div class="row">
-                                    @foreach ($noPriorityProducts as $product)
-                                    @php
-                                        $productImage = CommonHelper::getProductImage($product);
-                                    @endphp
-
-                                    @if ($product->slug && !empty($productImage))
-                                        <div class="col-lg-3 col-6">
-                                            <div class="product-wrapper-image">
-                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center position-relative">
-                                                    <img src="{{ $productImage }}" alt="product-image" class="w-100 mt-4">
-                                                    @if (!empty($product->out_of_stock) && $product->out_of_stock)
-                                                        <span class="stock-badge">Out of stock</span>
-                                                    @endif
-                                                </a>
-
-                                                <hr>
-                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
-                                                    <p class="text-center fw-600 mt-3 produtName">{{ ucwords($product->name) }}</p>
-                                                </a>
-
-                                                @if ($product->discount_percentage > 0)
-                                                    <div class="ribbon">
-                                                        <span>{{ $product->discount_percentage }}% off</span>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    @elseif ($product->slug)
-                                        <div class="col-lg-3 col-6">
-                                            <div class="product-wrapper-image">
-                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center">
-                                                    <div class="no-product-image">
-                                                        <span>{{ substr($product->name, 0, 1) }}</span>
-                                                    </div>
-                                                </a>
-
-                                                <hr>
-                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
-                                                    <p class="text-center fw-600 mt-3 produtName">{{ ucwords($product->name) }}</p>
-                                                </a>
-
-                                                @if ($product->discount_percentage > 0)
-                                                    <div class="ribbon">
-                                                        <span>{{ $product->discount_percentage }}% off</span>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    @endif
-                                    @endforeach
-
-                                </div>
+                <section id="storefront-section-deals" class="mb-12 scroll-mt-28" aria-labelledby="home-other-heading">
+                    <p id="home-other-heading" class="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                        {{ $homeSettings->section_other_deal_title ?? __('storefront.other_deals') }}
+                    </p>
+                    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
+                        @foreach ($noPriorityProducts as $product)
+                            <div class="col">
+                                <x-product-card :product="$product" />
                             </div>
-                        </div>
+                        @endforeach
                     </div>
-                </div>
+                </section>
             @endif
 
-            {{-- KGen Products Section --}}
-            @if (!empty($kgenProducts))
+            {{-- KGen Products Section (title from Settings → Homepage sections) --}}
+            @if (!empty($showKgenSection) && !empty($kgenProducts))
                 <div class="row mt-5">
                     <div class="col-12">
                         <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">
-                            Featured KGen Products
+                            {{ $kgenSectionTitle ?? 'KGen Technology' }}
                         </h1>
                         <hr class="normalhr">
 
                         <div class="row g-3 justify-content-center mx-0">
                             @foreach ($kgenProducts as $product)
-                                @php
-                                    $availableVariants = collect($product['variants'] ?? [])->filter(function ($variant) {
-                                        $stockAvailable = $variant['stockAvailable'] ?? $variant['inStock'] ?? $variant['available'] ?? $variant['isAvailable'] ?? true;
-                                        $stock = $variant['stock'] ?? $variant['quantity'] ?? null;
-
-                                        if ($stock === 0 || $stockAvailable === false || $stockAvailable === 0) {
-                                            return false;
-                                        }
-
-                                        if ($stockAvailable === true || ($stock !== null && $stock > 0)) {
-                                            return true;
-                                        }
-
-                                        return true;
-                                    })->values();
-
-                                    $primaryVariant = $availableVariants->first();
-                                    $discountPercentage = (float)($product['discount_percentage'] ?? 0);
-                                    $variantMrp = $primaryVariant ? (float)($primaryVariant['mrp'] ?? 0) : 0;
-                                    $variantPrice = $primaryVariant ? (float)($primaryVariant['price'] ?? $variantMrp) : 0;
-                                    $priceSource = $variantMrp > 0 ? $variantMrp : $variantPrice;
-                                    $effectivePrice = $primaryVariant
-                                        ? ($discountPercentage > 0
-                                            ? round($priceSource * (1 - ($discountPercentage / 100)), 2)
-                                            : $variantPrice)
-                                        : null;
-                                @endphp
                                 <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-4 px-2">
                                     <div class="card kgen-card h-100 shadow-sm position-relative overflow-hidden">
-                                        @if ($discountPercentage > 0)
+                                        @if (($product['discount_percentage'] ?? 0) > 0)
                                             <span class="badge bg-danger position-absolute kgen-badge">
-                                                {{ (int) $discountPercentage }}% Off
+                                                {{ (int) ($product['discount_percentage'] ?? 0) }}% Off
                                             </span>
                                         @endif
 
@@ -287,22 +137,22 @@
                                                 Category: {{ $product['categories'][0]['categoryName'] ?? 'Uncategorized' }}
                                             </p>
                                             <p class="kgen-card-desc">
-                                                {{ Str::limit($product['descriptionText'] ?? '', 90) }}
+                                                {{ $product['description_excerpt'] ?? '' }}
                                             </p>
 
-                                            @if ($primaryVariant)
+                                            @if (!empty($product['primary_variant']))
                                                 <div class="kgen-card-pricing mb-3">
                                                     <small class="text-muted d-block">
-                                                        Variant: {{ $primaryVariant['variantDisplayName'] ?? '-' }}
+                                                        Variant: {{ $product['primary_variant']['variantDisplayName'] ?? '-' }}
                                                     </small>
                                                     <div class="d-flex flex-column">
-                                                        @if ($variantMrp > 0)
+                                                        @if (($product['variant_mrp'] ?? 0) > 0)
                                                             <span class="text-muted text-decoration-line-through">
-                                                                ₹{{ number_format($variantMrp, 2) }}
+                                                                ₹{{ number_format((float) ($product['variant_mrp'] ?? 0), 2) }}
                                                             </span>
                                                         @endif
                                                         <span class="fw-bold text-success fs-5">
-                                                            ₹{{ number_format($effectivePrice ?? $variantPrice, 2) }}
+                                                            ₹{{ number_format((float) ($product['effective_price'] ?? $product['variant_price'] ?? 0), 2) }}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -348,19 +198,8 @@
         </a>
     </div>
 </div>-->
-@php
-use App\Models\HomepageSection;
-
-try {
-    $section = HomepageSection::where('section_name', 'hero')->first();
-} catch (\Exception $e) {
-    // If table doesn't exist or any error, just set section to null
-    $section = null;
-}
-@endphp
-
-@if($section && $section->status)
-    {!! $section->content !!}
+@if($heroSection && $heroSection->status)
+    {!! $heroSection->content !!}
 @endif
 {{-- Values Design Gift Cards --}}
 <!-- <div class="product-wrapper pt-5 pb-5">
@@ -397,57 +236,60 @@ Explore more Gift Cards & Vouchers
     <script>
         // Deferred carousel initialization function to prevent blocking and forced reflows
         function initializeCarousels() {
-            $('.category-slick-slider').slick({
-                slidesToShow: 8, // Desktop
-                slidesToScroll: 1, // Scroll 3 slides at a time
-                infinite: true, // Enable infinite scrolling
-                arrows: false, // Disable arrows for navigation
-                dots: true, // Enable dots for navigation
-                autoplay: true, // Enables automatic scrolling
-                autoplaySpeed: 2000, // Autoplay speed in milliseconds (1 second)
-                centerMode: true, // Center active slide
-                centerPadding: '10px', // Adjust this for how much of the next item you want visible
-                responsive: [{
-                    breakpoint: 768, // Mobile
-                    settings: {
-                        slidesToShow: 3,
-                        slidesToScroll: 1, // Scroll 1 slide at a time on mobile for better user experience
-                        infinite: true, // Ensure infinite scrolling is enabled on mobile
-                        centerMode: true, // Center active slide on mobile
-                        centerPadding: '10px', // Adjust for mobile visibility
-                        arrows: false, // Disable arrows for mobile
-                        dots: true, // Enable dots for mobile
-                        autoplay: true, // Enable autoplay on mobile
-                        autoplaySpeed: 1000, // Autoplay speed for mobile (1 second)
-                    }
-                }]
-            });
-
-            $('.brand-slick-slider').slick({
-                slidesToShow: 8, // Desktop
-                slidesToScroll: 1, // Scroll 3 slides at a time
-                infinite: true, // Enable infinite scrolling
-                arrows: false, // Disable arrows for navigation
-                dots: true, // Enable dots for navigation
-                autoplay: true, // Enables automatic scrolling
-                autoplaySpeed: 1500, // Autoplay speed in milliseconds (1 second)
-                centerMode: true, // Center active slide
-                centerPadding: '10px', // Adjust this for how much of the next item you want visible
-                responsive: [{
-                    breakpoint: 768, // Mobile
-                    settings: {
-                        slidesToShow: 3,
-                        slidesToScroll: 1, // Scroll 1 slide at a time on mobile for better user experience
-                        infinite: true, // Ensure infinite scrolling is enabled on mobile
-                        centerMode: true, // Center active slide on mobile
-                        centerPadding: '10px', // Adjust for mobile visibility
-                        arrows: false, // Disable arrows for mobile
-                        dots: true, // Enable dots for mobile
-                        autoplay: true, // Enable autoplay on mobile
-                        autoplaySpeed: 1000, // Autoplay speed for mobile (1 second)
-                    }
-                }]
-            });
+            if ($('.category-slick-slider').length) {
+                $('.category-slick-slider').slick({
+                    slidesToShow: 8,
+                    slidesToScroll: 1,
+                    infinite: true,
+                    arrows: false,
+                    dots: true,
+                    autoplay: true,
+                    autoplaySpeed: 2000,
+                    centerMode: true,
+                    centerPadding: '10px',
+                    responsive: [{
+                        breakpoint: 768,
+                        settings: {
+                            slidesToShow: 3,
+                            slidesToScroll: 1,
+                            infinite: true,
+                            centerMode: true,
+                            centerPadding: '10px',
+                            arrows: false,
+                            dots: true,
+                            autoplay: true,
+                            autoplaySpeed: 1000,
+                        }
+                    }]
+                });
+            }
+            if ($('.brand-slick-slider').length) {
+                $('.brand-slick-slider').slick({
+                    slidesToShow: 8,
+                    slidesToScroll: 1,
+                    infinite: true,
+                    arrows: false,
+                    dots: true,
+                    autoplay: true,
+                    autoplaySpeed: 1500,
+                    centerMode: true,
+                    centerPadding: '10px',
+                    responsive: [{
+                        breakpoint: 768,
+                        settings: {
+                            slidesToShow: 3,
+                            slidesToScroll: 1,
+                            infinite: true,
+                            centerMode: true,
+                            centerPadding: '10px',
+                            arrows: false,
+                            dots: true,
+                            autoplay: true,
+                            autoplaySpeed: 1000,
+                        }
+                    }]
+                });
+            }
         }
 
         $(document).ready(function() {

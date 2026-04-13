@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\KGenWalletBalance;
@@ -149,23 +150,25 @@ class KGenWalletController extends Controller
                         $message = 'Something went wrong while fetching transactions';
                 }
 
-                return view('kgen.transactions.index', [
+                return Inertia::render('Admin/KGen/WalletTransactions', [
                     'transactions' => [],
+                    'nextCursor' => null,
                     'errorMessage' => $message,
                 ]);
             }
 
             $data = $response->json();
 
-            return view('kgen.transactions.index', [
+            return Inertia::render('Admin/KGen/WalletTransactions', [
                 'transactions' => $data['data'] ?? [],
-                'nextCursor'   => $data['pagination']['nextCursor'] ?? null,
+                'nextCursor' => $data['pagination']['nextCursor'] ?? null,
                 'errorMessage' => null,
             ]);
 
         } catch (\Exception $e) {
-            return view('transactions.index', [
+            return Inertia::render('Admin/KGen/WalletTransactions', [
                 'transactions' => [],
+                'nextCursor' => null,
                 'errorMessage' => $e->getMessage(),
             ]);
         }

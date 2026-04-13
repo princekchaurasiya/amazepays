@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,106 +15,95 @@ class OrderSummary extends Model
     protected $fillable = [
         'order_id',
         'payment_id',
-        'payment_gateway', // 'cc_avenue' or 'unlimit'
+        'payment_gateway',
         'sender_name',
         'sender_email',
         'sender_phone',
         'payment_status',
         'order_status',
+        'summary_status',
         'product_name',
         'amount',
-        // Add any other fields that need to be updated via mass assignment
     ];
 
-    public function getSummaryStatusAttribute()
+    protected function summaryStatus(): Attribute
     {
-        // Normalize payment_status: 'Paid' and 'Success' both mean payment succeeded
-        $isPaymentSuccess = in_array($this->payment_status, ['Success', 'Paid', 'success', 'paid']);
-        
-        // Check if order is COMPLETE (Woohoo order created successfully)
-        $isOrderComplete = strtoupper($this->order_status ?? '') === 'COMPLETE';
-        
-        if ($isPaymentSuccess && $isOrderComplete) {
-            return 'complete';
-        } elseif ($isPaymentSuccess) {
-            // Payment successful but Woohoo order not yet created (PENDING) or failed
-            return 'resend';
-        }
-        return 'incomplete';
+        return Attribute::make(
+            get: function (?string $value) {
+                if (filled($value)) {
+                    return $value;
+                }
+
+                $isPaymentSuccess = in_array($this->payment_status, ['Success', 'Paid', 'success', 'paid']);
+                $isOrderComplete = strtoupper($this->order_status ?? '') === 'COMPLETE';
+
+                if ($isPaymentSuccess && $isOrderComplete) {
+                    return 'complete';
+                }
+                if ($isPaymentSuccess) {
+                    return 'resend';
+                }
+
+                return 'incomplete';
+            },
+        );
     }
 
-    /**
-     * Get the payment record based on payment_gateway
-     */
     public function getPaymentAttribute()
     {
-        if (!$this->payment_id) {
+        if (! $this->payment_id) {
             return null;
         }
 
         if ($this->payment_gateway === 'cc_avenue') {
-            return \App\Models\CcAvenuePayment::find($this->payment_id);
-        } elseif ($this->payment_gateway === 'unlimit') {
-            return \App\Models\UnlimitPayment::find($this->payment_id);
+            return CcAvenuePayment::find($this->payment_id);
+        }
+        if ($this->payment_gateway === 'unlimit') {
+            return UnlimitPayment::find($this->payment_id);
         }
 
         return null;
     }
 
-    /**
-     * Relationships
-     */
-
-    // Order relationship
     public function order()
     {
-        return $this->belongsTo(QsOrder::class, 'order_id', 'id');
+        return $this->belongsTo(Order::class, 'order_id', 'id');
     }
 
-    // User through order
     public function user()
     {
         return $this->hasOneThrough(
             User::class,
-            QsOrder::class,
-            'id',        // Foreign key on QsOrder table
-            'id',        // Foreign key on User table
-            'order_id',  // Local key on OrderSummary table
-            'user_id'    // Local key on QsOrder table
+            Order::class,
+            'id',
+            'id',
+            'order_id',
+            'user_id'
         );
     }
 
-    // CC Avenue Payment
     public function ccAvenuePayment()
     {
         return $this->belongsTo(CcAvenuePayment::class, 'payment_id')->where('payment_gateway', 'cc_avenue');
     }
 
-    // Unlimit Payment
     public function unlimitPayment()
     {
         return $this->belongsTo(UnlimitPayment::class, 'payment_id')->where('payment_gateway', 'unlimit');
     }
 
-    /**
-     * Scopes
-     */
-
-    // Scope for completed orders
     public function scopeCompleted($query)
     {
         return $query->where('order_status', 'COMPLETE')
-                    ->whereIn('payment_status', ['Success', 'Paid', 'success', 'paid']);
+            ->whereIn('payment_status', ['Success', 'Paid', 'success', 'paid']);
     }
 
-    // Scope for pending orders
     public function scopePending($query)
     {
         return $query->where('order_status', 'PENDING')
-                    ->whereIn('payment_status', ['Success', 'Paid', 'success', 'paid']);
+            ->whereIn('payment_status', ['Success', 'Paid', 'success', 'paid']);
     }
 
-    // Scope for failed orders
     public function scopeFailed($query)
     {
         return $query->whereNotIn('payment_status', ['Success', 'Paid', 'success', 'paid']);

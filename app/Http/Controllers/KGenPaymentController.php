@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\UnlimitPayment;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Client\RequestException;
 use App\Models\ApiToken;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
-use App\Helpers\CommonHelper;
 use App\Models\KGenOrder;
+use App\Models\UnlimitPayment;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class KGenPaymentController extends Controller
 {
@@ -19,7 +17,7 @@ class KGenPaymentController extends Controller
     {
         $response = Http::asForm()
             ->withHeaders([
-                'Authorization' => 'Basic ' . base64_encode(env('UNLIMIT_CODE')),
+                'Authorization' => 'Basic '.base64_encode(env('UNLIMIT_CODE')),
             ])
             ->post('https://sandbox.in.unlimit.com/api/auth/token', [
                 'grant_type' => 'password',
@@ -28,43 +26,41 @@ class KGenPaymentController extends Controller
             ]);
 
         $data = $response->json();
-        //dd($data);
 
-    if (isset($data['access_token'])) {
-        ApiToken::create([
-            'access_token' => $data['access_token'],
-            'expires_at' => isset($data['expires_in']) 
-                ? Carbon::now()->addSeconds($data['expires_in']) 
-                : null,
-        ]);
+        if (isset($data['access_token'])) {
+            ApiToken::create([
+                'access_token' => $data['access_token'],
+                'expires_at' => isset($data['expires_in'])
+                    ? Carbon::now()->addSeconds($data['expires_in'])
+                    : null,
+            ]);
 
-        //return response()->json(['message' => 'Token saved.']);
-        return $data['access_token'];
+            return $data['access_token'];
 
-    }
-
-    return response()->json(['error' => 'Token not received', 'response' => $data], 400);
-}
-
-public function initiate(Request $request)
-    {
-        $orderId = $request->input('order_id');
-        $payableAmount = $request->input('amount');
-        $variantId = $request->input('variant_id');
-
-        Log::info('Session variables:', ['orderid' => $orderId, 'amount' => $payableAmount, 'variantId' => $variantId]);
-
-        if (!$orderId || !$payableAmount || !$variantId) {
-            return back()->withErrors(['error' => 'Missing order details']);
         }
 
+        return response()->json(['error' => 'Token not received', 'response' => $data], 400);
+    }
+
+    public function initiate(Request $request)
+    {
+        $validated = $request->validate([
+            'order_id' => 'required',
+            'amount' => 'required|numeric|min:0.01',
+            'variant_id' => 'required|string',
+        ]);
+
+        $orderId = $validated['order_id'];
+        $payableAmount = $validated['amount'];
+        $variantId = $validated['variant_id'];
+
         $token = $this->getToken();
-        if (!$token) {
+        if (! $token || $token instanceof JsonResponse) {
             return back()->withErrors(['error' => 'Payment service unavailable']);
         }
 
         $time = $this->generatePaymentTime();
-        $merchantOrderId = 'KGEN_' . $orderId . '_' . Str::uuid();
+        $merchantOrderId = 'KGEN_'.$orderId.'_'.Str::uuid();
 
         $data = [
             'request' => [
@@ -82,72 +78,51 @@ public function initiate(Request $request)
             ],
             'return_urls' => [
                 'success_url' => route('kgen.payment.success', ['orderId' => $orderId]),
-                'decline_url' => route('kgen.payment.failed', ['orderId' => $orderId])
+                'decline_url' => route('kgen.payment.failed', ['orderId' => $orderId]),
             ],
         ];
 
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $token,
+                'Authorization' => 'Bearer '.$token,
                 'Content-Type' => 'application/json',
             ])->post('https://sandbox.in.unlimit.com/api/payments', $data);
-
-            Log::info('KGen Payment initiated', [
-                'order_id' => $orderId,
-                'amount' => $payableAmount,
-                'response_status' => $response->status()
-            ]);
 
             $responseData = $response->json();
 
             if (isset($responseData['redirect_url'])) {
-                // Store payment info
                 UnlimitPayment::create([
                     'order_id' => $orderId,
                     'payment_id' => $responseData['payment_id'] ?? null,
                     'merchant_order_id' => $merchantOrderId,
                     'amount' => $payableAmount,
                     'status' => 'INITIATED',
-                    'payment_data' => json_encode($responseData)
+                    'payment_data' => json_encode($responseData),
                 ]);
 
                 return redirect()->away($responseData['redirect_url']);
             }
 
-            Log::error('No redirect URL', ['response' => $responseData]);
             return back()->withErrors(['error' => 'Payment initiation failed']);
 
         } catch (\Exception $e) {
-            Log::error('Payment initiation error', ['error' => $e->getMessage()]);
             return back()->withErrors(['error' => 'Payment service temporarily unavailable']);
         }
     }
 
-public function handleReturnSuccess(Request $request, $orderId)
+    public function handleReturnSuccess(Request $request, $orderId)
     {
-        Log::info('Payment success callback', [
-            'order_id' => $orderId,
-            'request_data' => $request->all()
-        ]);
-
         $paymentId = $request->input('payment_id');
         $status = $request->input('status');
 
-        // Update payment and order status
         $this->updatePaymentStatus($paymentId, $orderId, $status ?? 'SUCCESS');
 
-        // Redirect to order confirmation
         return redirect()->route('kgen.order.success', ['orderId' => $orderId])
             ->with('success', 'Payment successful! Order confirmed.');
     }
 
     public function handleReturnFailed(Request $request, $orderId)
     {
-        Log::info('Payment failed callback', [
-            'order_id' => $orderId,
-            'request_data' => $request->all()
-        ]);
-
         $this->updatePaymentStatus($request->input('payment_id'), $orderId, 'FAILED');
 
         return redirect()->route('kgen.order.failed', ['orderId' => $orderId])
@@ -160,7 +135,7 @@ public function handleReturnSuccess(Request $request, $orderId)
         if ($order) {
             $order->update([
                 'status' => $status === 'SUCCESS' ? 'PAID' : 'PAYMENT_FAILED',
-                'payment_status' => $status
+                'payment_status' => $status,
             ]);
         }
 
@@ -170,10 +145,8 @@ public function handleReturnSuccess(Request $request, $orderId)
 
     private function processPaidOrder(KGenOrder $order)
     {
-        // Now call the original order placement logic
-        // This would be your existing placeExternalOrder logic
         $dpId = env('DP_ID');
-        $externalRefId = 'ORDER_' . strtoupper(Str::random(6));
+        $externalRefId = 'ORDER_'.strtoupper(Str::random(6));
 
         $response = $this->placeExternalOrder($dpId, $order->variant_id, $externalRefId);
         $data = $response->json();
@@ -181,39 +154,29 @@ public function handleReturnSuccess(Request $request, $orderId)
         $order->update([
             'external_ref' => $externalRefId,
             'api_response' => json_encode($data),
-            'status' => $data['status'] ?? 'PROCESSED'
+            'status' => $data['status'] ?? 'PROCESSED',
         ]);
     }
 
     private function generatePaymentTime(): string
     {
         $now = Carbon::now('UTC');
-        $milliseconds = $now->format('v'); // 3-digit milliseconds
-        $time = $now->format("Y-m-d\TH:i:s.") . $milliseconds . "Z";
+        $milliseconds = $now->format('v');
+        $time = $now->format("Y-m-d\TH:i:s.").$milliseconds.'Z';
+
         return $time;
     }
 
     private function placeExternalOrder(string $dpId, string $variantId, string $externalRefId)
-{
-    $response = Http::withHeaders([
-        'x-client-id' => env('EXLR8_USER_ID'),
-        'x-client-secret' => env('EXLR8_USER_SECRET'),
-        'Content-Type' => 'application/json',
-    ])->post(env('EXLR8_BASE_URL') . '/orders/b2b/direct-checkout', [
-        'dpID' => $dpId,
-        'variantID' => $variantId,
-        'externalRefID' => $externalRefId,
-    ]);
-
-    Log::info('External order API called', [
-        'dpId' => $dpId,
-        'variantId' => $variantId,
-        'externalRefId' => $externalRefId,
-        'status' => $response->status(),
-        'response' => $response->json()
-    ]);
-
-    return $response;
-}
-
+    {
+        return Http::withHeaders([
+            'x-client-id' => env('EXLR8_USER_ID'),
+            'x-client-secret' => env('EXLR8_USER_SECRET'),
+            'Content-Type' => 'application/json',
+        ])->post(env('EXLR8_BASE_URL').'/orders/b2b/direct-checkout', [
+            'dpID' => $dpId,
+            'variantID' => $variantId,
+            'externalRefID' => $externalRefId,
+        ]);
+    }
 }

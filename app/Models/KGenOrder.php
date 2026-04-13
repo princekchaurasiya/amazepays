@@ -20,7 +20,7 @@ class KGenOrder extends Model
         'payment_status',
         'fulfillment_status',
         'api_response',
-        'vouchers'
+        'vouchers',
         // ... other fields
     ];
 
@@ -74,5 +74,54 @@ class KGenOrder extends Model
     public function scopePaid($query)
     {
         return $query->where('payment_status', 'paid');
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function firstVoucherFromApi(): ?array
+    {
+        $api = $this->api_response;
+        if (is_string($api)) {
+            $decoded = json_decode($api, true);
+            $api = is_array($decoded) ? $decoded : null;
+        }
+        if (! is_array($api)) {
+            return null;
+        }
+        $lineItems = $api['lineItems'] ?? null;
+        if (! is_array($lineItems) || $lineItems === []) {
+            return null;
+        }
+        $vouchers = $lineItems[0]['vouchers'] ?? null;
+        if (! is_array($vouchers) || $vouchers === []) {
+            return null;
+        }
+
+        $first = $vouchers[0] ?? null;
+
+        return is_array($first) ? $first : null;
+    }
+
+    public function getVoucherCodeAttribute(): string
+    {
+        $v = $this->firstVoucherFromApi();
+
+        return (string) ($v['voucherCode'] ?? 'N/A');
+    }
+
+    public function getVoucherPinAttribute(): string
+    {
+        $v = $this->firstVoucherFromApi();
+
+        return (string) ($v['voucherPin'] ?? 'N/A');
+    }
+
+    public function getVoucherExpirationDateAttribute(): string
+    {
+        $v = $this->firstVoucherFromApi();
+        $exp = $v['expirationDate'] ?? 'N/A';
+
+        return is_scalar($exp) ? (string) $exp : 'N/A';
     }
 }

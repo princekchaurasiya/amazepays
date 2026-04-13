@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @deprecated Prefer resources/lang/en/provider_errors.php and App\Enums\ResponseCode.
+ *             Kept for backward compatibility with legacy __('errors.5035') style lookups.
+ */
 return [
     'default' => 'Order failed. Please try again later.',
     '200' => 'OK',
@@ -8,7 +12,7 @@ return [
     '400' => 'Order failed: There was an issue with the information provided. Please check your details.',
     '401' => 'Authorization failed. Please check your credentials and try again.',
     '403' => 'You do not have the necessary permissions to complete this order. Please contact support.',
-    
+
     '500' => 'Order failed: There was an internal server error. Please try again later.',
     '5035' => 'Order failed: The payment service is currently unavailable. Please try again later.',
     '5036' => 'Order failed: The payment amount does not match the required value. Please review and try again.',
@@ -55,4 +59,3 @@ return [
     '7002' => 'Failed to get order status due to an unexpected error occurred. Please Try Again Later',
 
 ];
-

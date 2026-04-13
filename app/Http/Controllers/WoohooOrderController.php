@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\CommonHelper;
+use App\Helpers\ApiSignatureHelper;
 use App\Helpers\ErrorHandler;
+use App\Helpers\ProductImageHelper;
 use App\Models\Billing;
+use App\Models\Order;
 use App\Models\OrderSummary;
-use App\Models\QsOrder;
 use App\Models\UnlimitPayment;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
@@ -16,22 +18,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\URL;
-<<<<<<< HEAD
-use Mail;
-use PDF;
+use Inertia\Inertia;
 
-=======
-use App\Jobs\ProcessWoohooOrder;
->>>>>>> aac288f (change 1)
 class WoohooOrderController extends Controller
 {
-    public function createWoohooOrderRequest($qsOrderDetails, $payment)
+    public function createWoohooOrderRequest(Order $order, $payment)
     {
         Log::info('******* Entered createWoohooOrderRequest ***********', [
-            'qs_order_id' => $qsOrderDetails->id,
-            'merchant_order_id' => $qsOrderDetails->merchant_order_id,
+            'order_id' => $order->id,
+            'merchant_order_id' => $order->merchant_order_id,
             'payment_status_param' => $payment->payment_status ?? null,
         ]);
 
@@ -39,13 +37,13 @@ class WoohooOrderController extends Controller
         $resolvedStatus = strtolower($payment->payment_status);
 
         Log::info('Resolved payment status', [
-            'order_id' => $qsOrderDetails->id,
+            'order_id' => $order->id,
             'resolved_status' => $resolvedStatus,
         ]);
 
         if (! in_array($resolvedStatus, ['success', 'completed', 'approved'])) {
             Log::info('Skipping Woohoo order creation because payment is not completed', [
-                'order_id' => $qsOrderDetails->id,
+                'order_id' => $order->id,
                 'payment_status' => $resolvedStatus,
             ]);
 
@@ -60,46 +58,47 @@ class WoohooOrderController extends Controller
         $normalizedStatus = strtolower(trim($resolvedStatus));
         if (! in_array($normalizedStatus, $validStatuses)) {
             Log::info('Woohoo blocked payment status', [
-                'order_id' => $qsOrderDetails->id,
+                'order_id' => $order->id,
                 'payment_status' => $resolvedStatus,
             ]);
 
             return [
                 'success' => false,
                 'message' => 'Payment not completed yet',
-		'status'  => 'FAILED',
+                'status' => 'FAILED',
             ];
         }
 
         Log::info('Payment verified as COMPLETED, proceeding with Woohoo order creation', [
-            'order_id' => $qsOrderDetails->id,
+            'order_id' => $order->id,
             'payment_status' => $resolvedStatus,
         ]);
 
         // ✅ Step 3: (Your existing Woohoo creation logic below — unchanged)
-        $billinginfo = Billing::latest()->first();
+        $billinginfo = Billing::where('order_id', $order->id)->first()
+            ?? Billing::latest()->first();
         $billingName = $billinginfo->billing_name ?? '';
         $parts = preg_split('/\s+/', trim($billingName), 2);
         $firstName = $parts[0] ?? '';
         $lastName = $parts[1] ?? '';
-        $refno = $qsOrderDetails->refno;
+        $refno = $order->refno;
 
         $checkoutData = session('checkout_data', []);
         Log::info('Checkout data', ['data' => $checkoutData]);
         $productData = session('selected_product');
         Log::info('Product data', ['prodData' => $productData]);
-        $normalizedSku = $qsOrderDetails->sku ?? ($productData['sku'] ?? null);
-        $normalizedQuantity = (int) ($qsOrderDetails->quantity ?? ($checkoutData['quantity'] ?? 1));
-        $normalizedDenomination = (float) ($qsOrderDetails->denomination ?? ($checkoutData['denomination'] ?? 0));
+        $normalizedSku = $order->sku ?? ($productData['sku'] ?? null);
+        $normalizedQuantity = (int) ($order->quantity ?? ($checkoutData['quantity'] ?? 1));
+        $normalizedDenomination = (float) ($order->denomination ?? ($checkoutData['denomination'] ?? 0));
 
         $normalizedAmount = (float) (
-            $qsOrderDetails->amount_payable_after_discount
-            ?? $qsOrderDetails->grand_payable_amount
+            $order->amount_payable_after_discount
+            ?? $order->grand_payable_amount
             ?? ($normalizedDenomination > 0 ? $normalizedDenomination * max(1, $normalizedQuantity) : 0)
         );
 
         // Woohoo expects the original price; do not send discounted amounts.
-        $woohooPrice = (float) ($qsOrderDetails->price ?? 0);
+        $woohooPrice = (float) ($order->price ?? 0);
         if ($woohooPrice <= 0) {
             $woohooPrice = $normalizedDenomination > 0 ? (float) $normalizedDenomination : $normalizedAmount;
         }
@@ -155,10 +154,10 @@ class WoohooOrderController extends Controller
         try {
             $requestBody = json_encode($create_order_request_body_data);
             $requestHttpMethod = 'post';
-            $absApiUrl = 'https://'.setting('api.woohoo_url').'/rest/v3/orders';
-            $clientSecret = setting('api.qs_clientSecret');
-            $bearerToken = setting('api.bearer_token');
-            $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+            $absApiUrl = 'https://'.config('woohoo.host').'/rest/v3/orders';
+            $clientSecret = config('woohoo.client_secret');
+            $bearerToken = config('woohoo.bearer_token');
+            $signature = ApiSignatureHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
             $dateAtClient = Carbon::now()->toIso8601String();
 
             Log::info('🚀 Sending Woohoo order API request', [
@@ -187,49 +186,49 @@ class WoohooOrderController extends Controller
                         'signature' => $signature,
                     ])
                     ->send('POST', $absApiUrl, ['body' => $requestBody]);
-            } catch (\Illuminate\Http\Client\RequestException $e) {
+            } catch (RequestException $e) {
                 // Laravel HTTP client throws RequestException for non-2xx responses
                 $statusCode = $e->response ? $e->response->status() : 500;
                 $responseBody = $e->response ? $e->response->body() : $e->getMessage();
-                
+
                 // Log full technical details for debugging
                 Log::error('Woohoo API request failed with RequestException', [
                     'status_code' => $statusCode,
                     'response_body_preview' => is_string($responseBody) ? substr($responseBody, 0, 500) : 'N/A',
                     'error_message' => $e->getMessage(),
                     'exception_type' => get_class($e),
-                    'order_id' => $qsOrderDetails->id ?? null,
-                    'merchant_order_id' => $qsOrderDetails->merchant_order_id ?? null,
+                    'order_id' => $order->id ?? null,
+                    'merchant_order_id' => $order->merchant_order_id ?? null,
                 ]);
 
                 // Return user-friendly error message based on status code
                 $userMessage = $this->getUserFriendlyErrorMessage($statusCode);
-                
+
                 return [
                     'success' => false,
                     'status_code' => $statusCode,
                     'message' => $userMessage,
                 ];
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Catch any other exceptions that might be thrown
                 $statusCode = 500;
                 if (method_exists($e, 'response') && $e->response) {
                     $statusCode = $e->response->status();
                 }
-                
+
                 // Log full technical details for debugging
                 Log::error('Woohoo API request failed with exception', [
                     'status_code' => $statusCode,
                     'error_message' => $e->getMessage(),
                     'exception_type' => get_class($e),
                     'trace' => $e->getTraceAsString(),
-                    'order_id' => $qsOrderDetails->id ?? null,
-                    'merchant_order_id' => $qsOrderDetails->merchant_order_id ?? null,
+                    'order_id' => $order->id ?? null,
+                    'merchant_order_id' => $order->merchant_order_id ?? null,
                 ]);
 
                 // Return user-friendly error message based on status code
                 $userMessage = $this->getUserFriendlyErrorMessage($statusCode);
-                
+
                 return [
                     'success' => false,
                     'status_code' => $statusCode,
@@ -241,22 +240,22 @@ class WoohooOrderController extends Controller
             $responseData = null;
             try {
                 $responseData = $createOrderResponse->json();
-            } catch (\Exception $jsonException) {
+            } catch (Exception $jsonException) {
                 // Response is not JSON (might be HTML error page)
                 $statusCode = $createOrderResponse->status();
                 $responseBody = $createOrderResponse->body();
-                
+
                 Log::error('Woohoo API returned non-JSON response', [
                     'status_code' => $statusCode,
                     'response_body_preview' => substr($responseBody, 0, 500), // Log first 500 chars
-                    'order_id' => $qsOrderDetails->id ?? null,
-                    'merchant_order_id' => $qsOrderDetails->merchant_order_id ?? null,
+                    'order_id' => $order->id ?? null,
+                    'merchant_order_id' => $order->merchant_order_id ?? null,
                     'json_error' => $jsonException->getMessage(),
                 ]);
 
                 // Return user-friendly error message based on status code
                 $userMessage = $this->getUserFriendlyErrorMessage($statusCode);
-                
+
                 return [
                     'success' => false,
                     'status_code' => $statusCode,
@@ -268,20 +267,20 @@ class WoohooOrderController extends Controller
             if (is_object($responseData)) {
                 $responseData = json_decode(json_encode($responseData), true);
             }
-        
-            if (!is_array($responseData)) {
+
+            if (! is_array($responseData)) {
                 $statusCode = $createOrderResponse->status();
                 $responseBody = $createOrderResponse->body();
-                
-                Log::error("Woohoo returned invalid JSON", [
-                    "raw_body_preview" => substr($responseBody, 0, 500),
-                    "status_code" => $statusCode,
-                    'order_id' => $qsOrderDetails->id ?? null,
-                    'merchant_order_id' => $qsOrderDetails->merchant_order_id ?? null,
+
+                Log::error('Woohoo returned invalid JSON', [
+                    'raw_body_preview' => substr($responseBody, 0, 500),
+                    'status_code' => $statusCode,
+                    'order_id' => $order->id ?? null,
+                    'merchant_order_id' => $order->merchant_order_id ?? null,
                 ]);
 
                 $userMessage = $this->getUserFriendlyErrorMessage($statusCode);
-                
+
                 return [
                     'success' => false,
                     'status_code' => $statusCode,
@@ -290,48 +289,48 @@ class WoohooOrderController extends Controller
             }
 
             // Ensure responseData is an array
-            if (!is_array($responseData)) {
+            if (! is_array($responseData)) {
                 $responseData = [];
             }
-            
+
             Log::info('Woohoo API Response', [
                 'status' => $createOrderResponse->status(),
                 'response' => $responseData,
             ]);
 
             if ($createOrderResponse->successful() && isset($responseData['status']) && $responseData['status'] === 'COMPLETE') {
-               // return ['success' => true, 'status' => 'COMPLETE', 'data' => $responseData];
-		 // If response already has success and data keys at top level, return as-is
-            // Otherwise, wrap it in our standard format
-            if (isset($responseData["success"]) && isset($responseData["data"])) {
-                // Response already in expected format
-                return $responseData;
-            } else {
-                // Wrap response in our standard format
-                return [
-                    'success' => true,
-                    'status' => 'COMPLETE',
-                    'data' => $responseData
-                ];
-            }
+                // return ['success' => true, 'status' => 'COMPLETE', 'data' => $responseData];
+                // If response already has success and data keys at top level, return as-is
+                // Otherwise, wrap it in our standard format
+                if (isset($responseData['success']) && isset($responseData['data'])) {
+                    // Response already in expected format
+                    return $responseData;
+                } else {
+                    // Wrap response in our standard format
+                    return [
+                        'success' => true,
+                        'status' => 'COMPLETE',
+                        'data' => $responseData,
+                    ];
+                }
             }
 
             // Handle HTTP error responses - log technical details, return user-friendly message
             $statusCode = $createOrderResponse->status();
             $responseBody = $createOrderResponse->body();
-            
+
             // Log full technical details for debugging (truncate HTML to avoid log bloat)
             Log::error('Woohoo API error response', [
                 'status_code' => $statusCode,
                 'response_body_preview' => substr($responseBody, 0, 500), // Log first 500 chars only
                 'response_data' => $responseData,
-                'order_id' => $qsOrderDetails->id ?? null,
-                'merchant_order_id' => $qsOrderDetails->merchant_order_id ?? null,
+                'order_id' => $order->id ?? null,
+                'merchant_order_id' => $order->merchant_order_id ?? null,
             ]);
 
             // Return user-friendly error message based on status code
             $userMessage = $this->getUserFriendlyErrorMessage($statusCode);
-            
+
             return [
                 'success' => false,
                 'status_code' => $statusCode,
@@ -343,10 +342,10 @@ class WoohooOrderController extends Controller
                 'error' => $e->getMessage(),
                 'retries' => $woohooRetryAttempts,
                 'timeout' => $woohooTimeout,
-		'file' => $e->getFile(),
-		'line' => $e->getLine(),
-                'order_id' => $qsOrderDetails->id ?? null,
-                'merchant_order_id' => $qsOrderDetails->merchant_order_id ?? null,
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'order_id' => $order->id ?? null,
+                'merchant_order_id' => $order->merchant_order_id ?? null,
             ]);
 
             return ['success' => false, 'message' => 'Unable to connect to the service. Please try again in a few moments. If the problem persists, please contact support.'];
@@ -354,278 +353,275 @@ class WoohooOrderController extends Controller
             Log::error('Error during Woohoo order creation', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-		'file' => $e->getFile(),
-		'line' => $e->getLine(),
-                'order_id' => $qsOrderDetails->id ?? null,
-                'merchant_order_id' => $qsOrderDetails->merchant_order_id ?? null,
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'order_id' => $order->id ?? null,
+                'merchant_order_id' => $order->merchant_order_id ?? null,
             ]);
 
             return ['success' => false, 'message' => 'An unexpected error occurred. Our team has been notified. Please contact support if this issue persists.'];
         }
     }
 
-    public function createOrder(Request $request, QsOrder $order = null)
+    public function createOrder(Request $request, ?Order $order = null)
     {
-        try
-	{
-        /**************************************
-         * 1. Get QsOrder - handle both route model binding and POST request
-         **************************************/
-        $qsOrderDetails = $order;
-        
-        // If order not provided via route model binding, get from request
-        if (!$qsOrderDetails) {
-            $orderId = $request->input('order_id');
-            
-            if (!$orderId) {
-                Log::error('Order ID not provided in resend-order request', [
-                    'request_data' => $request->all()
-                ]);
-                
-                return redirect()->route('voyager.order-summary.index')
-                    ->with('error', 'Order ID is required. Please try again.');
-            }
-            
-            $qsOrderDetails = QsOrder::find($orderId);
-            
-            if (!$qsOrderDetails) {
-                Log::error('QsOrder not found by order_id', [
-                    'order_id' => $orderId
-                ]);
-                
-                return redirect()->route('voyager.order-summary.index')
-                    ->with('error', 'Order not found. Please verify the order ID and try again.');
-            }
-        }
-        
-        /**************************************
-         * 2. Get merchant order ID
-         **************************************/
-        $merchantOrderId = $qsOrderDetails->merchant_order_id;
-        Log::info('Merchant Order ID', ['merchant_order_id' => $merchantOrderId, 'order_id' => $qsOrderDetails->id]);
+        try {
+            /**************************************
+             * 1. Get Order - handle both route model binding and POST request
+             **************************************/
+            // If order not provided via route model binding, get from request
+            if (! $order) {
+                $orderId = $request->input('order_id');
 
-        if (!$merchantOrderId) {
-            Log::error('Merchant Order ID is null', [
-                'order_id' => $qsOrderDetails->id,
-                'order_status' => $qsOrderDetails->order_status
-            ]);
-            
-            return redirect()->route('voyager.order-summary.index')
-                ->with('error', 'Order does not have a merchant order ID. This order may not have been processed for payment yet.');
-        }
-
-        /**************************************
-         * 3. Fetch Unlimit payment record
-         **************************************/
-        $paymentRecord = UnlimitPayment::where('merchant_order_id', $merchantOrderId)
-            ->orWhere('order_id', $qsOrderDetails->id) // Fallback: find by order_id
-            ->first();
-
-        if (! $paymentRecord) {
-            Log::error('UnlimitPayment not found', [
-                'merchant_order_id' => $merchantOrderId,
-                'order_id' => $qsOrderDetails->id
-            ]);
-
-            return redirect()->route('voyager.order-summary.index')
-                ->with('error', 'Payment record not found for this order. Please contact support.');
-        }
-
-        // NOTE: Unlimit returns "success" in lowercase – check both.
-        $paymentStatus = strtolower($paymentRecord->payment_status ?? '');
-        if (! in_array($paymentStatus, ['success', 'completed', 'paid', 'approved', 'confirmed'])) {
-            Log::warning('Payment status not successful', [
-                'payment_status' => $paymentRecord->payment_status,
-                'merchant_order_id' => $merchantOrderId,
-                'order_id' => $qsOrderDetails->id
-            ]);
-
-            return redirect()->route('voyager.order-summary.index')
-                ->with('error', 'Payment status is not successful. Current status: ' . ($paymentRecord->payment_status ?? 'Unknown') . '. Only orders with successful payments can be resent.');
-        }
-
-        /**************************************
-         * 4. Update Refno
-         **************************************/
-        $qsOrderDetails->refno = 'Amzr'.$qsOrderDetails->id;
-        $qsOrderDetails->save();
-        Log::info('Updated order refno', ['refno' => $qsOrderDetails->refno]);
-        session(['session_refno' => 'Amzr'.$qsOrderDetails->id]);
-
-        /**************************************
-         * 5. Call Woohoo API
-         **************************************/
-        $response = $this->createWoohooOrderRequest($qsOrderDetails, $paymentRecord);
-	
-	if (!is_array($response)) {
-   	 Log::error("Woohoo returned non-array response", [
-        "response" => $response
-   	 ]);
-
-   	 return $this->errorDefault();
-	}
-
-        if (empty($response)) {
-            Log::error('Woohoo API returned empty response');
-
-            return $this->errorDefault();
-        }
-
-        Log::info('Woohoo API Response 2', $response);
-
-        /**************************************
-         * 6. Handle Woohoo response safely
-         **************************************/
-        // Some responses return ["success" => true, "status" => "COMPLETE"]
-
-        $success = $response['success'];
-        $status  = $response['status'];
-
-        if ($success === true && $status === 'COMPLETE') {
-
-            // Extract cards from Woohoo
-            $cards = [];
-
-            if (isset($response['data']['cards']) && is_array($response['data']['cards'])) {
-                $cards = $response['data']['cards'];
-                Log::info('Extracted Woohoo cards', ['count' => count($cards)]);
-            }
-
-            // Prepare handler format
-            $handlerData = $response['data'] ?? [];
-            $handlerData['status'] = $status;
-
-            // Save vouchers
-            $this->handleSuccessFullOrder($handlerData);
-            
-            // CRITICAL: Update QsOrder and OrderSummary status to COMPLETE after successful Woohoo order creation
-            // Note: handleSuccessFullOrder already updates the order via updateQsOrder, but we ensure status consistency here
-            DB::beginTransaction();
-            try {
-                // Reload order to get latest woohoo_order_id from updateQsOrder
-                $qsOrderDetails->refresh();
-                
-                $qsOrderDetails->order_status = 'COMPLETE';
-                $qsOrderDetails->save();
-                
-                // Also update OrderSummary.order_status to maintain consistency
-                $orderSummary = OrderSummary::where('order_id', $qsOrderDetails->id)->first();
-                if ($orderSummary) {
-                    $orderSummary->order_status = 'COMPLETE';
-                    $orderSummary->save();
-                    
-                    Log::info("✅ OrderSummary status updated to COMPLETE (resend-order)", [
-                        'order_summary_id' => $orderSummary->id,
-                        'order_id' => $qsOrderDetails->id
+                if (! $orderId) {
+                    Log::error('Order ID not provided in resend-order request', [
+                        'request_keys' => array_keys($request->all()),
                     ]);
-                } else {
-                    Log::warning("⚠️ OrderSummary not found when updating to COMPLETE (resend-order)", [
-                        'order_id' => $qsOrderDetails->id
+
+                    return redirect()->route('admin.orders.index')
+                        ->with('error', 'Order ID is required. Please try again.');
+                }
+
+                $order = Order::find($orderId);
+
+                if (! $order) {
+                    Log::error('Order not found by order_id', [
+                        'order_id' => $orderId,
+                    ]);
+
+                    return redirect()->route('admin.orders.index')
+                        ->with('error', 'Order not found. Please verify the order ID and try again.');
+                }
+            }
+
+            /**************************************
+             * 2. Get merchant order ID
+             **************************************/
+            $merchantOrderId = $order->merchant_order_id;
+            Log::info('Merchant Order ID', ['merchant_order_id' => $merchantOrderId, 'order_id' => $order->id]);
+
+            if (! $merchantOrderId) {
+                Log::error('Merchant Order ID is null', [
+                    'order_id' => $order->id,
+                    'order_status' => $order->order_status,
+                ]);
+
+                return redirect()->route('admin.orders.index')
+                    ->with('error', 'Order does not have a merchant order ID. This order may not have been processed for payment yet.');
+            }
+
+            /**************************************
+             * 3. Fetch Unlimit payment record
+             **************************************/
+            $paymentRecord = UnlimitPayment::where('merchant_order_id', $merchantOrderId)
+                ->orWhere('order_id', $order->id) // Fallback: find by order_id
+                ->first();
+
+            if (! $paymentRecord) {
+                Log::error('UnlimitPayment not found', [
+                    'merchant_order_id' => $merchantOrderId,
+                    'order_id' => $order->id,
+                ]);
+
+                return redirect()->route('admin.orders.index')
+                    ->with('error', 'Payment record not found for this order. Please contact support.');
+            }
+
+            // NOTE: Unlimit returns "success" in lowercase – check both.
+            $paymentStatus = strtolower($paymentRecord->payment_status ?? '');
+            if (! in_array($paymentStatus, ['success', 'completed', 'paid', 'approved', 'confirmed'])) {
+                Log::warning('Payment status not successful', [
+                    'payment_status' => $paymentRecord->payment_status,
+                    'merchant_order_id' => $merchantOrderId,
+                    'order_id' => $order->id,
+                ]);
+
+                return redirect()->route('admin.orders.index')
+                    ->with('error', 'Payment status is not successful. Current status: '.($paymentRecord->payment_status ?? 'Unknown').'. Only orders with successful payments can be resent.');
+            }
+
+            /**************************************
+             * 4. Update Refno
+             **************************************/
+            $order->refno = 'Amzr'.$order->id;
+            $order->save();
+            Log::info('Updated order refno', ['refno' => $order->refno]);
+            session(['checkout_refno' => 'Amzr'.$order->id]);
+
+            /**************************************
+             * 5. Call Woohoo API
+             **************************************/
+            $response = $this->createWoohooOrderRequest($order, $paymentRecord);
+
+            if (! is_array($response)) {
+                Log::error('Woohoo returned non-array response', [
+                    'response' => $response,
+                ]);
+
+                return $this->errorDefault();
+            }
+
+            if (empty($response)) {
+                Log::error('Woohoo API returned empty response');
+
+                return $this->errorDefault();
+            }
+
+            Log::info('Woohoo API Response 2', $response);
+
+            /**************************************
+             * 6. Handle Woohoo response safely
+             **************************************/
+            // Some responses return ["success" => true, "status" => "COMPLETE"]
+
+            $success = $response['success'];
+            $status = $response['status'];
+
+            if ($success === true && $status === 'COMPLETE') {
+
+                // Extract cards from Woohoo
+                $cards = [];
+
+                if (isset($response['data']['cards']) && is_array($response['data']['cards'])) {
+                    $cards = $response['data']['cards'];
+                    Log::info('Extracted Woohoo cards', ['count' => count($cards)]);
+                }
+
+                // Prepare handler format
+                $handlerData = $response['data'] ?? [];
+                $handlerData['status'] = $status;
+
+                // Save vouchers
+                $this->handleSuccessFullOrder($handlerData);
+
+                // CRITICAL: Update Order and OrderSummary status to COMPLETE after successful Woohoo order creation
+                // Note: handleSuccessFullOrder already updates the order via syncOrderFromWoohooResponse, but we ensure status consistency here
+                DB::beginTransaction();
+                try {
+                    // Reload order to get latest woohoo_order_id from syncOrderFromWoohooResponse
+                    $order->refresh();
+
+                    $order->order_status = 'COMPLETE';
+                    $order->save();
+
+                    // Also update OrderSummary.order_status to maintain consistency
+                    $orderSummary = OrderSummary::where('order_id', $order->id)->first();
+                    if ($orderSummary) {
+                        $orderSummary->order_status = 'COMPLETE';
+                        $orderSummary->save();
+
+                        Log::info('✅ OrderSummary status updated to COMPLETE (resend-order)', [
+                            'order_summary_id' => $orderSummary->id,
+                            'order_id' => $order->id,
+                        ]);
+                    } else {
+                        Log::warning('⚠️ OrderSummary not found when updating to COMPLETE (resend-order)', [
+                            'order_id' => $order->id,
+                        ]);
+                    }
+
+                    Log::info('✅ Order status updated to COMPLETE (resend-order successful)', [
+                        'order_id' => $order->id,
+                        'woohoo_order_id' => $order->woohoo_order_id ?? $response['data']['orderId'] ?? 'N/A',
+                    ]);
+
+                    DB::commit();
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    Log::error('❌ Failed to update order status after resend-order', [
+                        'order_id' => $order->id,
+                        'error' => $e->getMessage(),
                     ]);
                 }
-                
-                Log::info("✅ QsOrder status updated to COMPLETE (resend-order successful)", [
-                    'order_id' => $qsOrderDetails->id,
-                    'woohoo_order_id' => $qsOrderDetails->woohoo_order_id ?? $response['data']['orderId'] ?? 'N/A'
-                ]);
-                
-                DB::commit();
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error("❌ Failed to update order status after resend-order", [
-                    'order_id' => $qsOrderDetails->id,
-                    'error' => $e->getMessage()
+
+                // Return success view with required variables
+                return Inertia::render('Checkout/OrderStatus', [
+                    'transactionStatusMessage' => __('errors.201', [], 'en') ?: 'Order processed successfully! Your gift card details have been sent to your email and SMS.',
+                    'isSuccessful' => true,
+                    'cardsArray' => $cards ?? [],
                 ]);
             }
-            
-            // Return success view with required variables
-            return view('order.order-status', [
-                'transactionStatusMessage' => __('errors.201', [], 'en') ?: 'Order processed successfully! Your gift card details have been sent to your email and SMS.',
-                'isSuccessful' => true,
-                'cardsArray' => $cards ?? [],
+
+            /**************************************
+             * 7. Error handling for Woohoo API error codes
+             **************************************/
+            if (($response['status_code'] ?? null) === 400 || ($response['status_code'] ?? null) === 500) {
+
+                $errorCode = $response['errorCode'] ?? 'default';
+                Log::error('Woohoo order error', [
+                    'status_code' => $response['status_code'] ?? null,
+                    'errorCode' => $errorCode,
+                    'order_id' => $order->id,
+                ]);
+
+                $this->sendOrderFailureMail($order);
+
+                // Update order status to FAILED
+                DB::beginTransaction();
+                try {
+                    $order->order_status = 'FAILED';
+                    $order->save();
+
+                    // Also update OrderSummary.order_status to maintain consistency
+                    $orderSummary = OrderSummary::where('order_id', $order->id)->first();
+                    if ($orderSummary) {
+                        $orderSummary->order_status = 'FAILED';
+                        $orderSummary->save();
+                    }
+
+                    DB::commit();
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    Log::error('❌ Failed to update order status to FAILED', [
+                        'order_id' => $order->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                return Inertia::render('Checkout/OrderStatus', [
+                    'transactionStatusMessage' => __('errors.'.$errorCode, [], 'en') ?: 'Order processing failed. Please contact support.',
+                    'isSuccessful' => false,
+                ]);
+            }
+
+            /**************************************
+             * 8. Anything else → treat as failed
+             **************************************/
+            Log::error('Unhandled Woohoo response format', [
+                'response' => $response,
+                'order_id' => $order->id,
             ]);
-    }
 
-        /**************************************
-         * 7. Error handling for Woohoo API error codes
-         **************************************/
-        if (($response['status_code'] ?? null) === 400 || ($response['status_code'] ?? null) === 500) {
-
-            $errorCode = $response['errorCode'] ?? 'default';
-            Log::error('Woohoo order error', [
-                'status_code' => $response['status_code'] ?? null,
-                'errorCode' => $errorCode,
-                'order_id' => $qsOrderDetails->id
-            ]);
-
-            $this->sendOrderFailureMail($qsOrderDetails);
-            
             // Update order status to FAILED
             DB::beginTransaction();
             try {
-                $qsOrderDetails->order_status = 'FAILED';
-                $qsOrderDetails->save();
-                
+                $order->order_status = 'FAILED';
+                $order->save();
+
                 // Also update OrderSummary.order_status to maintain consistency
-                $orderSummary = OrderSummary::where('order_id', $qsOrderDetails->id)->first();
+                $orderSummary = OrderSummary::where('order_id', $order->id)->first();
                 if ($orderSummary) {
                     $orderSummary->order_status = 'FAILED';
                     $orderSummary->save();
                 }
-                
+
                 DB::commit();
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 DB::rollBack();
-                Log::error("❌ Failed to update order status to FAILED", [
-                    'order_id' => $qsOrderDetails->id,
-                    'error' => $e->getMessage()
+                Log::error('❌ Failed to update order status to FAILED', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
                 ]);
             }
 
-            return view('order.order-status', [
-                'transactionStatusMessage' => __('errors.'.$errorCode, [], 'en') ?: 'Order processing failed. Please contact support.',
-                'isSuccessful' => false,
-            ]);
+            return $this->errorDefault();
+
+        } catch (\Throwable $e) {
+            Log::error('Woohoo processing error', ['error' => $e->getMessage(), 'file' => $e->getFile(),
+                'line' => $e->getLine()]);
+
+            return $this->errorDefault();
         }
-
-        /**************************************
-         * 8. Anything else → treat as failed
-         **************************************/
-        Log::error("Unhandled Woohoo response format", [
-            'response' => $response,
-            'order_id' => $qsOrderDetails->id
-        ]);
-        
-        // Update order status to FAILED
-        DB::beginTransaction();
-        try {
-            $qsOrderDetails->order_status = 'FAILED';
-            $qsOrderDetails->save();
-            
-            // Also update OrderSummary.order_status to maintain consistency
-            $orderSummary = OrderSummary::where('order_id', $qsOrderDetails->id)->first();
-            if ($orderSummary) {
-                $orderSummary->order_status = 'FAILED';
-                $orderSummary->save();
-            }
-            
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error("❌ Failed to update order status to FAILED", [
-                'order_id' => $qsOrderDetails->id,
-                'error' => $e->getMessage()
-            ]);
-        }
-
-        return $this->errorDefault();
-
-            }
-         catch (\Throwable $e) {
-                Log::error("Woohoo processing error", ['error' => $e->getMessage(),'file' => $e->getFile(),
-'line' => $e->getLine()]);
-                return $this->errorDefault();
-            }
     }
 
     /****************************************
@@ -633,7 +629,7 @@ class WoohooOrderController extends Controller
      ****************************************/
     private function errorDefault()
     {
-        return view('order.order-status', [
+        return Inertia::render('Checkout/OrderStatus', [
             'transactionStatusMessage' => __('errors.default'),
             'isSuccessful' => false,
         ]);
@@ -669,14 +665,14 @@ class WoohooOrderController extends Controller
         Log::info('Clearing session data after voucher processing');
         Session::forget('payment_data');
         Session::forget('checkout_data');
-        session()->forget('session_qs_order_id');
-        session()->forget('session_refno');
+        session()->forget('checkout_order_id');
+        session()->forget('checkout_refno');
         session()->forget('payment_return_data');
 
         return response()->json(['message' => 'Session data cleared successfully']);
     }
 
-    private function handleErrorResponse($statusCode, $response, $qsOrderDetails, $createOrderResponse)
+    private function handleErrorResponse($statusCode, $response, $order, $createOrderResponse)
     {
         $isSuccessful = false;
         $errorCode = $createOrderResponse['code'] ?? null;
@@ -704,10 +700,10 @@ class WoohooOrderController extends Controller
     {
         Log::info("********** We are hitting status check API by reference number *******************\n");
         $requestHttpMethod = 'GET';
-        $absApiUrl = 'https://'.setting('api.woohoo_url').'/rest/v3/order/'.$refno.'/status';
-        $clientSecret = setting('api.qs_clientSecret');
-        $bearerToken = setting('api.bearer_token');
-        $signature = CommonHelper::generateSignature('', $requestHttpMethod, $absApiUrl, $clientSecret);
+        $absApiUrl = 'https://'.config('woohoo.host').'/rest/v3/order/'.$refno.'/status';
+        $clientSecret = config('woohoo.client_secret');
+        $bearerToken = config('woohoo.bearer_token');
+        $signature = ApiSignatureHelper::generateSignature('', $requestHttpMethod, $absApiUrl, $clientSecret);
         $dateAtClient = Carbon::now()->toIso8601String();
         $retryCount = env('RETRY_COUNT', 0);
         $maxRetries = env('MAX_RETRIES', 3);
@@ -776,14 +772,14 @@ class WoohooOrderController extends Controller
     {
         Log::info("********** We are hitting card activation API by reference number *******************\n");
         $orderId = $cardStatusApiResponseData['orderId'];
-        $clientSecret = setting('api.qs_clientSecret');
-        $bearerToken = setting('api.bearer_token');
-        $apiUrl = 'https://'.setting('api.woohoo_url');
+        $clientSecret = config('woohoo.client_secret');
+        $bearerToken = config('woohoo.bearer_token');
+        $apiUrl = 'https://'.config('woohoo.host');
         $absApiUrl = "$apiUrl/rest/v3/order/{$orderId}/cards";
         $requestBody = '';
         $requestHttpMethod = 'GET';
         $dateAtClient = Carbon::now()->toIso8601String();
-        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+        $signature = ApiSignatureHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         try {
             $activatedCardApiResponse = Http::acceptJson()->withToken($bearerToken)->withHeaders(['signature' => $signature, 'dateAtClient' => $dateAtClient])->get($absApiUrl);
             if ($activatedCardApiResponse->successful()) {
@@ -825,64 +821,64 @@ class WoohooOrderController extends Controller
 
     public function handleSuccessFullOrder($orderCreatedResponse)
     {
-        log::info(777);
+        Log::info(777);
         $isSuccessful = false;
         Log::info('This is card response data: '.json_encode($orderCreatedResponse));
-        Log::info('About to update QS Order');
-        $orderId = $this->updateQsOrder($orderCreatedResponse);
-        Log::info('QS Order updated successfully, orderId = '.$orderId);
-        /* $orderId = session('session_qsorder_id');
-            $order = QsOrder::join("unlimit_payment", "unlimit_payment.order_id", "=", "qs_orders.id")
-                ->join("qs_products", "qs_products.sku", "=", "qs_orders.sku")
-                ->where("qs_orders.id", $orderId)
-                ->select("qs_orders.*", "unlimit_payment.*", "qs_products.*")
+        Log::info('About to sync order from Woohoo response');
+        $orderId = $this->syncOrderFromWoohooResponse($orderCreatedResponse);
+        Log::info('Order synced from Woohoo successfully, orderId = '.$orderId);
+        /* $orderId = session('checkout_order_id');
+            $order = Order::join("unlimit_payment", "unlimit_payment.order_id", "=", "orders.id")
+                ->join("products", "products.sku", "=", "orders.sku")
+                ->where("orders.id", $orderId)
+                ->select("orders.*", "unlimit_payment.*", "products.*")
                 ->first();*/
 
-        $order = DB::table('qs_orders')->join('unlimit_payment', function ($join) {
-            $join->on('unlimit_payment.order_id', '=', 'qs_orders.id');
-            // ->orOn('unlimit_payment.merchant_order_id', '=', 'qs_orders.merchant_order_id');
-        })->join('qs_products', function ($join) {
-            $join->on(DB::raw('qs_products.sku COLLATE utf8mb4_unicode_ci'), '=',
+        $order = DB::table('orders')->join('unlimit_payment', function ($join) {
+            $join->on('unlimit_payment.order_id', '=', 'orders.id');
+            // ->orOn('unlimit_payment.merchant_order_id', '=', 'orders.merchant_order_id');
+        })->join('products', function ($join) {
+            $join->on(DB::raw('products.sku COLLATE utf8mb4_unicode_ci'), '=',
                 DB::raw('
                 CASE 
-                    WHEN qs_orders.sku IS NOT NULL 
-                        THEN qs_orders.sku COLLATE utf8mb4_unicode_ci
+                    WHEN orders.sku IS NOT NULL 
+                        THEN orders.sku COLLATE utf8mb4_unicode_ci
                     ELSE unlimit_payment.sku COLLATE utf8mb4_unicode_ci
                 END
             '));
-        })->where('qs_orders.id', $orderId)
-        // ->whereNotNull('qs_orders.id')->orWhereNotNull('qs_orders.merchant_order_id')
+        })->where('orders.id', $orderId)
+        // ->whereNotNull('orders.id')->orWhereNotNull('orders.merchant_order_id')
             ->select(
-                'qs_orders.*',
+                'orders.*',
                 'unlimit_payment.*',
-                'qs_products.*'
+                'products.*'
             )->first();
 
         $orderData = $order ? json_decode(json_encode($order), true) : [];
         Log::info('Encoded value', ['order data' => $orderData]);
         Log::info('Join data', ['join data' => $order]);
-        $qsOrder = QsOrder::find($orderId);
-        if ($qsOrder && ! empty($orderCreatedResponse['orderId'])) {
+        $Order = Order::find($orderId);
+        if ($Order && ! empty($orderCreatedResponse['orderId'])) {
             $order->woohoo_order_id = $orderCreatedResponse['orderId'] ?? null;
-            $qsOrder->save();
-            Log::info('woohoo_order_id updated', ['id' => $orderId, 'woohoo_order_id' => $qsOrder->woohoo_order_id]);
+            $Order->save();
+            Log::info('woohoo_order_id updated', ['id' => $orderId, 'woohoo_order_id' => $Order->woohoo_order_id]);
         }
 
         Log::info('Join data', ['order' => $order]);
         Log::info('DEBUG JOIN VALUES', [
             'orderId' => $orderId,
-            'qsOrder' => QsOrder::find($orderId),
-            'qsOrder_sku' => QsOrder::find($orderId)?->sku,
-            'qsOrder_merchant_order_id' => QsOrder::find($orderId)?->merchant_order_id,
+            'Order' => Order::find($orderId),
+            'qsOrder_sku' => Order::find($orderId)?->sku,
+            'qsOrder_merchant_order_id' => Order::find($orderId)?->merchant_order_id,
 
             'unlimit_payment_exists' => UnlimitPayment::where('merchant_order_id',
-                QsOrder::find($orderId)?->merchant_order_id)->exists(),
+                Order::find($orderId)?->merchant_order_id)->exists(),
 
             'unlimit_payment_rows' => UnlimitPayment::where('merchant_order_id',
-                QsOrder::find($orderId)?->merchant_order_id)->get(),
+                Order::find($orderId)?->merchant_order_id)->get(),
 
-            'product_exists' => \DB::table('qs_products')
-                ->where('sku', QsOrder::find($orderId)?->sku)
+            'product_exists' => \DB::table('products')
+                ->where('sku', Order::find($orderId)?->sku)
                 ->exists(),
         ]);
         // Debug logging for product data
@@ -893,8 +889,8 @@ class WoohooOrderController extends Controller
          ]);*/
 
         // Get raw image URL first
-        $imageUrl = CommonHelper::getProductImage($order);
-        Log::info('Raw image URL from CommonHelper: '.$imageUrl);
+        $imageUrl = ProductImageHelper::getProductImage($order);
+        Log::info('Raw image URL from ProductImageHelper: '.$imageUrl);
 
         // Convert backslashes to forward slashes in the URL
         $imageUrl = str_replace('\\', '/', $imageUrl);
@@ -939,7 +935,7 @@ class WoohooOrderController extends Controller
                     Log::info('No product images available');
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error checking image accessibility: '.$e->getMessage());
             $smallImageUrl = null;
         }
@@ -984,7 +980,7 @@ class WoohooOrderController extends Controller
                     /* if (is_array($combined) && isset($combined["cards"]) && is_array($combined["cards"])) {
                          $cardsArray = $combined["cards"];
                          // Persist freshly fetched cards
-                         QsOrder::where("id", $orderId)->update([
+                         Order::where("id", $orderId)->update([
                              "cards" => encrypt(json_encode($cardsArray), env("ENCRYPTION_KEY")),
                          ]);
                      }*/
@@ -1012,7 +1008,7 @@ class WoohooOrderController extends Controller
                             }
                         }
                         if (! empty($cardsArray)) {
-                            QsOrder::where('id', $orderId)->update([
+                            Order::where('id', $orderId)->update([
                                 'cards' => encrypt(json_encode($cardsArray), env('ENCRYPTION_KEY')),
                             ]);
                         }
@@ -1023,8 +1019,8 @@ class WoohooOrderController extends Controller
             }
         }
 
-        log::info(888);
-        QsOrder::where('id', $orderId)->update(['invoice_number' => $invoiceNumber]);
+        Log::info(888);
+        Order::where('id', $orderId)->update(['invoice_number' => $invoiceNumber]);
 
         // Add image URL to logging
         Log::info('Final image URL being used in email: '.($smallImageUrl ?? 'No image available'));
@@ -1066,64 +1062,64 @@ class WoohooOrderController extends Controller
             'denomination' => $orderData['denomination'] ?? null,
             'discount_percentage' => $orderData['discount_percentage'] ?? null,
         ];
-       // try {
-            // Build robust SMS details with safe fallbacks
-            $senderName = $orderData['sender_first_name'] ?? ($billingdata['billing_name'] ?? 'Customer');
-            $orderIdForSms = $orderData['woohoo_order_id'] ?? ($orderData['id'] ?? null);
-            $orderAmountForSms = $orderData['amount'] ?? ($orderData['grand_payable_amount'] ?? null);
-            $productNameForSms = $orderData['name'] ?? ($orderData['sku'] ?? 'Gift Card');
-            $billingTelForSms = $billingdata['billing_tel'] ?? $orderData['sender_phone_no'] ?? null;
-            $shipToNameForSms = $orderData['receiver_name'] ?? $senderName;
-            $shipToContactForSms = $orderData['receiver_mobile'] ?? $billingTelForSms;
+        // try {
+        // Build robust SMS details with safe fallbacks
+        $senderName = $orderData['sender_first_name'] ?? ($billingdata['billing_name'] ?? 'Customer');
+        $orderIdForSms = $orderData['woohoo_order_id'] ?? ($orderData['id'] ?? null);
+        $orderAmountForSms = $orderData['amount'] ?? ($orderData['grand_payable_amount'] ?? null);
+        $productNameForSms = $orderData['name'] ?? ($orderData['sku'] ?? 'Gift Card');
+        $billingTelForSms = $billingdata['billing_tel'] ?? $orderData['sender_phone_no'] ?? null;
+        $shipToNameForSms = $orderData['receiver_name'] ?? $senderName;
+        $shipToContactForSms = $orderData['receiver_mobile'] ?? $billingTelForSms;
 
-            $prepareSmsDetails = [
-                'name' => $senderName,
-                'order_id' => $orderIdForSms,
-                'reference_id' => $orderData['id'] ?? null,
-                'order_date' => $orderData['created_at'] ?? null,
-                'billing_name' => $billingdata['billing_name'] ?? $senderName,
-                'order_amount' => $orderAmountForSms,
-                'cardSku' => $orderData['sku'] ?? null,
-                'cardProductName' => $productNameForSms,
-                'shipToName' => $shipToNameForSms,
-                'shipToContactNo' => $shipToContactForSms,
-                'grand_payable_amount' => $orderData['grand_payable_amount'] ?? null,
-                'perOrderQuantity' => $orderData['quantity'] ?? 1,
-                'giftSendOption' => $orderData['gift_send_option'] ?? 'buy_for_self',
-                'billing_tel' => $billingTelForSms,
-            ];
-            $deliveryMode = $orderData['delivery_mode'] ?? 'both';
-            if ($deliveryMode == 'both') {
-                Log::info('Calling Transaction Mail');
-                $this->sendTransactionMail($prepareMailDetails);
-                Log::info('Calling Gift Mail');
-                $this->sendGiftMail($prepareMailDetails, $cardsArray);
-                Log::info('Calling Transaction SMS');
-                $this->sendTransactionalMessage($prepareSmsDetails);
-                Log::info('Calling Gift SMS');
-                $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
-            } elseif ($orderData['delivery_mode'] == 'email') {
-                $this->sendTransactionMail($prepareMailDetails);
-                $this->sendTransactionalMessage($prepareSmsDetails);
-                $this->sendGiftMail($prepareMailDetails, $cardsArray);
-            } elseif ($orderData['delivery_mode'] == 'mobile') {
-                $this->sendTransactionMail($prepareMailDetails);
-                $this->sendTransactionalMessage($prepareSmsDetails);
-                $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
-            }
-            log::info('zzzz');
-       // }
-	/* catch (\Exception $e) {
-            return ErrorHandler::handleOrderError($e);
-        }*/
+        $prepareSmsDetails = [
+            'name' => $senderName,
+            'order_id' => $orderIdForSms,
+            'reference_id' => $orderData['id'] ?? null,
+            'order_date' => $orderData['created_at'] ?? null,
+            'billing_name' => $billingdata['billing_name'] ?? $senderName,
+            'order_amount' => $orderAmountForSms,
+            'cardSku' => $orderData['sku'] ?? null,
+            'cardProductName' => $productNameForSms,
+            'shipToName' => $shipToNameForSms,
+            'shipToContactNo' => $shipToContactForSms,
+            'grand_payable_amount' => $orderData['grand_payable_amount'] ?? null,
+            'perOrderQuantity' => $orderData['quantity'] ?? 1,
+            'giftSendOption' => $orderData['gift_send_option'] ?? 'buy_for_self',
+            'billing_tel' => $billingTelForSms,
+        ];
+        $deliveryMode = $orderData['delivery_mode'] ?? 'both';
+        if ($deliveryMode == 'both') {
+            Log::info('Calling Transaction Mail');
+            $this->sendTransactionMail($prepareMailDetails);
+            Log::info('Calling Gift Mail');
+            $this->sendGiftMail($prepareMailDetails, $cardsArray);
+            Log::info('Calling Transaction SMS');
+            $this->sendTransactionalMessage($prepareSmsDetails);
+            Log::info('Calling Gift SMS');
+            $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
+        } elseif ($orderData['delivery_mode'] == 'email') {
+            $this->sendTransactionMail($prepareMailDetails);
+            $this->sendTransactionalMessage($prepareSmsDetails);
+            $this->sendGiftMail($prepareMailDetails, $cardsArray);
+        } elseif ($orderData['delivery_mode'] == 'mobile') {
+            $this->sendTransactionMail($prepareMailDetails);
+            $this->sendTransactionalMessage($prepareSmsDetails);
+            $this->sendGiftMessage($prepareSmsDetails, $cardsArray);
+        }
+        Log::info('zzzz');
+        // }
+        /* catch (\Exception $e) {
+                return ErrorHandler::handleOrderError($e);
+            }*/
     }
 
-    public function updateQsOrder($orderCreatedResponse)
+    public function syncOrderFromWoohooResponse($orderCreatedResponse)
     {
-        $qsOrderId = session('session_qsorder_id');
-        $refno = session('session_refno');
+        $orderId = session('checkout_order_id');
+        $refno = session('checkout_refno');
 
-        Log::info('Reference number', ['ref_no' => $refno, 'qs_order_id' => $qsOrderId]);
+        Log::info('Reference number', ['ref_no' => $refno, 'order_id' => $orderId]);
         Log::info('Cache order data', ['order_data' => $orderCreatedResponse]);
 
         $isSuccessful = false;
@@ -1132,11 +1128,12 @@ class WoohooOrderController extends Controller
         }
 
         if (! is_array($orderCreatedResponse)) {
-            Log::error('updateQsOrder called with invalid response type', [
+            Log::error('syncOrderFromWoohooResponse called with invalid response type', [
                 'type' => gettype($orderCreatedResponse),
             ]);
             $transactionStatusMessage = 'Invalid order response format received from Woohoo.';
 
+            // Must not return an HTTP response: callers expect int order id or use this from non-HTTP sync paths.
             return view('order.order-status', compact('transactionStatusMessage', 'isSuccessful'));
         }
 
@@ -1163,43 +1160,43 @@ class WoohooOrderController extends Controller
             }
         }
 
-        $qsOrderUpdate = QsOrder::where('refno', $orderCreatedResponse['refno'])->first();
-        if ($qsOrderUpdate) {
+        $order = Order::where('refno', $orderCreatedResponse['refno'])->first();
+        if ($order) {
             // Normalize status to uppercase for consistency
             $normalizedStatus = strtoupper($orderCreatedResponse['status'] ?? '');
-            
-            $qsOrderUpdate->update([
+
+            $order->update([
                 'woohoo_order_id' => $orderCreatedResponse['orderId'] ?? null,
                 'order_status' => $normalizedStatus,
                 'cards' => encrypt(json_encode($orderCreatedResponse['cards'] ?? []), env('ENCRYPTION_KEY')),
                 'order_cancel' => json_encode($orderCreatedResponse['cancel'] ?? []),
                 'order_payment' => isset($orderCreatedResponse['payments']) ? json_encode($orderCreatedResponse['payments']) : null,
                 'currency' => json_encode($orderCreatedResponse['currency'] ?? []),
-                'additionalTxnFields' => isset($orderCreatedResponse['additionalTxnFields']) ? json_encode($orderCreatedResponse['additionalTxnFields']) : null
+                'additionalTxnFields' => isset($orderCreatedResponse['additionalTxnFields']) ? json_encode($orderCreatedResponse['additionalTxnFields']) : null,
             ]);
-            
+
             // CRITICAL: Also update OrderSummary.order_status to maintain consistency
-            $existingOrderSummary = OrderSummary::where('order_id', $qsOrderUpdate->id)->first();
+            $existingOrderSummary = OrderSummary::where('order_id', $order->id)->first();
             if ($existingOrderSummary) {
                 $existingOrderSummary->order_status = $normalizedStatus;
                 $existingOrderSummary->save();
-                
-                Log::info("✅ OrderSummary status updated in updateQsOrder", [
+
+                Log::info('✅ OrderSummary status updated in syncOrderFromWoohooResponse', [
                     'order_summary_id' => $existingOrderSummary->id,
-                    'order_id' => $qsOrderUpdate->id,
-                    'status' => $normalizedStatus
+                    'order_id' => $order->id,
+                    'status' => $normalizedStatus,
                 ]);
             } else {
-                Log::warning('OrderSummary not found for order_id: '.$qsOrderUpdate->id);
+                Log::warning('OrderSummary not found for order_id: '.$order->id);
             }
 
-            return $qsOrderUpdate->id;
+            return $order->id;
         } else {
             $transactionStatusMessage = 'Order with ID with referene number not found.';
             Log::error($transactionStatusMessage);
 
             return view('order.order-status', compact('transactionStatusMessage', 'isSuccessful'));
-            // Log::error("QS Order not found for refno: " . $orderCreatedResponse["refno"]);
+            // Log::error("Order not found for refno: " . $orderCreatedResponse["refno"]);
             // return false;
         }
     }
@@ -1217,8 +1214,8 @@ class WoohooOrderController extends Controller
             ], 400);
         }
 
-        $qsOrder = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
-        if (! $qsOrder) {
+        $Order = Order::where('merchant_order_id', $merchantOrderId)->first();
+        if (! $Order) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Order not found in DB. Contact support.',
@@ -1226,7 +1223,7 @@ class WoohooOrderController extends Controller
         }
 
         // If order already complete
-        if ($qsOrder->order_status === 'COMPLETE') {
+        if ($Order->order_status === 'COMPLETE') {
             return response()->json([
                 'status' => 'complete',
                 'message' => 'Payment completed successfully',
@@ -1234,13 +1231,13 @@ class WoohooOrderController extends Controller
         }
 
         // Fetch latest status from Unlimit API if needed
-        $statusResponse = $this->getStatusByReferenceNumberLightweight($qsOrder->refno);
+        $statusResponse = $this->getStatusByReferenceNumberLightweight($Order->refno);
         if ($statusResponse['status'] === 'COMPLETED') {
-            $qsOrder->order_status = 'COMPLETE';
-            $qsOrder->save();
-            
+            $Order->order_status = 'COMPLETE';
+            $Order->save();
+
             // CRITICAL: Also update OrderSummary.order_status to maintain consistency
-            $orderSummary = OrderSummary::where('order_id', $qsOrder->id)->first();
+            $orderSummary = OrderSummary::where('order_id', $Order->id)->first();
             if ($orderSummary) {
                 $orderSummary->order_status = 'COMPLETE';
                 $orderSummary->save();
@@ -1265,10 +1262,10 @@ class WoohooOrderController extends Controller
     {
         try {
             $requestHttpMethod = 'GET';
-            $absApiUrl = 'https://'.setting('api.woohoo_url').'/rest/v3/order/'.$refno.'/status';
-            $clientSecret = setting('api.qs_clientSecret');
-            $bearerToken = setting('api.bearer_token');
-            $signature = CommonHelper::generateSignature('', $requestHttpMethod, $absApiUrl, $clientSecret);
+            $absApiUrl = 'https://'.config('woohoo.host').'/rest/v3/order/'.$refno.'/status';
+            $clientSecret = config('woohoo.client_secret');
+            $bearerToken = config('woohoo.bearer_token');
+            $signature = ApiSignatureHelper::generateSignature('', $requestHttpMethod, $absApiUrl, $clientSecret);
             $dateAtClient = Carbon::now()->toIso8601String();
 
             Log::info("Lightweight status check for refno: $refno");
@@ -1328,7 +1325,7 @@ class WoohooOrderController extends Controller
                 'message' => 'Unknown status',
             ];
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Lightweight status check error: '.$e->getMessage());
 
             return [
@@ -1363,7 +1360,7 @@ class WoohooOrderController extends Controller
                 'order_id' => $prepareMailDetails['order_id'] ?? 'N/A',
             ]);
 
-            $pdf = PDF::loadView('layouts.invoice', $prepareMailDetails);
+            $pdf = Pdf::loadView('layouts.invoice', $prepareMailDetails);
 
             Mail::send(['html' => 'layouts.mail'], compact('prepareMailDetails', 'pdf'), function ($message) use ($prepareMailDetails, $pdf) {
                 $message->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
@@ -1382,7 +1379,7 @@ class WoohooOrderController extends Controller
             $msg = 'Transaction Mail created successfully!';
             $status = 'success';
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Log detailed error information
             Log::error('Failed to send transaction mail', [
                 'error_message' => $e->getMessage(),
@@ -1428,8 +1425,10 @@ class WoohooOrderController extends Controller
     //     return view ('layouts.invoice2');
     // }
 
-    public function sendOrderFailureMail($qsOrderDetails)
+    public function sendOrderFailureMail(Order $order)
     {
+        $failureOrderId = $order->id;
+
         // Fetch the recipient emails from the .env file
         $orderFailureAdminEmail = env('ORDER_FAILURE_ADMIN_EMAIL');
         $orderFailureITAdminEmail = env('ORDER_FAILURE_IT_ADMIN_EMAIL');
@@ -1452,7 +1451,7 @@ class WoohooOrderController extends Controller
         if (empty($orderFailureAdminEmail) || ! filter_var($orderFailureAdminEmail, FILTER_VALIDATE_EMAIL)) {
             Log::error('Order failure mail not sent: invalid or empty admin email', [
                 'admin_email' => $orderFailureAdminEmail,
-                'order_id' => $qsOrderDetails['order_id'] ?? 'N/A',
+                'order_id' => $failureOrderId,
             ]);
 
             return;
@@ -1460,7 +1459,7 @@ class WoohooOrderController extends Controller
         if (empty($orderFailureITAdminEmail) || ! filter_var($orderFailureITAdminEmail, FILTER_VALIDATE_EMAIL)) {
             Log::error('Order failure mail not sent: invalid or empty IT admin email', [
                 'it_admin_email' => $orderFailureITAdminEmail,
-                'order_id' => $qsOrderDetails['order_id'] ?? 'N/A',
+                'order_id' => $failureOrderId,
             ]);
 
             return;
@@ -1471,7 +1470,7 @@ class WoohooOrderController extends Controller
         if (empty($fromEmail) || ! filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
             Log::error('Order failure mail not sent: invalid or empty from email', [
                 'from_email' => $fromEmail,
-                'order_id' => $qsOrderDetails['order_id'] ?? 'N/A',
+                'order_id' => $failureOrderId,
             ]);
 
             return;
@@ -1483,7 +1482,7 @@ class WoohooOrderController extends Controller
             'it_admin_email' => $orderFailureITAdminEmail,
             'from_email' => $fromEmail,
             'company_name' => config('companyDefaultValues.company_name'),
-            'order_id' => $qsOrderDetails['order_id'] ?? 'N/A',
+            'order_id' => $failureOrderId,
         ]);
 
         try {
@@ -1491,12 +1490,12 @@ class WoohooOrderController extends Controller
             Log::info('Attempting to send order failure mail', [
                 'admin_email' => $orderFailureAdminEmail,
                 'it_admin_email' => $orderFailureITAdminEmail,
-                'order_id' => $qsOrderDetails['order_id'] ?? 'N/A',
+                'order_id' => $failureOrderId,
             ]);
 
             // Send the email using Blade template
             Mail::send('email.order-failure', [
-                'orderDetails' => $qsOrderDetails,  // Pass order details to the view
+                'orderDetails' => $order,  // Pass order details to the view
             ], function ($message) use ($orderFailureAdminEmail, $orderFailureITAdminEmail) {
                 $message->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
                     ->to($orderFailureAdminEmail) // Main recipient (admin)
@@ -1508,10 +1507,10 @@ class WoohooOrderController extends Controller
             Log::info('Order Failure email sent successfully', [
                 'admin_email' => $orderFailureAdminEmail,
                 'it_admin_email' => $orderFailureITAdminEmail,
-                'order_id' => $qsOrderDetails['order_id'] ?? 'N/A',
+                'order_id' => $failureOrderId,
             ]);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Log any errors during the email sending process
             Log::error('Failed to send Order Failure email', [
                 'error_message' => $e->getMessage(),
@@ -1519,7 +1518,7 @@ class WoohooOrderController extends Controller
                 'error_line' => $e->getLine(),
                 'admin_email' => $orderFailureAdminEmail,
                 'it_admin_email' => $orderFailureITAdminEmail,
-                'order_id' => $qsOrderDetails['order_id'] ?? 'N/A',
+                'order_id' => $failureOrderId,
                 'stack_trace' => $e->getTraceAsString(),
             ]);
         }
@@ -1556,6 +1555,8 @@ class WoohooOrderController extends Controller
                 'recipient_name' => $recipientName,
                 'order_id' => $prepareMailDetails['order_id'] ?? 'N/A',
                 'cards_count' => count($cardsArray),
+                'small_image_url' => $prepareMailDetails['smallImageUrl'] ?? null,
+                'cards_preview' => array_slice($cardsArray, 0, 3),
             ]);
 
             Mail::send(['html' => 'layouts.giftmail'], compact('prepareMailDetails', 'cardsArray'), function ($message) use ($prepareMailDetails) {
@@ -1575,7 +1576,7 @@ class WoohooOrderController extends Controller
             $msg = 'Gift Mail created successfully!';
             $status = 'success';
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Log detailed error information
             Log::error('Failed to send gift mail', [
                 'error_message' => $e->getMessage(),
@@ -1661,7 +1662,7 @@ class WoohooOrderController extends Controller
                 ]);
             }
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Exception occurred while sending transactional SMS', [
                 'error_message' => $e->getMessage(),
                 'error_file' => $e->getFile(),
@@ -1764,7 +1765,7 @@ class WoohooOrderController extends Controller
                         ]);
                     }
 
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     Log::error('Exception occurred while sending gift SMS for card', [
                         'card_index' => $index + 1,
                         'card_id' => $card['cardNumber'] ?? 'N/A',
@@ -1778,7 +1779,7 @@ class WoohooOrderController extends Controller
                 }
             }
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Exception occurred while sending gift SMS', [
                 'error_message' => $e->getMessage(),
                 'error_file' => $e->getFile(),

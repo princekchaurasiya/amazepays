@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Payment extends Model
 {
     use HasFactory;
+
     protected $fillable = [
+        'user_id',
         'payment_method',
         'merchant_order_id',
         'merchant_order_description',
@@ -52,6 +54,6 @@ class Payment extends Model
     // Order associated with payment (if order_id exists)
     public function order()
     {
-        return $this->belongsTo(QsOrder::class, 'merchant_order_id', 'merchant_order_id');
+        return $this->belongsTo(Order::class, 'merchant_order_id', 'merchant_order_id');
     }
 }

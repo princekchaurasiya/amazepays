@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\QsOrder;
+use App\Models\Order;
+use App\Models\OrderSummary;
+use App\Models\Product;
 use App\Models\UnlimitPayment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class UnlimitController extends Controller
 {
@@ -17,8 +19,7 @@ class UnlimitController extends Controller
      */
     public function checkout(Request $request)
     {
-        // Validate input
-        $request->validate([
+        $validated = $request->validate([
             'billing_name' => 'required|string',
             'billing_email' => 'required|email',
             'billing_tel' => 'required|string',
@@ -29,183 +30,132 @@ class UnlimitController extends Controller
             'billing_country' => 'required|string',
             'denomination' => 'required|numeric|min:0.01|max:999999',
             'sku' => 'required|string',
-            'order_id' => 'nullable|integer|exists:qs_orders,id', // Optional: if order already exists
+            'order_id' => 'nullable|integer|exists:orders,id',
         ]);
 
-        $denomination = (float) $request->denomination;
+        $denomination = (float) $validated['denomination'];
         $amountToPay = $denomination;
         $order = null;
 
-        // SECURITY: If order_id provided, validate and use existing order
-        if ($request->has('order_id') && $request->order_id) {
-            $order = QsOrder::where('id', $request->order_id)
+        if (! empty($validated['order_id'])) {
+            $order = Order::where('id', $validated['order_id'])
                 ->where('user_id', $request->user()->id ?? null)
                 ->first();
 
-            if (!$order) {
-                Log::error('❌ Unlimit checkout: Order not found or unauthorized', [
-                    'order_id' => $request->order_id,
-                    'user_id' => $request->user()->id ?? null,
-                    'ip_address' => $request->ip()
-                ]);
+            if (! $order) {
                 return back()->with('error', 'Order not found or unauthorized.');
             }
 
-            // SECURITY: Validate denomination matches order
             if (abs($order->denomination - $denomination) > 0.01) {
-                Log::error('❌ Unlimit checkout: Denomination mismatch', [
-                    'order_id' => $order->id,
-                    'order_denomination' => $order->denomination,
-                    'request_denomination' => $denomination,
-                    'ip_address' => $request->ip()
-                ]);
                 return back()->with('error', 'Denomination mismatch. Please refresh and try again.');
             }
 
-            // SECURITY: Use amount from database, not request
-            // CRITICAL: Never fall back to denomination alone - it's only unit price, not total
-            // If both amounts are null, calculate from denomination * quantity
             if ($order->amount_payable_after_discount !== null) {
                 $amountToPay = (float) $order->amount_payable_after_discount;
             } elseif ($order->grand_payable_amount !== null) {
                 $amountToPay = (float) $order->grand_payable_amount;
             } else {
-                // Fallback: calculate from denomination * quantity (never use denomination alone)
                 $quantity = (int) ($order->quantity ?? 1);
                 $amountToPay = (float) ($order->denomination ?? 0) * $quantity;
-                
-                Log::warning('⚠️ Unlimit checkout: Using calculated amount from denomination * quantity', [
-                    'order_id' => $order->id,
-                    'denomination' => $order->denomination,
-                    'quantity' => $quantity,
-                    'calculated_amount' => $amountToPay
-                ]);
             }
         } else {
-            // SECURITY: Validate denomination against product if SKU provided
-            if ($request->sku) {
-                $product = \App\Models\QsProduct::where('sku', $request->sku)->first();
-                
+            if ($validated['sku']) {
+                $product = Product::where('sku', $validated['sku'])->first();
+
                 if ($product) {
-                    // Decode product price
                     $product->price = json_decode($product->price);
                     $priceData = (array) $product->price;
                     $priceType = $priceData['type'] ?? 'RANGE';
 
                     if ($priceType === 'SLAB') {
                         $denominations = $priceData['denominations'] ?? [];
-                        if (!in_array((string) $denomination, $denominations)) {
-                            Log::warning('Invalid SLAB denomination in Unlimit checkout', [
-                                'denomination' => $denomination,
-                                'allowed' => $denominations,
-                                'sku' => $request->sku
-                            ]);
+                        if (! in_array((string) $denomination, $denominations)) {
                             return back()->withErrors([
-                                'denomination' => 'Invalid denomination value. Allowed values are: ' . implode(', ', $denominations)
+                                'denomination' => 'Invalid denomination value. Allowed values are: '.implode(', ', $denominations),
                             ])->withInput();
                         }
                     } elseif ($priceType === 'RANGE') {
                         $minPrice = $priceData['min'] ?? $product->minPrice ?? 0;
                         $maxPrice = $priceData['max'] ?? $product->maxPrice ?? 999999;
-                        
+
                         if ($denomination < $minPrice || $denomination > $maxPrice) {
-                            Log::warning('Denomination out of range in Unlimit checkout', [
-                                'denomination' => $denomination,
-                                'min' => $minPrice,
-                                'max' => $maxPrice,
-                                'sku' => $request->sku
-                            ]);
                             return back()->withErrors([
-                                'denomination' => "The denomination must be between ₹{$minPrice} and ₹{$maxPrice}."
+                                'denomination' => "The denomination must be between ₹{$minPrice} and ₹{$maxPrice}.",
                             ])->withInput();
                         }
                     }
                 }
             }
 
-            // Create new QsOrder
-            $order = QsOrder::create([
+            $order = Order::create([
                 'user_id' => $request->user()->id ?? null,
-                'woohoo_order_id' => 'WH-' . Str::upper(Str::random(6)),
+                'woohoo_order_id' => 'WH-'.Str::upper(Str::random(6)),
                 'order_status' => 'INITIATED',
                 'denomination' => $denomination,
-                'sender_first_name' => $request->billing_name,
-                'sender_email' => $request->billing_email,
-                'sender_phone_no' => $request->billing_tel,
-                'sender_address_1' => $request->billing_address,
-                'sender_city' => $request->billing_city,
-                'sender_state' => $request->billing_state,
-                'sender_post_code' => $request->billing_zip,
-                'sku' => $request->sku,
+                'sender_first_name' => $validated['billing_name'],
+                'sender_email' => $validated['billing_email'],
+                'sender_phone_no' => $validated['billing_tel'],
+                'sender_address_1' => $validated['billing_address'],
+                'sender_city' => $validated['billing_city'],
+                'sender_state' => $validated['billing_state'],
+                'sender_post_code' => $validated['billing_zip'],
+                'sku' => $validated['sku'],
                 'grand_payable_amount' => $denomination,
-                'amount_payable_after_discount' => $denomination, // no discount applied
+                'amount_payable_after_discount' => $denomination,
                 'currency' => 'INR',
             ]);
         }
 
         $merchantOrderId = $order->merchant_order_id ?? (string) Str::uuid();
-        
-        // Update order with merchant_order_id if not set
-        if (!$order->merchant_order_id) {
+
+        if (! $order->merchant_order_id) {
             $order->merchant_order_id = $merchantOrderId;
             $order->save();
         }
 
-        // Create or update UnlimitPayment record
         $payment = UnlimitPayment::where('order_id', $order->id)->first();
-        
+
         if ($payment) {
-            // Update existing payment
             $payment->merchant_order_id = $merchantOrderId;
-            $payment->amount = $amountToPay; // Use validated amount
-            $payment->billing_name = $request->billing_name;
-            $payment->billing_email = $request->billing_email;
-            $payment->billing_tel = $request->billing_tel;
-            $payment->billing_address = $request->billing_address;
-            $payment->billing_city = $request->billing_city;
-            $payment->billing_state = $request->billing_state;
-            $payment->billing_zip = $request->billing_zip;
-            $payment->billing_country = $request->billing_country;
+            $payment->amount = $amountToPay;
+            $payment->billing_name = $validated['billing_name'];
+            $payment->billing_email = $validated['billing_email'];
+            $payment->billing_tel = $validated['billing_tel'];
+            $payment->billing_address = $validated['billing_address'];
+            $payment->billing_city = $validated['billing_city'];
+            $payment->billing_state = $validated['billing_state'];
+            $payment->billing_zip = $validated['billing_zip'];
+            $payment->billing_country = $validated['billing_country'];
             $payment->save();
         } else {
-            // Create new payment
-            $payment = UnlimitPayment::create([
+            UnlimitPayment::create([
                 'user_id' => $request->user()->id ?? null,
                 'order_id' => $order->id,
                 'merchant_order_id' => $merchantOrderId,
-                'amount' => $amountToPay, // Use validated amount
+                'amount' => $amountToPay,
                 'currency' => 'INR',
-                'billing_name' => $request->billing_name,
-                'billing_email' => $request->billing_email,
-                'billing_tel' => $request->billing_tel,
-                'billing_address' => $request->billing_address,
-                'billing_city' => $request->billing_city,
-                'billing_state' => $request->billing_state,
-                'billing_zip' => $request->billing_zip,
-                'billing_country' => $request->billing_country,
+                'billing_name' => $validated['billing_name'],
+                'billing_email' => $validated['billing_email'],
+                'billing_tel' => $validated['billing_tel'],
+                'billing_address' => $validated['billing_address'],
+                'billing_city' => $validated['billing_city'],
+                'billing_state' => $validated['billing_state'],
+                'billing_zip' => $validated['billing_zip'],
+                'billing_country' => $validated['billing_country'],
             ]);
         }
 
-        Log::info("✅ Unlimit checkout validated", [
-            'merchant_order_id' => $merchantOrderId,
-            'order_id' => $order->id,
-            'amount' => $amountToPay,
-            'denomination' => $denomination
-        ]);
-
-        // SECURITY: Use environment-aware API URL
         $apiBaseUrl = config('unlimit.api_base_url', 'https://sandbox.in.unlimit.com');
-        $paymentUrl = rtrim($apiBaseUrl, '/') . '/payment/request';
+        $paymentUrl = rtrim($apiBaseUrl, '/').'/payment/request';
 
-        // Send request to Unlimit with validated amount
         $response = Http::post($paymentUrl, [
             'merchant_order' => [
                 'id' => $merchantOrderId,
-                'description' => 'Unlimit transaction'
+                'description' => 'Unlimit transaction',
             ],
             'payment_method' => 'upi',
             'payment_data' => [
-                'amount' => $amountToPay, // Use validated amount from database
+                'amount' => $amountToPay,
                 'currency' => 'INR',
             ],
             'return_urls' => [
@@ -215,15 +165,9 @@ class UnlimitController extends Controller
             'callback_url' => route('unlimit.callback'),
         ]);
 
-        Log::info("UNLIMIT API RESPONSE", $response->json());
-
         $redirectUrl = $response->json('redirect_url');
 
-        if (!$redirectUrl) {
-            Log::error('❌ No redirect URL from Unlimit API', [
-                'response' => $response->json(),
-                'status' => $response->status()
-            ]);
+        if (! $redirectUrl) {
             return back()->with('error', 'Payment gateway error. Please try again.');
         }
 
@@ -235,15 +179,15 @@ class UnlimitController extends Controller
      */
     public function callback(Request $request)
     {
-        $payload = $request->all();
-        Log::info('Unlimit callback received', ['payload' => $payload]);
+        $payload = [
+            'merchant_order' => $request->input('merchant_order'),
+            'payment_data' => $request->input('payment_data'),
+        ];
 
         $merchantOrderId = data_get($payload, 'merchant_order.id');
-        $paymentId = data_get($payload, 'payment_data.id');
         $status = data_get($payload, 'payment_data.status');
         $amount = data_get($payload, 'payment_data.amount');
 
-        // Update Payment record
         $payment = UnlimitPayment::where('merchant_order_id', $merchantOrderId)->first();
         if ($payment) {
             $payment->update([
@@ -253,24 +197,16 @@ class UnlimitController extends Controller
             ]);
         }
 
-        // Update Order status if payment is completed
-        $order = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
+        $order = Order::where('merchant_order_id', $merchantOrderId)->first();
         if ($order && $status === 'COMPLETED') {
-            // Standardized status flow: PENDING -> COMPLETE or FAILED
-            // Keep as PENDING until Woohoo order is created (will be updated to COMPLETE or FAILED)
-            if (!in_array($order->order_status, ['COMPLETE', 'FAILED'])) {
+            if (! in_array($order->order_status, ['COMPLETE', 'FAILED'])) {
                 $order->update(['order_status' => 'PENDING']);
-                
-                // CRITICAL: Also update OrderSummary.order_status to maintain consistency
+
                 $orderSummary = OrderSummary::where('order_id', $order->id)->first();
                 if ($orderSummary) {
                     $orderSummary->order_status = 'PENDING';
                     $orderSummary->save();
                 }
-                
-                Log::info("✅ QsOrder status updated to PENDING (payment successful, awaiting Woohoo order creation)", [
-                    'order_id' => $order->id
-                ]);
             }
         }
 
@@ -280,42 +216,41 @@ class UnlimitController extends Controller
     /**
      * Step 3: Return URL after Payment
      */
-   public function return(Request $request)
-{
-    // Prefer query param but fallback to POST
-    $merchantOrderId = $request->query('merchant_order_id') ?? $request->input('merchant_order_id');
-    $status = $request->query('status') ?? $request->input('status', 'unknown');
+    public function return(Request $request)
+    {
+        $merchantOrderId = $request->query('merchant_order_id') ?? $request->input('merchant_order_id');
+        $status = $request->query('status') ?? $request->input('status', 'unknown');
 
-    if (!$merchantOrderId) {
-        abort(404, 'Merchant order ID missing');
+        if (! $merchantOrderId) {
+            abort(404, 'Merchant order ID missing');
+        }
+
+        $payment = UnlimitPayment::where('merchant_order_id', $merchantOrderId)->latest()->first();
+        $order = Order::where('merchant_order_id', $merchantOrderId)->first();
+
+        if (! $payment || ! $order) {
+            abort(404, 'Payment or order not found');
+        }
+
+        $amount = $order->grand_payable_amount ?? 0;
+
+        return Inertia::render('Checkout/Processing', [
+            'payment_id' => $payment->id,
+            'order_id' => $order->id,
+            'amount' => $amount,
+            'status' => strtoupper($status),
+            'merchant_order_id' => $merchantOrderId ?? $payment->merchant_order_id ?? '',
+        ]);
     }
-
-    $payment = UnlimitPayment::where('merchant_order_id', $merchantOrderId)->latest()->first();
-    $order = QsOrder::where('merchant_order_id', $merchantOrderId)->first();
-
-    if (!$payment || !$order) {
-        abort(404, 'Payment or order not found');
-    }
-
-    $amount = $order->grand_payable_amount ?? 0;
-
-    return view('woohoo.processing-woohoo', [
-        'payment_id' => $payment->id,
-        'order_id' => $order->id,
-        'amount' => $amount,
-        'status' => strtoupper($status),
-        'merchant_order_id' => $merchantOrderId ?? $payment->merchant_order_id ?? '',
-    ]);
-}
 
     /**
-     * Step 4: Check Payment Status
+     * Step 4: Check payment status
      */
     public function checkTransactionStatus($merchantOrderId)
     {
         $payment = UnlimitPayment::where('merchant_order_id', $merchantOrderId)->first();
 
-        if (!$payment) {
+        if (! $payment) {
             return ['status' => 'NOT_FOUND'];
         }
 

@@ -2,15 +2,15 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Helpers\CommonHelper;
-use App\Models\QsProduct;
-use App\Models\QsCategory;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Exception;
+use App\Helpers\ApiSignatureHelper;
+use App\Models\Product;
+use App\Models\SyncedCategory;
 use Carbon;
 use DB;
+use Exception;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FetchProductList extends Command
 {
@@ -46,13 +46,13 @@ class FetchProductList extends Command
     public function handle()
     {
         try {
-            $qsCat = QsCategory::pluck('id')->first();
+            $syncedCategoryId = SyncedCategory::query()->pluck('id')->first();
             $requestBody = '';
             $requestHttpMethod = 'get';
-            $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/catalog/categories/' . $qsCat . '/products';
-            $clientSecret = setting('api.qs_clientSecret');
-            $bearerToken = setting('api.bearer_token');
-            $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+            $absApiUrl = 'https://'.config('woohoo.host').'/rest/v3/catalog/categories/'.$syncedCategoryId.'/products';
+            $clientSecret = config('woohoo.client_secret');
+            $bearerToken = config('woohoo.bearer_token');
+            $signature = ApiSignatureHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
 
             // Get the current time in ISO8601 format
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
@@ -90,16 +90,17 @@ class FetchProductList extends Command
                 $inserted = 0;
                 $updated = 0;
                 $skipped = 0;
-                
-                $collection->each(function ($item, $key) use ($qsCat, &$inserted, &$updated, &$skipped) {
+
+                $collection->each(function ($item, $key) use ($syncedCategoryId, &$inserted, &$updated, &$skipped) {
                     try {
                         // Skip products with empty or null SKUs
                         if (empty($item['sku']) || trim($item['sku']) === '') {
                             $skipped++;
                             Log::warning('Skipped product with empty SKU', ['product_name' => $item['name'] ?? 'Unknown']);
+
                             return;
                         }
-                        
+
                         $data = [
                             'sku' => $item['sku'],
                             'name' => $item['name'],
@@ -111,24 +112,24 @@ class FetchProductList extends Command
                             'images' => json_encode($item['images']),
                             'prdt_created_at' => $item['createdAt'],
                             'prdt_updated_at' => $item['updatedAt'],
-                            'qs_category_id' => $qsCat,
+                            'synced_category_id' => $syncedCategoryId,
                         ];
-                        
+
                         // Check if product exists to track inserts vs updates
-                        $exists = DB::table('qs_products')->where('sku', $item['sku'])->exists();
-                        
-                        DB::table('qs_products')->updateOrInsert(['sku' => $item['sku']], $data);
-                        
+                        $exists = DB::table('products')->where('sku', $item['sku'])->exists();
+
+                        DB::table('products')->updateOrInsert(['sku' => $item['sku']], $data);
+
                         if ($exists) {
                             $updated++;
                         } else {
                             $inserted++;
                         }
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         // Handle duplicate key or other database errors gracefully
                         Log::error('Failed to insert/update product', [
                             'sku' => $item['sku'] ?? 'Unknown',
-                            'error' => $e->getMessage()
+                            'error' => $e->getMessage(),
                         ]);
                         $skipped++;
                     }
@@ -138,16 +139,19 @@ class FetchProductList extends Command
                 $updateTime = Carbon\Carbon::now('Asia/Kolkata')->format('d/m/y H:i:s');
                 Log::info('Products updated in the database at:', ['update_time' => $updateTime]);
                 $this->info("Products stored successfully: {$inserted} inserted, {$updated} updated, {$skipped} skipped");
+
                 return json_encode(['status' => $products_resp->status(), 'data' => 'Stored Successfully']);
             } else {
-                $errorMessage = 'Something went wrong while fetching the product list. Status Code: ' . $products_resp->status();
+                $errorMessage = 'Something went wrong while fetching the product list. Status Code: '.$products_resp->status();
                 Log::error('Something went wrong while fetching the product list.', ['error' => $products_resp->body()]);
                 $this->error($errorMessage);
+
                 return json_encode(['status' => $products_resp->status(), 'data' => 'Something went wrong']);
             }
         } catch (Exception $e) {
-            Log::error('An error occurred: ' . $e->getMessage());
+            Log::error('An error occurred: '.$e->getMessage());
             $this->error($e->getMessage());
+
             return $e->getMessage();
         }
     }

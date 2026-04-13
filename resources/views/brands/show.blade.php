@@ -1,146 +1,49 @@
 @extends('layouts.app')
 
 @section('content')
-@php
-    use App\Helpers\CommonHelper;
-@endphp
+    <div class="mx-auto max-w-7xl px-4 py-8">
+        <nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+            <ol class="flex flex-wrap items-center gap-2">
+                <li><a href="{{ url('/') }}" class="hover:text-brand-600">{{ __('storefront.breadcrumb_home') }}</a></li>
+                <li aria-hidden="true">/</li>
+                <li class="font-medium text-gray-900">{{ $brand->name }}</li>
+            </ol>
+        </nav>
 
-    <div class="container">
-        <div class="product-wrapper pt-5 pb-5">
-            <div class="container-fluid">
-                <div class="row justify-content-center">
-                    <div class="col-12">
-                        <h1 class="text-grey-900 fw-700 pb-0 mb-2 d-block text-center hot-deal-text">{{ $brand->name }}</h1>
-                        <hr class="normalhr">
-                    </div>
+        <div class="flex flex-col items-center gap-4 md:flex-row md:items-start md:gap-8">
+            @if (!empty($brand->logo))
+                <div class="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gray-50 ring-1 ring-gray-100 md:h-28 md:w-28">
+                    <img src="{{ Storage::url($brand->logo) }}" alt="{{ $brand->name }}" class="max-h-full max-w-full object-contain p-2">
                 </div>
-
-
-                <div class="row justify-content-center">
-                    <div class="col-lg-10">
-                        <div class="row mt-5 mb-5 justify-content-center mx-0 gx-0 ">
-
-
-
-
-
-                            <div class="all-brand-slick-slider">
-                                @if (!empty($allBrands) && $allBrands->isNotEmpty())
-                                    @foreach ($allBrands as $singleBrand)
-                                        <div class="col-lg-1 mx-auto col-3">
-                                            <a href="{{ route('brands.show', ['slug' => $singleBrand->slug ?? '#']) }}">
-                                                <div class="shop-category-circle">
-                                                    @if (!empty($singleBrand->logo))
-                                                        <img src="{{ Voyager::image($singleBrand->logo) }}"
-                                                             alt="{{ $singleBrand->name ?? 'No Name' }}"
-                                                             class="shop-category-circle-image img-fluid">
-                                                    @endif
-                                                </div>
-                                                <p class="text-center text-black mt-2">{{ $singleBrand->name ?? 'No Name' }}</p>
-                                            </a>
-                                        </div>
-                                    @endforeach
-                                @else
-                                    <p class="text-center text-muted">No brands available at the moment.</p>
-                                @endif
-                            </div>
-
-
-
-                        </div>
-                    </div>
-                </div>
-
-
-
-
-
+            @endif
+            <div class="text-center md:text-left">
+                <h1 class="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">{{ $brand->name }}</h1>
+                @if($products->isNotEmpty())
+                    <p class="mt-2 text-sm text-gray-500">{{ __('storefront.brands_count', ['count' => $products->count()]) }}</p>
+                @endif
             </div>
+        </div>
 
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="row justify-content-center">
-                        <!-- loop product here -->
-                        <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-12">
-                            <div class="row">
+        @if (!empty($allBrands) && $allBrands->isNotEmpty())
+            <div class="mt-8 flex gap-2 overflow-x-auto pb-2 md:flex-wrap md:justify-center">
+                @foreach ($allBrands as $singleBrand)
+                    @php $active = isset($singleBrand->id, $brand->id) && (int) $singleBrand->id === (int) $brand->id; @endphp
+                    <a href="{{ route('brands.show', ['slug' => $singleBrand->slug ?? '#']) }}"
+                        class="shrink-0 rounded-full px-4 py-2 text-sm font-medium transition {{ $active ? 'bg-gray-900 text-white' : 'bg-white text-gray-800 ring-1 ring-gray-200 hover:ring-brand-500/30' }}">
+                        {{ $singleBrand->name ?? '—' }}
+                    </a>
+                @endforeach
+            </div>
+        @endif
 
-                                @foreach ($products as $product)
-                                    @php
-
-                                        $productImage = CommonHelper::getProductImage($product);
-
-                                    @endphp
-
-                                    @if ($product->slug && !empty($productImage))
-                                        <div class="col-lg-3 col-6">
-                                            <div class="product-wrapper-image">
-                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}" class="d-block text-center position-relative">
-                                                    <p class="single-image-wrapper">
-                                                        <img src="{{ $productImage }}" alt="product-image" class="w-100 mt-4 d-inline-block">
-                                                    </p>
-                                                    @if (!empty($product->out_of_stock) && $product->out_of_stock)
-                                                        <span class="stock-badge">Out of stock</span>
-                                                    @endif
-                                                </a>
-
-                                                <hr>
-                                                <a href="{{ route('get-product-by-slug', ['slug' => $product->url]) }}">
-                                                    <div class="product-image-text-wrapper m-lg-1">
-                                                        <p class="text-center fw-600 text-product-name-color text-product-name-font-size mt-lg-2 mt-3">
-                                                            {{ ucwords($product->name) }}
-                                                        </p>
-                                                    </div>
-                                                </a>
-
-                                                @if ($product->discount_percentage && $product->discount_percentage > 0)
-                                                    <div class="ribbon">
-                                                        <span>{{ $product->discount_percentage }}% off</span>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    @endif
-
-                            @endforeach
-                            @if ($products->isEmpty())
-    <p class="text-center text-muted">No brand available at the moment.</p>
-@endif
-                            </div> <!-- Closing row for products -->
-                        </div> <!-- Closing col for main product wrapper -->
-                    </div> <!-- Closing row for product display -->
-                </div> <!-- Closing col for main column -->
-            </div> <!-- Closing row for outer wrapper -->
-        </div> <!-- Closing product wrapper -->
-    </div> <!-- Closing main container -->
+        <div class="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            @forelse ($products as $product)
+                @if ($product->slug)
+                    <x-product-card :product="$product" />
+                @endif
+            @empty
+                <p class="col-span-full py-12 text-center text-gray-500">{{ __('storefront.empty_brand') }}</p>
+            @endforelse
+        </div>
+    </div>
 @endsection
-@push('scripts')
-    <script>
-        $(document).ready(function() {
-            $('.all-brand-slick-slider').slick({
-                slidesToShow: 8, // Desktop
-                slidesToScroll: 1, // Scroll 1 slide at a time
-                infinite: true, // Enable infinite scrolling
-                arrows: false, // Disable arrows for navigation
-                dots: true, // Enable dots for navigation
-                autoplay: true, // Enables automatic scrolling
-                autoplaySpeed: 2000, // Autoplay speed in milliseconds (1 second)
-                centerMode: true, // Center active slide
-                centerPadding: '10px', // Adjust this for how much of the next item you want visible
-                responsive: [{
-                    breakpoint: 768, // Mobile
-                    settings: {
-                        slidesToShow: 3,
-                        slidesToScroll: 1, // Scroll 1 slide at a time on mobile for better user experience
-                        infinite: true, // Ensure infinite scrolling is enabled on mobile
-                        centerMode: true, // Center active slide on mobile
-                        centerPadding: '10px', // Adjust for mobile visibility
-                        arrows: false, // Disable arrows for mobile
-                        dots: true, // Enable dots for mobile
-                        autoplay: true, // Enable autoplay on mobile
-                        autoplaySpeed: 1000, // Autoplay speed for mobile (1 second)
-                    }
-                }]
-            });
-        });
-    </script>
-@endpush

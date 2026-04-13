@@ -9,14 +9,8 @@
 </head>
 
 <body>
-    <!-- Debug info -->
-    @php
-        Log::info("Email template - Image URL being used: " . ($prepareMailDetails['smallImageUrl'] ?? 'No URL provided'));
-    @endphp
-
     <table
         style="width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; font-family: Arial, sans-serif;">
-        {{ logger($cardsArray) }}
         <tr>
             <td style="text-align: left; width:70%;">
                 <p style="font-weight: 600; font-size: 13px">Dear <span
@@ -24,7 +18,6 @@
                         ($prepareMailDetails['shipToName']) }}</span>, you've
                     received {{ count($cardsArray) }} {{ $cardsArray[0]['productName'] }}! Worth ₹ {{ $cardsArray[0]['amount'] }}
                     each.</p>
-            </td>
             </td>
             <td style="text-align: center; width:30%">
                 <img src="https://amazepays.in/images/logo.png" alt="Logo" style="max-width: 100px;"

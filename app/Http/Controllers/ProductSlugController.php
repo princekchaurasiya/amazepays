@@ -2,76 +2,75 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ContentFormatter;
+use App\Models\Product;
+use App\Services\Catalog\ProductContentService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Models\QsProduct;
-use App\Helpers\CommonHelper;
-use Exception;
+use Inertia\Inertia;
 
 class ProductSlugController extends Controller
 {
     public function getProductBySlug(Request $request)
     {
         try {
-            $product = QsProduct::where('url', $request->slug)->first();
+            $product = Product::where('url', $request->slug)->first();
             // dd($product);
 
-            if (!$product) {
-                return view('errors.404');
+            if (! $product) {
+                return Inertia::render('Error', [
+                    'status' => 404,
+                    'message' => 'Product not found.',
+                ])->toResponse($request)->setStatusCode(404);
             }
 
             // Access attributes first to trigger model accessors (auto-decode JSON fields)
             // Then convert to array - this ensures price, currency, images are properly decoded
             $productDetails = $product->toArray();
-            
+
             // Override with accessor values to ensure JSON fields are decoded
             $productDetails['price'] = $product->price;
             $productDetails['images'] = $product->images;
             $productDetails['currency'] = $product->currency;
+            $productDetails['display_image_url'] = $product->display_image_url;
 
-            // Decode howToUse safely from `cpg`
-            $decodedHowToUse = !empty($productDetails['amazepay_how_to_redeem'])
-            ? $productDetails['amazepay_how_to_redeem']
-            : (!empty($productDetails['cpg'])
-                ? $this->parseHowToUse($productDetails['cpg'])
-                : 'No how to redeem available.');
+            $content = app(ProductContentService::class);
 
-            $descriptionData = !empty($productDetails['amazepay_product_description'])
-    ? CommonHelper::extractDescription($productDetails['amazepay_product_description'])
-    : (!empty($productDetails['description'])
-        ? CommonHelper::extractDescription($productDetails['description'])
-        : 'No description available.');
+            // Decode howToUse safely from `cpg` (fallback when no admin content)
+            $decodedHowToUse = ! empty($productDetails['how_to_redeem'])
+                ? $productDetails['how_to_redeem']
+                : (! empty($productDetails['cpg'])
+                    ? $this->parseHowToUse($productDetails['cpg'])
+                    : 'No how to redeem available.');
 
+            $descriptionData = $content->resolveDescription($product);
+            $formattedTncData = $content->resolveTnc($product);
+            $resolvedHow = $content->resolveHowToRedeem($product);
+            $formatteddecodedHowToUse = $resolvedHow
+                ? $resolvedHow
+                : ContentFormatter::extractHowToRedeem($decodedHowToUse);
 
-            $tncData = !empty($productDetails['amazepay_t_and_c'])
-    ? $productDetails['amazepay_t_and_c']
-    : (!empty($productDetails['tnc'])
-        ? (is_string($productDetails['tnc'])
-            ? json_decode($productDetails['tnc'], true)
-            : $productDetails['tnc'])
-        : null);
-
-
-
-            $formattedTncData = CommonHelper::extractTnc($tncData);
-            $formatteddecodedHowToUse = CommonHelper::extractHowToRedeem($decodedHowToUse);
-
-            return view('userpanel.productPage', compact(
-                'productDetails',
-                'formattedTncData',
-                'descriptionData',
-                'formatteddecodedHowToUse'
-            ));
+            return Inertia::render('Storefront/Product', [
+                'productDetails' => $productDetails,
+                'formattedTncData' => $formattedTncData,
+                'descriptionData' => $descriptionData,
+                'formatteddecodedHowToUse' => $formatteddecodedHowToUse,
+            ]);
         } catch (Exception $e) {
-            Log::error('Error fetching product by slug: ' . $e->getMessage());
-            return view('userpanel.wentWrong')->with('errorMessage', 'Something Went Wrong. Please try again later.');
+            Log::error('Error fetching product by slug: '.$e->getMessage());
+
+            return Inertia::render('Error', [
+                'status' => 500,
+                'message' => 'Something went wrong. Please try again later.',
+            ])->toResponse($request)->setStatusCode(500);
         }
     }
 
     private function parseHowToUse($cpgString)
     {
         try {
-            if (!$cpgString) {
+            if (! $cpgString) {
                 return null;
             }
 
@@ -81,7 +80,7 @@ class ProductSlugController extends Controller
             }
 
             return null;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return null;
         }
     }

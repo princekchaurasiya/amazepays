@@ -8,6 +8,8 @@ use App\Models\GetEvcRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Http\Services\VDWebApiService;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 class GetEvcRequestController extends Controller
 {
@@ -19,17 +21,35 @@ class GetEvcRequestController extends Controller
         $this->vdWeb = $vdWeb;
     }
 
-    public function create()
+    public function create(): Response
     {
-        // Store the gift card form data in database if it exists in query parameters
         if (request()->has('denomination') && request()->has('quantity')) {
-            $this->storeGiftCardData();
+            $early = $this->storeGiftCardDataResponse();
+            if ($early instanceof Response) {
+                return $early;
+            }
         }
-        
-        return view('get_evc_requests.create');
+
+        $denom = request('denomination');
+        $qty = request('quantity');
+        $payable = '';
+        if ($denom !== null && $denom !== '' && $qty !== null && $qty !== '') {
+            $payable = (string) round((float) $denom * (int) $qty, 2);
+        }
+
+        return Inertia::render('Storefront/EvcRequestCreate', [
+            'prefill' => [
+                'denomination' => request('denomination'),
+                'quantity' => request('quantity'),
+                'vd_discount' => request('vd_discount'),
+                'vd_brand_code' => request('vd_brand_code'),
+                'gift_send_option' => request('gift_send_option'),
+                'payable_amount' => request('payable_amount') ?: $payable,
+            ],
+        ]);
     }
 
-    private function storeGiftCardData()
+    private function storeGiftCardDataResponse(): ?Response
     {
         try {
             // Create a new record with the gift card data
@@ -83,14 +103,17 @@ class GetEvcRequestController extends Controller
             ];
 
             $evcRequest = GetEvcRequest::create($giftCardData);
-            return view('payment.success', [
-                'orderId' => $evcRequest->order_id,
-                'requestRefNo' => $evcRequest->req_id,
+
+            return Inertia::render('Checkout/Status', [
+                'status' => 'success',
+                'msg' => 'Gift card request saved. Reference: '.$evcRequest->req_id,
+                'amount' => $evcRequest->amount,
             ]);
         } catch (\Exception $e) {
-            // Log error but don't stop the flow
-            \Log::error('Error storing gift card data: ' . $e->getMessage());
+            Log::error('Error storing gift card data: '.$e->getMessage());
         }
+
+        return null;
     }
 
     public function store(Request $request)
@@ -141,21 +164,17 @@ class GetEvcRequestController extends Controller
         return redirect()->back()->with('success', 'Request saved successfully!');
     }
 
-    public function show($orderId, $requestRefNo)
+    public function show($orderId, $requestRefNo): Response
     {
         $evcRequest = GetEvcRequest::where('order_id', $orderId)
-                        ->where('req_id', $requestRefNo)
-                        ->first();
+            ->where('req_id', $requestRefNo)
+            ->first();
 
-        if (!$evcRequest) {
-            return view('get_evc_requests.show', [
-                'evcRequest' => null,
-                'orderId' => $orderId,
-                'requestRefNo' => $requestRefNo,
-            ]);
-        }
-
-        return view('get_evc_requests.show', compact('evcRequest'));
+        return Inertia::render('Storefront/EvcRequestShow', [
+            'evcRequest' => $evcRequest ? $evcRequest->toArray() : null,
+            'orderId' => $orderId,
+            'requestRefNo' => $requestRefNo,
+        ]);
     }
 
     public function getBrands(string $token, string $brandCode = '')

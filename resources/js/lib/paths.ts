@@ -1,0 +1,27 @@
+/** Public storefront URL helpers (no Ziggy dependency). */
+
+export const paths = {
+    home: '/',
+    search: '/search',
+    searchSuggest: '/search/suggest',
+    business: '/business',
+    login: '/login',
+    profile: '/profile',
+    myOrders: '/my-order',
+    about: '/about',
+    contact: '/contact-us',
+    terms: '/terms-of-use',
+    privacy: '/privacy-policy',
+    refund: '/refund-policy',
+    faq: '/faq',
+    product: (slug: string) => `/product/${encodeURIComponent(slug)}`,
+    category: (slug: string) => `/category/${encodeURIComponent(slug)}`,
+    brand: (slug: string) => `/brand/${encodeURIComponent(slug)}`,
+    checkout: (slug: string) => `/checkout/${encodeURIComponent(slug)}`,
+    verifyEmail: '/verify-email',
+    changePassword: '/change-password',
+    panel: '/panel',
+    kgenProducts: '/kgen-products',
+    kgenPlaceOrder: '/kgen-place-order',
+    kgenOrders: '/kgen-orders',
+};

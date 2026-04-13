@@ -14,8 +14,11 @@
     @push('scripts')
         <script type="text/javascript">
              setTimeout(function() {
-                    console.log("Showing login modal");
-                    $('#Modallogin').modal('show');
+                    if (typeof window.openAuthModal === 'function') {
+                        window.openAuthModal();
+                    } else {
+                        window.location.href = '{{ route('login') }}';
+                    }
                 }, 100);
         </script>
     @endpush

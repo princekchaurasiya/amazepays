@@ -2,14 +2,14 @@
 
 /**
  * ProductHelper Usage Examples
- * 
+ *
  * This file contains examples of how to use ProductHelper in different scenarios.
  * You can use these patterns anywhere in your application.
  */
 
 namespace App\Helpers;
 
-use App\Models\QsProduct;
+use App\Models\Product;
 
 class ProductHelperUsageExamples
 {
@@ -45,9 +45,9 @@ class ProductHelperUsageExamples
                     'type' => 'RANGE',
                     'min' => '100',
                     'max' => '10000',
-                    'denominations' => ['100', '1000', '2000']
-                ]
-            ]
+                    'denominations' => ['100', '1000', '2000'],
+                ],
+            ],
         ];
 
         // Extract range info
@@ -88,7 +88,7 @@ class ProductHelperUsageExamples
     public function example4_withModels()
     {
         // Method 1: Use model methods (recommended - uses helper internally)
-        $product = QsProduct::find(1);
+        $product = Product::find(1);
         $minPrice = $product->getMinPrice();
         $maxPrice = $product->getMaxPrice();
         $formatted = $product->getFormattedPriceRange();
@@ -104,7 +104,7 @@ class ProductHelperUsageExamples
      */
     public function example5_processMultiple()
     {
-        $products = QsProduct::all();
+        $products = Product::all();
 
         // Process all products at once
         ProductHelper::processProducts($products);

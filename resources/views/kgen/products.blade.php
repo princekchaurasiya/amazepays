@@ -24,42 +24,16 @@
     @if(!request()->filled('search'))
         <div class="list-group mb-4">
             @foreach($products as $product)
-                @php
-                    // Filter out out-of-stock variants for list view
-                    $availableVariants = collect($product['variants'] ?? [])->filter(function($variant) {
-                        $stockAvailable = $variant['stockAvailable'] ?? $variant['inStock'] ?? $variant['available'] ?? $variant['isAvailable'] ?? true;
-                        $stock = $variant['stock'] ?? $variant['quantity'] ?? null;
-                        
-                        if ($stock === 0 || $stockAvailable === false || $stockAvailable === 0) {
-                            return false;
-                        }
-                        
-                        if ($stockAvailable === true || ($stock !== null && $stock > 0)) {
-                            return true;
-                        }
-                        
-                        return true;
-                    })->values();
-                @endphp
                 <div class="list-group-item">
                     <h5>{{ $product['productDisplayName'] }} ({{ $product['productID'] }})</h5>
-                    @if($availableVariants->isEmpty())
+                    @if(empty($product['variant_display_rows'] ?? []))
                         <div class="text-muted">No variants available</div>
                     @else
-                        @foreach($availableVariants as $variant)
-                            @php
-                                $discountPercentage = (float)($product['discount_percentage'] ?? 0);
-                                $mrpValue = (float)($variant['mrp'] ?? 0);
-                                $basePrice = (float)($variant['price'] ?? $mrpValue);
-                                $priceSource = $mrpValue > 0 ? $mrpValue : $basePrice;
-                                $effectivePrice = $discountPercentage > 0
-                                    ? round($priceSource * (1 - ($discountPercentage / 100)), 2)
-                                    : $basePrice;
-                            @endphp
+                        @foreach($product['variant_display_rows'] as $row)
                             <div>
-                                <strong>Variant:</strong> {{ $variant['variantDisplayName'] }} ({{ $variant['variantID'] }})<br>
-                                <strong>MRP:</strong> ₹{{ number_format($mrpValue ?: $basePrice, 2) }} |
-                                <strong>Discounted:</strong> <span class="text-success fw-bold">₹{{ number_format($effectivePrice, 2) }}</span>
+                                <strong>Variant:</strong> {{ $row['variant']['variantDisplayName'] ?? '-' }} ({{ $row['variant']['variantID'] ?? '' }})<br>
+                                <strong>MRP:</strong> ₹{{ number_format($row['mrpValue'] ?: $row['basePrice'], 2) }} |
+                                <strong>Discounted:</strong> <span class="text-success fw-bold">₹{{ number_format($row['effectivePrice'], 2) }}</span>
                             </div>
                         @endforeach
                     @endif
@@ -94,63 +68,32 @@
                             Category: {{ $product['categories'][0]['categoryName'] ?? 'Uncategorized' }}
                         </p>
                         <p class="card-text">
-                            {{ Str::limit($product['descriptionText'] ?? '', 100) }}
+                            {{ $product['description_excerpt'] ?? '' }}
                         </p>
 
-                        @php
-                            // Filter out out-of-stock variants
-                            $availableVariants = collect($product['variants'] ?? [])->filter(function($variant) {
-                                // Check common stock availability fields
-                                $stockAvailable = $variant['stockAvailable'] ?? $variant['inStock'] ?? $variant['available'] ?? $variant['isAvailable'] ?? true;
-                                $stock = $variant['stock'] ?? $variant['quantity'] ?? null;
-                                
-                                // If stock is explicitly 0 or false, consider out of stock
-                                if ($stock === 0 || $stockAvailable === false || $stockAvailable === 0) {
-                                    return false;
-                                }
-                                
-                                // If stockAvailable is explicitly true or stock > 0, consider in stock
-                                if ($stockAvailable === true || ($stock !== null && $stock > 0)) {
-                                    return true;
-                                }
-                                
-                                // Default to showing if no stock info is available
-                                return true;
-                            })->values();
-                        @endphp
-
-                        @if($availableVariants->isEmpty())
+                        @if(empty($product['variant_display_rows'] ?? []))
                             <div class="alert alert-warning mb-2">No variants available</div>
                         @else
                             <div class="mb-3">
                                 <strong>Select Variant:</strong>
                                 <div class="btn-group-vertical w-100 mt-2" role="group" id="variant-buttons-{{ $product['productID'] }}">
-                                    @foreach($availableVariants as $index => $variant)
-                                        @php
-                                            $discountPercentage = (float)($product['discount_percentage'] ?? 0);
-                                            $mrpValue = (float)($variant['mrp'] ?? 0);
-                                            $basePrice = (float)($variant['price'] ?? $mrpValue);
-                                            $priceSource = $mrpValue > 0 ? $mrpValue : $basePrice;
-                                            $effectivePrice = $discountPercentage > 0
-                                                ? round($priceSource * (1 - ($discountPercentage / 100)), 2)
-                                                : $basePrice;
-                                        @endphp
-                                        <button type="button" 
+                                    @foreach($product['variant_display_rows'] as $index => $row)
+                                        <button type="button"
                                                 class="btn btn-outline-primary variant-btn mb-2 {{ $index === 0 ? 'active' : '' }}"
-                                                data-variant-id="{{ $variant['variantID'] ?? '' }}"
-                                                data-mrp="{{ $variant['mrp'] ?? '' }}"
+                                                data-variant-id="{{ $row['variant']['variantID'] ?? '' }}"
+                                                data-mrp="{{ $row['variant']['mrp'] ?? '' }}"
                                                 data-product-id="{{ $product['productID'] }}">
-                                            <strong>{{ $variant['variantDisplayName'] ?? '-' }}</strong><br>
-                                            <small>MRP: <s>₹{{ number_format($mrpValue ?: $basePrice, 2) }}</s> | 
-                                            Discounted: <span class="text-success fw-bold">₹{{ number_format($effectivePrice, 2) }}</span></small>
+                                            <strong>{{ $row['variant']['variantDisplayName'] ?? '-' }}</strong><br>
+                                            <small>MRP: <s>₹{{ number_format($row['mrpValue'] ?: $row['basePrice'], 2) }}</s> |
+                                            Discounted: <span class="text-success fw-bold">₹{{ number_format($row['effectivePrice'], 2) }}</span></small>
                                         </button>
                                     @endforeach
                                 </div>
                             </div>
 
                             <form action="{{ route('place-order.form') }}" method="GET" id="order-form-{{ $product['productID'] }}">
-                                <input type="hidden" name="variantId" id="variantId-{{ $product['productID'] }}" value="{{ $availableVariants[0]['variantID'] ?? '' }}">
-                                <input type="hidden" name="mrp" id="mrp-{{ $product['productID'] }}" value="{{ $availableVariants[0]['mrp'] ?? '' }}">
+                                <input type="hidden" name="variantId" id="variantId-{{ $product['productID'] }}" value="{{ ($product['variant_display_rows'][0]['variant']['variantID'] ?? '') }}">
+                                <input type="hidden" name="mrp" id="mrp-{{ $product['productID'] }}" value="{{ ($product['variant_display_rows'][0]['variant']['mrp'] ?? '') }}">
                                 <button type="submit" class="btn btn-success w-100">Place Order</button>
                             </form>
                         @endif
@@ -168,9 +111,7 @@
 <div class="container py-5 text-center">
     <h2 class="mb-3">Please log in to view products</h2>
     <p class="text-muted mb-4">You need an active account to browse products and place orders.</p>
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Modallogin">
-        Launch Login
-    </button>
+    <a href="{{ route('login') }}" class="btn btn-primary">Log in</a>
 </div>
 @endauth
 
@@ -178,42 +119,37 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     @guest
-    if (typeof $ !== 'undefined') {
-        const loginModal = $('#Modallogin');
-        if (loginModal.length) {
-            loginModal.modal({ backdrop: 'static', keyboard: false });
-            loginModal.modal('show');
-            loginModal.on('hide.bs.modal', function (event) {
-                if (!window.kgenLoginCompleted) {
-                    event.preventDefault();
-                }
-            });
+    setTimeout(function () {
+        if (typeof window.openAuthModal === 'function') {
+            window.openAuthModal();
         }
-    }
+    }, 300);
     @endguest
 
-    // Handle variant button clicks
     document.querySelectorAll('.variant-btn').forEach(function(button) {
         button.addEventListener('click', function() {
             const productId = this.getAttribute('data-product-id');
             const variantId = this.getAttribute('data-variant-id');
             const mrp = this.getAttribute('data-mrp');
-            
-            // Remove active class from all variant buttons for this product
-            document.querySelectorAll(`#variant-buttons-${productId} .variant-btn`).forEach(function(btn) {
+
+            document.querySelectorAll('#variant-buttons-' + productId + ' .variant-btn').forEach(function(btn) {
                 btn.classList.remove('active');
                 btn.classList.remove('btn-primary');
                 btn.classList.add('btn-outline-primary');
             });
-            
-            // Add active class to clicked button
+
             this.classList.add('active');
             this.classList.remove('btn-outline-primary');
             this.classList.add('btn-primary');
-            
-            // Update form hidden inputs
-            document.getElementById(`variantId-${productId}`).value = variantId;
-            document.getElementById(`mrp-${productId}`).value = mrp;
+
+            const vId = document.getElementById('variantId-' + productId);
+            const mrpEl = document.getElementById('mrp-' + productId);
+            if (vId) {
+                vId.value = variantId || '';
+            }
+            if (mrpEl) {
+                mrpEl.value = mrp || '';
+            }
         });
     });
 });

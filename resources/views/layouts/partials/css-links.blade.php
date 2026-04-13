@@ -12,3 +12,5 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Custom Stylesheet -->
     <link rel="stylesheet" href="{{ URL::asset('css/style.css') }}">
+    {{-- Tailwind (auth modal + utility components) --}}
+    <link rel="stylesheet" href="{{ \Illuminate\Support\Facades\Vite::asset('resources/css/app.css') }}">

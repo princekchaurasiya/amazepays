@@ -28,7 +28,7 @@ return [
     'gst_number' => env('GST_NUMBER', '27AAFCF2328E1ZX'),
 
     'company_official_name' => env('COMPANY_NAME', 'Frenetic India Services Private Limited'),
-    'company_address' => env('COMPANY_ADDRESS', '98-103, 4 Floor, Aditya Industrial Estate Co-op Premises Ltd Mindspace Behind Evershine Mall Off Link Road Malad West Mumbai 400064.'),
+    'company_address' => (string) env('COMPANY_ADDRESS', ''),
     'company_cin' => env('COMPANY_CIN', 'U72900MH2022PTC391272'),
     'company_pan' => env('COMPANY_PAN', 'AAFCF2328E'),
     'company_bank_account_number' => env('COMPANY_BANK_ACCOUNT_NUMBER', '8747187374'),

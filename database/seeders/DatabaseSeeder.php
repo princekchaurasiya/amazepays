@@ -14,28 +14,11 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call([
-            // Voyager Core Seeders
-            RolesTableSeeder::class,
-            PermissionsTableSeeder::class,
-            DataTypesTableSeeder::class,
-            DataRowsTableSeeder::class,
-            MenusTableSeeder::class,
-            MenuItemsTableSeeder::class,
-            PermissionRoleTableSeeder::class,
-            SettingsTableSeeder::class,
-            
-            // API Settings (from backup)
-            ApiSettingsSeeder::class,
-            
-            // Application BREAD and Menus
-            ApplicationBreadSeeder::class,
-            AdminMenuSeeder::class,
-            
-            // Users
+            RolesAndPermissionsSeeder::class,
             UserSeeder::class,
-            
-            // QS Categories (for API integration)
-            QsCategorySeeder::class,
+            CategorySeeder::class,
+            AuditLogDemoSeeder::class,
+            TicketDemoSeeder::class,
         ]);
     }
 }

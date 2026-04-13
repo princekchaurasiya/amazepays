@@ -1,0 +1,69 @@
+<?php
+
+use App\Enums\ProviderErrorCode;
+
+/**
+ * Provider-specific user-facing messages. Keys align with {@see ProviderErrorCode}.
+ * Legacy numeric Woohoo-style codes are preserved from resources/lang/en/errors.php.
+ */
+return [
+    'woohoo' => [
+        'default' => 'Order failed. Please try again later.',
+        '200' => 'OK',
+        '201' => 'Order is successfully created!',
+        '202' => 'Woohoo! Order is being processed!',
+        '400' => 'Order failed: There was an issue with the information provided. Please check your details.',
+        '401' => 'Authorization failed. Please check your credentials and try again.',
+        '403' => 'You do not have the necessary permissions to complete this order. Please contact support.',
+        '500' => 'Order failed: There was an internal server error. Please try again later.',
+        '5035' => 'Order failed: The payment service is currently unavailable. Please try again later.',
+        '5036' => 'Order failed: The payment amount does not match the required value. Please review and try again.',
+        '5037' => 'Order failed: The payment service model is not available. Please try again later.',
+        '5038' => 'Order failed: The payment service exceeds limitations. Please try a different payment method.',
+        '5046' => 'Order failed: Customer is not available.',
+        '5103' => 'Order failed: card number is required for reload product',
+        '5080' => 'Order failed: Payment via Amazon is restricted. Please choose a different payment method.',
+        '5305' => 'Order failed: The requested store is currently inactive. Please try again later.',
+        '5307' => 'Order failed: The selected denomination is not available. Please choose a different amount.',
+        '5308' => 'Order failed: Some of the products in your order are restricted. Please review your order and try again.',
+        '5310' => 'Order failed: The product you are looking for is currently unavailable. Please try again later.',
+        '5311' => 'Order failed: Invalid delivery mode EMAIL.',
+        '5312' => 'Order failed: Default billing address is not configured.',
+        '5313' => 'Order failed: Duplicate reference number provided. Please try again later.',
+        '5315' => 'Order failed: Product mis-configuration. There is a configuration issue with the product. Please contact support.',
+        '5318' => 'Order failed: Denomination is not available.',
+        '5321' => 'Order failed: The order cannot be processed at this time. Please try again later.',
+        '5326' => 'Order failed: Combination of digital and physical product types is not supported. Please remove one of the product types.',
+        '5327' => 'Order failed: Apologies, payment for your order has failed. Please place a fresh order.',
+        '5333' => 'Order cannot be processed as the transaction has been refunded.',
+        '5334' => 'Delivery mode is not allowed with physical products.',
+        '5335' => 'Invalid order type.',
+        '5338' => 'Order failed: Amount exceeds the maximum allowed order value.',
+        '5342' => 'Order failed: Default shipping address is not configured.',
+        '5343' => 'Order failed: Invalid external login.',
+        '5344' => 'Order failed: External login is not required.',
+        '5348' => 'Order failed: Payment method PayU cannot be combined with another payment.',
+        '5349' => 'Order failed: PO number should be the same for all payments.',
+        '6000' => 'Order failed: Activation failed. Please try again later.',
+        '6050' => 'Order cannot be processed at this time.',
+        '6051' => 'Order failed: OTP is required for verification.',
+        '6052' => 'Order failed: Invalid OTP entered.',
+        '6053' => 'Order failed: Could not process your request. Please try again later.',
+        '6054' => 'Order failed: Invalid email delivery ID.',
+        '6057' => 'Order failed: This order does not support consolidated delivery.',
+        '6058' => 'Order failed: This order does not support multiple currencies.',
+        '6059' => 'Order failed: This currency is not allowed for the order.',
+        '6063' => 'Order cannot be placed due to insufficient balance.',
+        '6015' => 'Order has been created successfully, but activation failed due to customer velocity limit breached. You have purchased the maximum number of gift cards allowed this month.',
+        '11429' => 'Order failed: The order number is archived. Please contact the support team to obtain details of the order.',
+        '11447' => 'Order failed: Invalid order mode (self). Please contact support for assistance.',
+        '7001' => 'Failed to get order status due to connection issue. Please Try Again Later',
+        '7002' => 'Failed to get order status due to an unexpected error occurred. Please Try Again Later',
+    ],
+
+    'vouchagram' => [
+        'default' => 'Voucher request could not be completed. Please try again.',
+        '0000' => 'Success.',
+        'invalid' => 'The voucher provider returned an error. Please try again or contact support.',
+    ],
+];

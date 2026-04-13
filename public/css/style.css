@@ -18191,3 +18191,101 @@ top: 25px !important;
     color: white !important;
 }
 
+/* -------------------------------------------------------------------------
+ Hubble-style storefront cards (homepage product / brand grids)
+   ------------------------------------------------------------------------- */
+.hubble-card {
+    --hubble-card-radius: 1.5rem;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: var(--hubble-card-radius);
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.hubble-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+.hubble-card__img-wrap {
+    aspect-ratio: 4 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 1.25rem;
+    position: relative;
+    border-top-left-radius: var(--hubble-card-radius);
+    border-top-right-radius: var(--hubble-card-radius);
+}
+.hubble-card__img {
+    max-height: 72%;
+    max-width: 85%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+.hubble-card__placeholder {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1;
+}
+.hubble-card__badge {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.hubble-card__badge img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.hubble-card__body {
+    background: #fff;
+    padding: 0.75rem 0.5rem 1rem;
+    text-align: center;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+.hubble-card__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.35;
+    margin-bottom: 0.25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.hubble-card__discount {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #059669;
+    margin-bottom: 0;
+}
+.hubble-card__out {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.72);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.2rem 0.45rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+

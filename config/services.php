@@ -31,17 +31,26 @@ return [
     ],
 
     'vdweb' => [
-    'username' => env('VDWEB_USERNAME'),
-    'password' => env('VDWEB_PASSWORD'),
-    'distributor_id' => env('VDWEB_DISTRIBUTOR_ID'),
+        'username' => env('VDWEB_USERNAME'),
+        'password' => env('VDWEB_PASSWORD'),
+        'distributor_id' => env('VDWEB_DISTRIBUTOR_ID'),
     ],
 
     'giftcard' => [
-    'secret' => env('LYSTO_API_KEY'),
+        'secret' => env('LYSTO_API_KEY'),
     ],
 
     'unlimit' => [
-    'callback_secret' => env('UNLIMIT_CALLBACK_SECRET'),
+        'callback_secret' => env('UNLIMIT_CALLBACK_SECRET'),
+    ],
+
+    /*
+    | Providers included in voucher:sync-catalog (CatalogSyncService::syncAll)
+    */
+    'voucher_providers' => [
+        'woohoo',
+        'kgen',
+        'vouchagram',
     ],
 
 ];

@@ -2,11 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Models\KgenProduct;
+use App\Models\Product;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Models\KgenProduct;
-use App\Models\QsProduct;
 
 class FetchFeaturedKgenProducts extends Command
 {
@@ -36,7 +36,7 @@ class FetchFeaturedKgenProducts extends Command
             $clientSecret = env('EXLR8_USER_SECRET');
             $limit = (int) $this->option('limit');
 
-            if (!$baseUrl || !$partnerId || !$clientId || !$clientSecret) {
+            if (! $baseUrl || ! $partnerId || ! $clientId || ! $clientSecret) {
                 $this->error('KGen API credentials are not configured. Please check your .env file.');
                 Log::error('KGen API credentials missing', [
                     'baseUrl' => $baseUrl ? 'set' : 'missing',
@@ -44,19 +44,20 @@ class FetchFeaturedKgenProducts extends Command
                     'clientId' => $clientId ? 'set' : 'missing',
                     'clientSecret' => $clientSecret ? 'set' : 'missing',
                 ]);
+
                 return 1;
             }
 
-            $url = rtrim($baseUrl, '/') . '/products/delivery-partners/' . $partnerId;
-            
+            $url = rtrim($baseUrl, '/').'/products/delivery-partners/'.$partnerId;
+
             Log::info('Featured KGen Products Request', [
                 'url' => $url,
                 'method' => 'get',
                 'limit' => $limit,
                 'headers' => [
                     'x-client-id' => $clientId,
-                    'x-client-secret' => '***'
-                ]
+                    'x-client-secret' => '***',
+                ],
             ]);
 
             $response = Http::timeout(10)
@@ -74,15 +75,16 @@ class FetchFeaturedKgenProducts extends Command
             Log::info('Featured KGen Products Response', [
                 'status_code' => $statusCode,
                 'limit' => $limit,
-                'data' => $responseData
+                'data' => $responseData,
             ]);
 
-            if (!$response->successful()) {
-                $errorMessage = 'Failed to fetch featured KGen products. Status Code: ' . $statusCode;
+            if (! $response->successful()) {
+                $errorMessage = 'Failed to fetch featured KGen products. Status Code: '.$statusCode;
                 $this->error($errorMessage);
                 Log::error('Something went wrong while fetching featured KGen products', [
-                    'error' => $response->body()
+                    'error' => $response->body(),
                 ]);
+
                 return 1;
             }
 
@@ -91,15 +93,17 @@ class FetchFeaturedKgenProducts extends Command
             if ($products->isEmpty()) {
                 $this->warn('No products found in the API response.');
                 Log::info('Featured KGen Products: No products found in response');
+
                 return 0;
             }
 
-            // Get discount map from QsProduct
-            $discountMap = QsProduct::whereNotNull('discount_percentage')
+            // Get discount map from Product
+            $discountMap = Product::whereNotNull('discount_percentage')
                 ->where('discount_percentage', '>', 0)
                 ->pluck('discount_percentage', 'name')
                 ->mapWithKeys(function ($discount, $name) {
                     $normalized = strtolower(trim((string) $name));
+
                     return $normalized !== '' ? [$normalized => (float) $discount] : [];
                 });
 
@@ -139,16 +143,17 @@ class FetchFeaturedKgenProducts extends Command
             Log::info('Featured KGen products updated in the database', [
                 'count' => $count,
                 'limit' => $limit,
-                'update_time' => now()->format('d/m/y H:i:s')
+                'update_time' => now()->format('d/m/y H:i:s'),
             ]);
 
             return 0;
         } catch (\Exception $e) {
-            $this->error('An error occurred: ' . $e->getMessage());
+            $this->error('An error occurred: '.$e->getMessage());
             Log::error('Featured KGen Products fetch error', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return 1;
         }
     }

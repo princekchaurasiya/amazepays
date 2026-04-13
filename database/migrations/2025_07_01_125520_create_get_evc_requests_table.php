@@ -6,11 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateGetEvcRequestsTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::create('get_evc_requests', function (Blueprint $table) {
@@ -32,15 +27,18 @@ class CreateGetEvcRequestsTable extends Migration
             $table->string('country');
             $table->string('pincode');
             $table->string('curr');
+            $table->string('gift_send_option')->nullable();
+            $table->string('delivery_mode')->nullable();
+            $table->string('receiver_name')->nullable();
+            $table->string('receiver_email')->nullable();
+            $table->string('receiver_mobile')->nullable();
+            $table->text('receiver_msg')->nullable();
+            $table->decimal('vd_discount', 5, 2)->nullable();
+            $table->string('vd_brand_code')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::dropIfExists('get_evc_requests');

@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
-class User extends \TCG\Voyager\Models\User
+class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -22,9 +23,10 @@ class User extends \TCG\Voyager\Models\User
         'email',
         'password',
         'mobile',
+        'referral_code',
 
         'billing_zip', 'billing_address', 'billing_city', 'billing_state',
-        'billing_country','billing_address_two',
+        'billing_country', 'billing_address_two',
     ];
 
     /**
@@ -49,7 +51,7 @@ class User extends \TCG\Voyager\Models\User
     /**
      * Relationships
      */
-    
+
     // Wallet relationship
     public function wallet()
     {
@@ -62,10 +64,10 @@ class User extends \TCG\Voyager\Models\User
         return $this->hasManyThrough(WalletTransaction::class, Wallet::class);
     }
 
-    // QS Orders (Woohoo orders)
-    public function qsOrders()
+    /** Storefront / voucher orders */
+    public function orders()
     {
-        return $this->hasMany(QsOrder::class);
+        return $this->hasMany(Order::class);
     }
 
     // KGen Orders
@@ -110,6 +112,38 @@ class User extends \TCG\Voyager\Models\User
     public function userIps()
     {
         return $this->hasMany(UserIp::class);
+    }
+
+    public function tenants(): BelongsToMany
+    {
+        return $this->belongsToMany(Tenant::class, 'tenant_users')
+            ->withPivot('role', 'is_primary')
+            ->withTimestamps();
+    }
+
+    /**
+     * Primary tenant for B2B flows (first linked tenant).
+     */
+    public function currentTenantId(): ?int
+    {
+        return $this->tenants()->first()?->id;
+    }
+
+    public function auditLogs()
+    {
+        return $this->hasMany(AuditLog::class);
+    }
+
+    /**
+     * Post-login destination: storefront (/) or admin panel (/panel) per role.
+     */
+    public function homeUrl(): string
+    {
+        if ($this->hasAnyRole(['super-admin', 'admin', 'finance', 'b2b-client', 'b2b-operator'])) {
+            return route('admin.dashboard');
+        }
+
+        return route('home');
     }
 
     protected static function booted()

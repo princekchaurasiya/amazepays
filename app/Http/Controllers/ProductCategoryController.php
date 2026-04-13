@@ -2,28 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ApiSignatureHelper;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
-use App\Helpers\CommonHelper;
 
 class ProductCategoryController extends Controller
 {
     public function getProductCategory(Request $request, $themecategoryId = null)
     {
 
-        $themecategoryId  = 107;
+        $themecategoryId = 107;
         // If themecategoryId is provided, use it in the URL, else use the base URL
-        $baseApiUrl = 'https://' . setting('api.woohoo_url') . "/rest/v3/themes/category";
+        $baseApiUrl = 'https://'.config('woohoo.host').'/rest/v3/themes/category';
         $absApiUrl = $themecategoryId ? "{$baseApiUrl}/{$themecategoryId}" : $baseApiUrl;
 
         $requestBody = '';
         $requestHttpMethod = 'get';
 
-        $clientSecret = setting('api.qs_clientSecret');
-        $bearerToken = setting('api.bearer_token');
-        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+        $clientSecret = config('woohoo.client_secret');
+        $bearerToken = config('woohoo.bearer_token');
+        $signature = ApiSignatureHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         $dateAtClient = Carbon::now()->toIso8601String();
 
         // Logging variables

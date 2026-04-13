@@ -8,6 +8,7 @@ use App\Models\StoreDetail;
 use App\Models\Brand;
 use App\Exports\StoresExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Inertia\Inertia;
 
 class StoreController extends Controller
 {
@@ -20,8 +21,16 @@ class StoreController extends Controller
 
     public function showBrandSelection()
     {
-        $brands = \App\Models\Brand::all(); // Or fetch via API
-        return view('brands.select', compact('brands'));
+        $brands = Brand::all();
+
+        return Inertia::render('Admin/Stores/StoresWorkspace', [
+            'mode' => 'brand_pick',
+            'allBrands' => $brands->map(fn ($b) => [
+                'id' => $b->id,
+                'name' => $b->brand_name,
+                'brand_code' => $b->brand_code,
+            ])->values()->all(),
+        ]);
     }
 
     public function fetchStoresForBrand(Request $request, VDWebApiService $service)
@@ -44,16 +53,25 @@ class StoreController extends Controller
             return back()->with('error', 'No stores found or failed to fetch stores');
         }
 
-        return view('stores.list', [
-            'stores' => $stores,
-            'brandCode' => $brandcodes,
+        return Inertia::render('Admin/Stores/StoresWorkspace', [
+            'mode' => 'list_fetch',
+            'stores' => is_array($stores) ? $stores : [],
+            'brandCode' => $brandcodes->values()->all(),
         ]);
     }
 
     public function showForm()
     {
-        $brands = Brand::pluck('brand_name', 'brand_code');
-        return view('stores.form', compact('brands'));
+        $plucked = Brand::pluck('brand_name', 'brand_code');
+        $brands = [];
+        foreach ($plucked as $code => $name) {
+            $brands[] = ['code' => $code, 'name' => $name];
+        }
+
+        return Inertia::render('Admin/Stores/StoresWorkspace', [
+            'mode' => 'form',
+            'brands' => $brands,
+        ]);
     }
 
     public function syncAndShow(Request $request)
@@ -115,14 +133,20 @@ class StoreController extends Controller
     $states     = StoreDetail::distinct()->pluck('state')->filter();
     $cities     = StoreDetail::distinct()->pluck('city')->filter();
 
-    return view('stores.list', [
-        'stores'      => $stores,
-        'brandcodes'  => $brandcodes,
-        'brandnames'  => $brandnames,
-        'countries'   => $countries,
-        'states'      => $states,
-        'cities'      => $cities,
-        'filters'     => $request->all(),
+    return Inertia::render('Admin/Stores/StoresWorkspace', [
+        'mode' => 'list_filter',
+        'stores' => $stores->items(),
+        'pagination' => [
+            'current_page' => $stores->currentPage(),
+            'last_page' => $stores->lastPage(),
+            'total' => $stores->total(),
+        ],
+        'brandcodes' => $brandcodes->values()->all(),
+        'brandnames' => $brandnames->values()->all(),
+        'countries' => $countries->values()->all(),
+        'states' => $states->values()->all(),
+        'cities' => $cities->values()->all(),
+        'filters' => $request->all(),
     ]);
 }
 

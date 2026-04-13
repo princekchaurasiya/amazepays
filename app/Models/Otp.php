@@ -9,57 +9,57 @@ class Otp extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'mobile_number', 'otp', 'expiry_time'];
-
-    protected $casts = [
-        'expiry_time' => 'datetime',
+    protected $fillable = [
+        'user_id',
+        'mobile_number',
+        'otp',
+        'type',
+        'is_used',
+        'attempts',
+        'ip_address',
+        'expires_at',
+        'verified_at',
     ];
 
-    /**
-     * Relationships
-     */
+    protected $casts = [
+        'expires_at' => 'datetime',
+        'verified_at' => 'datetime',
+        'is_used' => 'boolean',
+        'attempts' => 'integer',
+    ];
 
-    // User who owns this OTP
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Scopes
-     */
-
-    // Scope for valid (non-expired) OTPs
     public function scopeValid($query)
     {
-        return $query->where('expiry_time', '>', now());
+        return $query->where('expires_at', '>', now());
     }
 
-    // Scope for expired OTPs
     public function scopeExpired($query)
     {
-        return $query->where('expiry_time', '<=', now());
+        return $query->where('expires_at', '<=', now());
     }
 
-    // Scope for specific mobile number
-    public function scopeForMobile($query, $mobile)
+    public function scopeUnused($query)
+    {
+        return $query->where('is_used', false);
+    }
+
+    public function scopeForMobile($query, string $mobile)
     {
         return $query->where('mobile_number', $mobile);
     }
 
-    /**
-     * Helper Methods
-     */
-
-    // Check if OTP is valid
-    public function isValid()
+    public function isValid(): bool
     {
-        return $this->expiry_time > now();
+        return $this->expires_at > now();
     }
 
-    // Check if OTP is expired
-    public function isExpired()
+    public function isExpired(): bool
     {
-        return $this->expiry_time <= now();
+        return $this->expires_at <= now();
     }
 }

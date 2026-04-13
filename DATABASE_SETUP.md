@@ -6,8 +6,8 @@ The application is trying to connect to database `amazepays` with user `amazepay
 ## Required Database Tables
 Based on the HomePageController, the application needs these tables:
 - `amazepay_categories` - Product categories
-- `amazepay_available_brands` - Product brands  
-- `qs_products` - Products
+- `storefront_brands` - Storefront / homepage brands (logos, brand landing pages)  
+- `products` - Products (synced catalog)
 - `slides` - Homepage slides
 - `home` - Homepage settings
 - Plus many other tables from migrations

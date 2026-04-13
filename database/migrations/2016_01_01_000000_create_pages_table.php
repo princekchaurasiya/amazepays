@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use TCG\Voyager\Models\Page;
+use Illuminate\Support\Facades\Schema;
 
 class CreatePagesTable extends Migration
 {
@@ -13,7 +13,6 @@ class CreatePagesTable extends Migration
      */
     public function up()
     {
-        // Create table for storing roles
         Schema::create('pages', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('author_id');
@@ -22,9 +21,13 @@ class CreatePagesTable extends Migration
             $table->text('body')->nullable();
             $table->string('image')->nullable();
             $table->string('slug')->unique();
+            $table->string('meta_title')->nullable();
             $table->text('meta_description')->nullable();
             $table->text('meta_keywords')->nullable();
-            $table->enum('status', Page::$statuses)->default(Page::STATUS_INACTIVE);
+            $table->string('og_image', 500)->nullable();
+            $table->string('canonical_url', 500)->nullable();
+            // Voyager Page::$statuses — inlined so migrate:fresh works without tcg/voyager installed
+            $table->enum('status', ['ACTIVE', 'INACTIVE'])->default('INACTIVE');
             $table->timestamps();
         });
     }
@@ -36,6 +39,6 @@ class CreatePagesTable extends Migration
      */
     public function down()
     {
-        Schema::drop('pages');
+        Schema::dropIfExists('pages');
     }
 }

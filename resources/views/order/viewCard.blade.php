@@ -3,9 +3,6 @@
     Amazepay | View Card
 @endsection
 @section('content')
-@php
-    use App\Helpers\CommonHelper;
-@endphp
     <div class="dashboard-wrapper bg-greylight">
         <div class="container">
             <div class="row">
@@ -21,8 +18,7 @@
                             <li class="d-block rounded-lg"><a href="{{ route('change-password') }}"><i
                                         class="ti-lock font-sm"></i><span> Change Password</span></a></li>
                             <!-- <li class="d-block rounded-lg "><a href="payment.html"><i class="ti-credit-card font-sm"></i><span> Payment</span></a></li> -->
-                            <li class="d-block rounded-lg"><a href="{{ route('userLogOut') }}"><i class="ti-power-off font-sm"></i><span>
-                                        Logout</span></a></li>
+                            @include('partials.logout-form-sidebar')
                         </ul>
                     </div>
                 </div>

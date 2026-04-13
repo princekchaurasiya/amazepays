@@ -16,6 +16,7 @@ class VerifyCsrfToken extends Middleware
         'payment-cancel',
         '/payment/notify',
         '/payment/return',
+        '/unlimit/return',
         'api/unlimit/callback',
         '/unlimit/webhook',
         '/upi/return',

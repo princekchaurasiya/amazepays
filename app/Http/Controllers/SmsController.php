@@ -2,126 +2,88 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use App\Services\Sender;
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
+use App\Models\BlockedMobile;
 use App\Models\Otp;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Response;
-use Config;
 use App\Models\User;
-use Mail;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class SmsController extends Controller
 {
     public function loginWithOtp(Request $request)
-{
-    \Log::info('Login with OTP initiated', ['request' => $request->all()]);
+    {
+        $destination = $request->input('destination');
+        $user = User::where('mobile', $destination)->first();
 
-    $destination = $request->input('destination');
-    $user = User::where('mobile', $destination)->first();
+        if (! $user) {
+            return response()->json(['status' => 'error', 'message' => 'The provided mobile number does not match any registered user. Please register first and then login.']);
+        }
 
-    if (!$user) {
-        \Log::warning('User not found for mobile number', ['mobile' => $destination]);
-        return response()->json(['status' => 'error', 'message' => 'The provided mobile number does not match any registered user. Please register first and then login.']);
+        if ($user->is_blocked) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Your account has been restricted. Please contact support.',
+                'contact_info' => [
+                    'email' => config('companyDefaultValues.company_email'),
+                    'phone' => '+91 '.config('companyDefaultValues.company_contact_no'),
+                ],
+            ]);
+        }
+
+        return $this->sendSms($request);
     }
-
-    // Check if user is blocked
-    if ($user->is_blocked) {
-        \Log::warning('Blocked user attempted OTP login', ['user_id' => $user->id]);
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Your account has been restricted. Please contact support.',
-            'contact_info' => [
-                'email' => config('companyDefaultValues.company_email'),
-                'phone' => '+91 ' . config('companyDefaultValues.company_contact_no')
-            ]
-        ]);
-    }
-
-    \Log::info('User found, proceeding to send SMS', ['user_id' => $user->id]);
-    return $this->sendSms($request);
-}
 
     public function registerWithOtp(Request $request)
     {
-        \Log::info('Register with OTP initiated', ['request' => $request->all()]);
-
         $destination = $request->input('destination');
-        if (!$destination) {
-            Log::error('Destination mobile number missing', ['request' => $request->all()]);
+        if (! $destination) {
             return response()->json(['status' => 'error', 'message' => 'Mobile number is required.']);
         }
 
         $user = User::where('mobile', $destination)->first();
 
         if ($user) {
-            Log::warning('User already exists for mobile number', ['mobile' => $destination]);
             return response()->json(['status' => 'error', 'message' => 'User Already Exists. Please try to log in.']);
         }
-
-        Log::info('No user found, proceeding to send SMS', ['mobile' => $destination]);
 
         try {
             return $this->sendSms($request);
         } catch (\Exception $e) {
-            Log::error('Error sending OTP', ['error' => $e->getMessage()]);
             return response()->json(['status' => 'error', 'message' => 'Failed to send OTP. Please try again.']);
         }
     }
 
-
-
     public function forgetPasswordWithMobileOtp(Request $request)
     {
-        Log::info('Forgot Password OTP initiated', ['request' => $request->all()]);
-
         $destination = $request->input('destination');
-        if (!$destination) {
-            Log::error('Destination mobile number missing', ['request' => $request->all()]);
+        if (! $destination) {
             return response()->json(['status' => 'error', 'message' => 'Mobile number is required to send OTP.']);
         }
 
         $user = User::where('mobile', $destination)->first();
 
-        if (!$user) {
-            Log::warning('No user found for the given mobile number', ['mobile' => $destination]);
+        if (! $user) {
             return response()->json(['status' => 'error', 'message' => 'Mobile number not registered. Please sign up.']);
         }
-
-        Log::info('User found, proceeding to send OTP', ['mobile' => $destination]);
 
         try {
             return $this->sendSms($request);
         } catch (\Exception $e) {
-            Log::error('Error sending OTP', ['error' => $e->getMessage()]);
             return response()->json(['status' => 'error', 'message' => 'Failed to send OTP. Please try again.']);
         }
     }
 
-
-
-
-
-
-
-
     public function profileUpdateSendOtp(Request $request)
     {
-        \Log::info('Profile update OTP send initiated', ['request' => $request->all()]);
-
-        $destination = $request->input('destination');
         return $this->sendSms($request);
     }
 
     public function sendSms(Request $request)
     {
-        \Log::info('Sending SMS initiated', ['request' => $request->all()]);
-
-        // Normalize destination to a 10-digit Indian mobile number
         $rawDestination = $request->input('destination', '');
         $normalized = preg_replace('/\D+/', '', $rawDestination);
         if (strlen($normalized) > 10) {
@@ -130,43 +92,43 @@ class SmsController extends Controller
             } elseif (substr($normalized, 0, 1) === '0' && strlen($normalized) >= 11) {
                 $normalized = substr($normalized, -10);
             } else {
-                // Fallback: take the last 10 digits
                 $normalized = substr($normalized, -10);
             }
         }
         $request->merge(['destination' => $normalized]);
 
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->only(['destination']), [
             'destination' => 'required|regex:/^[6-9]\d{9}$/',
         ]);
 
         if ($validator->fails()) {
-            \Log::error('Validation failed for sending sms', ['errors' => $validator->errors()]);
             return response()->json(['status' => 'error', 'message' => 'Please enter a valid 10-digit Indian mobile number.']);
         }
 
-        $destination = $request->input('destination');
-        \Log::info('Valid mobile number received', ['destination' => $destination]);
+        $destination = $validator->validated()['destination'];
 
+        if (BlockedMobile::isBlocked($destination)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'This mobile number cannot receive OTP. Please contact support.',
+                'contact_info' => [
+                    'email' => config('companyDefaultValues.company_email', 'support@amazepays.in'),
+                    'phone' => '+91 '.config('companyDefaultValues.company_contact_no', ''),
+                ],
+            ], 403);
+        }
 
-        //code block for resend otp concept
         $latestOtpEntry = Otp::where('mobile_number', $destination)->latest()->first();
 
-        // Check if $latestOtpEntry is null
         if ($latestOtpEntry) {
             $expirationTime = Carbon::parse($latestOtpEntry->created_at)->addMinutes(1);
-            // \Log::info('Latest OTP entry found', ['latestOtpEntry' => $latestOtpEntry, 'expirationTime' => $expirationTime]);
 
-            if (!Carbon::now()->greaterThan($expirationTime)) {
-                // \Log::info('OTP resend attempt blocked', ['destination' => $destination]);
+            if (! Carbon::now()->greaterThan($expirationTime)) {
                 return response()->json(['status' => 'error', 'message' => 'Wait for a minute before you resend the OTP']);
             }
-        } else {
-            // \Log::info('No previous OTP entry found for destination', ['destination' => $destination]);
         }
 
         $otp = config('companyDefaultValues.generated_otp');
-        \Log::info('Generated OTP', ['otp' => $otp]);
 
         $sms_api_url = config('companyDefaultValues.sms_api_url');
         $sms_user_name = config('companyDefaultValues.sms_user_name');
@@ -174,69 +136,56 @@ class SmsController extends Controller
         $sms_source = config('companyDefaultValues.sms_source');
         $sms_message = config('companyDefaultValues.sms_message');
         $sms_entity_id = config('companyDefaultValues.sms_entity_id');
-        // $sms_temp_id = config('companyDefaultValues.sms_temp_id');
         $sms_otp_temp_id = config('companyDefaultValues.sms_otp_temp_id');
-        $sms_tmid = config("companyDefaultValues.sms_tmid");
+        $sms_tmid = config('companyDefaultValues.sms_tmid');
 
-        // api url for sending otp
         $apiUrl = "$sms_api_url?username=$sms_user_name&password=$sms_user_password&type=0&dlr=1&destination={$destination}&source=$sms_source&message=$sms_message&entityid=$sms_entity_id&tempid=$sms_otp_temp_id&tmid=$sms_tmid";
 
-        // Log the API URL in a beautified format
-        \Log::info('Constructed SMS API URL', [
+        $expiresAt = config('companyDefaultValues.otpExpiration');
+        if (! $expiresAt instanceof Carbon) {
+            $expiresAt = now()->addMinutes(5);
+        }
+        $userId = User::where('mobile', $destination)->value('id');
 
-            'api_url' => $apiUrl,
-            'base_url' => $sms_api_url,
-            'username' => $sms_user_name,
-            'password' => $sms_user_password,
-            'type' => 0,
-            'dlr' => 1,
-            'destination' => $destination,
-            'source' => $sms_source,
-            'message' => $sms_message,
-            'entityid' => $sms_entity_id,
-            'tempid' => $sms_otp_temp_id,
-            'tmid' => $sms_tmid,
-        ]);
-
-
-
-
-
-        $otpExpiration = config('companyDefaultValues.otpExpiration');
         $otpData = [
-            'user_id' => null,
+            'user_id' => $userId,
             'mobile_number' => $destination,
-            'otp' => $otp,
-            'expiry_time' => $otpExpiration,
+            'otp' => Hash::make($otp),
+            'type' => $request->input('otp_type', 'login'),
+            'is_used' => false,
+            'expires_at' => $expiresAt,
+            'ip_address' => $request->ip(),
         ];
 
-        \Log::info('Creating OTP entry in database', ['otpData' => $otpData]);
         Otp::create($otpData);
-        \Log::info('OTP entry created successfully');
+
+        if (app()->environment('local') && config('app.debug')) {
+            Log::info('[TEST MODE] OTP generated (no SMS sent), use 123456 to verify', [
+                'mobile' => $destination,
+            ]);
+            $request->session()->put('otp', '123456');
+
+            return response()->json(['status' => 'success', 'message' => 'OTP sent (test mode). Use 123456.']);
+        }
 
         $response = Http::get($apiUrl);
-        \Log::info('API Response received', ['response' => $response->body()]);
 
         if ($response->successful()) {
             $statusCode = $response->status();
             switch ($statusCode) {
                 case 200:
                     $request->session()->put('otp', $otp);
-                    \Log::info('OTP sent successfully', ['destination' => $destination]);
+
                     return response()->json(['status' => 'success', 'message' => 'OTP sent successfully.']);
                 case 400:
-                    \Log::error('Invalid URL Error', ['destination' => $destination]);
                     return response()->json(['status' => 'error', 'error_code' => 1702, 'message' => 'Invalid URL Error']);
                 case 401:
-                    \Log::error('Invalid username or password', ['destination' => $destination]);
                     return response()->json(['status' => 'error', 'error_code' => 1703, 'message' => 'Invalid value in username or password field']);
                 default:
-                    \Log::error('Internal Server Error', ['destination' => $destination]);
                     return response()->json(['status' => 'error', 'error_code' => '500', 'message' => 'Internal Server Error']);
             }
-        } else {
-            \Log::error('API Request Failed', ['response' => $response->body()]);
-            return response()->json(['status' => 'error', 'error_code' => '503', 'message' => 'Service Unavailable']);
         }
+
+        return response()->json(['status' => 'error', 'error_code' => '503', 'message' => 'Service Unavailable']);
     }
 }

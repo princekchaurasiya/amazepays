@@ -2,24 +2,27 @@
 
 namespace App\Jobs;
 
+use App\Helpers\ApiSignatureHelper;
+use App\Models\Order;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
-use App\Helpers\CommonHelper;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-use App\Models\QsOrder;
 
 class StatusCheckJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $refno;
+
     protected $data;
+
     protected $orderId;
+
     /**
      * Create a new job instance.
      *
@@ -71,15 +74,16 @@ class StatusCheckJob implements ShouldQueue
             }
         }
     }
+
     public function getStatusByReferenceNumber($refno)
     {
         $requestHttpMethod = 'GET';
-        $absApiUrl = 'https://' . setting('api.woohoo_url') . '/rest/v3/order/' . $refno . '/status';
-        $clientSecret = setting('api.qs_clientSecret');
-        $bearerToken = setting('api.bearer_token');
+        $absApiUrl = 'https://'.config('woohoo.host').'/rest/v3/order/'.$refno.'/status';
+        $clientSecret = config('woohoo.client_secret');
+        $bearerToken = config('woohoo.bearer_token');
         $requestBody = '';
         $dateAtClient = Carbon::now()->toIso8601String();
-        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+        $signature = ApiSignatureHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         $response = Http::acceptJson()
             ->withToken($bearerToken)
             ->withHeaders([
@@ -96,21 +100,23 @@ class StatusCheckJob implements ShouldQueue
             } elseif ($status === 'PROCESSING') {
                 return 'PROCESSING';
             }
+
             return 'FAILED';
         }
+
         return 'ERROR';
     }
 
     public function callCardActivation($orderId)
     {
-        $clientSecret = setting('api.qs_clientSecret'); // Your client secret
-        $bearerToken = setting('api.bearer_token'); // Your bearer token
-        $apiUrl = 'https://' . setting('api.woohoo_url');
+        $clientSecret = config('woohoo.client_secret'); // Your client secret
+        $bearerToken = config('woohoo.bearer_token'); // Your bearer token
+        $apiUrl = 'https://'.config('woohoo.host');
         $absApiUrl = "$apiUrl/rest/v3/order/{$orderId}/cards";
         $requestBody = '';
         $requestHttpMethod = 'GET';
         $dateAtClient = Carbon::now()->toIso8601String();
-        $signature = CommonHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
+        $signature = ApiSignatureHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         $response = Http::acceptJson()
             ->withToken($bearerToken)
             ->withHeaders([
@@ -124,7 +130,7 @@ class StatusCheckJob implements ShouldQueue
             if (isset($responseData['cards'])) {
                 $encryptedCards = encrypt(json_encode($responseData['cards']));
                 // Update by Woohoo order id as that maps to remote order
-                QsOrder::where('woohoo_order_id', $orderId)->update(['cards' => $encryptedCards]);
+                Order::where('woohoo_order_id', $orderId)->update(['cards' => $encryptedCards]);
             }
         }
     }

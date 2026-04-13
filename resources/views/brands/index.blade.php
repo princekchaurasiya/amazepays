@@ -21,8 +21,8 @@
 
                     <div class="mb-2">
                         <strong>Images:</strong><br>
-                        <img src="{{ json_decode(str_replace("'", '"', $brand['Images']), true)['thumbnail'] }}" alt="Thumbnail" style="height: 80px;">
-                        <img src="{{ json_decode(str_replace("'", '"', $brand['Images']), true)['featured'] }}" alt="Featured" style="height: 80px;">
+                        <img src="{{ $brand['parsed_images']['thumbnail'] ?? '' }}" alt="Thumbnail" style="height: 80px;">
+                        <img src="{{ $brand['parsed_images']['featured'] ?? '' }}" alt="Featured" style="height: 80px;">
                     </div>
 
                     <p><strong>Terms and Conditions:</strong></p>

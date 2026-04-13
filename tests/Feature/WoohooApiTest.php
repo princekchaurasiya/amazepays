@@ -2,16 +2,10 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\QsOrder;
-use App\Models\OrderSummary;
-use App\Models\QsProduct;
+use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Exception;
+use Tests\TestCase;
 
 class WoohooApiTest extends TestCase
 {
@@ -33,10 +27,10 @@ class WoohooApiTest extends TestCase
                         'cardNumber' => '1234567890123456',
                         'cardPin' => '1234',
                         'amount' => '1000.00',
-                        'validity' => '2025-12-31'
-                    ]
-                ]
-            ], 200)
+                        'validity' => '2025-12-31',
+                    ],
+                ],
+            ], 200),
         ]);
 
         // This test would typically call the actual controller method
@@ -55,8 +49,8 @@ class WoohooApiTest extends TestCase
                 'status' => 'PROCESSING',
                 'orderId' => 'TEST_ORDER_456',
                 'refno' => 'Amz20250112000002',
-                'cards' => [] // Empty initially
-            ], 200)
+                'cards' => [], // Empty initially
+            ], 200),
         ]);
 
         $this->assertTrue(true);
@@ -71,8 +65,8 @@ class WoohooApiTest extends TestCase
         Http::fake([
             '*/rest/v3/orders' => Http::response([
                 'code' => 5320,
-                'message' => '100 Denomination is not available for product SKU - VOUCHERCODE. Please choose different denomination.'
-            ], 400)
+                'message' => '100 Denomination is not available for product SKU - VOUCHERCODE. Please choose different denomination.',
+            ], 400),
         ]);
 
         $this->assertTrue(true);
@@ -93,16 +87,16 @@ class WoohooApiTest extends TestCase
                         'cardNumber' => '1234567890123456',
                         'cardPin' => '1234',
                         'amount' => '1000.00',
-                        'validity' => '2025-12-31'
+                        'validity' => '2025-12-31',
                     ],
                     [
                         'cardNumber' => '2345678901234567',
                         'cardPin' => '5678',
                         'amount' => '1000.00',
-                        'validity' => '2025-12-31'
-                    ]
-                ]
-            ], 200)
+                        'validity' => '2025-12-31',
+                    ],
+                ],
+            ], 200),
         ]);
 
         $this->assertTrue(true);
@@ -120,9 +114,9 @@ class WoohooApiTest extends TestCase
                     'id' => 1,
                     'name' => 'Gift Cards',
                     'url' => '/gift-cards',
-                    'description' => 'Gift card category'
-                ]
-            ], 200)
+                    'description' => 'Gift card category',
+                ],
+            ], 200),
         ]);
 
         $this->assertTrue(true);
@@ -147,13 +141,13 @@ class WoohooApiTest extends TestCase
                             'price' => [
                                 'type' => 'Range',
                                 'min' => 100,
-                                'max' => 10000
+                                'max' => 10000,
                             ],
-                            'denominations' => [100, 500, 1000, 5000]
-                        ]
-                    ]
-                ]
-            ], 200)
+                            'denominations' => [100, 500, 1000, 5000],
+                        ],
+                    ],
+                ],
+            ], 200),
         ]);
 
         $this->assertTrue(true);
@@ -175,12 +169,12 @@ class WoohooApiTest extends TestCase
                 'price' => [
                     'type' => 'Range',
                     'min' => 100,
-                    'max' => 10000
+                    'max' => 10000,
                 ],
                 'metaInformation' => [
-                    'denominations' => [100, 500, 1000, 5000]
-                ]
-            ], 200)
+                    'denominations' => [100, 500, 1000, 5000],
+                ],
+            ], 200),
         ]);
 
         $this->assertTrue(true);
@@ -199,8 +193,8 @@ class WoohooApiTest extends TestCase
                 'status' => 'COMPLETE',
                 'orderId' => 'TEST_ORDER_123',
                 'refno' => $refno,
-                'message' => 'Order completed successfully'
-            ], 200)
+                'message' => 'Order completed successfully',
+            ], 200),
         ]);
 
         $this->assertTrue(true);
@@ -212,9 +206,9 @@ class WoohooApiTest extends TestCase
      */
     public function test_reference_number_uniqueness()
     {
-        $refno1 = 'Amz' . date('YmdHis') . rand(1000, 9999);
+        $refno1 = 'Amz'.date('YmdHis').rand(1000, 9999);
         sleep(1); // Ensure different timestamp
-        $refno2 = 'Amz' . date('YmdHis') . rand(1000, 9999);
+        $refno2 = 'Amz'.date('YmdHis').rand(1000, 9999);
 
         $this->assertNotEquals($refno1, $refno2);
         $this->assertStringStartsWith('Amz', $refno1);

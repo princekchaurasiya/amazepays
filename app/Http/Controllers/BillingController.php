@@ -2,15 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Billing;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 
 class BillingController extends Controller
 {
-
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'order_id' => [
+                'required',
+                'integer',
+                Rule::exists('orders', 'id')->where(fn ($q) => $q->where('user_id', Auth::id())),
+            ],
             'billing_name' => 'required|string|max:255',
             'billing_email' => 'required|email|max:255',
             'billing_tel' => 'nullable|string|max:50',
@@ -23,9 +30,18 @@ class BillingController extends Controller
             'billing_gst_number' => 'nullable|string|max:50',
         ]);
 
-        Billing::create($validated);
+        $orderId = (int) $validated['order_id'];
+        unset($validated['order_id']);
+
+        if (Schema::hasColumn('billings', 'order_id')) {
+            Billing::updateOrCreate(
+                ['order_id' => $orderId],
+                $validated
+            );
+        } else {
+            Billing::create($validated);
+        }
 
         return response()->json(['message' => 'Billing data saved to the database.']);
     }
-
 }

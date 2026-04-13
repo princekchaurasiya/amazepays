@@ -191,7 +191,7 @@
             <td colspan="4" style="text-align: left; padding-left: 16px;">
                 <p style="font-weight: 600; margin: 8px 0; font-size: 16px">Terms and Conditions</p>
                 <p>
-                    {!! \App\Helpers\CommonHelper::getFormattedInvoiceTermsAndConditions() !!}
+                    {!! \App\Helpers\InvoiceHelper::getFormattedInvoiceTermsAndConditions() !!}
                 </p>
             </td>
         </tr>

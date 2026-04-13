@@ -10,6 +10,7 @@ use Illuminate\Http\Client\RequestException;
 use App\Models\ApiToken;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 class NetBankPaymentController extends Controller
 {
@@ -142,7 +143,11 @@ public function process(Request $request)
 
         // Proceed with your custom logic (e.g., saving to DB, initiating a new payment method, etc.)
         
-        return view('payment.success', ['amount' => $payableAmount]);
+        return Inertia::render('Checkout/Status', [
+            'status' => 'success',
+            'msg' => 'Payment successful',
+            'amount' => $payableAmount,
+        ]);
     }
 
 }

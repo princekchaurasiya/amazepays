@@ -6,12 +6,6 @@
 
 @section('content')
 
-    @php
-        // Hardcoded values for demonstration purposes
-        $status = 'failure'; // Change to 'success' for testing success scenario
-        $msg = $status === 'success' ? 'Payment Successful' : 'Payment Failed';
-    @endphp
-
     @if ($status === 'success')
         <div class="row paymentSuccess" id="paymentSuccess">
             <div class="col-12 text-center allsection">

@@ -283,7 +283,7 @@ Before running tests, ensure:
    - These should be set in your `.env` file or via Voyager settings
 
 3. **Test Data:**
-   - Products should exist in `qs_products` table
+   - Products should exist in `products` table
    - Test SKUs: `CNPIN`, `VOUCHERCODE`, `CLAIMCODE`, `UBERLOW`
 
 ---
@@ -298,7 +298,7 @@ Before running tests, ensure:
 
 2. **"Product with SKU not found"**
    - Ensure products are synced: `php artisan fetch:productData`
-   - Or manually add test products to `qs_products` table
+   - Or manually add test products to `products` table
 
 3. **"Connection timeout"**
    - This may be expected for timeout test scenarios

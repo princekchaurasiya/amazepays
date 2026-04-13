@@ -5,9 +5,6 @@
 @endsection
 
 @section('content')
-@php
-    use App\Helpers\CommonHelper;
-@endphp
     <div class="dashboard-wrapper bg-greylight">
         <div class="container">
             @if(session('error'))
@@ -36,8 +33,7 @@
                                         class="ti-package font-sm"></i><span> My Order</span></a></li>
                             <li class="d-block rounded-lg"><a href="{{ route('change-password') }}"><i
                                         class="ti-lock font-sm"></i><span> Change Password</span></a></li>
-                            <li class="d-block rounded-lg"><a href="{{ route('userLogOut') }}"><i
-                                        class="ti-power-off font-sm"></i><span> Logout</span></a></li>
+                            @include('partials.logout-form-sidebar')
                         </ul>
                     </div>
                 </div>
@@ -48,23 +44,9 @@
                         </div>
                         @foreach ($order as $orderItem)
                             @if ($orderItem->refno)
-                                <?php
-                                $images = json_decode($orderItem->images, true);
-                                $orderStatus = strtoupper($orderItem->order_status);
-                                
-                                // Order is clickable if it has woohoo_order_id (has card details)
-                                // COMPLETE and PAID orders with woohoo_order_id are clickable
-                                // PENDING and FAILED orders are NOT clickable
-                                $isClickable = !empty($orderItem->woohoo_order_id) && in_array($orderStatus, ['COMPLETE', 'PAID']);
-                                $linkAttributes = $isClickable ? 'href="' . route('view-card-details', ['orderId' => $orderItem->woohoo_order_id]) . '"' : '';
-                                
-                                // Determine if order should be faded (PENDING, FAILED, or orders without woohoo_order_id)
-                                $isFaded = !$isClickable && !in_array($orderStatus, ['COMPLETE', 'PAID']);
-                                ?>
-
-                                <a {!! $linkAttributes !!} 
-                                    class="order-link {{ !$isClickable ? 'disabled-link' : '' }} {{ $isFaded ? 'faded-order' : '' }}"
-                                    style="{{ !$isClickable ? 'pointer-events: none;' : '' }}">
+                                <a @if(!empty($orderItem->view_card_url)) href="{{ $orderItem->view_card_url }}" @endif
+                                    class="order-link {{ !$orderItem->is_clickable ? 'disabled-link' : '' }} {{ $orderItem->is_faded ? 'faded-order' : '' }}"
+                                    @if(!$orderItem->is_clickable) style="pointer-events: none;" @endif>
                                     <div class="outer-order-wrapper-div">
                                         <div class="card product-card {{ $isFaded ? 'faded-order-card' : '' }}">
                                             <div class="card-body my-order-card-body">

@@ -18,21 +18,21 @@
                         style="cursor: {{ $slide->is_linked ? 'pointer' : 'default' }};">
                         @if ($slide->product_id)
                             <a href="{{ route('get-product-by-slug', ['slug' => $slide->slug]) }}">
-                                <img src="{{ Voyager::image($slide->desktop_image) }}" alt="{{ $slide->img_alt_tag }}"
+                                <img src="{{ Storage::url($slide->desktop_image) }}" alt="{{ $slide->img_alt_tag }}"
                                     class="d-block w-100">
                             </a>
                         @elseif($slide->category_id)
                             <a href="{{ route('categories.show', ['slug' => $slide->slug]) }}">
-                                <img src="{{ Voyager::image($slide->desktop_image) }}" alt="{{ $slide->img_alt_tag }}"
+                                <img src="{{ Storage::url($slide->desktop_image) }}" alt="{{ $slide->img_alt_tag }}"
                                     class="d-block w-100">
                             </a>
                         @elseif($slide->brand_id)
                             <a href="{{ route('brands.show', ['slug' => $slide->slug]) }}">
-                                <img src="{{ Voyager::image($slide->desktop_image) }}" alt="{{ $slide->img_alt_tag }}"
+                                <img src="{{ Storage::url($slide->desktop_image) }}" alt="{{ $slide->img_alt_tag }}"
                                     class="d-block w-100">
                             </a>
                         @else
-                            <img src="{{ Voyager::image($slide->desktop_image) }}" alt="{{ $slide->img_alt_tag }}"
+                            <img src="{{ Storage::url($slide->desktop_image) }}" alt="{{ $slide->img_alt_tag }}"
                                 class="d-block w-100">
                         @endif
                     </div>
@@ -69,21 +69,21 @@
                         style="cursor: {{ $slide->is_linked ? 'pointer' : 'default' }};">
                         @if ($slide->product_id)
                             <a href="{{ route('get-product-by-slug', ['slug' => $slide->slug]) }}">
-                                <img src="{{ Voyager::image($slide->image_mobile) }}" alt="{{ $slide->img_alt_tag }}"
+                                <img src="{{ Storage::url($slide->image_mobile) }}" alt="{{ $slide->img_alt_tag }}"
                                     class="d-block w-100">
                             </a>
                         @elseif($slide->category_id)
                             <a href="{{ route('categories.show', ['slug' => $slide->slug]) }}">
-                                <img src="{{ Voyager::image($slide->image_mobile) }}" alt="{{ $slide->img_alt_tag }}"
+                                <img src="{{ Storage::url($slide->image_mobile) }}" alt="{{ $slide->img_alt_tag }}"
                                     class="d-block w-100">
                             </a>
                         @elseif($slide->brand_id)
                             <a href="{{ route('brands.show', ['slug' => $slide->slug]) }}">
-                                <img src="{{ Voyager::image($slide->image_mobile) }}" alt="{{ $slide->img_alt_tag }}"
+                                <img src="{{ Storage::url($slide->image_mobile) }}" alt="{{ $slide->img_alt_tag }}"
                                     class="d-block w-100">
                             </a>
                         @else
-                            <img src="{{ Voyager::image($slide->image_mobile) }}" alt="{{ $slide->img_alt_tag }}"
+                            <img src="{{ Storage::url($slide->image_mobile) }}" alt="{{ $slide->img_alt_tag }}"
                                 class="d-block w-100">
                         @endif
                     </div>

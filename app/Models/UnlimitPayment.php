@@ -15,6 +15,7 @@ class UnlimitPayment extends Model
         'user_id',
         'price',
         'qty',
+        'sku',
         'order_id',
         'tracking_id',
         'bank_ref_no',
@@ -59,13 +60,13 @@ class UnlimitPayment extends Model
         'trans_date',
         'bin_country',
         'unlimit_response',
-         'merchant_order_id',
-         'raw_callback',
+        'merchant_order_id',
+        'raw_callback',
     ];
 
     public function order()
     {
-        return $this->belongsTo(QsOrder::class, 'order_id', 'id');
+        return $this->belongsTo(Order::class, 'order_id', 'id');
     }
 
     public function user()

@@ -3,27 +3,6 @@
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="container py-5">
-    @php
-        // Normalize to array if a collection is passed
-        if ($brands instanceof \Illuminate\Support\Collection) {
-            $brands = $brands->toArray();
-        }
-
-        $brand = [];
-        if (is_array($brands) && !empty($brands)) {
-            $keys = array_keys($brands);
-            // If numeric, zero-based array -> take index 0; otherwise take first value
-            if ($keys === range(0, count($brands) - 1)) {
-                $brand = $brands[0] ?? [];
-            } else {
-                $first = reset($brands);
-                $brand = is_array($first) ? $first : [];
-            }
-        }
-
-        $images = isset($brand['Images']) ? json_decode(str_replace("'", '"', $brand['Images']), true) : [];
-        $redeemSteps = $brand['RedeemSteps'] ?? [];
-    @endphp
     @if (empty($brand))
         <div class="alert alert-warning">No brand data available. Please try again later.</div>
     @endif
@@ -32,7 +11,7 @@
     <div class="card mb-4 shadow">
         <div class="row g-0">
             <div class="col-md-4">
-                <img src="{{ $images['featured'] ?? '' }}" class="img-fluid rounded-start" alt="{{ $brand['BrandName'] ?? '' }}">
+                <img src="{{ $brand_images['featured'] ?? '' }}" class="img-fluid rounded-start" alt="{{ $brand['BrandName'] ?? '' }}">
             </div>
             <div class="col-md-8">
                 <div class="card-body">
@@ -72,7 +51,7 @@
                                 Go to Checkout Page
                             </button>
                         @else
-                            <a href="#" class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color" data-toggle="modal" data-target="#Modallogin">
+                            <a href="{{ route('login') }}" class="form-control h60 bg-current float-right text-white text-center font-xss fw-500 border-0 p-0 mt-4 mb-4 w250 login-button-color">
                                 Go to Checkout Page
                             </a>
                         @endif
@@ -84,7 +63,7 @@
                                         <label for="tabone">How to Redeem</label>
                                         <div class="tab p-3 font-xsss instructions text-black">
                                             <div class="row">
-                                            @foreach(($redeemSteps ?? []) as $step)
+                                            @foreach(($redeem_steps ?? []) as $step)
                                             <img src="{{ $step['image'] ?? '' }}" class="card-img-top" alt="Redeem Step">
                                                 <div class="col-md-4 mb-3">
                                                     <div class="card h-100">
@@ -193,17 +172,15 @@
 
                  window.isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
     if (!window.isAuthenticated) {
-        // Only show login modal if user is not authenticated
         setTimeout(function () {
-            if (!$('#Modallogin').hasClass('show')) {
-                $('#Modallogin').modal('show');
+            if (typeof window.openAuthModal === 'function') {
+                window.openAuthModal();
             }
         }, 1000);
     } else {
-        // Hide login modal if user is authenticated and modal is visible
         setTimeout(function () {
-            if (window.isAuthenticated) {
-                $('#Modallogin').modal('hide');
+            if (typeof window.closeAuthModal === 'function') {
+                window.closeAuthModal();
             }
         }, 1000);
     }

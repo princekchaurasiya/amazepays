@@ -1,0 +1,187 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .btn-primary {
+        @apply inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 active:bg-brand-800 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 active:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700;
+    }
+
+    .btn-danger {
+        @apply inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 active:bg-red-800 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+    }
+
+    .input {
+        @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400;
+    }
+
+    .label {
+        @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+    }
+
+    .card {
+        @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm;
+    }
+
+    .table-header {
+        @apply text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider px-4 py-3 bg-gray-50 dark:bg-gray-700;
+    }
+
+    .table-cell {
+        @apply px-4 py-3 text-sm text-gray-900 dark:text-gray-300;
+    }
+
+    /* Blade auth / error layouts (login, 403, 404) — use compiled CSS via Vite::asset */
+    .auth-page {
+        @apply min-h-full flex flex-col items-center justify-center bg-gray-50 px-4 py-8 text-gray-900 antialiased;
+    }
+
+    .auth-brand {
+        @apply mb-3 inline-flex items-center justify-center gap-2 text-gray-900;
+    }
+
+    .auth-brand-mark {
+        @apply flex h-10 w-10 items-center justify-center rounded-lg bg-accent-500 text-lg font-bold text-white;
+    }
+
+    .auth-brand-text {
+        @apply text-xl font-bold tracking-tight text-brand-600;
+    }
+
+    .auth-brand-logo {
+        @apply mx-auto h-10 w-auto max-w-[200px] object-contain;
+    }
+
+    .auth-card-shell {
+        @apply w-full max-w-md;
+    }
+
+    .auth-card {
+        @apply card overflow-hidden border border-gray-200 shadow-sm;
+    }
+
+    .auth-card-header {
+        @apply border-b border-gray-100 px-6 py-5;
+    }
+
+    .auth-card-title {
+        @apply text-xl font-semibold text-brand-950;
+    }
+
+    .auth-card-sub {
+        @apply mt-1 text-sm text-gray-500;
+    }
+
+    .auth-card-body {
+        @apply px-6 py-6;
+    }
+
+    .auth-alert-error {
+        @apply mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800;
+    }
+
+    .auth-alert-info {
+        @apply mb-4 rounded-lg border border-sky-200 bg-sky-50 px-3 py-3 text-sm text-sky-900;
+    }
+
+    .auth-form-stack {
+        @apply space-y-5;
+    }
+
+    .auth-password-row {
+        @apply relative mt-1.5;
+    }
+
+    .auth-input-password {
+        @apply input block py-2.5 pl-3 pr-24;
+    }
+
+    .btn-toggle-password {
+        @apply absolute inset-y-0 right-0 flex items-center px-3 text-sm font-medium text-accent-600 hover:text-accent-700;
+    }
+
+    .btn-signin {
+        @apply btn-primary w-full justify-center px-4 py-3 text-sm font-semibold;
+    }
+
+    .auth-login-actions {
+        @apply mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4;
+    }
+
+    .btn-signin-inline {
+        @apply btn-primary justify-center px-6 py-2.5 text-sm font-semibold;
+    }
+
+    .auth-register-note {
+        @apply mt-4 text-center text-sm text-gray-600;
+    }
+
+    .auth-footer {
+        @apply mt-6 space-y-3 border-t border-gray-100 pt-6 text-center text-sm text-gray-600;
+    }
+
+    .auth-link {
+        @apply font-medium text-accent-600 hover:text-accent-700;
+    }
+
+    .auth-forgot-actions {
+        @apply mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4;
+    }
+
+    .auth-btn-reset {
+        @apply btn-primary justify-center px-6 py-2.5 text-sm font-semibold;
+    }
+
+    .auth-register-actions {
+        @apply mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4;
+    }
+
+    .auth-btn-register {
+        @apply btn-primary justify-center px-6 py-2.5 text-sm font-semibold;
+    }
+
+    .auth-legal {
+        @apply mt-6 text-center text-xs text-gray-400 leading-relaxed;
+    }
+
+    .auth-legal a {
+        @apply underline hover:text-gray-600;
+    }
+
+    /* Unified OTP flow */
+    .u-hidden {
+        @apply hidden;
+    }
+
+    .u-otp-box {
+        @apply h-12 w-10 sm:w-11 rounded-lg border border-gray-300 text-center text-lg font-semibold focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30;
+    }
+
+    .u-otp-row {
+        @apply flex justify-center gap-1.5 sm:gap-2;
+    }
+
+    .u-btn-pill {
+        @apply w-full rounded-full bg-brand-600 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:hover:bg-gray-300;
+    }
+
+    .u-modal-overlay {
+        @apply fixed inset-0 z-[1040] flex items-center justify-center bg-black/50 p-4;
+    }
+
+    .u-modal-panel {
+        @apply relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl;
+    }
+
+    .u-modal-close {
+        @apply absolute right-4 top-4 rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800;
+    }
+
+    .auth-sr-only {
+        @apply hidden;
+    }
+}

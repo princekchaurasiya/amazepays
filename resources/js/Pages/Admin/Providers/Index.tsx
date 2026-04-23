@@ -7,6 +7,7 @@ type Provider = {
     label: string;
     healthy: boolean;
     href: string | null;
+    note?: string | null;
 };
 
 export default function ProvidersIndex({
@@ -36,6 +37,9 @@ export default function ProvidersIndex({
                                     {p.healthy ? 'Configured' : 'Check env'}
                                 </span>
                             </div>
+                            {p.note ? (
+                                <p className="mt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400">{p.note}</p>
+                            ) : null}
                             {p.href ? (
                                 <Link href={p.href} className="mt-3 inline-block text-sm text-indigo-600 hover:underline dark:text-indigo-400">
                                     Open dashboard

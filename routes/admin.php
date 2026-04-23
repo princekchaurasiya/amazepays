@@ -4,13 +4,16 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\B2bPortalController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\GiftThemeController;
 use App\Http\Controllers\Admin\KGenAdminController;
 use App\Http\Controllers\Admin\OfferController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProviderDashboardController;
+use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\SecurityDashboardController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\SlideController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\UserController;
@@ -19,6 +22,7 @@ use App\Http\Controllers\Admin\VouchagramController;
 use App\Http\Controllers\Admin\WalletController;
 use App\Http\Controllers\Admin\WoohooAdminController;
 use App\Http\Controllers\Auth\TwoFactorController;
+use App\Models\Slide;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -48,9 +52,19 @@ Route::prefix('panel')->name('admin.')->middleware(['auth', 'two.factor'])->grou
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard')
         ->middleware('permission:dashboard.view');
 
-    // B2B portal (tenant-scoped)
-    Route::prefix('b2b')->name('b2b.')->group(function () {
-        Route::get('/place-order', [B2bPortalController::class, 'placeOrder'])->name('place-order')
+    // B2B portal (tenant-scoped — sets current_tenant for pricing / orders)
+    Route::prefix('b2b')->name('b2b.')->middleware('tenant')->group(function () {
+        Route::get('/place-order', fn () => redirect()->route('admin.b2b.shop'))->name('place-order')
+            ->middleware('permission:b2b.place_order');
+        Route::get('/shop', [B2bPortalController::class, 'shop'])->name('shop')
+            ->middleware('permission:b2b.shop.view');
+        Route::get('/price-list', [B2bPortalController::class, 'priceList'])->name('price-list')
+            ->middleware('permission:b2b.price_list.view');
+        Route::get('/price-list/export', [B2bPortalController::class, 'exportPriceList'])->name('price-list.export')
+            ->middleware('permission:b2b.price_list.view');
+        Route::get('/financial-activity', [B2bPortalController::class, 'financialActivity'])->name('financial-activity')
+            ->middleware('permission:b2b.finance.view');
+        Route::post('/orders', [B2bPortalController::class, 'storeOrder'])->name('orders.store')
             ->middleware('permission:b2b.place_order');
         Route::get('/orders', [B2bPortalController::class, 'orders'])->name('orders')
             ->middleware('permission:b2b.view_orders');
@@ -58,6 +72,14 @@ Route::prefix('panel')->name('admin.')->middleware(['auth', 'two.factor'])->grou
             ->middleware('permission:b2b.manage_team');
         Route::get('/wallet', [B2bPortalController::class, 'wallet'])->name('wallet')
             ->middleware('permission:b2b.wallet.view');
+        Route::post('/wallet/load-request', [B2bPortalController::class, 'storeWalletLoadRequest'])->name('wallet.load-request.store')
+            ->middleware('permission:b2b.wallet.request_load');
+
+        // Self-service: assign B2B-eligible SKUs to the current tenant (does not require tenants.view).
+        Route::get('/catalog', [B2bPortalController::class, 'catalogManage'])->name('catalog')
+            ->middleware('permission:tenants.assign_products');
+        Route::post('/catalog', [B2bPortalController::class, 'updateCatalog'])->name('catalog.update')
+            ->middleware('permission:tenants.assign_products');
     });
 
     // Products
@@ -67,6 +89,7 @@ Route::prefix('panel')->name('admin.')->middleware(['auth', 'two.factor'])->grou
             ->middleware('permission:products.create');
         Route::post('/', [ProductController::class, 'store'])->name('store')
             ->middleware('permission:products.create');
+        Route::patch('/bulk-update', [ProductController::class, 'bulkUpdate'])->name('bulk_update');
 
         Route::put('/{product}/content', [ProductController::class, 'updateContent'])->name('content.update')
             ->middleware('permission:products.update');
@@ -91,6 +114,28 @@ Route::prefix('panel')->name('admin.')->middleware(['auth', 'two.factor'])->grou
             ->middleware('permission:products.publish');
         Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy')
             ->middleware('permission:products.delete');
+    });
+
+    // Gift themes (storefront gifting)
+    Route::prefix('gift-themes')->name('gift-themes.')->middleware('permission:settings.view')->group(function () {
+        Route::get('/', [GiftThemeController::class, 'index'])->name('index');
+        Route::post('/', [GiftThemeController::class, 'store'])->name('store')
+            ->middleware('permission:settings.update');
+        Route::put('/{theme}', [GiftThemeController::class, 'update'])->name('update')
+            ->middleware('permission:settings.update');
+        Route::patch('/{theme}/toggle', [GiftThemeController::class, 'toggle'])->name('toggle')
+            ->middleware('permission:settings.update');
+        Route::delete('/{theme}', [GiftThemeController::class, 'destroy'])->name('destroy')
+            ->middleware('permission:settings.update');
+    });
+
+    // Legacy /panel/slides URLs → Settings → Hero carousel
+    Route::prefix('slides')->middleware('permission:settings.view')->group(function () {
+        Route::get('/', fn () => redirect()->route('admin.settings.hero-slides.index'));
+        Route::get('/create', fn () => redirect()->route('admin.settings.hero-slides.create'))
+            ->middleware('permission:settings.update');
+        Route::get('/{slide}/edit', fn (Slide $slide) => redirect()->route('admin.settings.hero-slides.edit', $slide))
+            ->middleware('permission:settings.update');
     });
 
     // Categories (storefront navigation)
@@ -120,6 +165,8 @@ Route::prefix('panel')->name('admin.')->middleware(['auth', 'two.factor'])->grou
         Route::get('/{user}', [UserController::class, 'show'])->name('show');
         Route::put('/{user}', [UserController::class, 'update'])->name('update')
             ->middleware('permission:users.update');
+        Route::put('/{user}/roles', [UserController::class, 'syncRoles'])->name('roles')
+            ->middleware('permission:users.assign_roles');
         Route::post('/{user}/block', [UserController::class, 'block'])->name('block')
             ->middleware('permission:users.block');
         Route::post('/{user}/unblock', [UserController::class, 'unblock'])->name('unblock')
@@ -147,14 +194,16 @@ Route::prefix('panel')->name('admin.')->middleware(['auth', 'two.factor'])->grou
         Route::get('/', [WalletController::class, 'index'])->name('index');
         Route::get('/load-requests', [WalletController::class, 'loadRequests'])->name('load_requests')
             ->middleware('permission:wallets.load_requests.view');
+        Route::get('/load-requests/{loadRequest}/proof', [WalletController::class, 'downloadLoadProof'])->name('load_requests.proof')
+            ->middleware('permission:wallets.load_requests.view');
         Route::post('/load-requests/{loadRequest}/approve', [WalletController::class, 'approveLoad'])->name('load_requests.approve')
             ->middleware('permission:wallets.load_requests.approve');
         Route::post('/load-requests/{loadRequest}/reject', [WalletController::class, 'rejectLoad'])->name('load_requests.reject')
             ->middleware('permission:wallets.load_requests.reject');
 
         Route::get('/{wallet}', [WalletController::class, 'show'])->name('show');
-        Route::post('/{wallet}/credit', [WalletController::class, 'credit'])->name('credit')
-            ->middleware('permission:wallets.credit');
+        Route::post('/{wallet}/load-requests', [WalletController::class, 'storeLoadOnBehalf'])->name('load_requests.store_on_behalf')
+            ->middleware('permission:wallets.load_requests.submit_on_behalf');
         Route::post('/{wallet}/debit', [WalletController::class, 'debit'])->name('debit')
             ->middleware('permission:wallets.debit');
         Route::post('/{wallet}/freeze', [WalletController::class, 'freeze'])->name('freeze')
@@ -242,6 +291,26 @@ Route::prefix('panel')->name('admin.')->middleware(['auth', 'two.factor'])->grou
             ->middleware('permission:settings.update');
         Route::post('/sections/reorder', [SettingsController::class, 'reorderSections'])->name('sections.reorder')
             ->middleware('permission:settings.update');
+
+        Route::prefix('hero-slides')->name('hero-slides.')->group(function () {
+            Route::get('/', [SlideController::class, 'index'])->name('index');
+            Route::get('/create', [SlideController::class, 'create'])->name('create')
+                ->middleware('permission:settings.update');
+            Route::post('/', [SlideController::class, 'store'])->name('store')
+                ->middleware('permission:settings.update');
+            Route::get('/{slide}/edit', [SlideController::class, 'edit'])->name('edit')
+                ->middleware('permission:settings.update');
+            Route::put('/{slide}', [SlideController::class, 'update'])->name('update')
+                ->middleware('permission:settings.update');
+            Route::delete('/{slide}', [SlideController::class, 'destroy'])->name('destroy')
+                ->middleware('permission:settings.update');
+        });
+
+        Route::middleware('permission:settings.roles.manage')->group(function () {
+            Route::get('/roles', [RolePermissionController::class, 'index'])->name('roles.index');
+            Route::get('/roles/{role}/edit', [RolePermissionController::class, 'edit'])->name('roles.edit');
+            Route::put('/roles/{role}', [RolePermissionController::class, 'update'])->name('roles.update');
+        });
     });
 
     // Voucher provider dashboards
@@ -251,6 +320,16 @@ Route::prefix('panel')->name('admin.')->middleware(['auth', 'two.factor'])->grou
         ->middleware('permission:providers.view');
     Route::get('/value-design', [ValueDesignAdminController::class, 'index'])->name('value-design.index')
         ->middleware('permission:providers.view');
+    Route::prefix('value-design')->name('value-design.')->middleware('permission:providers.view')->group(function () {
+        Route::post('/token', [ValueDesignAdminController::class, 'token'])->name('token');
+        Route::post('/brands', [ValueDesignAdminController::class, 'brands'])->name('brands');
+        Route::post('/stores', [ValueDesignAdminController::class, 'stores'])->name('stores');
+        Route::post('/evc', [ValueDesignAdminController::class, 'evc'])->name('evc');
+        Route::post('/evc-status', [ValueDesignAdminController::class, 'evcStatus'])->name('evc-status');
+        Route::post('/activated-evc', [ValueDesignAdminController::class, 'activatedEvc'])->name('activated-evc');
+        Route::post('/wallet-balance', [ValueDesignAdminController::class, 'walletBalance'])->name('wallet-balance');
+        Route::post('/sync-catalog', [ValueDesignAdminController::class, 'syncCatalog'])->name('sync-catalog');
+    });
     Route::get('/woohoo-admin', [WoohooAdminController::class, 'index'])->name('woohoo.index')
         ->middleware('permission:providers.view');
 
@@ -258,6 +337,8 @@ Route::prefix('panel')->name('admin.')->middleware(['auth', 'two.factor'])->grou
     Route::prefix('vouchagram')->name('vouchagram.')->middleware('permission:providers.view')->group(function () {
         Route::get('/', [VouchagramController::class, 'index'])->name('index');
         Route::post('/fetch-brands', [VouchagramController::class, 'fetchBrands'])->name('fetch-brands');
+        Route::get('/catalog-snapshots', [VouchagramController::class, 'listCatalogSnapshots'])->name('catalog-snapshots.index');
+        Route::get('/catalog-snapshots/{snapshot}', [VouchagramController::class, 'showCatalogSnapshot'])->name('catalog-snapshots.show');
         Route::post('/send-voucher', [VouchagramController::class, 'sendVoucher'])->name('send-voucher');
         Route::post('/pull-voucher', [VouchagramController::class, 'pullVoucher'])->name('pull-voucher');
         Route::post('/check-send-status', [VouchagramController::class, 'checkSendStatus'])->name('check-send-status');
@@ -265,5 +346,7 @@ Route::prefix('panel')->name('admin.')->middleware(['auth', 'two.factor'])->grou
         Route::post('/check-stock', [VouchagramController::class, 'checkStock'])->name('check-stock');
         Route::post('/store-list', [VouchagramController::class, 'getStoreList'])->name('store-list');
         Route::post('/sync-catalog', [VouchagramController::class, 'syncCatalog'])->name('sync-catalog');
+        Route::post('/sync-catalog-from-snapshot', [VouchagramController::class, 'syncCatalogFromSnapshot'])
+            ->name('sync-catalog-from-snapshot');
     });
 });

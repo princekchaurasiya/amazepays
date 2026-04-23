@@ -7,8 +7,10 @@ use App\Data\OrderData;
 use App\Data\PricingResult;
 use App\Exceptions\InsufficientBalanceException;
 use App\Exceptions\OrderCreationException;
+use App\Exceptions\WalletFrozenException;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Pricing\PricingService;
 use App\Services\Wallet\WalletService;
@@ -31,7 +33,7 @@ class OrderCreationService
     public function __construct(
         private PricingService $pricingService,
         private WalletService $walletService,
-        private VouchagramOrderFulfillmentService $vouchagramFulfillment,
+        private OrderFulfillmentOrchestrator $fulfillmentOrchestrator,
     ) {}
 
     /**
@@ -39,6 +41,7 @@ class OrderCreationService
      *
      * @throws OrderCreationException
      * @throws InsufficientBalanceException
+     * @throws WalletFrozenException when wallet payment and wallet is frozen
      */
     public function create(
         User $user,
@@ -47,12 +50,28 @@ class OrderCreationService
     ): Order {
         $product = Product::findOrFail($orderData->productId);
 
+        $tenant = $this->resolveTenantForOrder();
+
+        if ($tenant) {
+            $assigned = $tenant->products()
+                ->where('products.id', $product->id)
+                ->wherePivot('is_active', true)
+                ->exists();
+            if (! $assigned) {
+                throw new OrderCreationException('This product is not available for your B2B account.');
+            }
+            if (! in_array((string) ($product->catalog_audience ?? Product::CATALOG_AUDIENCE_BOTH), [Product::CATALOG_AUDIENCE_B2B, Product::CATALOG_AUDIENCE_BOTH], true)) {
+                throw new OrderCreationException('This product is not available for B2B purchase.');
+            }
+        }
+
         $pricing = $this->pricingService->calculate(
             product: $product,
             quantity: $orderData->quantity,
             denomination: $orderData->denomination,
             offerCode: $orderData->offerCode,
             user: $user,
+            tenant: $tenant,
         );
 
         return DB::transaction(function () use ($user, $product, $orderData, $billingData, $pricing) {
@@ -114,16 +133,25 @@ class OrderCreationService
                 'user_id' => $user->id,
             ]);
 
-            if ($orderData->paymentMethod === 'wallet' && $product->source_provider === 'vouchagram') {
+            if ($orderData->paymentMethod === 'wallet') {
                 $order->update([
                     'status' => 'paid',
                     'order_status' => 'PAID',
                 ]);
-                $this->vouchagramFulfillment->fulfillIfApplicable($order->fresh());
+                $this->fulfillmentOrchestrator->fulfillPaidOrder($order->fresh());
             }
 
             return $order;
         });
+    }
+
+    private function resolveTenantForOrder(): ?Tenant
+    {
+        if (app()->bound('current_tenant') && app('current_tenant') instanceof Tenant) {
+            return app('current_tenant');
+        }
+
+        return null;
     }
 
     /**

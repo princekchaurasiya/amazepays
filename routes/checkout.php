@@ -23,6 +23,11 @@ Route::middleware(['auth', 'check.transaction'])->group(function () {
     Route::get('/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
     Route::post('/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage.post');
 
+    Route::get('/cart', [ProductPageController::class, 'showCart'])->name('storefront.cart');
+    Route::post('/cart/remove', [ProductPageController::class, 'removeFromCart'])->name('storefront.cart.remove');
+    Route::post('/cart/clear', [ProductPageController::class, 'clearCart'])->name('storefront.cart.clear');
+    Route::post('/cart/{slug}', [ProductPageController::class, 'addToCart'])->name('storefront.cart.add');
+
     Route::post('/payment-process', [UnlimitPaymentController::class, 'store'])->name('unlimit.store');
     Route::post('/save-gift-card-form', [CheckoutController::class, 'saveGiftCardForm'])->name('save-gift-card-form');
 

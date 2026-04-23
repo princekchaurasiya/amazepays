@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'login_title' => 'Log in',
+    'login_signup' => 'Log in / Sign up',
+    'otp_subtitle' => "We'll send an OTP to verify your number",
+    'phone' => 'Phone',
+    'mobile_placeholder' => '10-digit mobile',
+    'continue' => 'Continue',
+    'please_wait' => 'Please wait...',
+    'enter_otp' => 'Enter OTP',
+    'sent_to' => 'Sent to :phone',
+    'verifying' => 'Verifying...',
+    'change_number' => 'Change number',
+    'complete_profile' => 'Complete your profile',
+    'full_name' => 'Full name',
+    'email_optional' => 'Email (optional)',
+    'referral_optional' => 'Referral code (optional)',
+    'saving' => 'Saving...',
+    'complete' => 'Complete',
+    'back' => 'Back',
+    'verify' => 'Verify',
+    'back_to_home' => 'Back to home',
+    'recaptcha_note' => "This site is protected by reCAPTCHA and Google's policies apply.",
+];

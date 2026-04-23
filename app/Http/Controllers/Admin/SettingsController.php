@@ -116,8 +116,7 @@ class SettingsController extends Controller
         }
 
         $sections = HomepageSection::query()
-            ->orderBy('sort_order')
-            ->orderBy('id')
+            ->ordered()
             ->get()
             ->map(fn (HomepageSection $s) => [
                 'id' => $s->id,
@@ -136,7 +135,7 @@ class SettingsController extends Controller
             ->map(fn (string $t) => [
                 'value' => $t,
                 'label' => match ($t) {
-                    'hot_deals' => 'Hot deals (priority products)',
+                    'hot_deals' => 'Hot deals (products with a hot deal rank)',
                     'other_deals' => 'Other deals',
                     'kgen' => 'KGen Technology (API product grid)',
                     'custom_html' => 'Custom HTML',
@@ -219,17 +218,21 @@ class SettingsController extends Controller
             'config.priority_product_count' => ['nullable', 'integer', 'min:1', 'max:500'],
         ]);
 
-        $maxSort = (int) HomepageSection::query()->max('sort_order');
+        $maxSort = HomepageSection::queryMaxSortOrder();
 
-        $section = HomepageSection::create([
+        $attributes = [
             'section_name' => $validated['section_name'],
             'section_type' => $validated['section_type'],
             'title' => $validated['title'] ?? null,
             'content' => $validated['content'] ?? null,
             'status' => $validated['status'] ?? true,
-            'sort_order' => $validated['sort_order'] ?? ($maxSort + 1),
             'config' => $this->normalizeSectionConfig($validated['section_type'], $validated['config'] ?? [], null),
-        ]);
+        ];
+        if (HomepageSection::hasSortOrderColumn()) {
+            $attributes['sort_order'] = $validated['sort_order'] ?? ($maxSort + 1);
+        }
+
+        $section = HomepageSection::create($attributes);
 
         audit('homepage_section.created', $section, [], $section->toArray());
 
@@ -253,19 +256,23 @@ class SettingsController extends Controller
 
         $old = $section->only(['section_name', 'section_type', 'title', 'content', 'status', 'sort_order', 'config']);
 
-        $section->update([
+        $update = [
             'section_name' => $validated['section_name'],
             'section_type' => $validated['section_type'],
             'title' => $validated['title'] ?? null,
             'content' => $validated['content'] ?? null,
             'status' => array_key_exists('status', $validated) ? (bool) $validated['status'] : $section->status,
-            'sort_order' => $validated['sort_order'] ?? $section->sort_order,
             'config' => $this->normalizeSectionConfig(
                 $validated['section_type'],
                 $validated['config'] ?? [],
                 $section->config ?? null
             ),
-        ]);
+        ];
+        if (HomepageSection::hasSortOrderColumn()) {
+            $update['sort_order'] = $validated['sort_order'] ?? $section->sort_order;
+        }
+
+        $section->update($update);
 
         audit('homepage_section.updated', $section, $old, $section->fresh()->toArray());
 
@@ -292,6 +299,10 @@ class SettingsController extends Controller
             'ids' => ['required', 'array', 'min:1'],
             'ids.*' => ['integer', 'exists:homepage_sections,id'],
         ]);
+
+        if (! HomepageSection::hasSortOrderColumn()) {
+            return back()->with('warning', 'Add the sort_order column (run migrations) to enable section reordering.');
+        }
 
         foreach ($validated['ids'] as $index => $id) {
             HomepageSection::where('id', $id)->update(['sort_order' => $index + 1]);

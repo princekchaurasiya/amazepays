@@ -318,6 +318,10 @@ This document maps every table, its columns, data types, constraints, and relati
 | `terms_and_conditions` | TEXT | Yes | NULL | -- | Terms and conditions |
 | `custom_description` | TEXT | Yes | NULL | -- | Custom description |
 | `custom_image` | VARCHAR(255) | Yes | NULL | -- | Overridden image |
+| `card_logo_url` | VARCHAR(255) | Yes | NULL | -- | Product-level logo fallback for card UI |
+| `card_bg_color` | VARCHAR(16) | Yes | NULL | -- | Product-level card background color |
+| `card_text_color` | VARCHAR(16) | Yes | NULL | -- | Product-level card text color |
+| `card_accent_color` | VARCHAR(16) | Yes | NULL | -- | Product-level accent color for CTA/discount line |
 | `show_product` | TINYINT(1) | No | 0 | -- | Visible on storefront |
 | `priority` | INT | No | 0 | -- | Display priority |
 | `secondary_priority` | INT | No | 0 | -- | Secondary sort order |
@@ -339,6 +343,32 @@ This document maps every table, its columns, data types, constraints, and relati
 | `products → orders` | orders | 1:N | sku = sku | Orders for product |
 | `products → tenant_products` | tenant_products | 1:N | product_id | Tenant access records |
 | `products → slides` | slides | 1:N | product_id | Banner links |
+
+### `brand_card_themes`
+
+| Column | Type | Nullable | Default | Constraints | Description |
+|--------|------|----------|---------|-------------|-------------|
+| `id` | BIGINT UNSIGNED | No | AUTO_INCREMENT | PK | Theme row ID |
+| `product_id` | BIGINT UNSIGNED | Yes | NULL | INDEX | Product-specific card theme |
+| `brand_id` | BIGINT UNSIGNED | Yes | NULL | INDEX | Brand-level card theme |
+| `brand_name` | VARCHAR(255) | Yes | NULL | INDEX | Name fallback for brand mapping |
+| `logo_url` | VARCHAR(255) | Yes | NULL | -- | Fallback logo URL |
+| `bg_color` | VARCHAR(16) | Yes | NULL | -- | Card background color |
+| `text_color` | VARCHAR(16) | Yes | NULL | -- | Card headline/value text color |
+| `accent_color` | VARCHAR(16) | Yes | NULL | -- | Accent color for discount/value messaging |
+| `is_active` | TINYINT(1) | No | 1 | INDEX | Enabled theme flag |
+| `priority` | INT UNSIGNED | No | 0 | INDEX | Lower number = higher preference |
+| `created_at` | TIMESTAMP | Yes | NULL | -- | Created |
+| `updated_at` | TIMESTAMP | Yes | NULL | -- | Updated |
+
+**Vouchagram catalog snapshots (related, not a replacement for `products`):**
+
+| Table | Role |
+|-------|------|
+| `vouchagram_catalog_snapshots` | One row per admin **Fetch brands** run (`mode` = `send` or `pull`). |
+| `vouchagram_catalog_snapshot_items` | JSON `payload` per brand row from `getbrands`. Used for history and optional **import to `products`** without calling the API again. |
+
+Live catalog import into **`products`** uses `CatalogSyncService` (`vouchagram_send` / `vouchagram_pull`, `catalog_audience`). See [VOUCHER_PROVIDERS.md](./VOUCHER_PROVIDERS.md) §12.
 
 ### `categories`
 
@@ -413,6 +443,8 @@ This document maps every table, its columns, data types, constraints, and relati
 | `order_payment` | VARCHAR(50) | Yes | NULL | -- | Payment method used |
 | `gift_send_option` | VARCHAR(50) | Yes | NULL | -- | Delivery preference |
 | `delivery_mode` | VARCHAR(50) | Yes | NULL | -- | Delivery mode |
+| `gift_theme_id` | BIGINT UNSIGNED | Yes | NULL | INDEX | Selected gift theme for `send_as_gift` checkout |
+| `gift_message_title` | VARCHAR(120) | Yes | NULL | -- | Gift card message title line |
 | `vd_brand_code` | VARCHAR(50) | Yes | NULL | -- | Value Design brand |
 | `vd_discount` | DECIMAL(5,2) | Yes | NULL | -- | VD discount |
 | `refno` | VARCHAR(255) | Yes | NULL | -- | Provider reference |
@@ -430,6 +462,21 @@ This document maps every table, its columns, data types, constraints, and relati
 | `orders → unlimit_payments` | unlimit_payments | 1:1 | unlimit_payments.order_id | Unlimit payment |
 | `orders → offers` | offers | N:1 | offer_id | Applied offer |
 | `orders → offer_usages` | offer_usages | 1:N | offer_usages.order_id | Usage tracking |
+
+### `gift_card_themes`
+
+| Column | Type | Nullable | Default | Constraints | Description |
+|--------|------|----------|---------|-------------|-------------|
+| `id` | BIGINT UNSIGNED | No | AUTO_INCREMENT | PK | Theme ID |
+| `name` | VARCHAR(255) | No | -- | -- | Theme display name |
+| `slug` | VARCHAR(255) | No | -- | UNIQUE | Stable theme key |
+| `thumbnail_url` | VARCHAR(255) | Yes | NULL | -- | Thumbnail used in selector |
+| `image_url` | VARCHAR(255) | Yes | NULL | -- | Full card artwork URL |
+| `is_active` | TINYINT(1) | No | 1 | INDEX | Only active themes are selectable |
+| `sort_order` | INT UNSIGNED | No | 0 | INDEX | Display ordering |
+| `metadata` | JSON | Yes | NULL | -- | Optional extra theme metadata |
+| `created_at` | TIMESTAMP | Yes | NULL | -- | Created |
+| `updated_at` | TIMESTAMP | Yes | NULL | -- | Updated |
 
 ### `order_summaries`
 

@@ -1,13 +1,8 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { router } from '@inertiajs/react';
+import React, { useRef } from 'react';
+import { router, usePage } from '@inertiajs/react';
 import { X } from 'lucide-react';
-
-type Step = 'phone' | 'otp' | 'profile';
-
-function csrf(): string {
-    return document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
-}
+import { OtpDigitGrid, type OtpDigitGridHandle } from '@/Components/Auth';
+import { usePhoneOtpAuth } from '@/hooks/usePhoneOtpAuth';
 
 type Props = {
     open: boolean;
@@ -15,111 +10,52 @@ type Props = {
 };
 
 export default function AuthModal({ open, onClose }: Props) {
-    const [step, setStep] = useState<Step>('phone');
-    const [phone, setPhone] = useState('');
-    const [otp, setOtp] = useState(['', '', '', '', '', '']);
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [referral, setReferral] = useState('');
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+    const otpInputRef = useRef<OtpDigitGridHandle>(null);
+    const page = usePage<{ i18n?: { auth_ui?: Record<string, string> } }>();
+    const text = page.props.i18n?.auth_ui ?? {};
+    const t = (key: string, fallback: string) => text[key] || fallback;
+
+    const { otpCode, resetFlow, ...auth } = usePhoneOtpAuth({
+        otpInputRef,
+        onLoggedIn: ({ redirectUrl }) => {
+            resetFlow();
+            onClose();
+            if (redirectUrl) window.location.href = redirectUrl;
+            else router.reload();
+        },
+        onRegistrationSuccess: ({ redirectUrl }) => {
+            resetFlow();
+            onClose();
+            if (redirectUrl) window.location.href = redirectUrl;
+            else router.reload();
+        },
+    });
+
+    const {
+        step,
+        setStep,
+        phone,
+        setPhone,
+        otp,
+        setOtp,
+        name,
+        setName,
+        email,
+        setEmail,
+        referral,
+        setReferral,
+        error,
+        loading,
+        sendOtp,
+        verifyOtp,
+        completeRegistration,
+    } = auth;
 
     if (!open) return null;
 
-    const reset = () => {
-        setStep('phone');
-        setPhone('');
-        setOtp(['', '', '', '', '', '']);
-        setName('');
-        setEmail('');
-        setReferral('');
-        setError(null);
-    };
-
     const handleClose = () => {
-        reset();
+        resetFlow();
         onClose();
-    };
-
-    const sendOtp = async () => {
-        setError(null);
-        setLoading(true);
-        try {
-            const { data } = await axios.post('/auth/send-otp', { destination: phone.trim() }, { headers: { 'X-CSRF-TOKEN': csrf() } });
-            if (data.status === 'error') {
-                setError(data.message ?? 'Failed to send OTP');
-            } else {
-                setStep('otp');
-            }
-        } catch (e: unknown) {
-            const msg = axios.isAxiosError(e) ? (e.response?.data as { message?: string })?.message : null;
-            setError(msg ?? 'Failed to send OTP');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const verifyOtp = async () => {
-        setError(null);
-        setLoading(true);
-        const code = otp.join('');
-        try {
-            const { data } = await axios.post(
-                '/auth/verify-otp',
-                { phone: phone.trim(), otp: code },
-                { headers: { 'X-CSRF-TOKEN': csrf() } },
-            );
-            if (data.status !== 'success') {
-                setError((data as { message?: string }).message ?? 'Invalid OTP');
-                setLoading(false);
-                return;
-            }
-            if (data.action === 'logged_in') {
-                handleClose();
-                if (data.redirect_url) window.location.href = data.redirect_url;
-                else router.reload();
-                return;
-            }
-            if (data.action === 'needs_profile') {
-                setStep('profile');
-            }
-        } catch (e: unknown) {
-            const msg = axios.isAxiosError(e) ? (e.response?.data as { message?: string })?.message : null;
-            setError(msg ?? 'Verification failed');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const completeProfile = async () => {
-        setError(null);
-        setLoading(true);
-        try {
-            const { data } = await axios.post(
-                '/auth/complete-registration',
-                {
-                    phone: phone.trim(),
-                    name: name.trim(),
-                    email: email.trim() || undefined,
-                    referral_code: referral.trim() || undefined,
-                },
-                { headers: { 'X-CSRF-TOKEN': csrf() } },
-            );
-            if (data.status !== 'success') {
-                const errs = (data as { errors?: Record<string, string[]> }).errors;
-                setError(errs ? Object.values(errs).flat().join(' ') : (data as { message?: string }).message ?? 'Failed');
-                setLoading(false);
-                return;
-            }
-            handleClose();
-            if (data.redirect_url) window.location.href = data.redirect_url;
-            else router.reload();
-        } catch (e: unknown) {
-            const msg = axios.isAxiosError(e) ? (e.response?.data as { message?: string })?.message : null;
-            setError(msg ?? 'Registration failed');
-        } finally {
-            setLoading(false);
-        }
     };
 
     return (
@@ -136,109 +72,116 @@ export default function AuthModal({ open, onClose }: Props) {
                 )}
 
                 {step === 'phone' && (
-                    <div className="space-y-4">
-                        <h2 className="text-center text-lg font-semibold text-gray-900">Log in / Sign up</h2>
-                        <p className="text-center text-sm text-gray-500">We’ll send an OTP to verify your number</p>
+                    <form
+                        className="space-y-4"
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            if (!loading) void sendOtp();
+                        }}
+                    >
+                        <h2 className="text-center text-lg font-semibold text-gray-900">{t('login_signup', 'Log in / Sign up')}</h2>
+                        <p className="text-center text-sm text-gray-500">{t('otp_subtitle', "We'll send an OTP to verify your number")}</p>
                         <label className="block text-sm font-medium text-gray-700">
-                            Phone
+                            {t('phone', 'Phone')}
                             <input
                                 type="tel"
                                 inputMode="numeric"
                                 className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                                placeholder="10-digit mobile"
+                                placeholder={t('mobile_placeholder', '10-digit mobile')}
                                 value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
+                                autoComplete="tel"
                             />
                         </label>
                         <button
-                            type="button"
+                            type="submit"
                             disabled={loading}
-                            onClick={sendOtp}
                             className="w-full rounded-full bg-gray-900 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
                         >
-                            {loading ? 'Please wait…' : 'Continue'}
+                            {loading ? t('please_wait', 'Please wait...') : t('continue', 'Continue')}
                         </button>
-                    </div>
+                    </form>
                 )}
 
                 {step === 'otp' && (
-                    <div className="space-y-4">
-                        <h2 className="text-center text-lg font-semibold text-gray-900">Enter OTP</h2>
-                        <p className="text-center text-sm text-gray-500">Sent to {phone}</p>
-                        <div className="flex justify-center gap-2">
-                            {otp.map((d, i) => (
-                                <input
-                                    key={i}
-                                    type="text"
-                                    inputMode="numeric"
-                                    maxLength={1}
-                                    className="h-10 w-10 rounded-lg border border-gray-300 text-center text-lg"
-                                    value={d}
-                                    onChange={(e) => {
-                                        const v = e.target.value.replace(/\D/g, '').slice(-1);
-                                        const next = [...otp];
-                                        next[i] = v;
-                                        setOtp(next);
-                                        if (v && i < 5) (e.target.nextElementSibling as HTMLInputElement | null)?.focus();
-                                    }}
-                                />
-                            ))}
-                        </div>
+                    <form
+                        className="space-y-4"
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            if (!loading && otpCode.length >= 4) void verifyOtp();
+                        }}
+                    >
+                        <h2 className="text-center text-lg font-semibold text-gray-900">{t('enter_otp', 'Enter OTP')}</h2>
+                        <p className="text-center text-sm text-gray-500">{t('sent_to', 'Sent to :phone').replace(':phone', phone)}</p>
+                        <OtpDigitGrid
+                            ref={otpInputRef}
+                            value={otp}
+                            onChange={setOtp}
+                            disabled={loading}
+                            inputClassName="h-10 w-10 rounded-lg border border-gray-300 text-center text-lg"
+                        />
                         <button
-                            type="button"
-                            disabled={loading || otp.join('').length < 4}
-                            onClick={verifyOtp}
+                            type="submit"
+                            disabled={loading || otpCode.length < 4}
                             className="w-full rounded-full bg-gray-900 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
                         >
-                            {loading ? 'Verifying…' : 'Continue'}
+                            {loading ? t('verifying', 'Verifying...') : t('continue', 'Continue')}
                         </button>
                         <button type="button" className="w-full text-sm text-brand-600 hover:underline" onClick={() => setStep('phone')}>
-                            Change number
+                            {t('change_number', 'Change number')}
                         </button>
-                    </div>
+                    </form>
                 )}
 
                 {step === 'profile' && (
-                    <div className="space-y-4">
-                        <h2 className="text-center text-lg font-semibold text-gray-900">Complete your profile</h2>
+                    <form
+                        className="space-y-4"
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            if (!loading && name.trim().length >= 2) void completeRegistration();
+                        }}
+                    >
+                        <h2 className="text-center text-lg font-semibold text-gray-900">{t('complete_profile', 'Complete your profile')}</h2>
                         <label className="block text-sm font-medium text-gray-700">
-                            Full name
+                            {t('full_name', 'Full name')}
                             <input
                                 className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
+                                autoComplete="name"
                             />
                         </label>
                         <label className="block text-sm font-medium text-gray-700">
-                            Email (optional)
+                            {t('email_optional', 'Email (optional)')}
                             <input
                                 type="email"
                                 className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                autoComplete="email"
                             />
                         </label>
                         <label className="block text-sm font-medium text-gray-700">
-                            Referral code (optional)
+                            {t('referral_optional', 'Referral code (optional)')}
                             <input
                                 className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                                 value={referral}
                                 onChange={(e) => setReferral(e.target.value)}
+                                autoComplete="off"
                             />
                         </label>
                         <button
-                            type="button"
+                            type="submit"
                             disabled={loading || name.trim().length < 2}
-                            onClick={completeProfile}
                             className="w-full rounded-full bg-gray-900 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
                         >
-                            {loading ? 'Saving…' : 'Complete'}
+                            {loading ? t('saving', 'Saving...') : t('complete', 'Complete')}
                         </button>
-                    </div>
+                    </form>
                 )}
 
                 <p className="mt-4 text-center text-xs text-gray-500">
-                    This site is protected by reCAPTCHA and Google&apos;s policies apply.
+                    {t('recaptcha_note', "This site is protected by reCAPTCHA and Google's policies apply.")}
                 </p>
             </div>
         </div>

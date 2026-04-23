@@ -462,6 +462,16 @@ const decryptPiDataNew = (data, key, iv) => {
 
 ---
 
+## Application integration (AmazePays admin)
+
+This document describes the **vendor** Send API. In the app:
+
+- **Fetch brands** in **Panel → Vouchagram → Brands** calls `getbrands` and stores the result in **`vouchagram_catalog_snapshots`** / **`vouchagram_catalog_snapshot_items`** (audit / history). That step alone does **not** create sellable rows in **`products`**.
+- To populate **`products`** for the storefront admin catalog (`catalog_audience` **b2c**): run **Catalog sync** in Send mode, `php artisan vouchagram:sync-catalog --mode=send`, or **import from snapshot** after a fetch (uses the saved snapshot; `source_provider` = `vouchagram_send`).
+- See `config/services.php` (`voucher_providers`) and [VOUCHER_PROVIDERS.md](./VOUCHER_PROVIDERS.md) §12.
+
+---
+
 ## Related project docs
 
 - [VOUCHAGRAM_PULL_API.md](./VOUCHAGRAM_PULL_API.md) – Pull (B2B) API  

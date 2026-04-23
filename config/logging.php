@@ -6,14 +6,14 @@ use Monolog\Handler\SyslogUdpHandler;
 
 return [
 
-    'default' => env('LOG_CHANNEL', 'daily'), // Default log channel
+    'default' => env('LOG_CHANNEL', 'single'),
 
     'deprecations' => env('LOG_DEPRECATIONS_CHANNEL', 'null'),
 
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['daily'], // Use daily logs in the stack
+            'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
 

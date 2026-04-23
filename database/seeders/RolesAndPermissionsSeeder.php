@@ -21,9 +21,13 @@ class RolesAndPermissionsSeeder extends Seeder
             // Products
             'products.view', 'products.create', 'products.update', 'products.delete',
             'products.publish', 'products.sync',
+            'products.catalog.storefront', 'products.catalog.business', 'products.catalog.all',
 
             // Categories (storefront)
             'categories.manage',
+
+            // Homepage slides / hero banners
+            'slides.view', 'slides.create', 'slides.update', 'slides.delete',
 
             // Orders
             'orders.view', 'orders.view_all', 'orders.cancel', 'orders.refund',
@@ -31,15 +35,16 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Users
             'users.view', 'users.create', 'users.update', 'users.block',
-            'users.delete', 'users.impersonate',
+            'users.delete', 'users.impersonate', 'users.assign_roles',
 
             // Tenants / B2B
             'tenants.view', 'tenants.create', 'tenants.update', 'tenants.suspend',
             'tenants.delete', 'tenants.assign_products', 'tenants.set_pricing',
 
             // Wallets
-            'wallets.view', 'wallets.credit', 'wallets.debit', 'wallets.freeze',
-            'wallets.load_requests.view', 'wallets.load_requests.approve', 'wallets.load_requests.reject',
+            'wallets.view', 'wallets.debit', 'wallets.freeze',
+            'wallets.load_requests.view', 'wallets.load_requests.submit_on_behalf',
+            'wallets.load_requests.approve', 'wallets.load_requests.reject',
 
             // Offers
             'offers.view', 'offers.create', 'offers.update', 'offers.delete', 'offers.toggle',
@@ -68,12 +73,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'tickets.view', 'tickets.create', 'tickets.update', 'tickets.reply', 'tickets.resolve',
 
             // Settings
-            'settings.view', 'settings.update',
+            'settings.view', 'settings.update', 'settings.roles.manage',
 
             // B2B Portal specific
             'b2b.place_order', 'b2b.bulk_order', 'b2b.view_orders',
             'b2b.manage_team', 'b2b.manage_api_keys',
             'b2b.wallet.view', 'b2b.wallet.load', 'b2b.wallet.request_load',
+            'b2b.shop.view', 'b2b.price_list.view', 'b2b.finance.view',
         ];
 
         foreach ($permissions as $perm) {
@@ -89,12 +95,15 @@ class RolesAndPermissionsSeeder extends Seeder
         $admin->givePermissionTo([
             'dashboard.view',
             'products.view', 'products.create', 'products.update', 'products.publish', 'products.sync',
+            'products.catalog.storefront', 'products.catalog.business', 'products.catalog.all',
             'categories.manage',
+            'slides.view', 'slides.create', 'slides.update', 'slides.delete',
             'orders.view', 'orders.view_all', 'orders.cancel', 'orders.refund', 'orders.approve', 'orders.export',
-            'users.view', 'users.update', 'users.block',
+            'users.view', 'users.update', 'users.block', 'users.assign_roles',
             'tenants.view', 'tenants.create', 'tenants.update', 'tenants.assign_products', 'tenants.set_pricing',
-            'wallets.view', 'wallets.credit', 'wallets.debit',
-            'wallets.load_requests.view', 'wallets.load_requests.approve', 'wallets.load_requests.reject',
+            'wallets.view', 'wallets.debit', 'wallets.freeze',
+            'wallets.load_requests.view', 'wallets.load_requests.submit_on_behalf',
+            'wallets.load_requests.approve', 'wallets.load_requests.reject',
             'offers.view', 'offers.create', 'offers.update', 'offers.delete', 'offers.toggle',
             'gateways.view', 'gateways.update', 'gateways.test',
             'providers.view', 'providers.configure', 'providers.sync',
@@ -104,7 +113,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'security.view', 'security.block_ip', 'security.unblock_ip',
             'security.block_mobile', 'security.unblock_mobile', 'security.resolve_event',
             'tickets.view', 'tickets.create', 'tickets.update', 'tickets.reply', 'tickets.resolve',
-            'settings.view', 'settings.update',
+            'settings.view', 'settings.update', 'settings.roles.manage',
         ]);
 
         // Finance — wallet and order management
@@ -112,8 +121,9 @@ class RolesAndPermissionsSeeder extends Seeder
         $finance->givePermissionTo([
             'dashboard.view',
             'orders.view', 'orders.view_all', 'orders.refund', 'orders.export',
-            'wallets.view', 'wallets.credit', 'wallets.debit',
-            'wallets.load_requests.view', 'wallets.load_requests.approve', 'wallets.load_requests.reject',
+            'wallets.view', 'wallets.debit', 'wallets.freeze',
+            'wallets.load_requests.view', 'wallets.load_requests.submit_on_behalf',
+            'wallets.load_requests.approve', 'wallets.load_requests.reject',
             'reports.view', 'reports.export',
         ]);
 
@@ -124,6 +134,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'b2b.place_order', 'b2b.bulk_order', 'b2b.view_orders',
             'b2b.manage_team', 'b2b.manage_api_keys',
             'b2b.wallet.view', 'b2b.wallet.load', 'b2b.wallet.request_load',
+            'b2b.shop.view', 'b2b.price_list.view', 'b2b.finance.view',
             'reports.view',
         ]);
 
@@ -133,6 +144,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'dashboard.view',
             'b2b.place_order', 'b2b.bulk_order', 'b2b.view_orders',
             'b2b.wallet.view',
+            'b2b.shop.view', 'b2b.price_list.view',
         ]);
 
         // B2C User — regular customer

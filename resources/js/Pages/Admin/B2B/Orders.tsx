@@ -1,5 +1,5 @@
-import React from 'react';
-import { Head } from '@inertiajs/react';
+import React, { FormEvent, useState } from 'react';
+import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { format } from 'date-fns';
 import { StatusBadge } from '@/Components/Admin';
@@ -17,9 +17,22 @@ type OrderRow = {
 type Props = {
     tenant: { id: number; name: string } | null;
     orders: OrderRow[];
+    filters?: { date_from?: string; date_to?: string };
 };
 
-export default function Orders({ tenant, orders }: Props) {
+export default function Orders({ tenant, orders, filters = {} }: Props) {
+    const [dateFrom, setDateFrom] = useState(filters.date_from ?? '');
+    const [dateTo, setDateTo] = useState(filters.date_to ?? '');
+
+    const applyFilters = (e?: FormEvent) => {
+        e?.preventDefault();
+        router.get(
+            '/panel/b2b/orders',
+            { date_from: dateFrom || undefined, date_to: dateTo || undefined },
+            { preserveState: true },
+        );
+    };
+
     return (
         <AdminLayout>
             <Head title="My orders" />
@@ -30,6 +43,37 @@ export default function Orders({ tenant, orders }: Props) {
                         Orders placed under your B2B tenant account.
                     </p>
                 </div>
+                {tenant && (
+                    <form
+                        onSubmit={applyFilters}
+                        className="flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+                    >
+                        <div>
+                            <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">From</label>
+                            <input
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) => setDateFrom(e.target.value)}
+                                className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            />
+                        </div>
+                        <div>
+                            <label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">To</label>
+                            <input
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) => setDateTo(e.target.value)}
+                                className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                        >
+                            Filter
+                        </button>
+                    </form>
+                )}
                 {!tenant ? (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
                         No tenant linked to this user.

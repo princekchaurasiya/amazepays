@@ -8,22 +8,26 @@ use App\Models\HomepageSection;
 use App\Models\Product;
 use App\Models\Slide;
 use App\Models\StorefrontBrand;
+use App\Services\Storefront\SlidePresentationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class HomePageController extends Controller
 {
+    public function __construct(
+        private SlidePresentationService $slidePresentation,
+    ) {}
+
     /**
      * JSON list of all visible products (legacy storefront API).
      */
     public function viewAllProduct()
     {
         Log::info('viewAllProduct method called');
-        $viewProds = Product::where('show_product', true)->get();
+        $viewProds = Product::query()->forStorefrontCatalog()->get();
         Log::info('Fetched all visible products', ['count' => $viewProds->count()]);
 
         return $viewProds;
@@ -36,41 +40,34 @@ class HomePageController extends Controller
             $categories = Category::orderBy('order')->get();
             $brands = StorefrontBrand::orderBy('order')->get();
 
-            $allProducts = Product::where('show_product', true)
-                ->orderByRaw('IFNULL(priority, 999999) ASC')
+            $allProducts = Product::query()
+                ->forStorefrontCatalog()
+                ->orderByRaw('IFNULL(hot_deal_rank, 999999) ASC')
                 ->orderByRaw('IFNULL(display_order, 999999) ASC')
                 ->get();
 
             $sections = HomepageSection::query()
                 ->where('status', true)
-                ->orderBy('sort_order')
-                ->orderBy('id')
+                ->ordered()
                 ->get();
 
             $hotDealsSection = $sections->firstWhere('section_type', 'hot_deals');
-            $priorityProductLimit = max(1, (int) data_get($hotDealsSection?->config, 'priority_product_count', 10));
+            $hotDealProductLimit = max(1, (int) data_get($hotDealsSection?->config, 'priority_product_count', 10));
 
-            // Split the products into two groups: priority and no priority
-            $priorityProducts = $allProducts->filter(function ($product) {
-                return ! is_null($product->priority); // Products with priority
-            })->take($priorityProductLimit); // Limit the number of priority products
+            // Hot deals: non-null `hot_deal_rank` (ordering); capped by homepage section `priority_product_count`.
+            $hotDealProducts = $allProducts->filter(function ($product) {
+                return ! is_null($product->hot_deal_rank);
+            })->take($hotDealProductLimit);
 
-            // Include display_order sorting for noPriorityProducts
-            $noPriorityProducts = $allProducts->filter(function ($product) {
-                return is_null($product->priority); // Products with no priority
+            // Other deals: `hot_deal_rank` null; list order uses `display_order` among this set.
+            $otherDealProducts = $allProducts->filter(function ($product) {
+                return is_null($product->hot_deal_rank);
             })->sortBy(function ($product) {
                 return $product->display_order ?? 999999;
             });
 
-            // Fetch all slides
-            $slides = Slide::where('status', 1) // Ensure the status is active
-                ->where('display_on_page', 'homepage') // Filter based on display location
-                ->orderBy('priority', 'asc') // Sort by priority
-                ->orderByRaw('priority IS NULL ASC') // Ensure null priorities are last
-                ->get();
-
-            // Retrieve slugs for slides (optimized to avoid N+1 queries)
-            $this->loadSlugsForSlides($slides);
+            $slides = $this->slidePresentation->homepageSlides();
+            $this->slidePresentation->attachSlugs($slides);
 
             // Return the view with the fetched data
             // Fetch KGen products asynchronously or with shorter timeout to avoid blocking
@@ -81,7 +78,7 @@ class HomePageController extends Controller
             );
 
             $brandMaxDiscounts = Product::query()
-                ->where('show_product', true)
+                ->forStorefrontCatalog()
                 ->whereNotNull('brand_id')
                 ->selectRaw('brand_id, MAX(COALESCE(discount_percentage, 0)) as max_discount')
                 ->groupBy('brand_id')
@@ -94,19 +91,10 @@ class HomePageController extends Controller
             $homeSettings = $this->buildLegacyHomeSettings($sections);
             $heroSection = HomepageSection::query()->where('section_name', 'hero')->first();
 
-            $slidesPayload = $slides->map(function (Slide $slide) {
-                return [
-                    'id' => $slide->id,
-                    'desktop_image' => $slide->desktop_image ? Storage::url($slide->desktop_image) : null,
-                    'image_mobile' => $slide->image_mobile ? Storage::url($slide->image_mobile) : null,
-                    'slug' => $slide->slug,
-                    'product_id' => $slide->product_id,
-                    'category_id' => $slide->category_id,
-                    'brand_id' => $slide->brand_id,
-                    'is_linked' => (bool) $slide->is_linked,
-                    'img_alt_tag' => $slide->img_alt_tag,
-                ];
-            })->values()->all();
+            $slidesPayload = $slides
+                ->map(fn (Slide $slide) => $this->slidePresentation->toPublicArray($slide))
+                ->values()
+                ->all();
 
             return Inertia::render('Storefront/Home', [
                 'slides' => $slidesPayload,
@@ -114,8 +102,8 @@ class HomePageController extends Controller
                 'allProducts' => $allProducts,
                 'categories' => $categories,
                 'brands' => $brands,
-                'priorityProducts' => $priorityProducts,
-                'noPriorityProducts' => $noPriorityProducts,
+                'hotDealProducts' => $hotDealProducts,
+                'otherDealProducts' => $otherDealProducts,
                 'kgenProducts' => $kgenProducts,
                 'brandMaxDiscounts' => $brandMaxDiscounts,
                 'kgenSectionTitle' => $kgenSectionTitle,
@@ -162,45 +150,6 @@ class HomePageController extends Controller
             'section_category_title' => $title('categories', 'Categories'),
             'section_other_deal_title' => $title('other_deals', 'Other Deals'),
         ];
-    }
-
-    // Optimized method to load slugs for all slides at once (prevents N+1 queries)
-    private function loadSlugsForSlides($slides)
-    {
-        // Collect all IDs
-        $productIds = [];
-        $categoryIds = [];
-        $brandIds = [];
-
-        foreach ($slides as $slide) {
-            if ($slide->product_id) {
-                $productIds[] = $slide->product_id;
-            }
-            if ($slide->category_id) {
-                $categoryIds[] = $slide->category_id;
-            }
-            if ($slide->brand_id) {
-                $brandIds[] = $slide->brand_id;
-            }
-        }
-
-        // Fetch all at once
-        $products = ! empty($productIds) ? Product::whereIn('id', array_unique($productIds))->pluck('slug', 'id')->toArray() : [];
-        $categories = ! empty($categoryIds) ? Category::whereIn('id', array_unique($categoryIds))->pluck('slug', 'id')->toArray() : [];
-        $brands = ! empty($brandIds) ? StorefrontBrand::whereIn('id', array_unique($brandIds))->pluck('slug', 'id')->toArray() : [];
-
-        // Assign slugs
-        foreach ($slides as $slide) {
-            if ($slide->product_id && isset($products[$slide->product_id])) {
-                $slide->slug = $products[$slide->product_id];
-            } elseif ($slide->category_id && isset($categories[$slide->category_id])) {
-                $slide->slug = $categories[$slide->category_id];
-            } elseif ($slide->brand_id && isset($brands[$slide->brand_id])) {
-                $slide->slug = $brands[$slide->brand_id];
-            } else {
-                $slide->slug = null;
-            }
-        }
     }
 
     /**

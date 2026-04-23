@@ -140,26 +140,28 @@ class WoohooProcessingController extends Controller
             if (in_array($status, ['success', 'completed', 'approved', 'confirmed'])) {
                 $Order = Order::where('id', $payment->order_id)->first();
                 if ($Order && ! in_array($Order->order_status, ['COMPLETE', 'FAILED'])) {
+                    $Order->status = 'paid';
                     // Keep as PENDING (will be updated to COMPLETE after successful Woohoo order creation)
                     if (! in_array($Order->order_status, ['PENDING', 'COMPLETE', 'FAILED'])) {
                         $Order->order_status = 'PENDING';
-                        $Order->save();
-
-                        // CRITICAL: Also update OrderSummary.order_status to maintain consistency
-                        if ($orderSummary) {
-                            $orderSummary->order_status = 'PENDING';
-                            $orderSummary->save();
-                        }
-
-                        Log::info('✅ Order status updated to PENDING (payment successful, awaiting Woohoo order creation)', [
-                            'order_id' => $Order->id,
-                        ]);
                     }
+                    $Order->save();
+
+                    // CRITICAL: Also update OrderSummary.order_status to maintain consistency
+                    if ($orderSummary) {
+                        $orderSummary->order_status = 'PENDING';
+                        $orderSummary->save();
+                    }
+
+                    Log::info('✅ Order status updated to PENDING (payment successful, awaiting Woohoo order creation)', [
+                        'order_id' => $Order->id,
+                    ]);
                 }
             } elseif (in_array($status, ['failed', 'declined', 'cancelled'])) {
                 // Payment failed - set order to FAILED
                 $Order = Order::where('id', $payment->order_id)->first();
                 if ($Order) {
+                    $Order->status = 'failed';
                     $Order->order_status = 'FAILED';
                     $Order->save();
 

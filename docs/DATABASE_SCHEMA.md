@@ -243,6 +243,29 @@ CREATE TABLE brands (
 );
 ```
 
+#### `brand_card_themes`
+```sql
+CREATE TABLE brand_card_themes (
+    id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    product_id  BIGINT UNSIGNED NULL,
+    brand_id    BIGINT UNSIGNED NULL,
+    brand_name  VARCHAR(255) NULL,
+    logo_url    VARCHAR(255) NULL,
+    bg_color    VARCHAR(16) NULL,
+    text_color  VARCHAR(16) NULL,
+    accent_color VARCHAR(16) NULL,
+    is_active   TINYINT(1) NOT NULL DEFAULT 1,
+    priority    INT UNSIGNED NOT NULL DEFAULT 0,
+    created_at  TIMESTAMP NULL,
+    updated_at  TIMESTAMP NULL,
+    INDEX idx_brand_card_themes_product_id (product_id),
+    INDEX idx_brand_card_themes_brand_id (brand_id),
+    INDEX idx_brand_card_themes_brand_name (brand_name),
+    INDEX idx_brand_card_themes_is_active (is_active),
+    INDEX idx_brand_card_themes_priority (priority)
+);
+```
+
 #### `category_product` (pivot)
 ```sql
 CREATE TABLE category_product (
@@ -323,6 +346,8 @@ CREATE TABLE orders (
     receiver_email              VARCHAR(255) NULL,
     receiver_mobile             VARCHAR(20) NULL,
     receiver_msg                TEXT NULL,
+    gift_theme_id               BIGINT UNSIGNED NULL,
+    gift_message_title          VARCHAR(120) NULL,
     cards                       JSON NULL,
     additionalTxnFields         JSON NULL,
     order_cancel                TINYINT(1) NULL,
@@ -337,7 +362,26 @@ CREATE TABLE orders (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
     INDEX idx_user_id (user_id),
     INDEX idx_order_status (order_status),
-    INDEX idx_sku (sku)
+    INDEX idx_sku (sku),
+    INDEX idx_gift_theme_id (gift_theme_id)
+);
+```
+
+#### `gift_card_themes`
+```sql
+CREATE TABLE gift_card_themes (
+    id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name            VARCHAR(255) NOT NULL,
+    slug            VARCHAR(255) NOT NULL UNIQUE,
+    thumbnail_url   VARCHAR(255) NULL,
+    image_url       VARCHAR(255) NULL,
+    is_active       TINYINT(1) NOT NULL DEFAULT 1,
+    sort_order      INT UNSIGNED NOT NULL DEFAULT 0,
+    metadata        JSON NULL,
+    created_at      TIMESTAMP NULL,
+    updated_at      TIMESTAMP NULL,
+    INDEX idx_gift_card_themes_is_active (is_active),
+    INDEX idx_gift_card_themes_sort_order (sort_order)
 );
 ```
 
@@ -614,25 +658,28 @@ CREATE TABLE homepage_sections (
 );
 ```
 
-#### `slides`
+#### `slides` (storefront hero carousel)
+
+Stores hero banner rows for web and mobile. **Wide asset:** `desktop_image`. **Mobile asset:** `image_mobile` (not `mobile_image`). Other columns include `cta_link`, `custom_url`, `priority`, `display_on_page` (e.g. `homepage`), `status`, optional FKs to `products`, `categories`, `storefront_brands`. See migration `2024_10_09_153402_create_slides_table.php` for the canonical schema.
+
 ```sql
+-- Illustrative; use migrations as source of truth
 CREATE TABLE slides (
     id                  BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    title               VARCHAR(255) NULL,
     desktop_image       VARCHAR(255) NULL,
-    mobile_image        VARCHAR(255) NULL,
-    link_type           VARCHAR(50) NULL,
-    product_id          BIGINT UNSIGNED NULL,
-    category_id         BIGINT UNSIGNED NULL,
+    image_mobile        VARCHAR(255) NULL,
+    cta_link            VARCHAR(255) NULL,
+    custom_url          VARCHAR(255) NULL,
+    link_type           VARCHAR(64) NULL,
+    product_id          INT UNSIGNED NULL,
+    category_id         INT UNSIGNED NULL,
     brand_id            BIGINT UNSIGNED NULL,
-    external_link       VARCHAR(255) NULL,
-    order               INT DEFAULT 0,
-    status              TINYINT(1) DEFAULT 1,
+    priority            INT NULL,
+    status              TINYINT NULL,
+    display_on_page     VARCHAR(64) NULL,
+    img_alt_tag         VARCHAR(255) NULL,
     created_at          TIMESTAMP NULL,
-    updated_at          TIMESTAMP NULL,
-    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
-    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
-    FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE SET NULL
+    updated_at          TIMESTAMP NULL
 );
 ```
 

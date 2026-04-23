@@ -109,7 +109,6 @@ class VDWebController extends Controller
         if ($brands) {
             return response()->json(['brands' => $brands]);
         }
-        dd($brands);
 
         return response()->json(['error' => 'Failed to fetch brands'], 500);
     }
@@ -241,7 +240,6 @@ class VDWebController extends Controller
     {
         // Step 1: Get Token
         $tokenResponse = $vdWebApiService->getToken();
-        // dd($tokenResponse);
         $token = $tokenResponse;
 
         if (! $token) {
@@ -253,8 +251,6 @@ class VDWebController extends Controller
         $payload['amount'] = (float) $payload['amount'];
         $jsonPayload = json_encode($payload);
         // $encryptedPayload = AesHelper::encrypt($jsonPayload);
-        // dd($encryptedPayload);
-
         // Step 3: Call API
         $response = $vdWebApiService->getEvc($token, $jsonPayload);
         if (! $response) {
@@ -303,7 +299,6 @@ class VDWebController extends Controller
 
         // Step 1: Get Token
         $tokenResponse = $vdWebApiService->getToken();
-        // dd($tokenResponse);
         $token = $tokenResponse;
 
         if (! $token) {
@@ -315,8 +310,6 @@ class VDWebController extends Controller
         $payload['amount'] = (float) $request->denomination; // Use form denomination instead of DB
         $jsonPayload = json_encode($payload);
         // $encryptedPayload = AesHelper::encrypt($jsonPayload);
-        // dd($encryptedPayload);
-
         // Step 3: Call API
         $response = $vdWebApiService->getEvc($token, $jsonPayload);
         if (! $response) {
@@ -348,7 +341,6 @@ class VDWebController extends Controller
     {
         // Step 1: Get Token
         $tokenResponse = $vdWebApiService->getToken();
-        // dd($tokenResponse);
         $token = $tokenResponse;
 
         if (! $token) {
@@ -360,19 +352,15 @@ class VDWebController extends Controller
         $payload['amount'] = (float) $payload['amount'];
         $jsonPayload = json_encode($payload);
         // $encryptedPayload = AesHelper::encrypt($jsonPayload);
-        // dd($encryptedPayload);
-
         // Step 3: Call API
         $response = $vdWebApiService->getEvc($token, $jsonPayload);
         if (! $response) {
             return response()->json(['error' => 'Failed to get EVC']);
         }
 
-        dd($response);
-
-        // This is tp decrypt Data
-        // $decryptedData = $this->decryptAES($response['data']);
-        $decryptedData = $this->vd_decrypt($response['data'], env('AES_SECRET_KEY'), env('AES_IV'));
+        $decryptedData = isset($response['data'])
+            ? $this->vd_decrypt($response['data'], env('AES_SECRET_KEY'), env('AES_IV'))
+            : null;
 
         return Inertia::render('Admin/ValueDesign/VdDataPage', [
             'title' => 'EVC success',
@@ -467,8 +455,6 @@ class VDWebController extends Controller
         if (! $status) {
             return response()->json(['error' => 'Failed to fetch EVC status'], 500);
         }
-        dd($status);
-
         return response()->json([
             'status_response' => $status,
         ]);
@@ -551,7 +537,6 @@ class VDWebController extends Controller
         $decryptedData = null;
         if (! empty($activatedEvc['data'])) {
             $decryptedData = $this->decryptAES($activatedEvc['data']);
-            dd($decryptedData);
         }
 
         // Return the result to a view
@@ -630,7 +615,10 @@ class VDWebController extends Controller
 
         // Debug if it fails
         if (! $response->successful()) {
-            dd('Request failed:', $response->status(), $response->body());
+            return Inertia::render('Admin/ValueDesign/VdDataPage', [
+                'title' => 'VD wallet balance',
+                'data' => ['error' => 'Wallet request failed', 'status' => $response->status(), 'body' => $response->body()],
+            ]);
         }
 
         $data = $response->json();

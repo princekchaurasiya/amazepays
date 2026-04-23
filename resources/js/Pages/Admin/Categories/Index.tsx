@@ -1,7 +1,7 @@
 import React, { FormEvent, useMemo, useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { ActionButtons, Breadcrumbs } from '@/Components/Admin';
+import { ActionButtons, AdminImageDropzone, Breadcrumbs } from '@/Components/Admin';
 import { FolderTree, Plus, X, Search, Package, Pencil } from 'lucide-react';
 
 type CategoryRow = {
@@ -10,6 +10,7 @@ type CategoryRow = {
     slug: string;
     order: number;
     thumbnail: string | null;
+    accent_color: string | null;
     products_count: number;
     product_ids: number[];
 };
@@ -31,19 +32,25 @@ export default function Index({ categories, products }: Props) {
     const categoryForm = useForm({
         name: '',
         order: 0 as number,
+        accent_color: '' as string,
         thumbnail: null as File | null,
     });
 
     const openAdd = () => {
         setEditingId(null);
-        categoryForm.setData({ name: '', order: 0, thumbnail: null });
+        categoryForm.setData({ name: '', order: 0, accent_color: '', thumbnail: null });
         categoryForm.clearErrors();
         setCategoryModalOpen(true);
     };
 
     const openEdit = (row: CategoryRow) => {
         setEditingId(row.id);
-        categoryForm.setData({ name: row.name, order: row.order, thumbnail: null });
+        categoryForm.setData({
+            name: row.name,
+            order: row.order,
+            accent_color: row.accent_color ?? '',
+            thumbnail: null,
+        });
         categoryForm.clearErrors();
         setCategoryModalOpen(true);
     };
@@ -151,7 +158,7 @@ export default function Index({ categories, products }: Props) {
                             <tbody>
                                 {categories.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-5 py-12 text-center text-gray-500 dark:text-gray-400">
+                                        <td colSpan={7} className="px-5 py-12 text-center text-gray-500 dark:text-gray-400">
                                             No categories yet. Click &quot;Add category&quot; to create one.
                                         </td>
                                     </tr>
@@ -172,6 +179,17 @@ export default function Index({ categories, products }: Props) {
                                                     <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                                                         <Package size={18} className="text-gray-400" />
                                                     </div>
+                                                )}
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                {row.accent_color ? (
+                                                    <span
+                                                        title={row.accent_color}
+                                                        className="inline-block h-8 w-8 rounded-full border border-gray-200 dark:border-gray-600 shadow-inner"
+                                                        style={{ backgroundColor: row.accent_color }}
+                                                    />
+                                                ) : (
+                                                    <span className="text-gray-400 text-xs">—</span>
                                                 )}
                                             </td>
                                             <td className="px-5 py-3 font-medium text-gray-900 dark:text-white">{row.name}</td>
@@ -266,18 +284,46 @@ export default function Index({ categories, products }: Props) {
                                 )}
                             </div>
                             <div>
-                                <label className={labelCls}>Thumbnail (optional)</label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={e =>
-                                        categoryForm.setData('thumbnail', e.target.files?.[0] ?? null)
-                                    }
-                                    className="text-sm text-gray-600 dark:text-gray-300"
-                                />
-                                {categoryForm.errors.thumbnail && (
-                                    <p className="text-red-500 text-xs mt-1">{categoryForm.errors.thumbnail}</p>
+                                <label className={labelCls}>Tile accent (#RRGGBB, optional)</label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="color"
+                                        value={
+                                            /^#[0-9A-Fa-f]{6}$/.test(categoryForm.data.accent_color.trim())
+                                                ? categoryForm.data.accent_color.trim()
+                                                : '#f97316'
+                                        }
+                                        onChange={e => categoryForm.setData('accent_color', e.target.value)}
+                                        className="h-9 w-14 cursor-pointer rounded border border-gray-300 dark:border-gray-600 bg-white p-0.5"
+                                        aria-label="Pick accent color"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="#f97316"
+                                        value={categoryForm.data.accent_color}
+                                        onChange={e => categoryForm.setData('accent_color', e.target.value)}
+                                        className={`${inputCls} flex-1 font-mono text-xs`}
+                                    />
+                                </div>
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Used for storefront category chips. Leave blank for default styling.
+                                </p>
+                                {categoryForm.errors.accent_color && (
+                                    <p className="text-red-500 text-xs mt-1">{categoryForm.errors.accent_color}</p>
                                 )}
+                            </div>
+                            <div>
+                                <label className={labelCls}>Thumbnail (optional)</label>
+                                <AdminImageDropzone
+                                    file={categoryForm.data.thumbnail}
+                                    onFileChange={f => categoryForm.setData('thumbnail', f)}
+                                    error={
+                                        typeof categoryForm.errors.thumbnail === 'string'
+                                            ? categoryForm.errors.thumbnail
+                                            : undefined
+                                    }
+                                    compact
+                                />
                             </div>
                             <div className="flex justify-end gap-2 pt-2">
                                 <button

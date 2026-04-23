@@ -162,6 +162,7 @@ export default function Index({ offers, filters, types }: Props) {
                                         <td className="px-5 py-3 text-right">
                                             <ActionButtons
                                                 editHref={`/panel/offers/${row.id}/edit`}
+                                                toggleOn={row.is_active}
                                                 onToggle={() =>
                                                     router.patch(`/panel/offers/${row.id}/toggle`, {}, { preserveScroll: true })
                                                 }

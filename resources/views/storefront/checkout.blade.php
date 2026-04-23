@@ -670,8 +670,8 @@
 
                     {{-- @php
                         // Fetch product details and calculate total amount and discount
-                        $denomination = $product->prodData['denomination'];
-                        $quantity = $product->prodData['quantity'];
+                        $denomination = $product->productData['denomination'];
+                        $quantity = $product->productData['quantity'];
                         $discountPercentage = $product->discount_percentage;
 
                         // Calculate total and discounted amounts

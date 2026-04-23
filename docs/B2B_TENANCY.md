@@ -44,92 +44,31 @@ B2C consumers do **not** have a tenant. Their `tenant_id` is `NULL` on orders an
 
 ## 2. Tenant Model
 
-### `tenants` Table
+### `tenants` table and related pivots
 
-```php
-// app/Models/Tenant.php
+Authoritative model: [`app/Models/Tenant.php`](../app/Models/Tenant.php). Migration: [`database/migrations/2026_04_14_000003_create_tenants_table.php`](../database/migrations/2026_04_14_000003_create_tenants_table.php).
 
-class Tenant extends Model
-{
-    protected $fillable = [
-        'name', 'slug', 'logo', 'contact_email', 'contact_phone',
-        'status', 'settings', 'margin_percentage', 'credit_limit',
-        'website', 'gst_number', 'address', 'city', 'state',
-        'pincode', 'country',
-    ];
+| Artifact | Purpose |
+|----------|---------|
+| **`tenants`** | B2B organization: `name`, `slug`, `type`, `status`, `margin_percentage`, `credit_limit`, `settings` (JSON), contact fields, suspension metadata, etc. |
+| **`tenant_users`** | Links **`users`** to **`tenants`**. Pivot columns: `role` (org role enum), `is_primary`, timestamps. Unique `(tenant_id, user_id)`. |
+| **`tenant_products`** | Which **`products`** rows a tenant may sell; pivot: `custom_price`, `margin_override`, `is_active`. |
 
-    protected $casts = [
-        'settings' => 'array',
-        'margin_percentage' => 'decimal:2',
-        'credit_limit' => 'decimal:2',
-    ];
+### `tenant_users` pivot (org role, not Spatie)
 
-    // Users belonging to this tenant
-    public function users()
-    {
-        return $this->belongsToMany(User::class, 'tenant_users')
-            ->withPivot('role', 'is_active')
-            ->withTimestamps();
-    }
+| Column | Description |
+|--------|-------------|
+| `tenant_id` | FK → `tenants.id` |
+| `user_id` | FK → `users.id` |
+| `role` | **`owner`**, **`manager`**, **`operator`**, or **`viewer`** (DB enum). This is the user’s **job title inside that company**. It is **not** the same as a Spatie role name (`b2b-client`, etc.). |
+| `is_primary` | If `true`, this tenant is chosen first by [`ResolveTenant`](../app/Http/Middleware/ResolveTenant.php) when the user has multiple tenant links. |
 
-    // Products assigned to this tenant
-    public function products()
-    {
-        return $this->belongsToMany(Product::class, 'tenant_products')
-            ->withPivot('custom_price', 'margin_override', 'is_active')
-            ->withTimestamps();
-    }
+Eloquent:
 
-    // Payment gateway configurations
-    public function paymentGateways()
-    {
-        return $this->hasMany(TenantPaymentGateway::class);
-    }
+- `Tenant::users()` — `belongsToMany(User::class, 'tenant_users')->withPivot('role', 'is_primary')`.
+- `User::tenants()` — inverse on [`app/Models/User.php`](../app/Models/User.php).
 
-    // Voucher provider configurations
-    public function voucherProviders()
-    {
-        return $this->hasMany(TenantVoucherProvider::class);
-    }
-
-    // API keys issued for this tenant
-    public function apiKeys()
-    {
-        return $this->hasMany(ApiKey::class);
-    }
-
-    // Wallet load requests
-    public function walletLoadRequests()
-    {
-        return $this->hasMany(WalletLoadRequest::class);
-    }
-
-    // Offers specific to this tenant
-    public function offers()
-    {
-        return $this->hasMany(Offer::class);
-    }
-
-    // Scoped orders
-    public function orders()
-    {
-        return $this->hasMany(Order::class);
-    }
-
-    // Status checks
-    public function isActive(): bool
-    {
-        return $this->status === 'active';
-    }
-
-    public function isSuspended(): bool
-    {
-        return $this->status === 'suspended';
-    }
-}
-```
-
-### Tenant Settings JSON Structure
+### Tenant settings JSON (illustrative)
 
 ```json
 {
@@ -149,98 +88,67 @@ class Tenant extends Model
 
 ## 3. Role-Based Access Control
 
-### Role Hierarchy
+### Spatie vs `tenant_users.role` (two different concepts)
 
-```
-super-admin
-├── admin
-│   ├── finance
-│   ├── b2b-manager
-│   │   └── b2b-client (tenant-scoped)
-│   │       └── b2b-operator (tenant-scoped)
-│   └── b2c-manager
-└── reseller (API-only, tenant-scoped)
-```
+| Concept | Storage | Meaning |
+|---------|---------|--------|
+| **Panel / app RBAC (Spatie)** | `roles`, `permissions`, `model_has_roles`, `role_has_permissions` | Gates **`/panel`** features via permission strings (e.g. `b2b.shop.view`, `tenants.view`). Assigned on **`User`** through `HasRoles` in [`app/Models/User.php`](../app/Models/User.php). |
+| **Tenant membership (org role)** | `tenant_users.role` | **Per-tenant** job: `owner`, `manager`, `operator`, `viewer`. **Does not** grant Spatie permissions. Used for org semantics; assortment and B2B shop data still depend on **`tenant_products`** and `current_tenant`. |
 
-### Spatie Permission Setup
+A B2B portal user normally has **both**: a Spatie role such as **`b2b-client`** or **`b2b-operator`**, **and** at least one **`tenant_users`** row (set **`is_primary`** when the user belongs to multiple tenants).
 
-```php
-// database/seeders/RolesAndPermissionsSeeder.php
-
-// Roles
-$superAdmin = Role::create(['name' => 'super-admin']);
-$admin      = Role::create(['name' => 'admin']);
-$finance    = Role::create(['name' => 'finance']);
-$b2bManager = Role::create(['name' => 'b2b-manager']);
-$b2bClient  = Role::create(['name' => 'b2b-client']);
-$b2bOperator = Role::create(['name' => 'b2b-operator']);
-$b2cManager = Role::create(['name' => 'b2c-manager']);
-$reseller   = Role::create(['name' => 'reseller']);
-
-// Permissions
-$permissions = [
-    // Products
-    'products.view', 'products.create', 'products.edit', 'products.delete',
-    'products.publish', 'products.sync',
-
-    // Orders
-    'orders.view', 'orders.create', 'orders.cancel', 'orders.refund', 'orders.export',
-
-    // Users
-    'users.view', 'users.create', 'users.edit', 'users.block',
-
-    // Tenants
-    'tenants.view', 'tenants.create', 'tenants.edit', 'tenants.suspend',
-
-    // Wallets
-    'wallets.view', 'wallets.credit', 'wallets.debit', 'wallets.approve-load',
-
-    // Payment Gateways
-    'gateways.view', 'gateways.configure',
-
-    // Voucher Providers
-    'providers.view', 'providers.configure',
-
-    // Reports
-    'reports.view', 'reports.export',
-
-    // API Keys
-    'api-keys.view', 'api-keys.create', 'api-keys.revoke',
-
-    // Settings
-    'settings.view', 'settings.edit',
-
-    // Audit Logs
-    'audit.view',
-
-    // Offers
-    'offers.view', 'offers.create', 'offers.edit', 'offers.delete',
-
-    // CMS / Homepage
-    'cms.view', 'cms.edit',
-];
+```mermaid
+erDiagram
+    users ||--o{ model_has_roles : morph
+    roles ||--o{ model_has_roles : ""
+    roles ||--o{ role_has_permissions : ""
+    permissions ||--o{ role_has_permissions : ""
+    users ||--o{ tenant_users : ""
+    tenants ||--o{ tenant_users : ""
+    tenants ||--o{ tenant_products : ""
+    products ||--o{ tenant_products : ""
 ```
 
-### Permission Matrix
+**`current_tenant` resolution** ([`ResolveTenant`](../app/Http/Middleware/ResolveTenant.php)): (1) logged-in user’s **`is_primary`** tenant link, else first linked tenant; (2) else header **`X-Tenant-Slug`**; (3) else bearer **API key** → that key’s tenant.
 
-| Permission | Super Admin | Admin | Finance | B2B Manager | B2B Client | B2B Operator | B2C Manager |
-|-----------|:-----------:|:-----:|:-------:|:-----------:|:----------:|:------------:|:-----------:|
-| products.view | Yes | Yes | -- | Yes | Assigned | Assigned | Yes |
-| products.create | Yes | Yes | -- | -- | -- | -- | Yes |
-| products.edit | Yes | Yes | -- | -- | -- | -- | Yes |
-| products.publish | Yes | Yes | -- | -- | -- | -- | Yes |
-| orders.view | Yes | Yes | Yes | Yes | Own tenant | Own tenant | Yes |
-| orders.create | Yes | Yes | -- | Yes | Yes | Yes | -- |
-| orders.refund | Yes | Yes | -- | -- | -- | -- | -- |
-| tenants.view | Yes | Yes | Yes | Yes | Own | -- | -- |
-| tenants.create | Yes | Yes | -- | -- | -- | -- | -- |
-| wallets.view | Yes | Yes | Yes | Yes | Own tenant | Own tenant | -- |
-| wallets.approve-load | Yes | Yes | -- | -- | -- | -- | -- |
-| gateways.configure | Yes | Yes | -- | -- | -- | -- | -- |
-| reports.view | Yes | Yes | Yes | Yes | Own tenant | -- | Yes |
-| offers.create | Yes | Yes | -- | -- | -- | -- | Yes |
-| cms.edit | Yes | Yes | -- | -- | -- | -- | Yes |
-| audit.view | Yes | Yes | -- | -- | -- | -- | -- |
+### Spatie roles (authoritative)
+
+Defined and granted in [`database/seeders/RolesAndPermissionsSeeder.php`](../database/seeders/RolesAndPermissionsSeeder.php):
+
+| Role | Notes |
+|------|--------|
+| `super-admin` | Receives all permissions. |
+| `admin` | Broad panel access; exact list is in the seeder (includes catalog, tenants, settings, etc.). |
+| `finance` | Orders, wallets, load requests, reports. |
+| `b2b-client` | Full B2B portal feature set in seeder (shop, orders, team, API keys, wallet loads, finance tab, reports). |
+| `b2b-operator` | Narrower B2B (orders, shop, price list, wallet view). |
+| `b2c-user` | Created with **no** permissions by default (storefront customer). |
+| `reseller` | `b2b.place_order`, `b2b.view_orders` only. |
+
+There are **no** seeded roles named `b2b-manager` or `b2c-manager` (older doc names).
+
+### Permissions (naming)
+
+- Use the **exact** strings from the seeder: e.g. **`products.update`** (not `products.edit`), **`api_keys.view`** (not `api-keys.view`), **`audit_logs.view`** (not `audit.view`), **`settings.update`** (not `settings.edit`).
+- Product admin catalog sections: **`products.catalog.storefront`**, **`products.catalog.business`**, **`products.catalog.all`** (plus **`products.view`** for panel product area). See [VOUCHER_PROVIDERS.md](./VOUCHER_PROVIDERS.md) and admin product controller.
+- Full permission list: see the `$permissions` array in `RolesAndPermissionsSeeder`.
+
+### B2B Spatie permissions (excerpt)
+
+| Permission | `b2b-client` | `b2b-operator` | `reseller` |
+|------------|:------------:|:--------------:|:----------:|
+| `b2b.shop.view` | Yes | Yes | Yes |
+| `b2b.price_list.view` | Yes | Yes | Yes |
+| `b2b.place_order` | Yes | Yes | Yes |
+| `b2b.view_orders` | Yes | Yes | Yes |
+| `b2b.finance.view` | Yes | No | No |
+| `b2b.manage_team` | Yes | No | No |
+| `b2b.manage_api_keys` | Yes | No | No |
+| `b2b.wallet.load` | Yes | No | No |
+| `reports.view` | Yes | No | No |
+| `products.view` | No | No | No |
+
+B2B catalog visibility in the shop is driven by **`tenant_products`** and catalog services (e.g. `B2bCatalogService`), **not** by the pivot `tenant_users.role`.
 
 ---
 
@@ -608,8 +516,8 @@ The B2C admin panel provides full CRUD for managing the consumer storefront:
 
 | Operation | Description |
 |-----------|-------------|
-| Banner Slides | CRUD for hero banners (desktop/mobile images, link to product/category/brand) |
-| Homepage Sections | Toggle sections on/off, edit section content (featured products, deals, etc.) |
+| Hero carousel | **Settings → Hero carousel** (`/panel/settings/hero-slides`): CRUD for storefront hero slides (`desktop_image`, `image_mobile`, links to product/category/brand or custom URL). Uses `settings.view` / `settings.update`. |
+| Homepage Sections | **Settings → Homepage sections**: toggle blocks on/off and order; the **banner** row controls whether the hero *area* is shown on the web home (images are edited in Hero carousel). |
 | Featured Products | Select products to feature on homepage |
 
 ---
@@ -729,65 +637,43 @@ Full admin CRUD for creating and managing promotional offers on voucher cards:
 
 ## 11. Implementation Details
 
-### User Model Extension
+### User model (`tenant_users` pivot)
+
+The live implementation is in [`app/Models/User.php`](../app/Models/User.php) (Spatie `HasRoles` is separate). Membership uses **`is_primary`**, not `is_active`, on the pivot:
 
 ```php
-// Add to User model
-
-public function tenants()
+public function tenants(): BelongsToMany
 {
     return $this->belongsToMany(Tenant::class, 'tenant_users')
-        ->withPivot('role', 'is_active')
+        ->withPivot('role', 'is_primary')
         ->withTimestamps();
 }
 
 public function currentTenant(): ?Tenant
 {
-    return $this->tenants()
-        ->wherePivot('is_active', true)
-        ->first();
+    $primary = $this->tenants()->wherePivot('is_primary', true)->first();
+
+    return $primary ?? $this->tenants()->first();
 }
 
 public function currentTenantId(): ?int
 {
     return $this->currentTenant()?->id;
 }
-
-public function belongsToTenant(int $tenantId): bool
-{
-    return $this->tenants()->where('tenants.id', $tenantId)->exists();
-}
 ```
 
-### Route Groups
+To test membership for a given tenant id: `$user->tenants()->where('tenants.id', $tenantId)->exists()`.
 
-```php
-// routes/web.php
+HTTP requests use [`app/Http/Middleware/ResolveTenant.php`](../app/Http/Middleware/ResolveTenant.php) (middleware alias **`tenant`**) to set `app('current_tenant')`; resolution order matches §3 (primary pivot → first link → `X-Tenant-Slug` → bearer API key).
 
-// Admin routes (super-admin, admin)
-Route::middleware(['auth', 'verified', 'role:super-admin|admin|finance|b2b-manager|b2c-manager'])
-    ->prefix('admin')
-    ->group(function () {
-        Route::resource('tenants', TenantController::class);
-        Route::resource('products', ProductController::class);
-        Route::resource('offers', OfferController::class);
-        Route::resource('categories', CategoryController::class);
-        Route::resource('brands', BrandController::class);
-        Route::resource('orders', OrderController::class)->only(['index', 'show']);
-        // ... more admin routes
-    });
+### Route groups (panel + B2B)
 
-// B2B portal routes (tenant-scoped)
-Route::middleware(['auth', 'verified', 'role:b2b-client|b2b-operator', 'tenant.resolve'])
-    ->prefix('b2b')
-    ->group(function () {
-        Route::get('dashboard', [B2BDashboardController::class, 'index']);
-        Route::resource('orders', B2BOrderController::class);
-        Route::get('wallet', [B2BWalletController::class, 'index']);
-        Route::post('wallet/load-request', [B2BWalletController::class, 'requestLoad']);
-        Route::resource('team', B2BTeamController::class);
-    });
-```
+The admin UI and B2B shop live under **`/panel`**, not a legacy `/admin` prefix. See [`routes/admin.php`](../routes/admin.php):
+
+- **Panel shell:** `Route::prefix('panel')->middleware(['auth', 'two.factor'])` — individual routes add `permission:…` (Spatie), not a single `role:` gate on the whole group.
+- **B2B (tenant-scoped):** `Route::prefix('panel/b2b')->middleware('tenant')` — each route uses the relevant `permission:b2b.*` (e.g. `b2b.shop.view`, `b2b.place_order`).
+
+B2B users typically have Spatie roles **`b2b-client`** or **`b2b-operator`** (see [`database/seeders/RolesAndPermissionsSeeder.php`](../database/seeders/RolesAndPermissionsSeeder.php)) **and** a row in **`tenant_users`** with org role `owner|manager|operator|viewer`.
 
 ---
 

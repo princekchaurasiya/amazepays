@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\BulkUpdateProductsRequest;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductContentRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
@@ -10,24 +11,65 @@ use App\Models\Product;
 use App\Models\ProductMedia;
 use App\Services\Catalog\ProductContentService;
 use App\Services\Catalog\ProductMediaService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProductController extends Controller
 {
+    private const CATALOG_SCOPE_STOREFRONT = 'storefront';
+
+    private const CATALOG_SCOPE_BUSINESS = 'business';
+
+    private const CATALOG_SCOPE_ALL = 'all';
+
     public function __construct(
         private ProductMediaService $productMedia,
         private ProductContentService $productContent,
     ) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
         $this->authorize('products.view');
+        $scope = $this->resolveCatalogScope($request);
+        $this->authorizeCatalogScopeForList($scope);
+
+        if (! $request->filled('catalog_scope')) {
+            return redirect()->route('admin.products.index', array_merge(
+                $request->query(),
+                ['catalog_scope' => $scope]
+            ));
+        }
+
+        $perPage = (int) $request->input('per_page', 20);
+        if (! in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 20;
+        }
+
+        $catalogAudienceFilter = null;
+        if ($request->filled('catalog_audience')) {
+            $aud = (string) $request->input('catalog_audience');
+            if (in_array($aud, [Product::CATALOG_AUDIENCE_B2B, Product::CATALOG_AUDIENCE_B2C, Product::CATALOG_AUDIENCE_BOTH], true)) {
+                $catalogAudienceFilter = $aud;
+            }
+        }
 
         $query = Product::with(['brand', 'productMedia']);
+
+        match ($scope) {
+            self::CATALOG_SCOPE_STOREFRONT => $query->adminStorefrontCatalog(),
+            self::CATALOG_SCOPE_BUSINESS => $query->adminBusinessCatalog(),
+            default => null,
+        };
+
+        if ($catalogAudienceFilter !== null) {
+            $query->where('catalog_audience', $catalogAudienceFilter);
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -46,7 +88,9 @@ class ProductController extends Controller
             $query->where('show_product', $request->status === 'visible');
         }
 
-        $paginator = $query->orderByDesc('id')->paginate(20)->withQueryString();
+        $sourceProviderOptions = $this->sourceProviderOptionsForScope($scope);
+
+        $paginator = $query->orderByDesc('id')->paginate($perPage)->withQueryString();
         $items = collect($paginator->items())->map(function (Product $p) {
             $thumb = $this->productContent->resolvePrimaryImageUrl($p);
 
@@ -55,6 +99,7 @@ class ProductController extends Controller
                 'sku' => $p->sku,
                 'product_name' => $p->display_name,
                 'source_provider' => $p->source_provider,
+                'catalog_audience' => $p->catalog_audience,
                 'show_product' => (bool) $p->show_product,
                 'selling_price' => $p->selling_price,
                 'price_display' => $this->resolvePriceDisplayForList($p),
@@ -74,16 +119,182 @@ class ProductController extends Controller
                 'from' => $paginator->firstItem(),
                 'to' => $paginator->lastItem(),
             ],
-            'filters' => $request->only(['search', 'source_provider', 'status']),
+            'filters' => array_merge($request->only(['search', 'source_provider', 'status']), [
+                'catalog_scope' => $scope,
+                'catalog_audience' => $catalogAudienceFilter,
+                'per_page' => $perPage,
+            ]),
+            'source_provider_options' => $sourceProviderOptions,
+            'canViewAllCatalog' => Gate::allows('products.catalog.all'),
+            'canViewStorefrontCatalog' => Gate::allows('products.catalog.storefront') || Gate::allows('products.catalog.all'),
+            'canViewBusinessCatalog' => Gate::allows('products.catalog.business') || Gate::allows('products.catalog.all'),
+            'canPublish' => Gate::allows('products.publish'),
+            'canUpdate' => Gate::allows('products.update'),
         ]);
     }
 
-    public function create(): Response
+    public function bulkUpdate(BulkUpdateProductsRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+        $scope = $validated['catalog_scope'];
+        $this->authorizeCatalogScopeForList($scope);
+
+        $hasVisibility = $request->boolean('apply_visibility');
+        $hasPrice = filled($validated['price_mode'] ?? null);
+        $hasContent = $request->boolean('apply_custom_description')
+            || $request->boolean('apply_how_to_redeem')
+            || $request->boolean('apply_terms_and_conditions');
+
+        if ($hasVisibility) {
+            $this->authorize('products.publish');
+        }
+        if ($hasPrice || $hasContent) {
+            $this->authorize('products.update');
+        }
+
+        $ids = array_values(array_unique(array_map('intval', $validated['ids'])));
+
+        $query = Product::query()->whereIn('id', $ids);
+        match ($scope) {
+            self::CATALOG_SCOPE_STOREFRONT => $query->adminStorefrontCatalog(),
+            self::CATALOG_SCOPE_BUSINESS => $query->adminBusinessCatalog(),
+            default => null,
+        };
+
+        if ($query->count() !== count($ids)) {
+            abort(422, 'Some selected products are not in this catalog.');
+        }
+
+        $visibilityChanges = 0;
+        $fullUpdates = 0;
+        $skippedRelativeNoSellingPrice = 0;
+
+        DB::transaction(function () use (
+            $request,
+            $query,
+            $validated,
+            $hasVisibility,
+            $hasPrice,
+            $hasContent,
+            &$visibilityChanges,
+            &$fullUpdates,
+            &$skippedRelativeNoSellingPrice,
+        ): void {
+            /** @var Collection<int, Product> $products */
+            $products = (clone $query)->get();
+
+            foreach ($products as $product) {
+                $updates = [];
+
+                if ($hasVisibility) {
+                    $target = (bool) $validated['show_product'];
+                    if ((bool) $product->show_product !== $target) {
+                        $updates['show_product'] = $target;
+                    }
+                }
+
+                if ($hasPrice) {
+                    $mode = $validated['price_mode'];
+                    if ($mode === 'absolute') {
+                        if (array_key_exists('selling_price', $validated) && $validated['selling_price'] !== null) {
+                            $updates['selling_price'] = $validated['selling_price'];
+                        }
+                        if (array_key_exists('mrp', $validated) && $validated['mrp'] !== null) {
+                            $updates['mrp'] = $validated['mrp'];
+                        }
+                        if (array_key_exists('discount_percentage', $validated) && $validated['discount_percentage'] !== null) {
+                            $updates['discount_percentage'] = $validated['discount_percentage'];
+                        }
+                    } elseif ($mode === 'relative_percent') {
+                        $base = $product->getRawOriginal('selling_price') ?? $product->selling_price;
+                        if ($base === null || $base === '') {
+                            $skippedRelativeNoSellingPrice++;
+                        } else {
+                            $updates['selling_price'] = round((float) $base * (1 + (float) $validated['price_relative_percent'] / 100), 2);
+                        }
+                    } elseif ($mode === 'relative_fixed') {
+                        $base = $product->getRawOriginal('selling_price') ?? $product->selling_price;
+                        if ($base === null || $base === '') {
+                            $skippedRelativeNoSellingPrice++;
+                        } else {
+                            $updates['selling_price'] = max(0, round((float) $base + (float) $validated['price_relative_amount'], 2));
+                        }
+                    }
+                }
+
+                if ($hasContent) {
+                    if ($request->boolean('apply_custom_description')) {
+                        $updates['custom_description'] = $validated['custom_description'] ?? null;
+                    }
+                    if ($request->boolean('apply_how_to_redeem')) {
+                        $updates['how_to_redeem'] = $validated['how_to_redeem'] ?? null;
+                    }
+                    if ($request->boolean('apply_terms_and_conditions')) {
+                        $updates['terms_and_conditions'] = $validated['terms_and_conditions'] ?? null;
+                    }
+                }
+
+                if ($updates === []) {
+                    continue;
+                }
+
+                $contentTouched = $hasContent && (
+                    array_key_exists('custom_description', $updates)
+                    || array_key_exists('how_to_redeem', $updates)
+                    || array_key_exists('terms_and_conditions', $updates)
+                );
+                if ($contentTouched) {
+                    $updates['content_customized_at'] = now();
+                    $updates['content_customized_by'] = $request->user()->id;
+                }
+
+                $keys = array_keys($updates);
+                $onlyVisibility = $keys === ['show_product'];
+
+                if ($onlyVisibility) {
+                    $old = ['show_product' => $product->show_product];
+                    $product->update($updates);
+                    audit('product.visibility_toggled', $product, $old, ['show_product' => $product->show_product]);
+                    $visibilityChanges++;
+                } else {
+                    $old = $product->only($keys);
+                    $product->update($updates);
+                    audit('product.updated', $product, $old, $product->only($keys));
+                    $fullUpdates++;
+                }
+            }
+        });
+
+        $parts = [];
+        if ($visibilityChanges > 0) {
+            $parts[] = "{$visibilityChanges} visibility";
+        }
+        if ($fullUpdates > 0) {
+            $parts[] = "{$fullUpdates} product(s) updated (price/content)";
+        }
+        if ($skippedRelativeNoSellingPrice > 0) {
+            $parts[] = "{$skippedRelativeNoSellingPrice} skipped (no selling price for relative change)";
+        }
+
+        $message = $parts !== []
+            ? 'Bulk update: '.implode('; ', $parts).'.'
+            : 'No changes applied.';
+
+        return back()->with('success', $message);
+    }
+
+    public function create(Request $request): Response
     {
         $this->authorize('products.create');
+        $scope = $request->input('catalog_scope');
+        if (! is_string($scope) || ! in_array($scope, [self::CATALOG_SCOPE_STOREFRONT, self::CATALOG_SCOPE_BUSINESS, self::CATALOG_SCOPE_ALL], true)) {
+            $scope = $this->resolveCatalogScope($request);
+        }
+        $this->authorizeCatalogScopeForList($scope);
 
         return Inertia::render('Admin/Products/Form', [
             'product' => null,
+            'default_catalog_audience' => $this->defaultAudienceForScope($scope),
         ]);
     }
 
@@ -367,5 +578,75 @@ class ProductController extends Controller
         }
 
         return '';
+    }
+
+    private function resolveCatalogScope(Request $request): string
+    {
+        $raw = $request->input('catalog_scope');
+        if (is_string($raw) && in_array($raw, [self::CATALOG_SCOPE_STOREFRONT, self::CATALOG_SCOPE_BUSINESS, self::CATALOG_SCOPE_ALL], true)) {
+            return $raw;
+        }
+        if (Gate::allows('products.catalog.all')) {
+            return self::CATALOG_SCOPE_ALL;
+        }
+        if (Gate::allows('products.catalog.storefront')) {
+            return self::CATALOG_SCOPE_STOREFRONT;
+        }
+        if (Gate::allows('products.catalog.business')) {
+            return self::CATALOG_SCOPE_BUSINESS;
+        }
+
+        abort(403, 'No product catalog permission is assigned to your role.');
+    }
+
+    private function authorizeCatalogScopeForList(string $scope): void
+    {
+        if (! Gate::allows('products.view')) {
+            abort(403);
+        }
+
+        $ok = match ($scope) {
+            self::CATALOG_SCOPE_STOREFRONT => Gate::allows('products.catalog.storefront') || Gate::allows('products.catalog.all'),
+            self::CATALOG_SCOPE_BUSINESS => Gate::allows('products.catalog.business') || Gate::allows('products.catalog.all'),
+            self::CATALOG_SCOPE_ALL => Gate::allows('products.catalog.all'),
+            default => false,
+        };
+
+        if (! $ok) {
+            abort(403);
+        }
+    }
+
+    private function defaultAudienceForScope(string $scope): string
+    {
+        return match ($scope) {
+            self::CATALOG_SCOPE_STOREFRONT => Product::CATALOG_AUDIENCE_B2C,
+            self::CATALOG_SCOPE_BUSINESS => Product::CATALOG_AUDIENCE_B2B,
+            default => Product::CATALOG_AUDIENCE_BOTH,
+        };
+    }
+
+    /**
+     * Distinct provider values visible under this catalog scope (ignores list filters).
+     *
+     * @return list<string>
+     */
+    private function sourceProviderOptionsForScope(string $scope): array
+    {
+        $optionsQuery = Product::query();
+        match ($scope) {
+            self::CATALOG_SCOPE_STOREFRONT => $optionsQuery->adminStorefrontCatalog(),
+            self::CATALOG_SCOPE_BUSINESS => $optionsQuery->adminBusinessCatalog(),
+            default => null,
+        };
+
+        return $optionsQuery
+            ->whereNotNull('source_provider')
+            ->where('source_provider', '!=', '')
+            ->distinct()
+            ->orderBy('source_provider')
+            ->pluck('source_provider')
+            ->values()
+            ->all();
     }
 }

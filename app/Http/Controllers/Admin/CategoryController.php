@@ -37,6 +37,7 @@ class CategoryController extends Controller
                 'slug' => $c->slug,
                 'order' => (float) $c->order,
                 'thumbnail' => $c->thumbnail ? Storage::disk('public')->url($c->thumbnail) : null,
+                'accent_color' => $c->accent_color,
                 'products_count' => $c->products_count,
                 'product_ids' => $productIdsByCategory->get($c->id, []),
             ];
@@ -68,12 +69,16 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:categories,name'],
             'order' => ['nullable', 'numeric'],
+            'accent_color' => ['nullable', 'string', 'max:7'],
             'thumbnail' => ['nullable', 'image', 'max:2048'],
         ]);
+
+        $accent = isset($validated['accent_color']) ? trim((string) $validated['accent_color']) : '';
 
         $data = [
             'name' => $validated['name'],
             'order' => $validated['order'] ?? 0,
+            'accent_color' => preg_match('/^#[0-9A-Fa-f]{6}$/', $accent) ? $accent : null,
         ];
 
         if ($request->hasFile('thumbnail')) {
@@ -95,15 +100,21 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('categories', 'name')->ignore($category->id)],
             'order' => ['nullable', 'numeric'],
+            'accent_color' => ['nullable', 'string', 'max:7'],
             'thumbnail' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        $old = $category->only(['name', 'order', 'thumbnail']);
+        $old = $category->only(['name', 'order', 'thumbnail', 'accent_color']);
 
         $data = [
             'name' => $validated['name'],
             'order' => $validated['order'] ?? $category->order,
         ];
+
+        if (array_key_exists('accent_color', $validated)) {
+            $accent = trim((string) $validated['accent_color']);
+            $data['accent_color'] = ($accent !== '' && preg_match('/^#[0-9A-Fa-f]{6}$/', $accent)) ? $accent : null;
+        }
 
         if ($request->hasFile('thumbnail')) {
             if ($category->thumbnail) {

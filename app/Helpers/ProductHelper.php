@@ -2,14 +2,16 @@
 
 namespace App\Helpers;
 
+use Illuminate\Support\Collection;
+
 class ProductHelper
 {
     /**
      * Safely decode JSON string to array
      * Handles cases where value might already be decoded or still be a JSON string
      *
-     * @param mixed $value
-     * @param mixed $default Default value if decoding fails
+     * @param  mixed  $value
+     * @param  mixed  $default  Default value if decoding fails
      * @return array|mixed
      */
     public static function decodeJson($value, $default = [])
@@ -26,6 +28,7 @@ class ProductHelper
         // If it's a string, try to decode it
         if (is_string($value)) {
             $decoded = json_decode($value, true);
+
             return ($decoded !== null && is_array($decoded)) ? $decoded : $default;
         }
 
@@ -35,7 +38,7 @@ class ProductHelper
     /**
      * Decode price from JSON string or return as array
      *
-     * @param mixed $price
+     * @param  mixed  $price
      * @return array|null
      */
     public static function decodePrice($price)
@@ -50,6 +53,7 @@ class ProductHelper
 
         if (is_string($price)) {
             $decoded = json_decode($price, true);
+
             return $decoded !== null ? $decoded : null;
         }
 
@@ -59,7 +63,7 @@ class ProductHelper
     /**
      * Decode currency from JSON string or return as array
      *
-     * @param mixed $currency
+     * @param  mixed  $currency
      * @return array|null
      */
     public static function decodeCurrency($currency)
@@ -74,6 +78,7 @@ class ProductHelper
 
         if (is_string($currency)) {
             $decoded = json_decode($currency, true);
+
             return $decoded !== null ? $decoded : null;
         }
 
@@ -84,7 +89,7 @@ class ProductHelper
      * Decode images from JSON string or return as array
      * Always returns an array (never null)
      *
-     * @param mixed $images
+     * @param  mixed  $images
      * @return array
      */
     public static function decodeImages($images)
@@ -93,17 +98,65 @@ class ProductHelper
     }
 
     /**
+     * Canonical product `price` JSON shape used across providers:
+     * - RANGE: `type` RANGE, `min`, `max` (optional `currency`)
+     * - SLAB: `type` SLAB, `denominations` (numeric list of allowed face values)
+     * - Woohoo: nested `cpg` entries may repeat the same fields
+     *
+     * Provider alias: some writers (e.g. Vouchagram catalog) use `values` for SLAB;
+     * those are merged into `denominations` here so PricingService and UI stay unified.
+     *
+     * @param  array<string, mixed>  $price
+     * @return array<string, mixed>
+     */
+    public static function normalizePriceArray(array $price): array
+    {
+        if (isset($price['cpg']) && is_array($price['cpg'])) {
+            foreach ($price['cpg'] as $i => $cpgData) {
+                if (is_array($cpgData)) {
+                    $price['cpg'][$i] = self::mergeSlabValuesIntoDenominations($cpgData);
+                }
+            }
+        }
+
+        return self::mergeSlabValuesIntoDenominations($price);
+    }
+
+    /**
+     * @param  array<string, mixed>  $node
+     * @return array<string, mixed>
+     */
+    private static function mergeSlabValuesIntoDenominations(array $node): array
+    {
+        if (strtoupper((string) ($node['type'] ?? '')) !== 'SLAB') {
+            return $node;
+        }
+
+        $denoms = $node['denominations'] ?? [];
+        if (! is_array($denoms)) {
+            $denoms = [];
+        }
+
+        $values = $node['values'] ?? [];
+        if ($denoms === [] && is_array($values) && $values !== []) {
+            $node['denominations'] = array_values(array_map(fn ($v) => (float) $v, $values));
+        }
+
+        return $node;
+    }
+
+    /**
      * Extract range information from price structure
      * Handles both RANGE and SLAB price types
      *
-     * @param array|null $price
-     * @param string|null $minPrice Fallback min price
-     * @param string|null $maxPrice Fallback max price
+     * @param  array|null  $price
+     * @param  string|null  $minPrice  Fallback min price
+     * @param  string|null  $maxPrice  Fallback max price
      * @return array
      */
     public static function extractRange($price, $minPrice = null, $maxPrice = null)
     {
-        if (empty($price) || !is_array($price)) {
+        if (empty($price) || ! is_array($price)) {
             return [
                 'min' => $minPrice,
                 'max' => $maxPrice,
@@ -111,6 +164,8 @@ class ProductHelper
                 'denominations' => [],
             ];
         }
+
+        $price = self::normalizePriceArray($price);
 
         // Check if price has cpg structure (common in Woohoo API for both RANGE and SLAB)
         if (isset($price['cpg']) && is_array($price['cpg'])) {
@@ -136,6 +191,21 @@ class ProductHelper
             ];
         }
 
+        // SLAB with denominations only (e.g. Vouchagram fixed list without min/max on root)
+        if (strtoupper((string) ($price['type'] ?? '')) === 'SLAB') {
+            $denoms = $price['denominations'] ?? [];
+            if (is_array($denoms) && $denoms !== []) {
+                $nums = array_map('floatval', $denoms);
+
+                return [
+                    'min' => min($nums),
+                    'max' => max($nums),
+                    'type' => 'SLAB',
+                    'denominations' => array_values($nums),
+                ];
+            }
+        }
+
         // Fallback to provided min/max
         return [
             'min' => $minPrice,
@@ -148,86 +218,93 @@ class ProductHelper
     /**
      * Get minimum price from range or price structure
      *
-     * @param array|null $price
-     * @param string|null $minPrice Fallback min price
+     * @param  array|null  $price
+     * @param  string|null  $minPrice  Fallback min price
      * @return string|null
      */
     public static function getMinPrice($price, $minPrice = null)
     {
         $range = self::extractRange($price, $minPrice, null);
+
         return $range['min'] ?? $minPrice;
     }
 
     /**
      * Get maximum price from range or price structure
      *
-     * @param array|null $price
-     * @param string|null $maxPrice Fallback max price
+     * @param  array|null  $price
+     * @param  string|null  $maxPrice  Fallback max price
      * @return string|null
      */
     public static function getMaxPrice($price, $maxPrice = null)
     {
         $range = self::extractRange($price, null, $maxPrice);
+
         return $range['max'] ?? $maxPrice;
     }
 
     /**
      * Get price type (RANGE, SLAB, etc.) from price structure
      *
-     * @param array|null $price
+     * @param  array|null  $price
      * @return string|null
      */
     public static function getPriceType($price)
     {
         $range = self::extractRange($price);
+
         return $range['type'] ?? null;
     }
 
     /**
      * Get available denominations from price structure
      *
-     * @param array|null $price
+     * @param  array|null  $price
      * @return array
      */
     public static function getDenominations($price)
     {
         $range = self::extractRange($price);
+
         return $range['denominations'] ?? [];
     }
 
     /**
      * Check if price structure has a valid range
      *
-     * @param array|null $price
+     * @param  array|null  $price
      * @return bool
      */
     public static function hasPriceRange($price)
     {
         $range = self::extractRange($price);
-        return !empty($range['min']) && !empty($range['max']);
+
+        return ! empty($range['min']) && ! empty($range['max']);
     }
 
     /**
      * Check if price uses SLAB pricing
      *
-     * @param array|null $price
+     * @param  array|null  $price
      * @return bool
      */
     public static function isSlabPricing($price)
     {
         $type = self::getPriceType($price);
+
         return strtoupper($type ?? '') === 'SLAB';
     }
 
     /**
      * Check if price uses RANGE pricing
      *
-     * @param array|null $price
+     * @param  array|null  $price
      * @return bool
      */
     public static function isRangePricing($price)
     {
         $type = self::getPriceType($price);
+
         return strtoupper($type ?? '') === 'RANGE';
     }
 
@@ -235,8 +312,8 @@ class ProductHelper
      * Get formatted price display string
      * Examples: "₹100 - ₹10,000" for RANGE, "₹500, ₹1000" for SLAB
      *
-     * @param array|null $price
-     * @param string $currencySymbol Currency symbol (default: ₹)
+     * @param  array|null  $price
+     * @param  string  $currencySymbol  Currency symbol (default: ₹)
      * @return string|null
      */
     public static function getFormattedPriceRange($price, $currencySymbol = '₹')
@@ -246,35 +323,37 @@ class ProductHelper
         $max = $range['max'] ?? null;
         $type = $range['type'] ?? null;
 
-        if (!$min || !$max) {
+        if (! $min || ! $max) {
             return null;
         }
 
         // Format numbers with commas
-        $formattedMin = number_format((float)$min);
-        $formattedMax = number_format((float)$max);
+        $formattedMin = number_format((float) $min);
+        $formattedMax = number_format((float) $max);
 
         if (strtoupper($type ?? '') === 'SLAB') {
             // For SLAB, show denominations if available
             $denominations = $range['denominations'] ?? [];
-            if (!empty($denominations)) {
-                $formattedDenoms = array_map(function($d) use ($currencySymbol) {
-                    return $currencySymbol . number_format((float)$d);
+            if (! empty($denominations)) {
+                $formattedDenoms = array_map(function ($d) use ($currencySymbol) {
+                    return $currencySymbol.number_format((float) $d);
                 }, $denominations);
+
                 return implode(', ', $formattedDenoms);
             }
-            return $currencySymbol . $formattedMin . ' - ' . $currencySymbol . $formattedMax;
+
+            return $currencySymbol.$formattedMin.' - '.$currencySymbol.$formattedMax;
         }
 
         // Default RANGE format
-        return $currencySymbol . $formattedMin . ' - ' . $currencySymbol . $formattedMax;
+        return $currencySymbol.$formattedMin.' - '.$currencySymbol.$formattedMax;
     }
 
     /**
      * Process product data - decode all JSON fields automatically
      * Can be used on arrays or objects
      *
-     * @param array|object $product
+     * @param  array|object  $product
      * @return array|object
      */
     public static function processProductData($product)
@@ -290,6 +369,7 @@ class ProductHelper
             if (isset($product->images)) {
                 $product->images = self::decodeImages($product->images);
             }
+
             return $product;
         }
 
@@ -304,6 +384,7 @@ class ProductHelper
             if (isset($product['images'])) {
                 $product['images'] = self::decodeImages($product['images']);
             }
+
             return $product;
         }
 
@@ -313,16 +394,17 @@ class ProductHelper
     /**
      * Process multiple products at once
      *
-     * @param array|\Illuminate\Support\Collection $products
-     * @return array|\Illuminate\Support\Collection
+     * @param  array|Collection  $products
+     * @return array|Collection
      */
     public static function processProducts($products)
     {
-        if (is_array($products) || $products instanceof \Illuminate\Support\Collection) {
+        if (is_array($products) || $products instanceof Collection) {
             foreach ($products as $product) {
                 self::processProductData($product);
             }
         }
+
         return $products;
     }
 }

@@ -2,10 +2,24 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateProductRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('hot_deal_rank') && $this->input('hot_deal_rank') === '') {
+            $this->merge(['hot_deal_rank' => null]);
+        }
+
+        if (! $this->filled('catalog_audience') && $this->filled('source_provider')) {
+            $this->merge([
+                'catalog_audience' => Product::defaultCatalogAudienceForSourceProvider($this->string('source_provider')->toString()),
+            ]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->user()->can('products.update');
@@ -24,7 +38,8 @@ class UpdateProductRequest extends FormRequest
             'how_to_redeem' => 'nullable|string',
             'terms_and_conditions' => 'nullable|string',
             'show_product' => 'boolean',
-            'priority' => 'integer|min:0',
+            'catalog_audience' => 'required|string|in:b2c,b2b,both',
+            'hot_deal_rank' => 'nullable|numeric|min:0',
             'display_order' => 'integer|min:0',
             'custom_image' => 'nullable|image|max:5120',
         ];

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Breadcrumbs } from '@/Components/Admin';
@@ -15,11 +15,78 @@ type Tenant = {
     orders_count?: number;
 };
 
+type CatalogRow = { id: number; name: string; sku: string | null };
+
 type Props = {
     tenant: Tenant;
+    catalogProducts: CatalogRow[];
+    assignedProductIds: number[];
+    canAssignProducts: boolean;
 };
 
-export default function Show({ tenant }: Props) {
+function CatalogPicker({
+    items,
+    selected,
+    onChange,
+}: {
+    items: CatalogRow[];
+    selected: number[];
+    onChange: (ids: number[]) => void;
+}) {
+    const [q, setQ] = useState('');
+    const filtered = useMemo(() => {
+        const s = q.trim().toLowerCase();
+        if (!s) return items;
+        return items.filter(
+            i =>
+                i.name.toLowerCase().includes(s) ||
+                (i.sku || '').toLowerCase().includes(s) ||
+                String(i.id).includes(s),
+        );
+    }, [items, q]);
+
+    const toggle = (id: number) => {
+        if (selected.includes(id)) {
+            onChange(selected.filter(x => x !== id));
+        } else {
+            onChange([...selected, id]);
+        }
+    };
+
+    return (
+        <div className="border dark:border-gray-600 rounded-lg p-4 space-y-2">
+            <input
+                value={q}
+                onChange={e => setQ(e.target.value)}
+                placeholder="Search name or SKU…"
+                className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+            />
+            <div className="max-h-64 overflow-y-auto space-y-1 text-sm border dark:border-gray-600 rounded-md p-2">
+                {filtered.length === 0 ? (
+                    <p className="text-gray-500 text-xs">
+                        No B2B-eligible products (Business or Both). Create or retag products first.
+                    </p>
+                ) : (
+                    filtered.map(row => (
+                        <label
+                            key={row.id}
+                            className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded px-1"
+                        >
+                            <input type="checkbox" checked={selected.includes(row.id)} onChange={() => toggle(row.id)} />
+                            <span className="flex-1 truncate">
+                                {row.name}
+                                {row.sku && <span className="text-gray-400 font-mono text-xs ml-1">({row.sku})</span>}
+                            </span>
+                        </label>
+                    ))
+                )}
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{selected.length} selected for this tenant</p>
+        </div>
+    );
+}
+
+export default function Show({ tenant, catalogProducts, assignedProductIds, canAssignProducts }: Props) {
     const form = useForm({
         name: tenant.name,
         contact_email: tenant.contact_email,
@@ -27,15 +94,24 @@ export default function Show({ tenant }: Props) {
         wallet_limit: tenant.wallet_limit != null ? String(tenant.wallet_limit) : '',
     });
 
+    const catalogForm = useForm({
+        product_ids: [...assignedProductIds],
+    });
+
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         form.put(`/panel/tenants/${tenant.id}`);
     };
 
+    const submitCatalog = (e: React.FormEvent) => {
+        e.preventDefault();
+        catalogForm.post(`/panel/tenants/${tenant.id}/products`, { preserveScroll: true });
+    };
+
     return (
         <AdminLayout>
             <Head title={tenant.name} />
-            <div className="space-y-6 max-w-2xl">
+            <div className="space-y-6 max-w-4xl">
                 <Breadcrumbs items={[{ label: 'Tenants', href: '/panel/tenants' }, { label: tenant.name }]} />
                 <div className="flex items-center gap-4">
                     <Link href="/panel/tenants" className="text-gray-500 hover:text-indigo-600">
@@ -83,7 +159,11 @@ export default function Show({ tenant }: Props) {
                         />
                     </div>
                     <div className="flex gap-3">
-                        <button type="submit" disabled={form.processing} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                        <button
+                            type="submit"
+                            disabled={form.processing}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                        >
                             Save
                         </button>
                         <button
@@ -99,6 +179,40 @@ export default function Show({ tenant }: Props) {
                         </button>
                     </div>
                 </form>
+
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 space-y-3">
+                    <div>
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">B2B catalog for this tenant</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            B2B-eligible SKUs only (catalog audience Business or Both) for this tenant&apos;s shop and price
+                            list (<code className="text-xs">/panel/b2b/shop</code>).
+                        </p>
+                    </div>
+                    {!canAssignProducts ? (
+                        <p className="text-sm text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                            You do not have permission to assign products. An administrator with{' '}
+                            <span className="font-mono text-xs">tenants.assign_products</span> must update this catalog.
+                        </p>
+                    ) : (
+                        <form onSubmit={submitCatalog} className="space-y-3">
+                            <CatalogPicker
+                                items={catalogProducts}
+                                selected={catalogForm.data.product_ids}
+                                onChange={ids => catalogForm.setData('product_ids', ids)}
+                            />
+                            {catalogForm.errors.product_ids && (
+                                <p className="text-sm text-red-600">{catalogForm.errors.product_ids}</p>
+                            )}
+                            <button
+                                type="submit"
+                                disabled={catalogForm.processing}
+                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                            >
+                                Save catalog
+                            </button>
+                        </form>
+                    )}
+                </div>
             </div>
         </AdminLayout>
     );

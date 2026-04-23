@@ -1,8 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Breadcrumbs, RichTextEditor, ImageGalleryManager, HelpTooltip, type GalleryItem } from '@/Components/Admin';
+import {
+    AdminImageDropzone,
+    Breadcrumbs,
+    RichTextEditor,
+    ImageGalleryManager,
+    HelpTooltip,
+    type GalleryItem,
+} from '@/Components/Admin';
 import { Save, ArrowLeft, Package } from 'lucide-react';
+
+function defaultCatalogAudience(sourceProvider: string): 'b2c' | 'b2b' | 'both' {
+    if (sourceProvider === 'vouchagram_pull') return 'b2b';
+    if (sourceProvider === 'vouchagram_send' || sourceProvider === 'vouchagram') return 'b2c';
+    return 'both';
+}
 
 type ProductPayload = {
     id?: number;
@@ -11,6 +24,7 @@ type ProductPayload = {
     name?: string | null;
     display_name?: string;
     source_provider?: string | null;
+    catalog_audience?: string | null;
     selling_price?: string | number | null;
     mrp?: string | number | null;
     denomination?: string | number | null;
@@ -22,13 +36,14 @@ type ProductPayload = {
     description?: string | null;
     tnc?: string | null;
     show_product?: boolean | number;
-    priority?: string | number | null;
+    hot_deal_rank?: string | number | null;
     display_order?: string | number | null;
     media?: GalleryItem[];
 };
 
 type Props = {
     product: ProductPayload | null;
+    default_catalog_audience?: 'b2c' | 'b2b' | 'both' | null;
 };
 
 const tabs = [
@@ -38,14 +53,16 @@ const tabs = [
     { id: 'settings', label: 'Visibility' },
 ] as const;
 
-export default function Form({ product }: Props) {
+export default function Form({ product, default_catalog_audience }: Props) {
     const isEdit = !!product?.id;
     const [tab, setTab] = useState<(typeof tabs)[number]['id']>('basic');
+    const skipProviderAudienceOnce = useRef(false);
 
     const { data, setData, setDefaults, post, put, processing, errors, reset } = useForm({
         product_name: '',
         sku: '',
         source_provider: 'manual',
+        catalog_audience: 'both' as 'b2c' | 'b2b' | 'both',
         selling_price: '' as string | number,
         mrp: '' as string | number,
         denomination: '' as string | number,
@@ -55,7 +72,7 @@ export default function Form({ product }: Props) {
         how_to_redeem: '',
         terms_and_conditions: '',
         show_product: true,
-        priority: 0,
+        hot_deal_rank: '' as string | number,
         display_order: 0,
         custom_image: null as File | null,
     });
@@ -63,12 +80,42 @@ export default function Form({ product }: Props) {
     useEffect(() => {
         if (!product) {
             reset();
+            const sp = 'manual';
+            const audience =
+                default_catalog_audience === 'b2c' ||
+                default_catalog_audience === 'b2b' ||
+                default_catalog_audience === 'both'
+                    ? default_catalog_audience
+                    : defaultCatalogAudience(sp);
+            skipProviderAudienceOnce.current = true;
+            const hydrated = {
+                product_name: '',
+                sku: '',
+                source_provider: sp,
+                catalog_audience: audience,
+                selling_price: '' as string | number,
+                mrp: '' as string | number,
+                denomination: '' as string | number,
+                discount_percentage: '' as string | number,
+                gst_rate: '' as string | number,
+                custom_description: '',
+                how_to_redeem: '',
+                terms_and_conditions: '',
+                show_product: true,
+                hot_deal_rank: '' as string | number,
+                display_order: 0,
+                custom_image: null as File | null,
+            };
+            setDefaults(hydrated);
+            setData(hydrated);
             return;
         }
+        const sp = String(product.source_provider ?? 'manual');
         const hydrated = {
             product_name: String(product.product_name ?? product.name ?? product.display_name ?? ''),
             sku: String(product.sku ?? ''),
-            source_provider: String(product.source_provider ?? 'manual'),
+            source_provider: sp,
+            catalog_audience: (product.catalog_audience as 'b2c' | 'b2b' | 'both') ?? defaultCatalogAudience(sp),
             selling_price: product.selling_price ?? '',
             mrp: product.mrp ?? '',
             denomination: product.denomination ?? '',
@@ -78,13 +125,25 @@ export default function Form({ product }: Props) {
             how_to_redeem: String(product.how_to_redeem ?? ''),
             terms_and_conditions: String(product.terms_and_conditions ?? ''),
             show_product: Boolean(product.show_product),
-            priority: Number(product.priority ?? 0),
+            hot_deal_rank:
+                product.hot_deal_rank !== null && product.hot_deal_rank !== undefined && product.hot_deal_rank !== ''
+                    ? Number(product.hot_deal_rank)
+                    : '',
             display_order: Number(product.display_order ?? 0),
             custom_image: null as File | null,
         };
         setDefaults(hydrated);
         setData(hydrated);
-    }, [product]);
+    }, [product, default_catalog_audience]);
+
+    useEffect(() => {
+        if (isEdit) return;
+        if (skipProviderAudienceOnce.current) {
+            skipProviderAudienceOnce.current = false;
+            return;
+        }
+        setData('catalog_audience', defaultCatalogAudience(data.source_provider));
+    }, [data.source_provider, isEdit]);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -179,7 +238,18 @@ export default function Form({ product }: Props) {
                                         onChange={e => setData('source_provider', e.target.value)}
                                         className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
                                     >
-                                        {['woohoo', 'kgen', 'value_design', 'lysto', 'ezpin', 'gyftrr', 'manual'].map(p => (
+                                        {[
+                                            'woohoo',
+                                            'kgen',
+                                            'value_design',
+                                            'lysto',
+                                            'ezpin',
+                                            'gyftrr',
+                                            'manual',
+                                            'vouchagram',
+                                            'vouchagram_send',
+                                            'vouchagram_pull',
+                                        ].map(p => (
                                             <option key={p} value={p}>
                                                 {p}
                                             </option>
@@ -192,14 +262,14 @@ export default function Form({ product }: Props) {
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Single hero image upload (optional)
                                 </label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={e => setData('custom_image', e.target.files?.[0] ?? null)}
-                                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700"
+                                <AdminImageDropzone
+                                    file={data.custom_image}
+                                    onFileChange={f => setData('custom_image', f)}
+                                    error={errors.custom_image}
+                                    hintText="For multiple images use the Content tab after saving."
+                                    maxFileBytes={5 * 1024 * 1024}
+                                    compact
                                 />
-                                {errors.custom_image && <p className="text-red-600 text-xs mt-1">{errors.custom_image}</p>}
-                                <p className="text-xs text-gray-500 mt-1">For multiple images use the Content tab after saving.</p>
                             </div>
                         </div>
                     )}
@@ -326,6 +396,26 @@ export default function Form({ product }: Props) {
 
                     {tab === 'settings' && (
                         <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Catalog audience (B2B vs B2C)
+                                </label>
+                                <select
+                                    value={data.catalog_audience}
+                                    onChange={e => setData('catalog_audience', e.target.value as 'b2c' | 'b2b' | 'both')}
+                                    className="w-full max-w-md rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+                                >
+                                    <option value="b2c">B2C only (consumer storefront)</option>
+                                    <option value="b2b">B2B only (tenant shop / wallet orders)</option>
+                                    <option value="both">Both channels</option>
+                                </select>
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Vouchagram Send defaults to B2C; Pull defaults to B2B. Catalog sync updates this unless you override here.
+                                </p>
+                                {errors.catalog_audience && (
+                                    <p className="text-red-600 text-xs mt-1">{errors.catalog_audience}</p>
+                                )}
+                            </div>
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="checkbox"
@@ -336,12 +426,19 @@ export default function Form({ product }: Props) {
                                 <span className="text-sm text-gray-700 dark:text-gray-300">Visible on storefront</span>
                             </label>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sort priority</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Hot deal rank
+                                    <span className="ml-1 font-normal text-gray-500">(leave empty to exclude from hot deals)</span>
+                                </label>
                                 <input
                                     type="number"
+                                    step="0.01"
                                     min="0"
-                                    value={data.priority}
-                                    onChange={e => setData('priority', Number(e.target.value))}
+                                    value={data.hot_deal_rank}
+                                    onChange={e => {
+                                        const v = e.target.value;
+                                        setData('hot_deal_rank', v === '' ? '' : Number(v));
+                                    }}
                                     className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
                                 />
                             </div>

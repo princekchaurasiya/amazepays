@@ -19,11 +19,36 @@ class ProfileController extends Controller
     public function updateProfile(Request $request)
     {
         try {
+            $allowed = [
+                'name',
+                'email',
+                'mobile',
+                'otp',
+                'billing_address',
+                'billing_address_two',
+                'billing_city',
+                'billing_state',
+                'billing_zip',
+                'billing_country',
+            ];
+            $unknown = array_values(array_diff(array_keys($request->all()), $allowed));
+            if ($unknown !== []) {
+                return redirect()->back()->withErrors([
+                    'unexpected_fields' => 'Unexpected input fields detected: '.implode(', ', $unknown),
+                ]);
+            }
+
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z\s]+$/'],
                 'email' => 'required|email|unique:users,email,'.Auth::id(),
                 'mobile' => ['required', 'regex:/^[0-9]{10}$/'],
                 'otp' => 'nullable|string|size:6',
+                'billing_address' => 'nullable|string|max:255',
+                'billing_address_two' => 'nullable|string|max:255',
+                'billing_city' => 'nullable|string|max:100',
+                'billing_state' => 'nullable|string|max:100',
+                'billing_zip' => 'nullable|string|max:20',
+                'billing_country' => 'nullable|string|max:4',
             ]);
 
             $user = Auth::user();
@@ -39,6 +64,12 @@ class ProfileController extends Controller
             $user->name = $validated['name'];
             $user->email = $validated['email'];
             $user->mobile = $validated['mobile'];
+            $user->billing_address = $validated['billing_address'] ?? null;
+            $user->billing_address_two = $validated['billing_address_two'] ?? null;
+            $user->billing_city = $validated['billing_city'] ?? null;
+            $user->billing_state = $validated['billing_state'] ?? null;
+            $user->billing_zip = $validated['billing_zip'] ?? null;
+            $user->billing_country = $validated['billing_country'] ?? null;
 
             if ($user->save()) {
                 return redirect()->back()->with('success', 'Profile updated successfully!');

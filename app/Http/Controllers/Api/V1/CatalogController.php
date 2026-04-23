@@ -24,7 +24,7 @@ class CatalogController extends Controller
     /** List visible products with filters, sorting, and pagination. */
     public function index(Request $request): JsonResponse
     {
-        $query = Product::query()->where('show_product', true)->with(['productMedia', 'categories']);
+        $query = Product::query()->forStorefrontCatalog()->with(['productMedia', 'categories']);
 
         if ($request->filled('search')) {
             $query->where('product_name', 'like', "%{$request->search}%");
@@ -33,6 +33,10 @@ class CatalogController extends Controller
         if ($request->filled('category_id')) {
             $catId = $request->category_id;
             $query->whereHas('categories', fn ($q) => $q->where('categories.id', $catId));
+        }
+
+        if ($request->filled('brand_id')) {
+            $query->where('brand_id', $request->brand_id);
         }
 
         if ($request->filled('source_provider')) {
@@ -47,8 +51,20 @@ class CatalogController extends Controller
             $query->where('selling_price', '<=', $request->max_price);
         }
 
+        $sortBy = $request->input('sort_by', 'hot_deal_rank');
+        if ($sortBy === 'priority') {
+            $sortBy = 'hot_deal_rank';
+        }
+
+        $allowedSort = ['hot_deal_rank', 'display_order', 'selling_price', 'product_name', 'id', 'created_at', 'updated_at'];
+        if (! in_array($sortBy, $allowedSort, true)) {
+            $sortBy = 'hot_deal_rank';
+        }
+
+        $sortOrder = strtolower((string) $request->input('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
         $products = $query
-            ->orderBy($request->input('sort_by', 'priority'), $request->input('sort_order', 'asc'))
+            ->orderBy($sortBy, $sortOrder)
             ->paginate($request->input('per_page', 20));
 
         $products->getCollection()->transform(function (Product $p) {
@@ -64,7 +80,7 @@ class CatalogController extends Controller
     /** Show a single product by ID. */
     public function show(Product $product): JsonResponse
     {
-        if (! $product->show_product) {
+        if (! $product->isListedOnConsumerStorefront()) {
             return $this->notFound();
         }
 
@@ -84,7 +100,7 @@ class CatalogController extends Controller
     /** List storefront navigation categories. */
     public function categories(): JsonResponse
     {
-        $categories = Category::orderBy('order')->get(['id', 'name', 'slug', 'thumbnail']);
+        $categories = Category::orderBy('order')->get(['id', 'name', 'slug', 'thumbnail', 'accent_color']);
 
         return $this->ok('Categories retrieved.', ['categories' => $categories->toArray()]);
     }

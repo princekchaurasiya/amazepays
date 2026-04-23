@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'title' => 'Checkout',
+    'order_summary' => 'Order summary',
+    'payment_method' => 'Payment method',
+    'upi' => 'UPI',
+    'using_saved_billing' => 'Using saved billing details from your account.',
+    'billing_unavailable' => 'Billing details required before payment',
+    'billing_unavailable_help' => 'Please update your profile billing details to continue.',
+    'billing_required_for_context' => 'Required for :payment via :provider.',
+    'update_profile' => 'Update profile',
+    'promo_code' => 'Promo Code',
+    'promo_placeholder' => 'Enter promo code',
+    'confirm' => 'Confirm',
+    'offers_for_you' => 'Offers for you',
+    'offers_hint' => 'Discounts are applied automatically at checkout when eligible.',
+    'payable' => 'Payable',
+    'gst_optional' => 'GST (optional)',
+    'pay_with_upi' => 'Pay Now',
+    'complete_selection_first' => 'Complete product selection first.',
+    'edit_cart' => 'Edit cart',
+    'continue_shopping' => 'Continue shopping',
+    'billing_missing_for_payment' => 'Billing details are incomplete. Missing: :fields.',
+];

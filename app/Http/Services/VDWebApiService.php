@@ -27,14 +27,14 @@ class VDWebApiService
 
     public function getToken()
     {
-        $url = env('TOKEN_API_URL');
-        $distributorId = env('DISTRIBUTOR_ID');
+        $url = config('services.value_design.base_url').'/api-generatetoken/';
+        $distributorId = config('services.value_design.distributor_id');
 
         try {
             $response = Http::timeout(20) // 20 seconds
                 ->withHeaders([
-                    'username' => env('API_USERNAME'),
-                    'password' => env('API_PASSWORD'),
+                    'username' => config('services.value_design.username'),
+                    'password' => config('services.value_design.password'),
                 ])->post($url, [
                     'distributor_id' => $distributorId,
                 ]);
@@ -148,8 +148,8 @@ class VDWebApiService
             return $result;
         }
 
-        $key = env('AES_SECRET_KEY');
-        $iv = env('AES_IV');
+        $key = config('services.value_design.secret_key');
+        $iv = config('services.value_design.secret_iv');
 
         // Attempt 1: base64 with URL normalization
         $prepared = $this->normalizeEncryptedInput($encrypted);
@@ -193,8 +193,8 @@ class VDWebApiService
 
     public function decryptAES(string $encryptedBase64): string
     {
-        $key = env('AES_SECRET_KEY');
-        $iv = env('AES_IV');
+        $key = config('services.value_design.secret_key');
+        $iv = config('services.value_design.secret_iv');
 
         $ciphertext = base64_decode($encryptedBase64, true);
         if ($ciphertext === false) {
@@ -264,8 +264,6 @@ class VDWebApiService
 
         // Decode JSON string to array
         $brandsArray = json_decode($jsonString, true);
-        dd($brandsArray);
-
         if (! is_array($brandsArray)) {
             throw new \Exception('Invalid JSON data for brands.');
         }

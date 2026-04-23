@@ -2,18 +2,30 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exceptions\InsufficientBalanceException;
+use App\Exceptions\WalletFrozenException;
 use App\Http\Controllers\Controller;
-use App\Http\Services\WalletService;
+use App\Http\Requests\Wallet\SubmitWalletLoadRequest;
 use App\Models\Wallet;
 use App\Models\WalletLoadRequest;
 use App\Models\WalletTransaction;
+use App\Services\Wallet\WalletLoadRequestService;
+use App\Services\Wallet\WalletService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WalletController extends Controller
 {
-    public function __construct(private WalletService $walletService) {}
+    public function __construct(
+        private WalletService $walletService,
+        private WalletLoadRequestService $loadRequestService,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -43,33 +55,29 @@ class WalletController extends Controller
         ]);
     }
 
-    public function credit(Request $request, Wallet $wallet)
+    public function storeLoadOnBehalf(SubmitWalletLoadRequest $request, Wallet $wallet): RedirectResponse
     {
-        $this->authorize('wallets.credit');
+        $this->authorize('wallets.load_requests.submit_on_behalf');
 
-        $request->validate([
-            'amount' => 'required|numeric|min:1|max:1000000',
-            'description' => 'required|string|max:255',
-        ]);
+        $this->loadRequestService->submitForUser($wallet->user, $request);
 
-        try {
-            $this->walletService->credit(
-                $wallet,
-                $request->amount,
-                'manual_credit',
-                'ADMIN-'.uniqid(),
-                $request->description
-            );
+        return back()->with('success', 'Wallet load request submitted. It will appear in the load requests queue for approval.');
+    }
 
-            audit('wallet.manual_credit', $wallet, ['balance_before' => $wallet->balance], [
-                'amount' => $request->amount,
-                'description' => $request->description,
-            ]);
+    public function downloadLoadProof(WalletLoadRequest $loadRequest): StreamedResponse
+    {
+        $this->authorize('wallets.load_requests.view');
 
-            return back()->with('success', 'Wallet credited successfully.');
-        } catch (\Exception $e) {
-            return back()->withErrors(['amount' => $e->getMessage()]);
+        if (! $loadRequest->proof_file) {
+            abort(404);
         }
+
+        $disk = Storage::disk('local');
+        if (! $disk->exists($loadRequest->proof_file)) {
+            abort(404);
+        }
+
+        return $disk->response($loadRequest->proof_file);
     }
 
     public function debit(Request $request, Wallet $wallet)
@@ -81,21 +89,31 @@ class WalletController extends Controller
             'description' => 'required|string|max:255',
         ]);
 
+        $balanceBefore = (float) $wallet->fresh()->balance;
+
         try {
             $this->walletService->debit(
-                $wallet,
-                $request->amount,
-                'manual_debit',
-                'ADMIN-'.uniqid(),
-                $request->description
+                $wallet->user,
+                (float) $request->amount,
+                $request->description,
+                'admin-debit-'.Str::uuid(),
+                null,
+                null,
             );
 
-            audit('wallet.manual_debit', $wallet, ['balance_before' => $wallet->balance], [
-                'amount' => $request->amount,
+            $balanceAfter = (float) $wallet->fresh()->balance;
+
+            audit('wallet.debit', $wallet->fresh(), [
+                'balance' => $balanceBefore,
+            ], [
+                'balance' => $balanceAfter,
+                'amount' => (float) $request->amount,
                 'description' => $request->description,
             ]);
 
             return back()->with('success', 'Wallet debited successfully.');
+        } catch (InsufficientBalanceException|WalletFrozenException $e) {
+            return back()->withErrors(['amount' => $e->getMessage()]);
         } catch (\Exception $e) {
             return back()->withErrors(['amount' => $e->getMessage()]);
         }
@@ -105,8 +123,17 @@ class WalletController extends Controller
     {
         $this->authorize('wallets.freeze');
 
+        $before = [
+            'is_frozen' => (bool) $wallet->is_frozen,
+            'frozen_reason' => $wallet->frozen_reason,
+        ];
+
         $wallet->update(['is_frozen' => true, 'frozen_reason' => 'Admin action']);
-        audit('wallet.frozen', $wallet);
+
+        audit('wallet.frozen', $wallet->fresh(), $before, [
+            'is_frozen' => true,
+            'frozen_reason' => 'Admin action',
+        ]);
 
         return back()->with('success', 'Wallet frozen.');
     }
@@ -115,13 +142,21 @@ class WalletController extends Controller
     {
         $this->authorize('wallets.freeze');
 
+        $before = [
+            'is_frozen' => (bool) $wallet->is_frozen,
+            'frozen_reason' => $wallet->frozen_reason,
+        ];
+
         $wallet->update(['is_frozen' => false, 'frozen_reason' => null]);
-        audit('wallet.unfrozen', $wallet);
+
+        audit('wallet.unfrozen', $wallet->fresh(), $before, [
+            'is_frozen' => false,
+            'frozen_reason' => null,
+        ]);
 
         return back()->with('success', 'Wallet unfrozen.');
     }
 
-    // Load Request Management
     public function loadRequests(Request $request): Response
     {
         $this->authorize('wallets.load_requests.view');
@@ -135,48 +170,79 @@ class WalletController extends Controller
             'filters' => $request->only(['status']),
             'counts' => [
                 'pending' => WalletLoadRequest::where('status', 'pending')->count(),
-                'under_review' => WalletLoadRequest::where('status', 'under_review')->count(),
             ],
         ]);
     }
 
-    public function approveLoad(Request $request, WalletLoadRequest $loadRequest)
+    public function approveLoad(Request $request, WalletLoadRequest $loadRequest): RedirectResponse
     {
         $this->authorize('wallets.load_requests.approve');
 
-        if (! in_array($loadRequest->status, ['pending', 'under_review'])) {
+        if ($loadRequest->status !== 'pending') {
             return back()->withErrors(['error' => 'This request cannot be approved.']);
         }
 
         $request->validate(['note' => 'nullable|string|max:500']);
 
-        $wallet = $loadRequest->user->wallet;
+        $user = $loadRequest->user;
+        $previousStatus = $loadRequest->status;
+        $balanceBefore = (float) ($user->fresh()->wallet?->balance ?? 0);
 
-        $this->walletService->credit(
-            $wallet,
-            $loadRequest->amount,
-            'bank_load',
-            'BL-'.$loadRequest->id,
-            "Bank load approved by admin. UTR: {$loadRequest->utr_number}"
-        );
+        try {
+            DB::transaction(function () use ($loadRequest, $request, $user) {
+                $this->walletService->credit(
+                    $user,
+                    (float) $loadRequest->amount,
+                    'Wallet load via '.$loadRequest->payment_mode,
+                    'wallet-load-'.$loadRequest->id,
+                    'load_request',
+                    $loadRequest->id,
+                );
 
-        $loadRequest->update([
+                $loadRequest->update([
+                    'status' => 'approved',
+                    'approved_by' => $request->user()->id,
+                    'approved_at' => now(),
+                    'admin_note' => $request->input('note'),
+                ]);
+            });
+        } catch (\Throwable $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+
+        $loadRequest->refresh();
+        $balanceAfter = (float) $user->fresh()->wallet->balance;
+
+        audit('wallet.load.approved', $loadRequest, [
+            'status' => $previousStatus,
+        ], [
             'status' => 'approved',
             'approved_by' => $request->user()->id,
-            'approved_at' => now(),
-            'admin_note' => $request->note,
         ]);
 
-        audit('wallet.load_approved', $loadRequest, ['status' => 'pending'], ['status' => 'approved']);
+        audit('wallet.credit', $user->fresh()->wallet, [
+            'balance' => $balanceBefore,
+        ], [
+            'balance' => $balanceAfter,
+            'amount' => (float) $loadRequest->amount,
+            'context' => 'wallet_load_approve',
+            'load_request_id' => $loadRequest->id,
+        ]);
 
         return back()->with('success', "Load request approved. ₹{$loadRequest->amount} credited.");
     }
 
-    public function rejectLoad(Request $request, WalletLoadRequest $loadRequest)
+    public function rejectLoad(Request $request, WalletLoadRequest $loadRequest): RedirectResponse
     {
         $this->authorize('wallets.load_requests.reject');
 
+        if ($loadRequest->status !== 'pending') {
+            return back()->withErrors(['error' => 'This request cannot be rejected.']);
+        }
+
         $request->validate(['reason' => 'required|string|max:500']);
+
+        $previousStatus = $loadRequest->status;
 
         $loadRequest->update([
             'status' => 'rejected',
@@ -184,7 +250,14 @@ class WalletController extends Controller
             'rejected_at' => now(),
         ]);
 
-        audit('wallet.load_rejected', $loadRequest, ['status' => 'pending'], ['status' => 'rejected']);
+        $loadRequest->refresh();
+
+        audit('wallet.load.rejected', $loadRequest, [
+            'status' => $previousStatus,
+        ], [
+            'status' => 'rejected',
+            'admin_note' => $request->reason,
+        ]);
 
         return back()->with('success', 'Load request rejected.');
     }

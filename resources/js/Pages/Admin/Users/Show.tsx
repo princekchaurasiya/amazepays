@@ -26,13 +26,19 @@ type OrderLite = {
 type Props = {
     user: UserT;
     orders: OrderLite[];
+    assignableRoles: string[];
+    canAssignRoles: boolean;
 };
 
-export default function Show({ user, orders }: Props) {
+export default function Show({ user, orders, assignableRoles, canAssignRoles }: Props) {
     const profileForm = useForm({
         name: user.name,
         email: user.email,
         mobile: user.mobile ?? '',
+    });
+
+    const rolesForm = useForm({
+        roles: (user.roles || []).map((r) => r.name),
     });
 
     const submitProfile = (e: React.FormEvent) => {
@@ -89,8 +95,43 @@ export default function Show({ user, orders }: Props) {
                         </button>
                     </form>
                     <div className="mt-6 pt-6 border-t dark:border-gray-700">
-                        <p className="text-sm text-gray-500">Roles</p>
-                        <p className="font-medium">{(user.roles || []).map(r => r.name).join(', ') || '—'}</p>
+                        <p className="text-sm text-gray-500 mb-2">Roles</p>
+                        {canAssignRoles && assignableRoles.length > 0 ? (
+                            <form onSubmit={submitRoles} className="space-y-3 max-w-xl">
+                                <div className="flex flex-col gap-2">
+                                    {assignableRoles.map((name) => (
+                                        <label key={name} className="flex items-center gap-2 text-sm cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                checked={rolesForm.data.roles.includes(name)}
+                                                onChange={() => {
+                                                    const next = new Set(rolesForm.data.roles);
+                                                    if (next.has(name)) next.delete(name);
+                                                    else next.add(name);
+                                                    rolesForm.setData('roles', [...next]);
+                                                }}
+                                            />
+                                            <span className="font-mono text-gray-800 dark:text-gray-200">{name}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                {rolesForm.errors.roles && (
+                                    <p className="text-red-500 text-xs">{rolesForm.errors.roles}</p>
+                                )}
+                                <button
+                                    type="submit"
+                                    disabled={rolesForm.processing}
+                                    className="px-4 py-2 bg-gray-800 dark:bg-gray-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                                >
+                                    Save roles
+                                </button>
+                            </form>
+                        ) : (
+                            <p className="font-medium">
+                                {(user.roles || []).map((r) => r.name).join(', ') || '—'}
+                            </p>
+                        )}
                         {user.wallet && (
                             <p className="mt-2 text-sm">
                                 Wallet balance: <span className="font-medium">₹{Number(user.wallet.balance).toLocaleString('en-IN')}</span>{' '}

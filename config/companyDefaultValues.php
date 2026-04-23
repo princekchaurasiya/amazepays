@@ -12,9 +12,7 @@ $otp_duration_minutes = $otpExpiration->diffInMinutes($otpGeneratedTime);
 
 // $sms_message = 'Dear User,  Your  one  time  password is  ' . $otp . '  and  its  valid  for ' . $otp_duration_minutes . '  minutes  only.  Do  not  share  to  anyone.  Thanks - ' . $company_name;
 
-
-$sms_message = $otp . ' is your Frenetic India OTP. Valid for ' . $otp_duration_minutes . ' minutes. Do not share. - ' . $company_name;
-
+$sms_message = $otp.' is your Frenetic India OTP. Valid for '.$otp_duration_minutes.' minutes. Do not share. - '.$company_name;
 
 // transaction message setup
 
@@ -24,10 +22,10 @@ return [
     'otpExpiration' => $otpExpiration,
     'company_name' => $company_name,
 
-
     'gst_number' => env('GST_NUMBER', '27AAFCF2328E1ZX'),
 
     'company_official_name' => env('COMPANY_NAME', 'Frenetic India Services Private Limited'),
+    /** Registered office line — set `COMPANY_ADDRESS` in `.env` only (see `.env.example`). */
     'company_address' => (string) env('COMPANY_ADDRESS', ''),
     'company_cin' => env('COMPANY_CIN', 'U72900MH2022PTC391272'),
     'company_pan' => env('COMPANY_PAN', 'AAFCF2328E'),
@@ -50,8 +48,6 @@ return [
     'company_website' => env('COMPANY_WEBSITE', 'https://amazepays.in/'),
     'company_new_website_link' => env('COMPANY_NEW_WEBSITE_LINK', 'https://freneticindia.com/'),
     'company_new_website_link_about_us' => env('COMPANY_NEW_WEBSITE_LINK', 'https://theamazeindia.com/about.html'),
-    'company_contact_no' => env('COMPANY_CONTACT_NO','9324449485'),
+    'company_contact_no' => env('COMPANY_CONTACT_NO', '9324449485'),
 
 ];
-
-?>

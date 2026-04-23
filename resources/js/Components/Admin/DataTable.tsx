@@ -33,6 +33,7 @@ type Props<T> = {
     rowKey?: (row: T) => string | number;
 };
 
+/** Generic table; for Inertia admin lists use {@link InertiaQueryPagination} so page links keep filters. */
 export default function DataTable<T extends Record<string, any>>({
     columns,
     data,

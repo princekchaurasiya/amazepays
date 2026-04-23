@@ -342,6 +342,16 @@ const decryptPiDataNew = (data, key, iv) => {
 
 ---
 
+## Application integration (AmazePays admin)
+
+This document describes the **vendor** Pull API. In the app:
+
+- **Fetch brands** in **Panel → Vouchagram → Brands** (Pull mode) persists a **snapshot** in **`vouchagram_catalog_snapshots`** / **`vouchagram_catalog_snapshot_items`**. Snapshots are not the same as **`products`**.
+- To populate **`products`** for the B2B admin catalog (`catalog_audience` **b2b**, `source_provider` = `vouchagram_pull`; new rows default to **hidden** on the public storefront): run **Catalog sync** in Pull mode, `php artisan vouchagram:sync-catalog --mode=pull`, or **import from snapshot** after a fetch.
+- See [VOUCHER_PROVIDERS.md](./VOUCHER_PROVIDERS.md) §12.
+
+---
+
 ## Related project docs
 
 - [VOUCHAGRAM_SEND_API.md](./VOUCHAGRAM_SEND_API.md) – Send (B2C) API  

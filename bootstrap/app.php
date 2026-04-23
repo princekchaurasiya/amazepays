@@ -4,6 +4,7 @@ use App\Exceptions\InsufficientBalanceException;
 use App\Exceptions\OrderCreationException;
 use App\Exceptions\PaymentFailedException;
 use App\Exceptions\VoucherFulfillmentException;
+use App\Exceptions\WalletFrozenException;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\AuthenticateApiKey;
@@ -182,6 +183,16 @@ return Application::configure(basePath: dirname(__DIR__))
                 'required' => $e->required,
                 'available' => $e->available,
             ]);
+        });
+
+        $exceptions->render(function (WalletFrozenException $e, $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'WALLET_FROZEN',
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
         });
 
         $exceptions->render(function (VoucherFulfillmentException $e, $request) use ($jsonError) {

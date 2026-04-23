@@ -186,6 +186,8 @@ class DashboardController
 - Manual product creation (admin-only, non-synced products)
 - Trigger catalog sync per provider
 
+**Homepage — hot deals vs other deals:** The public homepage splits visible products into two blocks controlled under **Settings → Homepage sections** (`hot_deals` and `other_deals`). A product appears in **Hot deals** when it has a non-null **`hot_deal_rank`** (nullable decimal; lower values surface earlier). The maximum number of hot-deal cards comes from the hot-deals section config key `priority_product_count`. Products with **`hot_deal_rank` null** are candidates for **Other deals**; within that group, **`display_order`** controls ordering. This field is unrelated to slide `priority`, support-ticket `priority`, or API sort parameters except that catalog `sort_by=priority` is accepted as a backward-compatible alias for `hot_deal_rank`.
+
 ### 4.3 Order Management
 
 **Features:**
@@ -417,7 +419,8 @@ Route::middleware(['auth', 'verified', '2fa.verified', 'role:super-admin|admin|f
     Route::get('wallets/load-requests', [WalletController::class, 'loadRequests'])->name('wallets.load-requests');
     Route::patch('wallets/load-requests/{request}/approve', [WalletController::class, 'approve'])->name('wallets.approve');
     Route::patch('wallets/load-requests/{request}/reject', [WalletController::class, 'reject'])->name('wallets.reject');
-    Route::post('wallets/{wallet}/credit', [WalletController::class, 'credit'])->name('wallets.credit');
+    Route::post('wallets/{wallet}/load-requests', [WalletController::class, 'storeLoadOnBehalf'])->name('wallets.load_requests.store_on_behalf');
+    Route::get('wallets/load-requests/{loadRequest}/proof', [WalletController::class, 'downloadLoadProof'])->name('wallets.load_requests.proof');
     Route::post('wallets/{wallet}/debit', [WalletController::class, 'debit'])->name('wallets.debit');
 
     // Offers
@@ -455,9 +458,10 @@ Route::middleware(['auth', 'verified', '2fa.verified', 'role:super-admin|admin|f
         Route::get('/fraud-queue', [SecurityDashboardController::class, 'fraudQueue'])->name('fraud-queue');
     });
 
-    // Homepage / CMS
-    Route::resource('slides', SlideController::class);
-    Route::resource('homepage-sections', HomepageSectionController::class);
+    // Homepage: sections under Settings; hero images under Settings → Hero carousel
+    // See routes/admin.php — `SlideController` is registered as
+    // `GET|POST|PUT|DELETE /panel/settings/hero-slides` (permission: settings.view / settings.update).
+    // Legacy `GET /panel/slides` redirects to the hero-slides index.
 });
 ```
 

@@ -1,8 +1,20 @@
 import React, { FormEvent, useState } from 'react';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Breadcrumbs, ConfirmDialog } from '@/Components/Admin';
-import { Settings, Save, Plus, Pencil, Trash2, ChevronUp, ChevronDown, LayoutGrid, X } from 'lucide-react';
+import {
+    Settings,
+    Save,
+    Plus,
+    Pencil,
+    Trash2,
+    ChevronUp,
+    ChevronDown,
+    LayoutGrid,
+    X,
+    Shield,
+    Images,
+} from 'lucide-react';
 
 type Field = {
     key: string;
@@ -57,6 +69,7 @@ function sectionPayload(row: SectionRow, overrides: Partial<SectionRow> = {}) {
 export default function Index({ groups, sections = [], homepageSectionTypes = [] }: Props) {
     const page = usePage<{ auth?: { user?: { permissions?: string[] } } }>();
     const canEditSections = page.props.auth?.user?.permissions?.includes('settings.update') ?? false;
+    const canManageRoles = page.props.auth?.user?.permissions?.includes('settings.roles.manage') ?? false;
 
     const initial: Record<string, string | number | boolean> = {};
     groups.forEach(g => {
@@ -206,6 +219,28 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Application settings</h1>
                 </div>
 
+                {canManageRoles && (
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                            <Shield className="text-indigo-600 shrink-0 mt-0.5" size={22} />
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    Access control
+                                </h2>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    Map Spatie permissions to roles (storefront vs B2B catalog, orders, and more).
+                                </p>
+                            </div>
+                        </div>
+                        <Link
+                            href="/panel/settings/roles"
+                            className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shrink-0"
+                        >
+                            Roles & permissions
+                        </Link>
+                    </div>
+                )}
+
                 {/* Homepage sections — storefront order & visibility */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 space-y-4 border border-gray-100 dark:border-gray-700">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b dark:border-gray-700 pb-3">
@@ -214,20 +249,32 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
                             <div>
                                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Homepage sections</h2>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    Control which blocks appear on the storefront home page and in what order. Use{' '}
+                                    Turn blocks on or off and set their order on the storefront home page. The{' '}
+                                    <strong className="font-medium">banner</strong> row only shows or hides the hero
+                                    area — upload <strong className="font-medium">desktop and mobile images</strong> under{' '}
+                                    <strong className="font-medium">Hero carousel</strong> below. Use{' '}
                                     <strong className="font-medium">Custom HTML</strong> for extra content blocks.
                                 </p>
                             </div>
                         </div>
                         {canEditSections && (
-                            <button
-                                type="button"
-                                onClick={openAddSection}
-                                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shrink-0"
-                            >
-                                <Plus size={18} />
-                                Add section
-                            </button>
+                            <div className="flex flex-wrap items-center gap-2 shrink-0 justify-end">
+                                <Link
+                                    href="/panel/settings/hero-slides"
+                                    className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 bg-indigo-50/80 dark:bg-indigo-950/40 rounded-lg text-sm font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/50"
+                                >
+                                    <Images size={18} />
+                                    Hero carousel
+                                </Link>
+                                <button
+                                    type="button"
+                                    onClick={openAddSection}
+                                    className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700"
+                                >
+                                    <Plus size={18} />
+                                    Add section
+                                </button>
+                            </div>
                         )}
                     </div>
 
@@ -249,7 +296,7 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
                                         <th className="px-3 py-2 font-medium">Type</th>
                                         <th className="px-3 py-2 font-medium">Title</th>
                                         <th className="px-3 py-2 font-medium w-24">Active</th>
-                                        <th className="px-3 py-2 font-medium text-right w-40">Actions</th>
+                                        <th className="px-3 py-2 font-medium text-right min-w-[11rem]">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -328,7 +375,16 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
                                             </td>
                                             <td className="px-3 py-2 text-right">
                                                 {canEditSections ? (
-                                                    <div className="inline-flex items-center gap-1 justify-end">
+                                                    <div className="inline-flex flex-wrap items-center gap-1 justify-end">
+                                                        {row.section_type === 'banner' && (
+                                                            <Link
+                                                                href="/panel/settings/hero-slides"
+                                                                className="mr-1 px-2 py-1 rounded-md text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
+                                                                title="Desktop & mobile hero images and links"
+                                                            >
+                                                                Carousel
+                                                            </Link>
+                                                        )}
                                                         <button
                                                             type="button"
                                                             onClick={() => openEditSection(row)}

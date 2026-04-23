@@ -3,10 +3,11 @@ import { Head, Link } from '@inertiajs/react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 import { BrandCard, ProductCard } from '@/Components/Storefront';
 import { paths } from '@/lib/paths';
+import { categoryAccentBackground } from '@/lib/categoryAccent';
 
 type Brand = { id: number; name: string; slug: string; logo?: string | null };
 type Product = Record<string, unknown>;
-type Cat = { id: number; name: string; slug: string };
+type Cat = { id: number; name: string; slug: string; accent_color?: string | null };
 
 export default function BusinessPage({
     categories = [],
@@ -31,7 +32,7 @@ export default function BusinessPage({
                     {savingsDisplay ? <p className="mt-6 text-sm text-emerald-300">Platform savings: {savingsDisplay}</p> : null}
                     <div className="mt-8 flex flex-wrap justify-center gap-4">
                         <Link
-                            href={`${paths.panel}/b2b/place-order`}
+                            href={`${paths.panel}/b2b/shop`}
                             className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100"
                         >
                             Open B2B portal
@@ -71,15 +72,33 @@ export default function BusinessPage({
                     <section className="mt-12">
                         <h2 className="mb-4 text-center text-xs font-semibold uppercase tracking-widest text-gray-500">Categories</h2>
                         <div className="flex flex-wrap justify-center gap-2">
-                            {categories.map((c) => (
-                                <Link
-                                    key={c.id}
-                                    href={paths.category(c.slug)}
-                                    className="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-200"
-                                >
-                                    {c.name}
-                                </Link>
-                            ))}
+                            {categories.map((c) => {
+                                const accent =
+                                    typeof c.accent_color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(c.accent_color.trim())
+                                        ? c.accent_color.trim()
+                                        : null;
+                                const chipBg = categoryAccentBackground(accent, 0.28);
+                                return (
+                                    <Link
+                                        key={c.id}
+                                        href={paths.category(c.slug)}
+                                        className={`rounded-full border px-4 py-2 text-sm font-medium transition hover:opacity-90 ${
+                                            accent ? 'border-black/10' : 'border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                        }`}
+                                        style={
+                                            accent
+                                                ? {
+                                                      backgroundColor: chipBg,
+                                                      color: accent,
+                                                      borderColor: `${accent}55`,
+                                                  }
+                                                : undefined
+                                        }
+                                    >
+                                        {c.name}
+                                    </Link>
+                                );
+                            })}
                         </div>
                     </section>
                 )}

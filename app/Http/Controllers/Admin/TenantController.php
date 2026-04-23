@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -48,10 +49,26 @@ class TenantController extends Controller
             ->with('success', "Tenant {$tenant->name} created.");
     }
 
-    public function show(Tenant $tenant)
+    public function show(Request $request, Tenant $tenant)
     {
+        $assignedIds = $tenant->products()->pluck('products.id')->all();
+
+        $catalogProducts = Product::query()
+            ->forB2bCatalog()
+            ->orderBy('product_name')
+            ->get(['id', 'product_name', 'sku', 'name'])
+            ->map(fn (Product $p) => [
+                'id' => $p->id,
+                'name' => (string) ($p->product_name ?: $p->name),
+                'sku' => $p->sku,
+            ])
+            ->all();
+
         return Inertia::render('Admin/Tenants/Show', [
             'tenant' => $tenant->loadCount(['users', 'orders']),
+            'catalogProducts' => $catalogProducts,
+            'assignedProductIds' => $assignedIds,
+            'canAssignProducts' => $request->user()->can('tenants.assign_products'),
         ]);
     }
 
@@ -82,7 +99,7 @@ class TenantController extends Controller
     public function assignProducts(Request $request, Tenant $tenant)
     {
         $validated = $request->validate([
-            'product_ids' => 'required|array',
+            'product_ids' => 'present|array',
             'product_ids.*' => 'integer|exists:products,id',
         ]);
 

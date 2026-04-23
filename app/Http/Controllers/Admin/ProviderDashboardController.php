@@ -15,6 +15,9 @@ class ProviderDashboardController extends Controller
     {
         $this->authorize('providers.view');
 
+        $vouchagramConfigured = (bool) config('vouchagram.send.username') || (bool) config('vouchagram.pull.username');
+        $gyftrEnvConfigured = (bool) env('GYFTR_CLIENT_ID');
+
         return Inertia::render('Admin/Providers/Index', [
             'providers' => [
                 [
@@ -22,42 +25,37 @@ class ProviderDashboardController extends Controller
                     'label' => 'Woohoo',
                     'healthy' => (bool) config('woohoo.host') && (bool) config('woohoo.bearer_token'),
                     'href' => route('admin.woohoo.index'),
+                    'note' => null,
                 ],
                 [
-                    'key' => 'vouchagram',
-                    'label' => 'Vouchagram',
-                    'healthy' => (bool) config('vouchagram.send.username') || (bool) config('vouchagram.pull.username'),
+                    'key' => 'vouchagram_gyftr',
+                    'label' => 'Vouchagram / Gyftr',
+                    'healthy' => $vouchagramConfigured || $gyftrEnvConfigured,
                     'href' => route('admin.vouchagram.index'),
+                    'note' => 'Same voucher network: Vouchagram is the parent platform (Send/Pull APIs, catalog sync, partner tools); Gyftr is a brand on that network. One dashboard covers both.',
                 ],
                 [
                     'key' => 'kgen',
                     'label' => 'KGen / EXLR8',
                     'healthy' => (bool) env('EXLR8_BASE_URL') && (bool) env('EXLR8_USER_ID'),
                     'href' => route('admin.kgen.index'),
+                    'note' => null,
                 ],
                 [
                     'key' => 'vd',
                     'label' => 'Value Design',
-                    'healthy' => (bool) env('VD_API_URL') || (bool) env('VALUE_DESIGN_API_URL'),
+                    'healthy' => (bool) config('services.value_design.base_url')
+                        && (bool) config('services.value_design.username')
+                        && (bool) config('services.value_design.password'),
                     'href' => route('admin.value-design.index'),
-                ],
-                [
-                    'key' => 'ezpin',
-                    'label' => 'EZPin',
-                    'healthy' => (bool) env('EZPIN_API_KEY'),
-                    'href' => null,
-                ],
-                [
-                    'key' => 'gyftr',
-                    'label' => 'Gyftr',
-                    'healthy' => (bool) env('GYFTR_CLIENT_ID'),
-                    'href' => null,
+                    'note' => null,
                 ],
                 [
                     'key' => 'lysto',
                     'label' => 'Lysto / Athena',
                     'healthy' => (bool) env('ATHENA_BASE_URL') || (bool) env('LYSTO_API_KEY'),
                     'href' => url('/admin/lysto/dashboard'),
+                    'note' => null,
                 ],
             ],
             'order_stats' => [

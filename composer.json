@@ -65,7 +65,8 @@
         "test:feature": "phpunit --testsuite=Feature",
         "test:security": "phpunit --testsuite=Security",
         "test:wallet": "phpunit --filter WalletTest",
-        "test:api": "phpunit --filter ApiTest"
+        "test:api": "phpunit --filter ApiTest",
+        "serve:mobile": "@php artisan serve --host=0.0.0.0 --port=8000"
     },
     "extra": {
         "laravel": {

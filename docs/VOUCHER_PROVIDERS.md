@@ -202,7 +202,7 @@ class NormalizedProduct
 
 - **Frequency:** Every 4 hours via scheduled command
 - **Process:** Fetch all products → upsert into `products` with `source_provider = 'woohoo'`
-- **Local overrides preserved:** `custom_description`, `custom_image`, `show_product`, `priority`
+- **Local overrides preserved:** `custom_description`, `custom_image`, `show_product`, `hot_deal_rank`
 
 ---
 
@@ -412,7 +412,7 @@ Scheduler (cron)
     │    - Update: price, stock, images   │
     │    - Preserve: custom description,  │
     │      custom_image, show_product,    │
-    │      priority, category, brand      │
+    │      hot_deal_rank, category, brand │
     │ 4. If missing from provider:        │
     │    - Set out_of_stock = true        │
     │    - Do NOT delete                  │
@@ -470,13 +470,14 @@ Provider Configuration Form:
 
 | Aspect | Detail |
 |--------|--------|
-| **Drivers** | `vouchagram` / `vouchagram_send` (B2C Send Voucher), `vouchagram_pull` (B2B Pull Voucher) |
+| **Drivers** | `vouchagram_send` (B2C Send Voucher), `vouchagram_pull` (B2B Pull Voucher). Factory alias `vouchagram` maps to Send (same as `vouchagram_send`). |
 | **Config** | `config/vouchagram.php` — env: `VOUCHAGRAM_SEND_*`, `VOUCHAGRAM_PULL_*` |
 | **Encryption** | AES-256-CBC on payloads; JWT from `GET /gettoken` (cached ~25 min) |
 | **Service** | `App\Services\Voucher\VouchagramService` |
 | **Fulfillment** | `App\Services\Order\VouchagramOrderFulfillmentService` — B2C (`tenant_id` null) uses Send flow; B2B (`tenant_id` set) uses Pull flow |
-| **Catalog sync** | `php artisan vouchagram:sync-catalog` or admin **Panel → Vouchagram → Catalog sync**; `syncProvider('vouchagram')` stores `source_provider = vouchagram` |
-| **Admin UI** | `/panel/vouchagram` (Inertia) — brands, stock, send/pull, status, stores, sync |
+| **Fetch brands (admin)** | `POST /panel/vouchagram/fetch-brands` saves a **read-only snapshot** in `vouchagram_catalog_snapshots` + `vouchagram_catalog_snapshot_items`. It does **not** create `products` rows. |
+| **Catalog → `products`** | `CatalogSyncService::syncProvider()` with **`vouchagram_send`** or **`vouchagram_pull`** upserts **`products`** (matching `source_provider` and `catalog_audience` via `Product::defaultCatalogAudienceForSourceProvider`). Triggers: `php artisan vouchagram:sync-catalog` (`--mode=send`, `pull`, or `both`), **Panel → Vouchagram → Catalog sync**, or **POST `/panel/vouchagram/sync-catalog-from-snapshot`** (reuses `vouchagram_catalog_snapshot_items`; no second live `getBrands` call). |
+| **Admin UI** | `/panel/vouchagram` (Inertia) — brands, saved snapshots, send/pull tools, catalog sync |
 | **Vendor API reference** | [VOUCHAGRAM_SEND_API.md](./VOUCHAGRAM_SEND_API.md) (B2C Send), [VOUCHAGRAM_PULL_API.md](./VOUCHAGRAM_PULL_API.md) (B2B Pull) |
 
 ---

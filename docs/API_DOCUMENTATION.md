@@ -37,6 +37,54 @@ All APIs return JSON. All requests must include `Accept: application/json`.
 
 The API validates every write with explicit rules. Extra JSON fields sent by the client are **ignored** for persistence unless they are part of validated input—do not rely on undocumented keys. Webhook endpoints under `/api/v1/webhooks/*` verify gateway signatures (where configured) and pass only whitelisted payload fragments to the payment service (see [PAYMENT_GATEWAYS.md](PAYMENT_GATEWAYS.md#payload-whitelisting-and-application-logs) and [CODE_STANDARDS.md](CODE_STANDARDS.md#http-request-input--logging)).
 
+### Storefront checkout anti-tampering notes
+
+For gift-card checkout (`/checkout/{slug}` in web storefront), backend validation is authoritative:
+
+- Client-provided totals are not trusted; payable amounts are recomputed server-side from locked product pricing.
+- `gift_send_option` is enforced against product policy (`both`, `self_only`, `gift_only`).
+- For `send_as_gift`, required fields are enforced server-side (`receiver_*`, `gift_message_title`, `sender_first_name`, `gift_theme_id`).
+- `gift_theme_id` must reference an active row in `gift_card_themes`; inactive/forged values are rejected.
+- Invalid denomination/range/quantity combinations are rejected even if client UI is bypassed via DevTools.
+
+### Provider-aware billing requirements (checkout gate)
+
+Billing field requirements are resolved server-side from payment method + provider context.
+Do not hardcode assumptions in client apps.
+
+| Context | Required Billing Fields |
+|---|---|
+| `upi + woohoo` | `billing_name`, `billing_email`, `billing_address`, `billing_city`, `billing_state`, `billing_zip`, `billing_country` |
+| `ccavenue` | `billing_name`, `billing_email`, `billing_tel`, `billing_address`, `billing_address_two`, `billing_city`, `billing_state`, `billing_zip`, `billing_country` |
+| `wallet/internal` | `billing_name`, `billing_email` |
+
+Implementation source of truth:
+- `App\\Support\\BillingRequirementResolver`
+- Checkout readiness checks in `ProductPageController` and `UPIPaymentController`
+
+### Checkout summary and payable authority
+
+- Storefront checkout order summary is display-only and intentionally minimal (product + payable).
+- Denomination/quantity are product-selection concerns and are not used as authority values during payment initiation.
+- Payable amount is always resolved from persisted order records on the server (`amount_payable_after_discount` fallback `grand_payable_amount`).
+- Payment initiation endpoints reject unexpected fields and ignore client-side total tampering.
+
+### Storefront product card theme payload
+
+For `/product/{slug}` storefront render payload, card appearance is resolved server-side with this precedence:
+
+1. active row from `brand_card_themes` (product/brand/name match),
+2. fallback fields on `products` (`card_logo_url`, `card_bg_color`, `card_text_color`, `card_accent_color`),
+3. neutral default palette.
+
+The UI receives:
+
+- `productDetails.card_theme.logo_url`
+- `productDetails.card_theme.bg_color`
+- `productDetails.card_theme.text_color`
+- `productDetails.card_theme.accent_color`
+- `productDetails.default_card_value` (initial card value before user changes denomination)
+
 ---
 
 ## 2. Authentication
@@ -524,13 +572,28 @@ PUT /api/v1/profile
 POST /api/v1/profile/update-email
 ```
 
-### 6.8 Homepage
+### 6.8 Home (hero carousel)
 
 ```
-GET /api/v1/homepage
+GET /api/v1/home
 ```
 
-Returns sections, banners, featured products, active offers for the app home screen.
+Public. Returns the standard success envelope with **`data.slides`**: an array of homepage hero slides (same source as the web storefront carousel). Active slides are those with `status = 1` and `display_on_page = homepage` (see `SlidePresentationService`).
+
+Each slide object includes (among others):
+
+| Field | Description |
+|-------|-------------|
+| `id` | Slide id |
+| `desktop_image` | Absolute URL for wide / desktop hero |
+| `image_mobile` | Absolute URL for mobile hero |
+| `slug` | Resolved target slug when linked to product/category/brand |
+| `product_id`, `category_id`, `brand_id` | Optional deep-link targets |
+| `is_linked` | Whether the slide should be tappable |
+| `img_alt_tag` | Accessibility |
+| `cta_link`, `custom_url`, `link_type` | Optional URLs / metadata |
+
+**Admin:** Manage slides in the panel at **Settings → Hero carousel** (`/panel/settings/hero-slides`). Legacy URL `/panel/slides` redirects there.
 
 ---
 

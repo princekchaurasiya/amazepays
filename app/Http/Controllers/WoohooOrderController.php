@@ -86,7 +86,7 @@ class WoohooOrderController extends Controller
         $checkoutData = session('checkout_data', []);
         Log::info('Checkout data', ['data' => $checkoutData]);
         $productData = session('selected_product');
-        Log::info('Product data', ['prodData' => $productData]);
+        Log::info('Product data', ['productData' => $productData]);
         $normalizedSku = $order->sku ?? ($productData['sku'] ?? null);
         $normalizedQuantity = (int) ($order->quantity ?? ($checkoutData['quantity'] ?? 1));
         $normalizedDenomination = (float) ($order->denomination ?? ($checkoutData['denomination'] ?? 0));

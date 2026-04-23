@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
-import { Menu } from 'lucide-react';
+import { Menu, ShoppingCart } from 'lucide-react';
 import { paths } from '@/lib/paths';
 import SearchDropdown, { type SearchDropdownHandle } from '@/Components/Storefront/SearchDropdown';
 
@@ -10,8 +10,12 @@ type Props = {
 };
 
 export default function StorefrontHeader({ onOpenAuth, searchQuery = '' }: Props) {
-    const page = usePage<{ auth?: { user?: { name: string; email: string } | null } }>();
+    const page = usePage<{
+        auth?: { user?: { name: string; email: string } | null };
+        cart?: { count: number; quantity: number; total: number };
+    }>();
     const user = page.props.auth?.user ?? null;
+    const cartQty = Number(page.props.cart?.quantity ?? 0);
     const [q, setQ] = useState(() => (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('query') ?? '' : searchQuery));
     const [searchFocused, setSearchFocused] = useState(false);
     const searchBoundaryRef = useRef<HTMLDivElement>(null);
@@ -77,6 +81,18 @@ export default function StorefrontHeader({ onOpenAuth, searchQuery = '' }: Props
                     </Link>
                     {user ? (
                         <div className="hidden items-center gap-2 sm:flex">
+                            <Link
+                                href={paths.cart}
+                                className="relative inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            >
+                                <ShoppingCart className="h-4 w-4" />
+                                Cart
+                                {cartQty > 0 ? (
+                                    <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-gray-900 px-1 text-xs font-semibold text-white">
+                                        {cartQty > 99 ? '99+' : cartQty}
+                                    </span>
+                                ) : null}
+                            </Link>
                             <Link href={paths.profile} className="text-sm font-medium text-gray-700 hover:text-brand-600">
                                 Profile
                             </Link>
@@ -115,6 +131,9 @@ export default function StorefrontHeader({ onOpenAuth, searchQuery = '' }: Props
                             </Link>
                             {user ? (
                                 <>
+                                    <Link href={paths.cart} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                        Cart{cartQty > 0 ? ` (${cartQty > 99 ? '99+' : cartQty})` : ''}
+                                    </Link>
                                     <Link href={paths.profile} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                         Profile
                                     </Link>

@@ -9,7 +9,7 @@ use App\Contracts\RefundResult;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\Order\OrderCreationService;
-use App\Services\Order\VouchagramOrderFulfillmentService;
+use App\Services\Order\OrderFulfillmentOrchestrator;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -19,7 +19,7 @@ class PaymentService
 {
     public function __construct(
         private OrderCreationService $orderCreation,
-        private VouchagramOrderFulfillmentService $vouchagramFulfillment,
+        private OrderFulfillmentOrchestrator $fulfillmentOrchestrator,
     ) {}
 
     public function authorize(Order $order, User $user): void
@@ -103,6 +103,13 @@ class PaymentService
                     'order_id' => $order->id,
                     'error' => $e->getMessage(),
                 ]);
+                $order->update([
+                    'status' => 'failed',
+                    'order_status' => 'FAILED',
+                    'remarks' => trim((string) ($order->remarks ?? '').' | PAYMENT_AMOUNT_MISMATCH'),
+                ]);
+
+                return;
             }
         }
         if ($result->isPaid()) {
@@ -111,7 +118,7 @@ class PaymentService
                 'order_status' => $order->order_status ?: 'PENDING',
             ]);
             $order->refresh();
-            $this->vouchagramFulfillment->fulfillIfApplicable($order);
+            $this->fulfillmentOrchestrator->fulfillPaidOrder($order);
         } elseif (in_array($result->status, ['failed', 'cancelled'], true)) {
             $order->update([
                 'status' => $result->status,

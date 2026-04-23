@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { StatCard, StatusBadge } from '@/Components/Admin';
 import {
@@ -51,8 +51,29 @@ type SecurityBlock = {
     wallet_fraud_flags: number;
 };
 
+type StatLinkKey =
+    | 'orders_today'
+    | 'revenue_today'
+    | 'total_users'
+    | 'wallet_balance'
+    | 'pending_loads'
+    | 'orders_this_week'
+    | 'b2b_wallet';
+
+type StatLinks = Partial<Record<StatLinkKey, string>>;
+
+type StatCardDef = {
+    label: string;
+    value: string | number;
+    icon: React.ElementType;
+    color: 'blue' | 'green' | 'purple' | 'orange';
+    linkKey?: StatLinkKey;
+};
+
 type Props = {
     dashboardType?: DashboardType;
+    chartDays?: number;
+    statLinks?: StatLinks;
     stats?: Partial<Stats>;
     recentOrders?: any[];
     revenueChart?: { date: string; orders: number; revenue: number }[];
@@ -81,8 +102,12 @@ const defaultSecurity: SecurityBlock = {
     wallet_fraud_flags: 0,
 };
 
+const CHART_DAY_OPTIONS = [7, 14, 30, 60, 90] as const;
+
 export default function Dashboard({
     dashboardType = 'admin',
+    chartDays: chartDaysProp = 30,
+    statLinks: statLinksIn = {},
     stats: statsIn,
     recentOrders,
     revenueChart,
@@ -90,6 +115,10 @@ export default function Dashboard({
     b2b,
 }: Props) {
     const stats = useMemo(() => ({ ...defaultStats, ...statsIn }), [statsIn]);
+    const statLinks = useMemo(() => statLinksIn ?? {}, [statLinksIn]);
+    const chartDays = CHART_DAY_OPTIONS.includes(chartDaysProp as (typeof CHART_DAY_OPTIONS)[number])
+        ? chartDaysProp
+        : 30;
     const security = useMemo(() => ({ ...defaultSecurity, ...securityIn }), [securityIn]);
     const orders = Array.isArray(recentOrders) ? recentOrders : [];
     const chart = Array.isArray(revenueChart) ? revenueChart : [];
@@ -108,32 +137,36 @@ export default function Dashboard({
               ? 'Tenant activity and your wallet balance.'
               : 'Operations, security, and revenue across the platform.';
 
-    const statCards =
+    const statCards: StatCardDef[] =
         dashboardType === 'b2b'
             ? [
                   {
                       label: 'Orders today',
                       value: stats.orders_today,
                       icon: ShoppingCart,
-                      color: 'blue' as const,
+                      color: 'blue',
+                      linkKey: 'orders_today',
                   },
                   {
                       label: 'Revenue today',
                       value: `₹${Number(stats.revenue_today).toLocaleString('en-IN')}`,
                       icon: IndianRupee,
-                      color: 'green' as const,
+                      color: 'green',
+                      linkKey: 'revenue_today',
                   },
                   {
                       label: 'Orders this week',
                       value: stats.orders_this_week ?? 0,
                       icon: TrendingUp,
-                      color: 'purple' as const,
+                      color: 'purple',
+                      linkKey: 'orders_this_week',
                   },
                   {
                       label: 'Your wallet',
                       value: `₹${Number(stats.total_wallet_balance).toLocaleString('en-IN')}`,
                       icon: Wallet,
-                      color: 'orange' as const,
+                      color: 'orange',
+                      linkKey: 'b2b_wallet',
                   },
               ]
             : dashboardType === 'finance'
@@ -142,25 +175,29 @@ export default function Dashboard({
                         label: 'Orders today',
                         value: stats.orders_today,
                         icon: ShoppingCart,
-                        color: 'blue' as const,
+                        color: 'blue',
+                        linkKey: 'orders_today',
                     },
                     {
                         label: 'Revenue today',
                         value: `₹${Number(stats.revenue_today).toLocaleString('en-IN')}`,
                         icon: IndianRupee,
-                        color: 'green' as const,
+                        color: 'green',
+                        linkKey: 'revenue_today',
                     },
                     {
                         label: 'Pending load requests',
                         value: stats.pending_loads ?? 0,
                         icon: Wallet,
-                        color: 'orange' as const,
+                        color: 'orange',
+                        linkKey: 'pending_loads',
                     },
                     {
                         label: 'Total wallet balance',
                         value: `₹${Number(stats.total_wallet_balance).toLocaleString('en-IN')}`,
                         icon: IndianRupee,
-                        color: 'purple' as const,
+                        color: 'purple',
+                        linkKey: 'wallet_balance',
                     },
                 ]
               : [
@@ -168,25 +205,29 @@ export default function Dashboard({
                         label: 'Orders today',
                         value: stats.orders_today,
                         icon: ShoppingCart,
-                        color: 'blue' as const,
+                        color: 'blue',
+                        linkKey: 'orders_today',
                     },
                     {
                         label: 'Revenue today',
                         value: `₹${Number(stats.revenue_today).toLocaleString('en-IN')}`,
                         icon: IndianRupee,
-                        color: 'green' as const,
+                        color: 'green',
+                        linkKey: 'revenue_today',
                     },
                     {
                         label: 'Total users',
                         value: stats.total_users ?? 0,
                         icon: Users,
-                        color: 'purple' as const,
+                        color: 'purple',
+                        linkKey: 'total_users',
                     },
                     {
                         label: 'Wallet balance',
                         value: `₹${Number(stats.total_wallet_balance).toLocaleString('en-IN')}`,
                         icon: Wallet,
-                        color: 'orange' as const,
+                        color: 'orange',
+                        linkKey: 'wallet_balance',
                     },
                 ];
 
@@ -235,10 +276,10 @@ export default function Dashboard({
                 {dashboardType === 'b2b' && (
                     <div className="flex flex-wrap gap-2">
                         <Link
-                            href="/panel/b2b/place-order"
+                            href="/panel/b2b/shop"
                             className="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-indigo-700"
                         >
-                            Place order
+                            Shop
                         </Link>
                         <Link
                             href="/panel/b2b/orders"
@@ -262,7 +303,8 @@ export default function Dashboard({
                             label={card.label}
                             value={card.value}
                             icon={card.icon}
-                            color={card.color as any}
+                            color={card.color}
+                            href={card.linkKey ? statLinks[card.linkKey] : undefined}
                         />
                     ))}
                 </div>
@@ -298,11 +340,38 @@ export default function Dashboard({
                 )}
 
                 <div className="rounded-xl bg-white p-5 shadow-sm dark:bg-gray-800">
-                    <div className="mb-4 flex items-center gap-2">
-                        <TrendingUp size={20} className="text-green-600" />
-                        <h2 className="font-semibold text-gray-900 dark:text-white">
-                            {dashboardType === 'b2b' ? 'Revenue — your tenant (30 days)' : 'Revenue — last 30 days'}
-                        </h2>
+                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-2">
+                            <TrendingUp size={20} className="text-green-600" />
+                            <h2 className="font-semibold text-gray-900 dark:text-white">
+                                {dashboardType === 'b2b'
+                                    ? `Revenue — your tenant (${chartDays} days)`
+                                    : `Revenue — last ${chartDays} days`}
+                            </h2>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="dashboard-chart-days" className="text-xs text-gray-500 dark:text-gray-400">
+                                Period
+                            </label>
+                            <select
+                                id="dashboard-chart-days"
+                                value={chartDays}
+                                onChange={(e) => {
+                                    router.get(
+                                        '/panel',
+                                        { chart_days: Number(e.target.value) },
+                                        { preserveState: true, replace: true, preserveScroll: true },
+                                    );
+                                }}
+                                className="rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            >
+                                {CHART_DAY_OPTIONS.map((d) => (
+                                    <option key={d} value={d}>
+                                        Last {d} days
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                     {chartData.length === 0 ? (
                         <p className="py-8 text-center text-sm text-gray-500">No revenue data in this period.</p>

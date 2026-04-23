@@ -36,6 +36,15 @@ return [
         'distributor_id' => env('VDWEB_DISTRIBUTOR_ID'),
     ],
 
+    'value_design' => [
+        'base_url' => env('VALUE_DESIGN_BASE_URL', 'http://cards.vdwebapi.com/distributor/'),
+        'username' => env('VALUE_DESIGN_USERNAME', env('VDWEB_USERNAME')),
+        'password' => env('VALUE_DESIGN_PASSWORD', env('VDWEB_PASSWORD')),
+        'distributor_id' => env('VALUE_DESIGN_DISTRIBUTOR_ID', env('VDWEB_DISTRIBUTOR_ID')),
+        'secret_key' => env('VALUE_DESIGN_SECRET_KEY', env('AES_SECRET_KEY')),
+        'secret_iv' => env('VALUE_DESIGN_SECRET_IV', env('AES_IV')),
+    ],
+
     'giftcard' => [
         'secret' => env('LYSTO_API_KEY'),
     ],
@@ -50,7 +59,9 @@ return [
     'voucher_providers' => [
         'woohoo',
         'kgen',
-        'vouchagram',
+        'value_design',
+        'vouchagram_send',
+        'vouchagram_pull',
     ],
 
 ];

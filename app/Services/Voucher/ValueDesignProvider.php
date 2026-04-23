@@ -5,6 +5,7 @@ namespace App\Services\Voucher;
 use App\Contracts\StockCheckResult;
 use App\Contracts\VoucherOrderResult;
 use App\Contracts\VoucherProviderInterface;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Value Design / VD Voucher Provider
@@ -12,7 +13,12 @@ use App\Contracts\VoucherProviderInterface;
  */
 class ValueDesignProvider implements VoucherProviderInterface
 {
-    public function __construct(private array $config = []) {}
+    private ValueDesignService $service;
+
+    public function __construct(private array $config = [])
+    {
+        $this->service = new ValueDesignService(empty($config) ? null : $config);
+    }
 
     public function getName(): string
     {
@@ -31,17 +37,44 @@ class ValueDesignProvider implements VoucherProviderInterface
 
     public function placeOrder(array $orderData): VoucherOrderResult
     {
-        return new VoucherOrderResult(success: false, status: 'failed', error: 'Value Design: Not configured.');
+        try {
+            $token = $this->service->generateToken()['token'];
+            $evc = $this->service->getEvc($token, $orderData);
+            $raw = $evc['raw'] ?? [];
+
+            return new VoucherOrderResult(
+                success: true,
+                status: 'pending',
+                providerOrderId: (string) ($raw['order_id'] ?? $orderData['order_id'] ?? ''),
+                raw: is_array($raw) ? $raw : [],
+            );
+        } catch (\Throwable $e) {
+            Log::error('ValueDesignProvider placeOrder failed', ['error' => $e->getMessage()]);
+
+            return new VoucherOrderResult(success: false, status: 'failed', error: $e->getMessage());
+        }
     }
 
     public function queryOrder(string $providerOrderId): VoucherOrderResult
     {
-        return new VoucherOrderResult(success: false, status: 'failed', error: 'Not implemented.');
+        try {
+            $token = $this->service->generateToken()['token'];
+            $status = $this->service->getEvcStatus($token, $providerOrderId, $providerOrderId);
+
+            return new VoucherOrderResult(
+                success: true,
+                status: 'pending',
+                providerOrderId: $providerOrderId,
+                raw: $status,
+            );
+        } catch (\Throwable $e) {
+            return new VoucherOrderResult(success: false, status: 'failed', error: $e->getMessage());
+        }
     }
 
     public function fetchCatalog(): array
     {
-        return [];
+        return $this->service->fetchCatalog();
     }
 
     public function fetchCatalogUpdates(\DateTime $since): array
@@ -51,7 +84,7 @@ class ValueDesignProvider implements VoucherProviderInterface
 
     public function checkStock(string $productSku, int $quantity = 1): StockCheckResult
     {
-        return new StockCheckResult(available: false);
+        return new StockCheckResult(available: true, quantity: $quantity);
     }
 
     public function cancelOrder(string $providerOrderId): bool

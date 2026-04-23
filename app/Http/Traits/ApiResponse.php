@@ -61,18 +61,18 @@ trait ApiResponse
         ], $status);
     }
 
-    protected function notFound(string $message = 'Resource not found.'): JsonResponse
+    protected function notFound(string $message = ''): JsonResponse
     {
-        return $this->error('NOT_FOUND', $message, 404);
+        return $this->error('NOT_FOUND', $message !== '' ? $message : __('api.resource_not_found'), 404);
     }
 
-    protected function forbidden(string $message = 'Access denied.'): JsonResponse
+    protected function forbidden(string $message = ''): JsonResponse
     {
-        return $this->error('FORBIDDEN', $message, 403);
+        return $this->error('FORBIDDEN', $message !== '' ? $message : __('api.access_denied'), 403);
     }
 
-    protected function unauthorized(string $message = 'Authentication required.'): JsonResponse
+    protected function unauthorized(string $message = ''): JsonResponse
     {
-        return $this->error('UNAUTHENTICATED', $message, 401);
+        return $this->error('UNAUTHENTICATED', $message !== '' ? $message : __('api.authentication_required'), 401);
     }
 }

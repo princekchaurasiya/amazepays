@@ -4,6 +4,7 @@ import StorefrontLayout from '@/Layouts/StorefrontLayout';
 import { BrandCard, HeroCarousel, ProductCard } from '@/Components/Storefront';
 import CategoryGlyph from '@/Components/Storefront/CategoryGlyph';
 import { getCategoryIconDef } from '@/lib/categoryIcons';
+import { categoryAccentBackground } from '@/lib/categoryAccent';
 import type { Slide } from '@/Components/Storefront/HeroCarousel';
 import { paths } from '@/lib/paths';
 
@@ -19,7 +20,7 @@ type HomeSettings = {
     section_other_deal_title?: string;
 };
 
-type Cat = { id: number; name: string; slug: string; thumbnail?: string | null };
+type Cat = { id: number; name: string; slug: string; thumbnail?: string | null; accent_color?: string | null };
 type Brand = { id: number; name: string; slug: string; logo?: string | null };
 type Product = Record<string, unknown>;
 
@@ -36,8 +37,8 @@ export default function Home({
     homeSettings,
     categories = [],
     brands = [],
-    priorityProducts = [],
-    noPriorityProducts = [],
+    hotDealProducts = [],
+    otherDealProducts = [],
     kgenProducts = [],
     brandMaxDiscounts = {},
     kgenSectionTitle = 'KGen Technology',
@@ -47,15 +48,15 @@ export default function Home({
     homeSettings?: HomeSettings;
     categories?: Cat[];
     brands?: Brand[];
-    priorityProducts?: Product[];
-    noPriorityProducts?: Product[];
+    hotDealProducts?: Product[];
+    otherDealProducts?: Product[];
     kgenProducts?: KgenProduct[];
     brandMaxDiscounts?: Record<string, number | string>;
     kgenSectionTitle?: string;
     showKgenSection?: boolean;
 }) {
     const hs = homeSettings ?? {};
-    const emptySetup = (!categories?.length && !priorityProducts?.length && !noPriorityProducts?.length);
+    const emptySetup = (!categories?.length && !hotDealProducts?.length && !otherDealProducts?.length);
 
     return (
         <StorefrontLayout>
@@ -92,13 +93,13 @@ export default function Home({
                     </section>
                 )}
 
-                {hs.section_hot_deal_status && priorityProducts.length > 0 && (
+                {hs.section_hot_deal_status && hotDealProducts.length > 0 && (
                     <section id="storefront-section-hot" className="mb-12 scroll-mt-28">
                         <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                             {hs.section_hot_deal_title ?? 'Hot deals'}
                         </p>
                         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
-                            {priorityProducts.map((p, i) => (
+                            {hotDealProducts.map((p, i) => (
                                 <ProductCard key={(p.id as number) ?? i} product={p as Product} />
                             ))}
                         </div>
@@ -114,19 +115,36 @@ export default function Home({
                             {categories.map((c) => {
                                 const t = thumbUrl(c.thumbnail);
                                 const showGlyph = !t && getCategoryIconDef(c.name);
+                                const accent =
+                                    typeof c.accent_color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(c.accent_color.trim())
+                                        ? c.accent_color.trim()
+                                        : null;
+                                const tintBg = categoryAccentBackground(accent, 0.22);
                                 return (
                                     <Link
                                         key={c.id}
                                         href={paths.category(c.slug)}
                                         className="flex flex-col items-center rounded-2xl bg-white p-4 text-center shadow-sm ring-1 ring-gray-100 transition hover:ring-brand-500/25"
                                     >
-                                        <span className="mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-gray-50 ring-1 ring-gray-100">
+                                        <span
+                                            className={`mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full ring-1 ${tintBg ? 'ring-black/5' : 'bg-gray-50 ring-gray-100'}`}
+                                            style={tintBg ? { backgroundColor: tintBg } : undefined}
+                                        >
                                             {t ? (
                                                 <img src={t} alt="" className="h-full w-full object-cover" />
                                             ) : showGlyph ? (
-                                                <CategoryGlyph name={c.name} className="h-7 w-7 text-brand-600" />
+                                                <CategoryGlyph
+                                                    name={c.name}
+                                                    className={`h-7 w-7 ${accent ? '' : 'text-brand-600'}`}
+                                                    accentColor={accent}
+                                                />
                                             ) : (
-                                                <span className="text-lg font-bold text-brand-600">{c.name.slice(0, 1).toUpperCase()}</span>
+                                                <span
+                                                    className={`text-lg font-bold ${accent ? '' : 'text-brand-600'}`}
+                                                    style={accent ? { color: accent } : undefined}
+                                                >
+                                                    {c.name.slice(0, 1).toUpperCase()}
+                                                </span>
                                             )}
                                         </span>
                                         <span className="line-clamp-2 text-sm font-medium text-gray-900">{c.name}</span>
@@ -137,13 +155,13 @@ export default function Home({
                     </section>
                 )}
 
-                {hs.section_other_deal_status && noPriorityProducts.length > 0 && (
+                {hs.section_other_deal_status && otherDealProducts.length > 0 && (
                     <section id="storefront-section-deals" className="mb-12 scroll-mt-28">
                         <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                             {hs.section_other_deal_title ?? 'Other deals'}
                         </p>
                         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
-                            {noPriorityProducts.map((p, i) => (
+                            {otherDealProducts.map((p, i) => (
                                 <ProductCard key={(p.id as number) ?? i} product={p as Product} />
                             ))}
                         </div>

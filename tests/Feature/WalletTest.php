@@ -2,12 +2,10 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
+use App\Exceptions\InsufficientBalanceException;
 use App\Models\User;
-use App\Http\Services\WalletService;
-use Exception;
+use App\Services\Wallet\WalletService;
+use Tests\TestCase;
 
 class WalletTest extends TestCase
 {
@@ -41,7 +39,7 @@ class WalletTest extends TestCase
         $this->assertEquals(500, $user->fresh()->wallet->balance);
         $this->assertDatabaseHas('wallet_transactions', [
             'type' => 'credit',
-            'amount' => 500
+            'amount' => 500,
         ]);
     }
 
@@ -58,13 +56,11 @@ class WalletTest extends TestCase
 
     public function test_wallet_cannot_debit_more_than_balance()
     {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Insufficient balance');
+        $this->expectException(InsufficientBalanceException::class);
 
         $user = User::factory()->create();
         $walletService = app(WalletService::class);
 
         $walletService->debit($user, 100);
     }
-
 }

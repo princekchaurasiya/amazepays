@@ -155,9 +155,7 @@ class VouchagramPullProvider implements VoucherProviderInterface
             return [];
         }
 
-        $send = new VouchagramSendProvider($this->vouchagram);
-
-        return $send->fetchCatalog();
+        return VouchagramCatalogMapper::mapBrandRowsToCatalogItems($brands);
     }
 
     public function fetchCatalogUpdates(\DateTime $since): array

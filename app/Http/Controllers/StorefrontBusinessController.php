@@ -19,15 +19,15 @@ class StorefrontBusinessController extends Controller
         $brands = StorefrontBrand::query()->orderBy('order')->get();
 
         $brandMaxDiscounts = Product::query()
-            ->where('show_product', true)
+            ->forStorefrontCatalog()
             ->whereNotNull('brand_id')
             ->selectRaw('brand_id, MAX(COALESCE(discount_percentage, 0)) as max_discount')
             ->groupBy('brand_id')
             ->pluck('max_discount', 'brand_id');
 
         $featuredProducts = Product::query()
-            ->where('show_product', true)
-            ->orderByRaw('IFNULL(priority, 999999) ASC')
+            ->forStorefrontCatalog()
+            ->orderByRaw('IFNULL(hot_deal_rank, 999999) ASC')
             ->orderByRaw('IFNULL(display_order, 999999) ASC')
             ->limit(12)
             ->get();

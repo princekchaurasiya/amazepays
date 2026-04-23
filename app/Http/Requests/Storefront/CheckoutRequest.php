@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests\Storefront;
 
+use App\Http\Requests\Concerns\RejectsUnexpectedInput;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CheckoutRequest extends FormRequest
 {
+    use RejectsUnexpectedInput;
+
     public function authorize(): bool
     {
         return auth()->check();
@@ -22,7 +25,12 @@ class CheckoutRequest extends FormRequest
             'receiver_name' => 'nullable|required_if:gift_send_option,send_as_gift|string|max:255',
             'receiver_email' => 'nullable|required_if:gift_send_option,send_as_gift|email|max:255',
             'receiver_mobile' => 'nullable|required_if:gift_send_option,send_as_gift|digits:10',
-            'receiver_msg' => 'nullable|string|max:500',
+            'receiver_msg' => 'nullable|required_if:gift_send_option,send_as_gift|string|max:500',
+            'gift_theme_id' => 'nullable|required_if:gift_send_option,send_as_gift|integer|exists:gift_card_themes,id',
+            'gift_message_title' => 'nullable|required_if:gift_send_option,send_as_gift|string|max:120',
+            'sender_first_name' => 'nullable|required_if:gift_send_option,send_as_gift|string|max:120',
+            'gift_delivery_option' => 'nullable|required_if:gift_send_option,send_as_gift|string|in:send_now,send_later',
+            'gift_delivery_at' => 'nullable|required_if:gift_delivery_option,send_later|date|after:now',
             'offer_code' => 'nullable|string|max:50',
 
             'billing_name' => 'required|string|max:255',

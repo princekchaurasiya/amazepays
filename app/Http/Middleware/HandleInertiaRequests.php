@@ -44,6 +44,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => $request->session()->get('error'),
                 'warning' => $request->session()->get('warning'),
             ],
+            'cart' => fn () => $this->shareCartSummary($request),
             'ziggy' => fn () => [
                 'location' => $request->url(),
             ],
@@ -63,6 +64,44 @@ class HandleInertiaRequests extends Middleware
                 'linkedin' => env('LINKEDIN_URL', '#'),
                 'instagram' => env('INSTAGRAM_URL', '#'),
             ],
+            'i18n' => fn () => [
+                'storefront' => [
+                    'product' => __('storefront.product'),
+                ],
+                'checkout' => __('checkout'),
+                'auth_ui' => __('auth_ui'),
+                'admin' => __('admin'),
+            ],
         ]);
+    }
+
+    /**
+     * @return array{count:int,quantity:int,total:float}
+     */
+    private function shareCartSummary(Request $request): array
+    {
+        $cart = $request->user()?->cart()->with('items')->first();
+        $items = $cart?->items ?? collect();
+
+        $count = $items->count();
+        $quantity = 0;
+        $total = 0.0;
+
+        foreach ($items as $item) {
+            $q = (int) ($item->quantity ?? 0);
+            $line = (float) ($item->line_total ?? 0.0);
+            if ($q > 0) {
+                $quantity += $q;
+            }
+            if ($line > 0) {
+                $total += $line;
+            }
+        }
+
+        return [
+            'count' => $count,
+            'quantity' => $quantity,
+            'total' => $total,
+        ];
     }
 }

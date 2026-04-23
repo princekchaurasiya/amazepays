@@ -22,7 +22,7 @@ class SearchController extends Controller
         $like = '%'.$q.'%';
 
         $products = Product::query()
-            ->where('show_product', true)
+            ->forStorefrontCatalog()
             ->where(function ($w) use ($like) {
                 $w->where('name', 'LIKE', $like)
                     ->orWhere('product_name', 'LIKE', $like);
@@ -54,7 +54,7 @@ class SearchController extends Controller
         $like = '%'.$query.'%';
 
         $results = Product::query()
-            ->where('show_product', true)
+            ->forStorefrontCatalog()
             ->where(function ($q2) use ($like) {
                 $q2->where('name', 'LIKE', $like)
                     ->orWhere('product_name', 'LIKE', $like)

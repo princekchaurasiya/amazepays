@@ -20,7 +20,10 @@ class UnlimitPaymentController extends Controller
     public function showPaymentForm(Request $request, $slug)
     {
         $product = Product::where('url', $slug)->firstOrFail();
-        $product['prodData'] = $request->only([
+        if (! $product->isListedOnConsumerStorefront()) {
+            abort(404);
+        }
+        $product['productData'] = $request->only([
             'denomination', 'quantity', 'gift_send_option', 'receiver_name',
             'receiver_email', 'receiver_mobile', 'receiver_msg', 'delivery_mode',
         ]);

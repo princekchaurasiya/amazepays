@@ -17,8 +17,9 @@ import {
     rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Star, Trash2, Upload } from 'lucide-react';
+import { GripVertical, Star, Trash2 } from 'lucide-react';
 import ConfirmDialog from './ConfirmDialog';
+import AdminImageDropzone from './AdminImageDropzone';
 
 export type GalleryItem = {
     id: number;
@@ -35,13 +36,27 @@ type Props = {
     items: GalleryItem[];
 };
 
+function normalizePreviewUrl(url: string): string {
+    if (!url) return url;
+    try {
+        const parsed = new URL(url);
+        const isLocal = parsed.hostname === '127.0.0.1' || parsed.hostname === 'localhost';
+        if (isLocal && typeof window !== 'undefined') {
+            return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
+        }
+        return url;
+    } catch {
+        return url;
+    }
+}
+
 function SupplierThumb({ item }: { item: GalleryItem }) {
     return (
         <div className="relative rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden bg-slate-50 dark:bg-slate-900/50">
             <span className="absolute top-1 right-1 z-10 rounded bg-slate-800/85 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
                 Supplier
             </span>
-            <img src={item.url} alt="" className="w-full h-32 object-contain bg-white" />
+            <img src={normalizePreviewUrl(item.url)} alt="" className="w-full h-32 object-contain bg-white" />
             <p className="text-[10px] text-slate-500 dark:text-slate-400 px-2 py-1 truncate" title={item.url}>
                 From catalog sync — upload below to override
             </p>
@@ -76,7 +91,7 @@ function SortableThumb({
                 isHero ? 'border-amber-400 ring-2 ring-amber-200' : 'border-gray-200 dark:border-gray-700'
             }`}
         >
-            <img src={item.url} alt="" className="w-full h-32 object-cover" />
+            <img src={normalizePreviewUrl(item.url)} alt="" className="w-full h-32 object-cover" />
             <div className="absolute top-1 left-1 flex gap-1">
                 <button
                     type="button"
@@ -156,10 +171,7 @@ export default function ImageGalleryManager({ productId, items: initialItems }: 
         setDeleteId(null);
     };
 
-    const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        e.target.value = '';
-        if (!file) return;
+    const onFileSelected = (file: File) => {
         setUploading(true);
         const fd = new FormData();
         fd.append('file', file);
@@ -184,13 +196,11 @@ export default function ImageGalleryManager({ productId, items: initialItems }: 
                 variant="danger"
             />
 
-            <label className="flex items-center justify-center gap-2 w-full py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer hover:border-indigo-400 transition-colors">
-                <Upload size={20} className="text-gray-400" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {uploading ? 'Uploading…' : 'Upload image (PNG, JPG, WebP — max 5MB)'}
-                </span>
-                <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={onFile} />
-            </label>
+            <AdminImageDropzone
+                onFileSelected={onFileSelected}
+                busy={uploading}
+                maxFileBytes={5 * 1024 * 1024}
+            />
 
             {isEmpty ? (
                 <p className="text-sm text-gray-500 text-center">No gallery images yet. Upload a sharp product photo above.</p>

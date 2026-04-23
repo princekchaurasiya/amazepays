@@ -1,10 +1,17 @@
 export { default as AuthModal } from './AuthModal';
 export { default as BrandCard } from './BrandCard';
 export { default as CategoryNav } from './CategoryNav';
+export { default as GiftOptionSelector } from './GiftOptionSelector';
+export { default as GiftPersonalizationPanel } from './GiftPersonalizationPanel';
 export { default as HeroCarousel } from './HeroCarousel';
+export type { GiftOption, GiftOptionPolicy } from './GiftOptionSelector';
+export type { GiftTheme, GiftPersonalizationState } from './GiftPersonalizationPanel';
 export type { Slide } from './HeroCarousel';
 export { default as ProductCard } from './ProductCard';
+export { default as ProductInfoModal } from './ProductInfoModal';
+export { default as ProductPurchasePanel } from './ProductPurchasePanel';
 export { default as SearchDropdown } from './SearchDropdown';
 export type { SearchDropdownHandle, SearchSuggestion } from './SearchDropdown';
+export type { ProductInfoSection } from './ProductInfoModal';
 export { default as StorefrontFooter } from './StorefrontFooter';
 export { default as StorefrontHeader } from './StorefrontHeader';

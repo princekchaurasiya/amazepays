@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Wallet\SubmitWalletLoadRequest;
 use App\Http\Traits\ApiResponse;
 use App\Models\WalletLoadRequest;
 use App\Models\WalletTransaction;
+use App\Services\Wallet\WalletLoadRequestService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,6 +17,8 @@ use Illuminate\Http\Request;
 class WalletController extends Controller
 {
     use ApiResponse;
+
+    public function __construct(private WalletLoadRequestService $loadRequestService) {}
 
     /** Get the user's current wallet balance. */
     public function balance(Request $request): JsonResponse
@@ -44,35 +48,10 @@ class WalletController extends Controller
         return $this->paginated($transactions);
     }
 
-    /** Submit a wallet load request (bank transfer / UPI proof). */
-    public function requestLoad(Request $request): JsonResponse
+    /** Submit a wallet load request (bank transfer proof). */
+    public function requestLoad(SubmitWalletLoadRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'amount' => 'required|numeric|min:100|max:500000',
-            'payment_method' => 'required|in:bank_transfer,upi,neft,rtgs',
-            'utr_number' => 'required|string|max:100',
-            'bank_reference' => 'nullable|string|max:100',
-            'payment_proof' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
-        ]);
-
-        $proofPath = null;
-        if ($request->hasFile('payment_proof')) {
-            $proofPath = $request->file('payment_proof')->store(
-                'wallet-proofs/'.$request->user()->id,
-                'private'
-            );
-        }
-
-        $loadRequest = WalletLoadRequest::create([
-            'user_id' => $request->user()->id,
-            'tenant_id' => tenant_id(),
-            'amount' => $validated['amount'],
-            'payment_method' => $validated['payment_method'],
-            'utr_number' => $validated['utr_number'],
-            'bank_reference' => $validated['bank_reference'] ?? null,
-            'payment_proof_path' => $proofPath,
-            'status' => 'pending',
-        ]);
+        $loadRequest = $this->loadRequestService->submitForUser($request->user(), $request);
 
         return $this->created('Load request submitted. It will be reviewed within 2-4 business hours.', [
             'request_id' => $loadRequest->id,
@@ -91,6 +70,8 @@ class WalletController extends Controller
         return $this->ok('Load request status.', [
             'id' => $loadRequest->id,
             'amount' => $loadRequest->amount,
+            'payment_mode' => $loadRequest->payment_mode,
+            'reference_no' => $loadRequest->reference_no,
             'status' => $loadRequest->status,
             'created_at' => $loadRequest->created_at,
             'updated_at' => $loadRequest->updated_at,

@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class WalletLoadRequest extends Model
 {
     protected $fillable = [
-        'user_id', 'tenant_id', 'amount', 'payment_method', 'utr_number',
-        'bank_reference', 'payment_proof_path', 'status', 'admin_note',
+        'user_id', 'tenant_id', 'amount', 'payment_mode', 'reference_no',
+        'proof_file', 'status', 'admin_note',
         'approved_by', 'approved_at', 'rejected_at',
     ];
 
@@ -38,11 +38,6 @@ class WalletLoadRequest extends Model
         return $query->where('status', 'pending');
     }
 
-    public function scopeUnderReview($query)
-    {
-        return $query->where('status', 'under_review');
-    }
-
     public function isPending(): bool
     {
         return $this->status === 'pending';
@@ -50,6 +45,6 @@ class WalletLoadRequest extends Model
 
     public function canBeApproved(): bool
     {
-        return in_array($this->status, ['pending', 'under_review']);
+        return $this->status === 'pending';
     }
 }

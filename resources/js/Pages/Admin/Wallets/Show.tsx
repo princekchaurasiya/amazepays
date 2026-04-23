@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import React, { FormEvent, useState } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Breadcrumbs } from '@/Components/Admin';
+import FileUploadDropzone from '@/Components/Admin/FileUploadDropzone';
 import { ArrowLeft, Wallet } from 'lucide-react';
 
 type WalletT = {
@@ -34,11 +35,47 @@ type Props = {
     transactions: Paginated<Tx>;
 };
 
+const PAYMENT_MODES = [
+    { value: 'neft', label: 'NEFT' },
+    { value: 'imps', label: 'IMPS' },
+    { value: 'rtgs', label: 'RTGS' },
+    { value: 'cash', label: 'Cash' },
+    { value: 'cheque', label: 'Cheque' },
+];
+
 export default function Show({ wallet, transactions }: Props) {
-    const [creditAmount, setCreditAmount] = useState('');
-    const [creditDesc, setCreditDesc] = useState('');
+    const { auth } = usePage().props as { auth?: { user?: { permissions?: string[] } } };
+    const canSubmitOnBehalf = !!auth?.user?.permissions?.includes('wallets.load_requests.submit_on_behalf');
+
+    const [loadAmount, setLoadAmount] = useState('');
+    const [loadMode, setLoadMode] = useState('neft');
+    const [loadRef, setLoadRef] = useState('');
+    const [loadProof, setLoadProof] = useState<File | null>(null);
+
     const [debitAmount, setDebitAmount] = useState('');
     const [debitDesc, setDebitDesc] = useState('');
+
+    const submitLoadRequest = (e: FormEvent) => {
+        e.preventDefault();
+        if (!loadProof) {
+            return;
+        }
+        const fd = new FormData();
+        fd.append('amount', loadAmount);
+        fd.append('payment_mode', loadMode);
+        if (loadRef) {
+            fd.append('reference_no', loadRef);
+        }
+        fd.append('proof', loadProof);
+        router.post(`/panel/wallets/${wallet.id}/load-requests`, fd, {
+            forceFormData: true,
+            onSuccess: () => {
+                setLoadAmount('');
+                setLoadRef('');
+                setLoadProof(null);
+            },
+        });
+    };
 
     return (
         <AdminLayout>
@@ -81,51 +118,97 @@ export default function Show({ wallet, transactions }: Props) {
                         >
                             {wallet.is_frozen ? 'Unfreeze' : 'Freeze'}
                         </button>
+                        <Link
+                            href="/panel/wallets/load-requests"
+                            className="px-3 py-1.5 border rounded-lg text-sm dark:border-gray-600 text-indigo-600"
+                        >
+                            Load requests queue
+                        </Link>
                     </div>
                 </div>
                 <div className="grid md:grid-cols-2 gap-6">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 space-y-3">
-                        <h3 className="font-semibold">Credit</h3>
-                        <input
-                            type="number"
-                            value={creditAmount}
-                            onChange={e => setCreditAmount(e.target.value)}
-                            placeholder="Amount"
-                            className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700"
-                        />
-                        <input
-                            value={creditDesc}
-                            onChange={e => setCreditDesc(e.target.value)}
-                            placeholder="Description"
-                            className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => router.post(`/panel/wallets/${wallet.id}/credit`, { amount: creditAmount, description: creditDesc })}
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm"
+                    {canSubmitOnBehalf ? (
+                        <form
+                            onSubmit={submitLoadRequest}
+                            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 space-y-3"
                         >
-                            Credit
-                        </button>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 space-y-3">
+                            <h3 className="font-semibold">Submit load request (on behalf)</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Creates a pending request. Finance must approve before the wallet is credited.
+                            </p>
+                            <input
+                                type="number"
+                                required
+                                value={loadAmount}
+                                onChange={e => setLoadAmount(e.target.value)}
+                                placeholder="Amount (min 100)"
+                                className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700"
+                            />
+                            <select
+                                value={loadMode}
+                                onChange={e => setLoadMode(e.target.value)}
+                                className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700"
+                            >
+                                {PAYMENT_MODES.map(m => (
+                                    <option key={m.value} value={m.value}>{m.label}</option>
+                                ))}
+                            </select>
+                            <input
+                                value={loadRef}
+                                onChange={e => setLoadRef(e.target.value)}
+                                placeholder="Reference / UTR / cheque no (optional)"
+                                className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700"
+                            />
+                            <FileUploadDropzone
+                                label="Payment proof"
+                                description="PDF, PNG or JPEG — max 2 MB (same rules as upload validation)."
+                                value={loadProof}
+                                onChange={setLoadProof}
+                                accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+                                required
+                                compact
+                            />
+                            <button
+                                type="submit"
+                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm"
+                            >
+                                Submit load request
+                            </button>
+                        </form>
+                    ) : (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                            <h3 className="font-semibold text-gray-900 dark:text-white">Wallet top-ups</h3>
+                            <p>Direct credits are disabled. Use the load requests queue to approve funding.</p>
+                            <Link href="/panel/wallets/load-requests" className="text-indigo-600 font-medium">Open load requests</Link>
+                        </div>
+                    )}
+                    <div
+                        className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 space-y-3 ${wallet.is_frozen ? 'opacity-60' : ''}`}
+                    >
                         <h3 className="font-semibold">Debit</h3>
+                        {wallet.is_frozen ? (
+                            <p className="text-xs text-amber-700 dark:text-amber-400">Debit is disabled while this wallet is frozen.</p>
+                        ) : null}
                         <input
                             type="number"
                             value={debitAmount}
                             onChange={e => setDebitAmount(e.target.value)}
                             placeholder="Amount"
-                            className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700"
+                            disabled={!!wallet.is_frozen}
+                            className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700 disabled:cursor-not-allowed"
                         />
                         <input
                             value={debitDesc}
                             onChange={e => setDebitDesc(e.target.value)}
                             placeholder="Description"
-                            className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700"
+                            disabled={!!wallet.is_frozen}
+                            className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700 disabled:cursor-not-allowed"
                         />
                         <button
                             type="button"
+                            disabled={!!wallet.is_frozen}
                             onClick={() => router.post(`/panel/wallets/${wallet.id}/debit`, { amount: debitAmount, description: debitDesc })}
-                            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm"
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Debit
                         </button>
@@ -154,7 +237,7 @@ export default function Show({ wallet, transactions }: Props) {
                                             {tx.created_at ? new Date(tx.created_at).toLocaleString() : '—'}
                                         </td>
                                         <td className="px-5 py-3">{tx.type}</td>
-                                        <td className="px-5 py-3">₹{Number(tx.amount).toLocaleString('en-IN')}</td>
+                                        <td className="px-5 py-3">{'\u20B9'}{Number(tx.amount).toLocaleString('en-IN')}</td>
                                         <td className="px-5 py-3">{tx.description || '—'}</td>
                                     </tr>
                                 ))

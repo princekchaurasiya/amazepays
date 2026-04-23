@@ -17,6 +17,7 @@ use App\Http\Controllers\PaymentStatusController;
 use App\Http\Controllers\ProductSlugController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\Storefront\CardBalanceController;
 use App\Http\Controllers\Storefront\StaticPageController;
 use App\Http\Controllers\SmsController;
 use App\Http\Controllers\StoreController;
@@ -26,7 +27,6 @@ use App\Http\Controllers\StorefrontCategoryController;
 use App\Http\Controllers\TransactionReportController;
 use App\Http\Controllers\UserBlockController;
 use App\Http\Controllers\VDHomeController;
-use App\Http\Controllers\VDWebController;
 use App\Http\Controllers\ViewCardDetailsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -58,6 +58,10 @@ Route::get('/terms-of-use', [StaticPageController::class, 'terms'])->name('terms
 Route::get('/privacy-policy', [StaticPageController::class, 'privacy'])->name('privacy-policy');
 Route::get('/refund-policy', [StaticPageController::class, 'refund'])->name('refundPolicy');
 Route::get('/faq', [StaticPageController::class, 'faq'])->name('faq');
+Route::get('/card-balance', [CardBalanceController::class, 'index'])->name('card.balance');
+Route::post('/card-balance/check', [CardBalanceController::class, 'check'])
+    ->name('card.balance.check')
+    ->middleware('throttle:20,1');
 Route::get('/gift', fn () => Inertia::render('Storefront/GiftMailPreview'))->name('gift.preview');
 Route::get('/payment-status', PaymentStatusController::class)->name('payment.status');
 
@@ -110,21 +114,16 @@ Route::middleware('admin.user')->group(function () {
     Route::post('/admin/stores/fetch', [StoreController::class, 'fetchStoresForBrand'])->name('admin.stores.fetch');
     Route::post('/admin/stores/sync', [StoreController::class, 'syncAndShow'])->name('admin.stores.sync');
     Route::get('/admin/stores/export', [StoreController::class, 'exportStores'])->name('admin.stores.export');
-    Route::get('/admin/vd/brands', [VDWebController::class, 'showBrands'])->name('admin.vd.brands');
-    Route::get('/admin/vd/dashboard', fn () => Inertia::render('Admin/ValueDesign/VdDataPage', [
-        'title' => 'Value Design dashboard',
-        'data' => ['message' => 'Legacy dashboard migrated to React. Use VD brands and EVC tools from this admin section.'],
-    ]))->name('admin.vd.dashboard');
-    Route::get('/admin/evc/request', [VDWebController::class, 'requestEvc'])->name('admin.evc.request');
-    Route::post('/admin/evc/store-request', [VDWebController::class, 'storeGetEvcRequest'])->name('admin.evc.store-request');
-    Route::post('/admin/evc/decrypt-store', [VDWebController::class, 'decryptAndStoreEvc'])->name('admin.evc.decrypt-store');
-    Route::post('/admin/evc/status', [VDWebController::class, 'VDgetEvcStatus'])->name('admin.evc.status');
-    Route::get('/admin/evc/form', fn () => Inertia::render('Admin/ValueDesign/VdDataPage', [
-        'title' => 'EVC form',
-        'data' => ['message' => 'Use POST endpoints under /admin/evc/* or the get-evc-request flow from the storefront.'],
-    ]))->name('admin.evc.form');
-    Route::get('/admin/evc-details/{orderId}/{requestRefNo}', [VDWebController::class, 'evcDetails'])->name('admin.evc.details');
-    Route::post('/admin/evc/get-activated', [VDWebController::class, 'VDgetActivatedEvc'])->name('admin.evc.activated');
+    // Legacy VD routes are retired; keep redirects to the new panel.
+    Route::get('/admin/vd/brands', fn () => redirect('/panel/value-design'))->name('admin.vd.brands');
+    Route::get('/admin/vd/dashboard', fn () => redirect('/panel/value-design'))->name('admin.vd.dashboard');
+    Route::get('/admin/evc/request', fn () => redirect('/panel/value-design'))->name('admin.evc.request');
+    Route::post('/admin/evc/store-request', fn () => response()->json(['success' => false, 'message' => 'Legacy endpoint retired. Use /panel/value-design.'], 410))->name('admin.evc.store-request');
+    Route::post('/admin/evc/decrypt-store', fn () => response()->json(['success' => false, 'message' => 'Legacy endpoint retired. Use /panel/value-design.'], 410))->name('admin.evc.decrypt-store');
+    Route::post('/admin/evc/status', fn () => response()->json(['success' => false, 'message' => 'Legacy endpoint retired. Use /panel/value-design.'], 410))->name('admin.evc.status');
+    Route::get('/admin/evc/form', fn () => redirect('/panel/value-design'))->name('admin.evc.form');
+    Route::get('/admin/evc-details/{orderId}/{requestRefNo}', fn () => redirect('/panel/value-design'))->name('admin.evc.details');
+    Route::post('/admin/evc/get-activated', fn () => response()->json(['success' => false, 'message' => 'Legacy endpoint retired. Use /panel/value-design.'], 410))->name('admin.evc.activated');
     Route::post('/admin/api/vd-brands/clear-cache', [VDHomeController::class, 'clearVDBrandsCache'])->name('admin.vd.brands.clear-cache');
     Route::get('/admin/api/vd-brands/test-connection', [VDHomeController::class, 'testVDConnection'])->name('admin.vd.brands.test-connection');
     Route::get('/admin/lysto/giftcards', [AthenaGiftCardController::class, 'index'])->name('admin.lysto.giftcards');

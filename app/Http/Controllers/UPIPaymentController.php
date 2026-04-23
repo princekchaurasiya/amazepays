@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\CheckoutHelper;
 use App\Models\ApiToken;
 use App\Models\Order;
+use App\Models\OrderSummary;
+use App\Models\Product;
 use App\Models\UnlimitPayment;
+use App\Support\BillingRequirementResolver;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
@@ -19,6 +23,10 @@ use Inertia\Inertia;
 
 class UPIPaymentController extends Controller
 {
+    public function __construct(
+        private BillingRequirementResolver $billingRequirements,
+    ) {}
+
     public function getToken()
     {
         try {
@@ -121,6 +129,17 @@ class UPIPaymentController extends Controller
     public function store(Request $request)
     {
         try {
+            $unknown = array_values(array_diff(array_keys($request->all()), ['order_id']));
+            if ($unknown !== []) {
+                return redirect()->back()->withErrors([
+                    'unexpected_fields' => 'Unexpected input fields detected: '.implode(', ', $unknown),
+                ]);
+            }
+
+            $request->validate([
+                'order_id' => 'nullable|integer|min:1',
+            ]);
+
             // SECURITY: Require authentication
             if (! Auth::check()) {
                 Log::warning('❌ Unauthenticated payment attempt');
@@ -146,9 +165,7 @@ class UPIPaymentController extends Controller
             }
 
             // SECURITY: Fetch order from database and validate ownership
-            $order = Order::where('id', $orderId)
-                ->where('user_id', $userId)
-                ->first();
+            $order = $this->findOrderForUser((int) $orderId, (int) $userId);
 
             if (! $order) {
                 Log::error('❌ Order not found or unauthorized', [
@@ -159,10 +176,29 @@ class UPIPaymentController extends Controller
                 return redirect()->back()->with('error', 'Order not found or unauthorized access.');
             }
 
+            if ((string) $order->order_status !== 'Pending') {
+                Log::warning('❌ Payment attempted for non-pending order', [
+                    'order_id' => $orderId,
+                    'user_id' => $userId,
+                    'order_status' => $order->order_status,
+                ]);
+
+                return redirect()->back()->with('error', __('payments.order_processing_exists'));
+            }
+
+            $sourceProvider = Product::query()->whereKey($order->product_id)->value('source_provider');
+            $requiredBillingFields = $this->billingRequirements->requiredFields((string) $order->payment_method, (string) $sourceProvider);
+            $billingSnapshot = $this->resolveBillingSnapshot($order, $requiredBillingFields);
+            if (! $billingSnapshot['ready']) {
+                return redirect()->back()->with('error', __('checkout.billing_missing_for_payment', [
+                    'fields' => implode(', ', $this->billingRequirements->humanize($billingSnapshot['missing'])),
+                ]));
+            }
+
             // SECURITY: Get amount from database, not from request
             $payableAmount = (float) ($order->amount_payable_after_discount ?? $order->grand_payable_amount ?? 0);
 
-            if ($payableAmount <= 0) {
+            if (! is_finite($payableAmount) || $payableAmount <= 0) {
                 Log::error('❌ Invalid payable amount from database', [
                     'amount' => $payableAmount,
                     'order_id' => $orderId,
@@ -267,13 +303,28 @@ class UPIPaymentController extends Controller
                         'amount' => $payableAmount,
                     ]);
                 } else {
-                    DB::rollBack();
-                    Log::error('❌ Payment record not found or unauthorized', [
-                        'order_id' => $orderId,
+                    $payment = UnlimitPayment::create([
+                        'order_id' => $order->id,
                         'user_id' => $userId,
+                        'mer_amount' => $order->grand_payable_amount,
+                        'price' => $order->denomination,
+                        'qty' => $order->quantity,
+                        'merchant_order_id' => $merchantOrderId,
+                        'amount' => $payableAmount,
+                        'payment_status' => 'pending',
+                        'order_status' => 'UnPaid',
                     ]);
 
-                    return redirect()->back()->with('error', 'Payment record not found. Please try again.');
+                    OrderSummary::query()->firstOrCreate(
+                        ['order_id' => $order->id],
+                        [
+                            'payment_id' => $payment->id,
+                            'payment_gateway' => 'unlimit',
+                            'product_name' => (string) ($order->product_name ?? ''),
+                            'payment_status' => (string) ($payment->order_status ?? 'UnPaid'),
+                            'order_status' => (string) ($order->order_status ?? 'Pending'),
+                        ]
+                    );
                 }
 
                 DB::commit();
@@ -389,18 +440,65 @@ class UPIPaymentController extends Controller
 
     public function process(Request $request)
     {
-        // Get the payable amount from request
-        $payableAmount = $request->input('payable_amount');
+        $validated = $request->validate([
+            'order_id' => 'required|integer|min:1',
+        ]);
 
-        // Debug or use the amount
-        // dd($payableAmount);
+        $userId = (int) Auth::id();
+        $order = $this->findOrderForUser((int) $validated['order_id'], $userId);
+        if (! $order) {
+            abort(404);
+        }
 
-        // Proceed with your custom logic (e.g., saving to DB, initiating a new payment method, etc.)
+        $payableAmount = (float) ($order->amount_payable_after_discount ?? $order->grand_payable_amount ?? 0);
 
         return Inertia::render('Checkout/Status', [
             'status' => 'success',
             'msg' => 'Payment successful',
             'amount' => $payableAmount,
         ]);
+    }
+
+    /**
+     * @return array{snapshot: array<string, string>, missing: array<int, string>, ready: bool}
+     */
+    private function resolveBillingSnapshot(Order $order, array $requiredFields = ['billing_name', 'billing_email']): array
+    {
+        $cached = $order->id ? CheckoutHelper::getBillingData((int) $order->id) : null;
+        $user = Auth::user();
+
+        $snapshot = [
+            'billing_name' => trim((string) ($cached['billing_name'] ?? $user?->name ?? '')),
+            'billing_email' => trim((string) ($cached['billing_email'] ?? $user?->email ?? '')),
+            'billing_tel' => trim((string) ($cached['billing_tel'] ?? $user?->mobile ?? '')),
+            'billing_zip' => trim((string) ($cached['billing_zip'] ?? $user?->billing_zip ?? '')),
+            'billing_address' => trim((string) ($cached['billing_address'] ?? $user?->billing_address ?? '')),
+            'billing_address_two' => trim((string) ($cached['billing_address_two'] ?? $user?->billing_address_two ?? '')),
+            'billing_city' => trim((string) ($cached['billing_city'] ?? $user?->billing_city ?? '')),
+            'billing_state' => trim((string) ($cached['billing_state'] ?? $user?->billing_state ?? '')),
+            'billing_country' => trim((string) ($cached['billing_country'] ?? $user?->billing_country ?? 'IN')),
+            'billing_gst_number' => trim((string) ($cached['billing_gst_number'] ?? '')),
+        ];
+
+        $missing = [];
+        foreach ($requiredFields as $field) {
+            if (($snapshot[$field] ?? '') === '') {
+                $missing[] = $field;
+            }
+        }
+
+        return [
+            'snapshot' => $snapshot,
+            'missing' => $missing,
+            'ready' => count($missing) === 0,
+        ];
+    }
+
+    private function findOrderForUser(int $orderId, int $userId): ?Order
+    {
+        return Order::query()
+            ->whereKey($orderId)
+            ->where('user_id', $userId)
+            ->first();
     }
 }

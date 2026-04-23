@@ -123,61 +123,7 @@ class VouchagramSendProvider implements VoucherProviderInterface
             return [];
         }
 
-        $out = [];
-        foreach ($brands as $row) {
-            if (! is_array($row)) {
-                continue;
-            }
-            $code = (string) ($row['BrandProductCode'] ?? '');
-            if ($code === '') {
-                continue;
-            }
-            $denom = $row['denominationList'] ?? null;
-            $min = $row['MinValue'] ?? null;
-            $max = $row['MaxValue'] ?? null;
-            $denomType = strtoupper((string) ($row['DenomType'] ?? 'F'));
-
-            $priceType = 'FIXED';
-            $priceField = null;
-            if ($denomType === 'D' || ($denom === null && ($min !== null || $max !== null))) {
-                $priceType = 'RANGE';
-                $priceField = [
-                    'type' => 'RANGE',
-                    'min' => (float) ($min ?? 1),
-                    'max' => (float) ($max ?? 100000),
-                    'currency' => 'INR',
-                ];
-            } elseif ($denom !== null && $denom !== '') {
-                $vals = array_map('trim', explode(',', (string) $denom));
-                $priceField = [
-                    'type' => 'SLAB',
-                    'values' => array_map(fn ($v) => (float) $v, $vals),
-                    'currency' => 'INR',
-                ];
-            } else {
-                $priceField = [
-                    'type' => 'RANGE',
-                    'min' => (float) ($min ?? 1),
-                    'max' => (float) ($max ?? 100000),
-                    'currency' => 'INR',
-                ];
-            }
-
-            $out[] = [
-                'sku' => $code,
-                'name' => (string) ($row['BrandName'] ?? $code),
-                'description' => (string) ($row['Descriptions'] ?? ''),
-                'tnc' => (string) ($row['tnc'] ?? ''),
-                'price' => $priceField,
-                'denomination' => is_numeric($denom) ? (float) $denom : null,
-                'image' => $row['BrandImage'] ?? null,
-                'image_url' => $row['BrandImage'] ?? null,
-                'currency' => 'INR',
-                'provider' => 'vouchagram',
-            ];
-        }
-
-        return $out;
+        return VouchagramCatalogMapper::mapBrandRowsToCatalogItems($brands);
     }
 
     public function fetchCatalogUpdates(\DateTime $since): array

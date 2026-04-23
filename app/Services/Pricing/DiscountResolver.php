@@ -37,6 +37,20 @@ class DiscountResolver
             }
         }
 
+        if ($tenant) {
+            $assignment = $tenant->products()
+                ->where('products.id', $product->id)
+                ->wherePivot('is_active', true)
+                ->first();
+            if ($assignment?->pivot && $assignment->pivot->margin_override !== null && $assignment->pivot->margin_override !== '') {
+                return [
+                    'percentage' => (float) $assignment->pivot->margin_override,
+                    'offer_code' => null,
+                    'source' => 'tenant_product_margin',
+                ];
+            }
+        }
+
         if ($tenant && $tenant->margin_percentage) {
             return [
                 'percentage' => (float) $tenant->margin_percentage,

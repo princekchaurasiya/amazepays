@@ -3,6 +3,7 @@
 namespace App\Services\Wallet;
 
 use App\Exceptions\InsufficientBalanceException;
+use App\Exceptions\WalletFrozenException;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
@@ -66,6 +67,7 @@ class WalletService
      * @return WalletTransaction
      *
      * @throws InsufficientBalanceException when balance < amount
+     * @throws WalletFrozenException when wallet is frozen
      */
     public function debit(
         User $user,
@@ -88,6 +90,10 @@ class WalletService
             }
 
             $wallet = Wallet::where('user_id', $user->id)->lockForUpdate()->firstOrFail();
+
+            if ($wallet->is_frozen) {
+                throw new WalletFrozenException($wallet->frozen_reason);
+            }
 
             if ($wallet->balance < $amount) {
                 throw new InsufficientBalanceException(

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Head } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Gift, RefreshCw, Send, Download, Search, Store, Database, Activity, Copy, Check } from 'lucide-react';
+import { Gift, RefreshCw, Send, Download, Search, Store, Database, Activity, Copy, Check, Archive } from 'lucide-react';
 
 /** Sanitized row from GET /panel/vouchagram/fetch-brands */
 export type VouchagramBrandRow = {
@@ -22,6 +22,7 @@ export type VouchagramBrandRow = {
 type Props = {
     sendConfigured: boolean;
     pullConfigured: boolean;
+    canSyncCatalog?: boolean;
 };
 
 function csrf(): string {
@@ -43,9 +44,21 @@ async function postJson(url: string, body: Record<string, unknown>): Promise<Rec
     return res.json();
 }
 
+async function getJson(url: string): Promise<Record<string, unknown>> {
+    const res = await fetch(url, {
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        credentials: 'same-origin',
+    });
+    return res.json();
+}
+
 const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: Activity },
     { id: 'brands', label: 'Brands', icon: Search },
+    { id: 'saved', label: 'Saved fetches', icon: Archive },
     { id: 'send', label: 'Send (B2C)', icon: Send },
     { id: 'pull', label: 'Pull (B2B)', icon: Download },
     { id: 'status', label: 'Check status', icon: RefreshCw },
@@ -55,28 +68,149 @@ const tabs = [
 
 const FETCH_BRANDS_URL = '/panel/vouchagram/fetch-brands';
 const SYNC_CATALOG_URL = '/panel/vouchagram/sync-catalog';
+const SYNC_FROM_SNAPSHOT_URL = '/panel/vouchagram/sync-catalog-from-snapshot';
+const CATALOG_SNAPSHOTS_URL = '/panel/vouchagram/catalog-snapshots';
+
+type CatalogSnapshotListRow = {
+    id: number;
+    mode: string;
+    brand_product_code_filter: string | null;
+    item_count: number;
+    fetched_at: string;
+};
+
+type PaginateMeta = {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+};
 
 type CatalogSyncStats = { created: number; updated: number; deactivated: number };
+type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
+type JsonObject = { [key: string]: JsonValue };
 
-function SyncStatsCard({ stats }: { stats: CatalogSyncStats }) {
+function SyncStatsCard({ stats, mode }: { stats: CatalogSyncStats; mode: 'send' | 'pull' | null }) {
+    const footer =
+        mode === 'pull' ? (
+            <p className="mt-2 text-xs text-green-700 dark:text-green-300">
+                These items are meant for <strong>business / admin</strong> use. They stay off your public website unless you choose to show them under
+                Products.
+            </p>
+        ) : (
+            <p className="mt-2 text-xs text-green-700 dark:text-green-300">
+                These items can appear on your <strong>public store</strong>. You can hide any product later in the Products screen.
+            </p>
+        );
+
     return (
         <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900/50 dark:bg-green-950/30">
-            <h4 className="text-sm font-semibold text-green-800 dark:text-green-200">Catalog sync complete</h4>
+            <h4 className="text-sm font-semibold text-green-800 dark:text-green-200">Import finished</h4>
             <ul className="mt-2 flex flex-wrap gap-6 text-sm text-green-900 dark:text-green-100">
                 <li>
-                    Created: <strong>{stats.created}</strong>
+                    New products: <strong>{stats.created}</strong>
                 </li>
                 <li>
                     Updated: <strong>{stats.updated}</strong>
                 </li>
                 <li>
-                    Deactivated: <strong>{stats.deactivated}</strong>
+                    No longer listed: <strong>{stats.deactivated}</strong>
                 </li>
             </ul>
-            <p className="mt-2 text-xs text-green-700 dark:text-green-300">
-                New products are <strong>visible on the storefront by default</strong>. Turn off &quot;Visible on storefront&quot; in Products if you
-                want to hide one.
+            <p className="mt-2 text-xs text-green-600 dark:text-green-400">
+                <strong>Send</strong> import = public storefront catalog. <strong>Pull</strong> import = B2B / admin catalog.
             </p>
+            {footer}
+        </div>
+    );
+}
+
+function BrandDataTable({
+    rows,
+    copiedCode,
+    onCopy,
+}: {
+    rows: VouchagramBrandRow[];
+    copiedCode: string | null;
+    onCopy: (code: string) => void;
+}) {
+    return (
+        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
+            <table className="w-full min-w-[900px] text-left text-sm">
+                <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                    <tr>
+                        <th className="px-3 py-2">Image</th>
+                        <th className="px-3 py-2">Brand</th>
+                        <th className="px-3 py-2">Code</th>
+                        <th className="px-3 py-2">Type</th>
+                        <th className="px-3 py-2">Pricing</th>
+                        <th className="px-3 py-2">Stock</th>
+                        <th className="px-3 py-2">Category</th>
+                        <th className="px-3 py-2">Redemption</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {rows.length === 0 ? (
+                        <tr>
+                            <td colSpan={8} className="px-3 py-8 text-center text-gray-500">
+                                No products returned.
+                            </td>
+                        </tr>
+                    ) : (
+                        rows.map((row) => (
+                            <tr key={row.BrandProductCode} className="bg-white dark:bg-gray-900/50">
+                                <td className="px-3 py-2">
+                                    {row.BrandImage ? (
+                                        <img
+                                            src={row.BrandImage}
+                                            alt=""
+                                            className="h-10 w-10 rounded object-contain bg-gray-50 dark:bg-gray-800"
+                                        />
+                                    ) : (
+                                        <span className="text-gray-400">—</span>
+                                    )}
+                                </td>
+                                <td className="px-3 py-2 font-medium text-gray-900 dark:text-white">{row.BrandName ?? '—'}</td>
+                                <td className="px-3 py-2">
+                                    <div className="flex items-center gap-1">
+                                        <code className="max-w-[180px] truncate text-xs text-gray-800 dark:text-gray-200">
+                                            {row.BrandProductCode}
+                                        </code>
+                                        <button
+                                            type="button"
+                                            title="Copy code"
+                                            onClick={() => onCopy(row.BrandProductCode)}
+                                            className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                        >
+                                            {copiedCode === row.BrandProductCode ? (
+                                                <Check className="h-3.5 w-3.5 text-green-600" />
+                                            ) : (
+                                                <Copy className="h-3.5 w-3.5" />
+                                            )}
+                                        </button>
+                                    </div>
+                                </td>
+                                <td className="px-3 py-2">
+                                    <span className="rounded bg-gray-100 px-2 py-0.5 text-xs dark:bg-gray-800">{row.Brandtype ?? '—'}</span>
+                                </td>
+                                <td className="px-3 py-2 text-xs text-gray-700 dark:text-gray-300">{formatBrandPricing(row)}</td>
+                                <td className="px-3 py-2">
+                                    <span
+                                        className={`inline-block h-2.5 w-2.5 rounded-full ${
+                                            stockOk(row.stockAvailable) ? 'bg-green-500' : 'bg-red-500'
+                                        }`}
+                                        title={String(row.stockAvailable ?? '')}
+                                    />
+                                </td>
+                                <td className="max-w-[160px] truncate px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
+                                    {row.Category ?? '—'}
+                                </td>
+                                <td className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">{redemptionLabel(row.RedemptionType)}</td>
+                            </tr>
+                        ))
+                    )}
+                </tbody>
+            </table>
         </div>
     );
 }
@@ -116,16 +250,111 @@ function stockOk(v: string | boolean | undefined): boolean {
     return String(v).toLowerCase() === 'true';
 }
 
-export default function VouchagramIndex({ sendConfigured, pullConfigured }: Props) {
+function titleCase(key: string): string {
+    return key
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function scalarLabel(value: JsonValue): string {
+    if (value === null) return 'null';
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    return String(value);
+}
+
+function ScalarGrid({ data }: { data: JsonObject }) {
+    const entries = Object.entries(data).filter(([, v]) => v === null || ['string', 'number', 'boolean'].includes(typeof v));
+    if (entries.length === 0) return null;
+    return (
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {entries.map(([key, value]) => (
+                <div key={key} className="rounded border border-gray-100 bg-white px-3 py-2 text-xs dark:border-gray-700 dark:bg-gray-800">
+                    <p className="font-medium text-gray-600 dark:text-gray-300">{titleCase(key)}</p>
+                    <p className="mt-1 break-words text-gray-900 dark:text-gray-100">{scalarLabel(value as JsonValue)}</p>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function ObjectSections({ data }: { data: JsonObject }) {
+    const objectEntries = Object.entries(data).filter(([, v]) => v !== null && typeof v === 'object' && !Array.isArray(v));
+    if (objectEntries.length === 0) return null;
+    return (
+        <div className="space-y-3">
+            {objectEntries.map(([key, value]) => (
+                <div key={key} className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{titleCase(key)}</p>
+                    <ScalarGrid data={value as JsonObject} />
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function ArraySections({ data }: { data: JsonObject }) {
+    const arrayEntries = Object.entries(data).filter(([, v]) => Array.isArray(v));
+    if (arrayEntries.length === 0) return null;
+    return (
+        <div className="space-y-3">
+            {arrayEntries.map(([key, value]) => {
+                const rows = value as JsonValue[];
+                return (
+                    <div key={key} className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            {titleCase(key)} ({rows.length})
+                        </p>
+                        <div className="space-y-2">
+                            {rows.slice(0, 20).map((row, idx) => (
+                                <div key={`${key}-${idx}`} className="rounded border border-gray-100 bg-gray-50 px-3 py-2 text-xs dark:border-gray-700 dark:bg-gray-900">
+                                    {row !== null && typeof row === 'object' && !Array.isArray(row) ? (
+                                        <ScalarGrid data={row as JsonObject} />
+                                    ) : (
+                                        <span className="text-gray-900 dark:text-gray-100">{scalarLabel(row)}</span>
+                                    )}
+                                </div>
+                            ))}
+                            {rows.length > 20 && <p className="text-xs text-gray-500">Showing first 20 items...</p>}
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+export default function VouchagramIndex({ sendConfigured, pullConfigured, canSyncCatalog = false }: Props) {
     const [active, setActive] = useState<(typeof tabs)[number]['id']>('dashboard');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<Record<string, unknown> | null>(null);
     const [brandRows, setBrandRows] = useState<VouchagramBrandRow[] | null>(null);
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
-    const [syncLoading, setSyncLoading] = useState(false);
+    const [brandsSendBusy, setBrandsSendBusy] = useState(false);
+    const [brandsPullBusy, setBrandsPullBusy] = useState(false);
+    const [catalogSendBusy, setCatalogSendBusy] = useState(false);
+    const [catalogPullBusy, setCatalogPullBusy] = useState(false);
+    const [snapshotImportBusy, setSnapshotImportBusy] = useState(false);
     const [syncStats, setSyncStats] = useState<CatalogSyncStats | null>(null);
     const [lastSyncContext, setLastSyncContext] = useState<'brands' | 'sync' | null>(null);
+    const [lastSyncMode, setLastSyncMode] = useState<'send' | 'pull' | null>(null);
+    /** Partner product list shown on Catalog sync tab after a successful import. */
+    const [syncTabBrandRows, setSyncTabBrandRows] = useState<VouchagramBrandRow[] | null>(null);
+    const [syncTabActivityLog, setSyncTabActivityLog] = useState<string[]>([]);
+
+    const [savedListFilterMode, setSavedListFilterMode] = useState<'all' | 'send' | 'pull'>('all');
+    const [savedList, setSavedList] = useState<CatalogSnapshotListRow[] | null>(null);
+    const [savedListMeta, setSavedListMeta] = useState<PaginateMeta | null>(null);
+    const [savedListLoading, setSavedListLoading] = useState(false);
+    const [savedListError, setSavedListError] = useState<string | null>(null);
+
+    const [savedDetailId, setSavedDetailId] = useState<number | null>(null);
+    const [savedDetailHeader, setSavedDetailHeader] = useState<CatalogSnapshotListRow | null>(null);
+    const [savedDetailRows, setSavedDetailRows] = useState<VouchagramBrandRow[] | null>(null);
+    const [savedDetailMeta, setSavedDetailMeta] = useState<PaginateMeta | null>(null);
+    const [savedDetailLoading, setSavedDetailLoading] = useState(false);
+    const [savedDetailError, setSavedDetailError] = useState<string | null>(null);
 
     const [brandMode, setBrandMode] = useState<'send' | 'pull'>('send');
     const [brandCode, setBrandCode] = useState('');
@@ -171,19 +400,256 @@ export default function VouchagramIndex({ sendConfigured, pullConfigured }: Prop
         }
     }, [active]);
 
-    const runSyncCatalog = async (preserveBrandTable: boolean) => {
+    useEffect(() => {
+        if (active !== 'sync') {
+            setSyncTabBrandRows(null);
+            setSyncTabActivityLog([]);
+        }
+    }, [active]);
+
+    useEffect(() => {
+        if (active !== 'saved') {
+            return;
+        }
+
+        let cancelled = false;
+
+        const load = async () => {
+            setSavedListLoading(true);
+            setSavedListError(null);
+            try {
+                const params = new URLSearchParams({ page: '1', per_page: '20' });
+                if (savedListFilterMode !== 'all') {
+                    params.set('mode', savedListFilterMode);
+                }
+                const data = await getJson(`${CATALOG_SNAPSHOTS_URL}?${params.toString()}`);
+                if (cancelled) {
+                    return;
+                }
+                if (data.success !== true) {
+                    setSavedList(null);
+                    setSavedListMeta(null);
+                    setSavedListError(String(data.message ?? 'Could not load saved fetches.'));
+                    return;
+                }
+                const rows = Array.isArray(data.data) ? (data.data as CatalogSnapshotListRow[]) : [];
+                setSavedList(rows);
+                const m = data.meta as Record<string, unknown> | undefined;
+                if (m && typeof m.current_page === 'number') {
+                    setSavedListMeta({
+                        current_page: Number(m.current_page),
+                        last_page: Number(m.last_page),
+                        per_page: Number(m.per_page),
+                        total: Number(m.total),
+                    });
+                } else {
+                    setSavedListMeta(null);
+                }
+            } catch (e: unknown) {
+                if (!cancelled) {
+                    setSavedList(null);
+                    setSavedListMeta(null);
+                    setSavedListError(e instanceof Error ? e.message : 'Request failed');
+                }
+            } finally {
+                if (!cancelled) {
+                    setSavedListLoading(false);
+                }
+            }
+        };
+
+        void load();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [active, savedListFilterMode]);
+
+    const loadSavedListPage = async (page: number) => {
+        if (active !== 'saved') {
+            return;
+        }
+        setSavedListLoading(true);
+        setSavedListError(null);
+        try {
+            const params = new URLSearchParams({ page: String(page), per_page: '20' });
+            if (savedListFilterMode !== 'all') {
+                params.set('mode', savedListFilterMode);
+            }
+            const data = await getJson(`${CATALOG_SNAPSHOTS_URL}?${params.toString()}`);
+            if (data.success !== true) {
+                setSavedList(null);
+                setSavedListMeta(null);
+                setSavedListError(String(data.message ?? 'Could not load saved fetches.'));
+                return;
+            }
+            const rows = Array.isArray(data.data) ? (data.data as CatalogSnapshotListRow[]) : [];
+            setSavedList(rows);
+            const m = data.meta as Record<string, unknown> | undefined;
+            if (m && typeof m.current_page === 'number') {
+                setSavedListMeta({
+                    current_page: Number(m.current_page),
+                    last_page: Number(m.last_page),
+                    per_page: Number(m.per_page),
+                    total: Number(m.total),
+                });
+            } else {
+                setSavedListMeta(null);
+            }
+        } catch (e: unknown) {
+            setSavedList(null);
+            setSavedListMeta(null);
+            setSavedListError(e instanceof Error ? e.message : 'Request failed');
+        } finally {
+            setSavedListLoading(false);
+        }
+    };
+
+    const loadSavedDetail = async (id: number, page = 1, listRow?: CatalogSnapshotListRow) => {
+        setSavedDetailId(id);
+        if (listRow) {
+            setSavedDetailHeader(listRow);
+        }
+        setSavedDetailLoading(true);
+        setSavedDetailError(null);
+        try {
+            const params = new URLSearchParams({ page: String(page), per_page: '100' });
+            const data = await getJson(`${CATALOG_SNAPSHOTS_URL}/${id}?${params.toString()}`);
+            if (data.success !== true) {
+                setSavedDetailHeader(null);
+                setSavedDetailRows(null);
+                setSavedDetailMeta(null);
+                setSavedDetailError(String(data.message ?? 'Could not load snapshot.'));
+                return;
+            }
+            const snap = data.snapshot as Record<string, unknown> | undefined;
+            if (snap && snap.id != null) {
+                setSavedDetailHeader({
+                    id: Number(snap.id),
+                    mode: String(snap.mode ?? ''),
+                    brand_product_code_filter: (snap.brand_product_code_filter as string | null) ?? null,
+                    item_count: Number(snap.item_count ?? 0),
+                    fetched_at: String(snap.fetched_at ?? ''),
+                });
+            } else {
+                setSavedDetailHeader(null);
+            }
+            setSavedDetailRows(Array.isArray(data.data) ? (data.data as VouchagramBrandRow[]) : []);
+            const m = data.meta as Record<string, unknown> | undefined;
+            if (m && typeof m.current_page === 'number') {
+                setSavedDetailMeta({
+                    current_page: Number(m.current_page),
+                    last_page: Number(m.last_page),
+                    per_page: Number(m.per_page),
+                    total: Number(m.total),
+                });
+            } else {
+                setSavedDetailMeta(null);
+            }
+        } catch (e: unknown) {
+            setSavedDetailHeader(null);
+            setSavedDetailRows(null);
+            setSavedDetailMeta(null);
+            setSavedDetailError(e instanceof Error ? e.message : 'Request failed');
+        } finally {
+            setSavedDetailLoading(false);
+        }
+    };
+
+    const runSyncCatalog = async (mode: 'send' | 'pull', preserveBrandTable: boolean) => {
         setError(null);
         setSyncStats(null);
         setLastSyncContext(null);
+        setLastSyncMode(null);
         if (preserveBrandTable) {
-            setSyncLoading(true);
+            if (mode === 'send') {
+                setBrandsSendBusy(true);
+            } else {
+                setBrandsPullBusy(true);
+            }
         } else {
-            setLoading(true);
-            setResult(null);
-            setBrandRows(null);
+            if (mode === 'send') {
+                setCatalogSendBusy(true);
+            } else {
+                setCatalogPullBusy(true);
+            }
+            setSyncTabBrandRows(null);
+            setSyncTabActivityLog([]);
         }
+        const log: string[] = [];
         try {
-            const data = await postJson(SYNC_CATALOG_URL, {});
+            const data = await postJson(SYNC_CATALOG_URL, { mode });
+            if (data.success === false && data.message) {
+                setError(String(data.message));
+                if (!preserveBrandTable) {
+                    setSyncTabActivityLog([`Import failed: ${String(data.message)}`]);
+                }
+            }
+            if (data.success === true && data.stats && typeof data.stats === 'object' && !Array.isArray(data.stats)) {
+                const s = data.stats as Record<string, unknown>;
+                const created = Number(s.created ?? 0);
+                const updated = Number(s.updated ?? 0);
+                const deactivated = Number(s.deactivated ?? 0);
+                setSyncStats({ created, updated, deactivated });
+                setLastSyncContext(preserveBrandTable ? 'brands' : 'sync');
+                if (data.mode === 'send' || data.mode === 'pull') {
+                    setLastSyncMode(data.mode);
+                }
+                log.push(
+                    `Imported from partner: ${created} new, ${updated} updated, ${deactivated} marked no longer available.`
+                );
+
+                if (!preserveBrandTable) {
+                    const br = await postJson(FETCH_BRANDS_URL, { mode, brand_code: null });
+                    if (br.success === true && Array.isArray(br.data)) {
+                        const rows = br.data as VouchagramBrandRow[];
+                        setSyncTabBrandRows(rows);
+                        log.push(
+                            rows.length > 0
+                                ? `Loaded ${rows.length} products below so you can review what is available from the partner.`
+                                : 'Import finished; the partner returned no products in the live list (table below is empty).'
+                        );
+                        if (typeof br.snapshot_id === 'number') {
+                            log.push(`Catalog snapshot saved as #${br.snapshot_id}.`);
+                        }
+                    } else {
+                        setSyncTabBrandRows(null);
+                        log.push('Import succeeded, but the product list preview could not be loaded. Try the Brands tab to fetch the list.');
+                    }
+                    setSyncTabActivityLog(log);
+                }
+            }
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'Request failed';
+            setError(msg);
+            if (!preserveBrandTable) {
+                setSyncTabActivityLog([`Something went wrong: ${msg}`]);
+            }
+        } finally {
+            if (preserveBrandTable) {
+                if (mode === 'send') {
+                    setBrandsSendBusy(false);
+                } else {
+                    setBrandsPullBusy(false);
+                }
+            } else {
+                if (mode === 'send') {
+                    setCatalogSendBusy(false);
+                } else {
+                    setCatalogPullBusy(false);
+                }
+            }
+        }
+    };
+
+    const runSyncFromSnapshot = async (snapshotId: number) => {
+        setError(null);
+        setSyncStats(null);
+        setLastSyncContext('brands');
+        setLastSyncMode(null);
+        setSnapshotImportBusy(true);
+        try {
+            const data = await postJson(SYNC_FROM_SNAPSHOT_URL, { snapshot_id: snapshotId });
             if (data.success === false && data.message) {
                 setError(String(data.message));
             }
@@ -194,16 +660,14 @@ export default function VouchagramIndex({ sendConfigured, pullConfigured }: Prop
                     updated: Number(s.updated ?? 0),
                     deactivated: Number(s.deactivated ?? 0),
                 });
-                setLastSyncContext(preserveBrandTable ? 'brands' : 'sync');
+                if (data.mode === 'send' || data.mode === 'pull') {
+                    setLastSyncMode(data.mode as 'send' | 'pull');
+                }
             }
         } catch (e: unknown) {
             setError(e instanceof Error ? e.message : 'Request failed');
         } finally {
-            if (preserveBrandTable) {
-                setSyncLoading(false);
-            } else {
-                setLoading(false);
-            }
+            setSnapshotImportBusy(false);
         }
     };
 
@@ -252,6 +716,13 @@ export default function VouchagramIndex({ sendConfigured, pullConfigured }: Prop
         result.stats != null &&
         typeof result.stats === 'object' &&
         !Array.isArray(result.stats);
+    const normalizedResponseData = (() => {
+        if (!result) return null;
+        const data = result.data as JsonValue;
+        if (!data) return null;
+        if (typeof data !== 'object' || Array.isArray(data)) return { value: data } as JsonObject;
+        return data as JsonObject;
+    })();
 
     return (
         <AdminLayout>
@@ -262,7 +733,7 @@ export default function VouchagramIndex({ sendConfigured, pullConfigured }: Prop
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vouchagram API</h1>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Send Voucher (B2C) and Pull Voucher (B2B) — test tools and catalog sync
+                            Parent platform for the Gyftr voucher network — Send (B2C) and Pull (B2B) tools and catalog sync
                         </p>
                     </div>
                 </div>
@@ -349,6 +820,37 @@ export default function VouchagramIndex({ sendConfigured, pullConfigured }: Prop
                                 Fetch brands
                             </button>
                         </div>
+                        {result?.success === true && typeof result.snapshot_id === 'number' && (
+                            <div className="space-y-2">
+                                <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
+                                    Saved as catalog <strong>#{result.snapshot_id}</strong>
+                                    {typeof result.snapshot_fetched_at === 'string' ? (
+                                        <span className="ml-2 text-xs opacity-80">({result.snapshot_fetched_at})</span>
+                                    ) : null}
+                                    . This stores rows for history; it does not create <code className="text-xs">products</code> until you
+                                    import below.
+                                </p>
+                                {canSyncCatalog ? (
+                                    <button
+                                        type="button"
+                                        disabled={snapshotImportBusy || brandsSendBusy || brandsPullBusy}
+                                        onClick={() => void runSyncFromSnapshot(Number(result.snapshot_id))}
+                                        className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                                    >
+                                        {snapshotImportBusy
+                                            ? 'Importing from snapshot…'
+                                            : `Import snapshot #${String(result.snapshot_id)} into Products (no live API)`}
+                                    </button>
+                                ) : (
+                                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                                        Importing into Products requires the <strong>providers.sync</strong> permission.
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                        {active === 'brands' && lastSyncContext === 'brands' && syncStats && (
+                            <SyncStatsCard stats={syncStats} mode={lastSyncMode} />
+                        )}
                         <div className="border-t border-gray-200 pt-4 dark:border-gray-600">
                             <h4 className="mb-2 text-sm font-semibold text-gray-800 dark:text-gray-200">Check stock</h4>
                             <div className="flex flex-wrap gap-4">
@@ -396,104 +898,204 @@ export default function VouchagramIndex({ sendConfigured, pullConfigured }: Prop
                                     </span>
                                     <button
                                         type="button"
-                                        disabled={loading || syncLoading}
-                                        onClick={() => runSyncCatalog(true)}
-                                        title="Fetches the full catalog from Vouchagram (same as Catalog sync tab) and upserts into the products table"
+                                        disabled={loading || brandsSendBusy || brandsPullBusy || snapshotImportBusy || !sendConfigured}
+                                        onClick={() => runSyncCatalog('send', true)}
+                                        title={
+                                            brandsPullBusy
+                                                ? 'Wait until the Pull import finishes.'
+                                                : 'Partner Send API — saves products for your public storefront.'
+                                        }
                                         className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                                     >
-                                        {syncLoading
-                                            ? 'Syncing…'
-                                            : `Sync ${brandRows!.length} listed brands to products`}
+                                        {brandsSendBusy
+                                            ? 'Importing…'
+                                            : `Re-fetch from partner (Send API) — ${brandRows!.length} listed`}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={loading || brandsSendBusy || brandsPullBusy || snapshotImportBusy || !pullConfigured}
+                                        onClick={() => runSyncCatalog('pull', true)}
+                                        title={
+                                            brandsSendBusy
+                                                ? 'Wait until the Send import finishes.'
+                                                : 'Partner Pull API — saves products for B2B / admin use.'
+                                        }
+                                        className="rounded-lg bg-teal-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-800 disabled:opacity-50"
+                                    >
+                                        {brandsPullBusy
+                                            ? 'Importing…'
+                                            : `Re-fetch from partner (Pull API) — ${brandRows!.length} listed`}
                                     </button>
                                 </div>
-                                {lastSyncContext === 'brands' && syncStats && (
-                                    <SyncStatsCard stats={syncStats} />
-                                )}
-                                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
-                                    <table className="w-full min-w-[900px] text-left text-sm">
-                                        <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-                                            <tr>
-                                                <th className="px-3 py-2">Image</th>
-                                                <th className="px-3 py-2">Brand</th>
-                                                <th className="px-3 py-2">Code</th>
-                                                <th className="px-3 py-2">Type</th>
-                                                <th className="px-3 py-2">Pricing</th>
-                                                <th className="px-3 py-2">Stock</th>
-                                                <th className="px-3 py-2">Category</th>
-                                                <th className="px-3 py-2">Redemption</th>
+                                <BrandDataTable rows={brandRows!} copiedCode={copiedCode} onCopy={copyCode} />
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {active === 'saved' && (
+                    <div className="space-y-6 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Saved catalog fetches</h3>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                Each successful &quot;Fetch brands&quot; is stored with an internal id. Open a row to view the same
+                                sanitized columns as on the Brands tab.
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4">
+                            <label className="flex items-center gap-2 text-sm">
+                                Mode
+                                <select
+                                    value={savedListFilterMode}
+                                    onChange={(e) => setSavedListFilterMode(e.target.value as 'all' | 'send' | 'pull')}
+                                    className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-900"
+                                >
+                                    <option value="all">All</option>
+                                    <option value="send">Send</option>
+                                    <option value="pull">Pull</option>
+                                </select>
+                            </label>
+                            {savedListLoading && <span className="text-xs text-gray-500">Loading…</span>}
+                        </div>
+                        {savedListError && (
+                            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200">
+                                {savedListError}
+                            </p>
+                        )}
+                        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
+                            <table className="w-full min-w-[640px] text-left text-sm">
+                                <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                                    <tr>
+                                        <th className="px-3 py-2">ID</th>
+                                        <th className="px-3 py-2">Mode</th>
+                                        <th className="px-3 py-2">Fetched</th>
+                                        <th className="px-3 py-2">Filter</th>
+                                        <th className="px-3 py-2">Items</th>
+                                        <th className="px-3 py-2" />
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                                    {!savedList || savedList.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={6} className="px-3 py-8 text-center text-gray-500">
+                                                {savedListLoading ? 'Loading…' : 'No saved fetches yet. Use Fetch brands on the Brands tab.'}
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        savedList.map((row) => (
+                                            <tr
+                                                key={row.id}
+                                                className={`bg-white dark:bg-gray-900/50 ${savedDetailId === row.id ? 'ring-1 ring-inset ring-indigo-300 dark:ring-indigo-700' : ''}`}
+                                            >
+                                                <td className="px-3 py-2 font-mono text-xs">{row.id}</td>
+                                                <td className="px-3 py-2">
+                                                    <span className="rounded bg-gray-100 px-2 py-0.5 text-xs dark:bg-gray-800">{row.mode}</span>
+                                                </td>
+                                                <td className="px-3 py-2 text-xs text-gray-600 dark:text-gray-300">{row.fetched_at}</td>
+                                                <td className="max-w-[200px] truncate px-3 py-2 text-xs text-gray-600 dark:text-gray-300">
+                                                    {row.brand_product_code_filter ?? '— (all)'}
+                                                </td>
+                                                <td className="px-3 py-2">{row.item_count}</td>
+                                                <td className="px-3 py-2 text-right">
+                                                    <button
+                                                        type="button"
+                                                        disabled={savedDetailLoading}
+                                                        onClick={() => void loadSavedDetail(row.id, 1, row)}
+                                                        className="rounded-lg bg-indigo-600 px-3 py-1 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                                                    >
+                                                        View rows
+                                                    </button>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                                            {brandRows!.length === 0 ? (
-                                                <tr>
-                                                    <td colSpan={8} className="px-3 py-8 text-center text-gray-500">
-                                                        No brands returned.
-                                                    </td>
-                                                </tr>
-                                            ) : (
-                                                brandRows!.map((row) => (
-                                                    <tr key={row.BrandProductCode} className="bg-white dark:bg-gray-900/50">
-                                                        <td className="px-3 py-2">
-                                                            {row.BrandImage ? (
-                                                                <img
-                                                                    src={row.BrandImage}
-                                                                    alt=""
-                                                                    className="h-10 w-10 rounded object-contain bg-gray-50 dark:bg-gray-800"
-                                                                />
-                                                            ) : (
-                                                                <span className="text-gray-400">—</span>
-                                                            )}
-                                                        </td>
-                                                        <td className="px-3 py-2 font-medium text-gray-900 dark:text-white">
-                                                            {row.BrandName ?? '—'}
-                                                        </td>
-                                                        <td className="px-3 py-2">
-                                                            <div className="flex items-center gap-1">
-                                                                <code className="max-w-[180px] truncate text-xs text-gray-800 dark:text-gray-200">
-                                                                    {row.BrandProductCode}
-                                                                </code>
-                                                                <button
-                                                                    type="button"
-                                                                    title="Copy code"
-                                                                    onClick={() => copyCode(row.BrandProductCode)}
-                                                                    className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-                                                                >
-                                                                    {copiedCode === row.BrandProductCode ? (
-                                                                        <Check className="h-3.5 w-3.5 text-green-600" />
-                                                                    ) : (
-                                                                        <Copy className="h-3.5 w-3.5" />
-                                                                    )}
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-3 py-2">
-                                                            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs dark:bg-gray-800">
-                                                                {row.Brandtype ?? '—'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-3 py-2 text-xs text-gray-700 dark:text-gray-300">
-                                                            {formatBrandPricing(row)}
-                                                        </td>
-                                                        <td className="px-3 py-2">
-                                                            <span
-                                                                className={`inline-block h-2.5 w-2.5 rounded-full ${
-                                                                    stockOk(row.stockAvailable) ? 'bg-green-500' : 'bg-red-500'
-                                                                }`}
-                                                                title={String(row.stockAvailable ?? '')}
-                                                            />
-                                                        </td>
-                                                        <td className="max-w-[160px] truncate px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
-                                                            {row.Category ?? '—'}
-                                                        </td>
-                                                        <td className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
-                                                            {redemptionLabel(row.RedemptionType)}
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </table>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        {savedListMeta && savedListMeta.last_page > 1 && (
+                            <div className="flex flex-wrap items-center gap-2 text-sm">
+                                <button
+                                    type="button"
+                                    disabled={savedListLoading || savedListMeta.current_page <= 1}
+                                    onClick={() => void loadSavedListPage(savedListMeta.current_page - 1)}
+                                    className="rounded border border-gray-300 px-3 py-1 dark:border-gray-600 disabled:opacity-50"
+                                >
+                                    Previous
+                                </button>
+                                <span className="text-gray-600 dark:text-gray-400">
+                                    Page {savedListMeta.current_page} of {savedListMeta.last_page} ({savedListMeta.total} total)
+                                </span>
+                                <button
+                                    type="button"
+                                    disabled={savedListLoading || savedListMeta.current_page >= savedListMeta.last_page}
+                                    onClick={() => void loadSavedListPage(savedListMeta.current_page + 1)}
+                                    className="rounded border border-gray-300 px-3 py-1 dark:border-gray-600 disabled:opacity-50"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
+
+                        {savedDetailError && (
+                            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200">
+                                {savedDetailError}
+                            </p>
+                        )}
+
+                        {savedDetailHeader && (
+                            <div className="space-y-3 border-t border-gray-200 pt-6 dark:border-gray-600">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                        Snapshot #{savedDetailHeader.id}{' '}
+                                        <span className="font-normal text-gray-500 dark:text-gray-400">
+                                            ({savedDetailHeader.mode}, {savedDetailHeader.item_count} items)
+                                        </span>
+                                    </h4>
+                                    {canSyncCatalog && savedDetailHeader.item_count > 0 && (
+                                        <button
+                                            type="button"
+                                            disabled={snapshotImportBusy || brandsSendBusy || brandsPullBusy}
+                                            onClick={() => void runSyncFromSnapshot(savedDetailHeader.id)}
+                                            className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                                        >
+                                            {snapshotImportBusy ? 'Importing…' : 'Import this snapshot into Products'}
+                                        </button>
+                                    )}
                                 </div>
+                                {savedDetailLoading && <p className="text-xs text-gray-500">Loading rows…</p>}
+                                {savedDetailRows && (
+                                    <>
+                                        <BrandDataTable rows={savedDetailRows} copiedCode={copiedCode} onCopy={copyCode} />
+                                        {savedDetailMeta && savedDetailMeta.last_page > 1 && (
+                                            <div className="flex flex-wrap items-center gap-2 text-sm">
+                                                <button
+                                                    type="button"
+                                                    disabled={savedDetailLoading || savedDetailMeta.current_page <= 1}
+                                                    onClick={() =>
+                                                        savedDetailId != null && void loadSavedDetail(savedDetailId, savedDetailMeta.current_page - 1)
+                                                    }
+                                                    className="rounded border border-gray-300 px-3 py-1 dark:border-gray-600 disabled:opacity-50"
+                                                >
+                                                    Previous page
+                                                </button>
+                                                <span className="text-gray-600 dark:text-gray-400">
+                                                    Page {savedDetailMeta.current_page} of {savedDetailMeta.last_page} (
+                                                    {savedDetailMeta.total} rows)
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    disabled={savedDetailLoading || savedDetailMeta.current_page >= savedDetailMeta.last_page}
+                                                    onClick={() =>
+                                                        savedDetailId != null && void loadSavedDetail(savedDetailId, savedDetailMeta.current_page + 1)
+                                                    }
+                                                    className="rounded border border-gray-300 px-3 py-1 dark:border-gray-600 disabled:opacity-50"
+                                                >
+                                                    Next page
+                                                </button>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
@@ -644,33 +1246,103 @@ export default function VouchagramIndex({ sendConfigured, pullConfigured }: Prop
                 )}
 
                 {active === 'sync' && (
-                    <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-                        <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
-                            Runs <code className="rounded bg-gray-100 px-1 dark:bg-gray-900">CatalogSyncService</code> for{' '}
-                            <code>vouchagram</code> and fills product URLs/slugs. Requires <code>providers.sync</code> permission.
-                        </p>
-                        <button
-                            type="button"
-                            disabled={loading || syncLoading}
-                            onClick={() => runSyncCatalog(false)}
-                            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-                        >
-                            {loading ? 'Syncing…' : 'Sync catalog now'}
-                        </button>
-                        {lastSyncContext === 'sync' && syncStats && <SyncStatsCard stats={syncStats} />}
+                    <div className="space-y-6 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+                        <div>
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Update product list from partner</h3>
+                            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                Two separate imports: the partner <strong>Send API</strong> fills your <strong>public store</strong> catalog (what
+                                shoppers see). The <strong>Pull API</strong> fills your <strong>B2B / admin</strong> catalog (business use; hidden from
+                                the public site by default). After each import we load the table below so you can review brands, codes, pricing, and
+                                stock—like the Brands tab.
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                            <button
+                                type="button"
+                                disabled={catalogSendBusy || catalogPullBusy || !sendConfigured}
+                                onClick={() => runSyncCatalog('send', false)}
+                                title={
+                                    catalogPullBusy
+                                        ? 'Wait until the Pull import finishes.'
+                                        : 'Partner Send API — full catalog import for the public storefront.'
+                                }
+                                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                            >
+                                {catalogSendBusy
+                                    ? 'Importing…'
+                                    : 'Import for public store (Send API)'}
+                            </button>
+                            <button
+                                type="button"
+                                disabled={catalogSendBusy || catalogPullBusy || !pullConfigured}
+                                onClick={() => runSyncCatalog('pull', false)}
+                                title={
+                                    catalogSendBusy
+                                        ? 'Wait until the Send import finishes.'
+                                        : 'Partner Pull API — full catalog import for B2B / admin.'
+                                }
+                                className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
+                            >
+                                {catalogPullBusy
+                                    ? 'Importing…'
+                                    : 'Import for B2B (Pull API)'}
+                            </button>
+                        </div>
+
+                        {syncTabActivityLog.length > 0 && (
+                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-900/50">
+                                <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">What happened</h4>
+                                <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-gray-800 dark:text-gray-200">
+                                    {syncTabActivityLog.map((line, i) => (
+                                        <li key={i}>{line}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {lastSyncContext === 'sync' && syncStats && <SyncStatsCard stats={syncStats} mode={lastSyncMode} />}
+
+                        {syncTabBrandRows !== null && (
+                            <div className="space-y-2">
+                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Partner products (after last import)</h4>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    Same view as the Brands tab—so you can confirm what the partner returned.
+                                </p>
+                                <BrandDataTable rows={syncTabBrandRows} copiedCode={copiedCode} onCopy={copyCode} />
+                            </div>
+                        )}
                     </div>
                 )}
 
                 {result !== null && !hideRawJsonForBrands && !hideRawJsonForSync && (
                     <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-                        <h4 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">Response</h4>
-                        <pre className="max-h-[480px] overflow-auto text-xs text-gray-800 dark:text-gray-200">
-                            {JSON.stringify(result, null, 2)}
-                        </pre>
+                        <div className="mb-3 flex items-center justify-between">
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Response</h4>
+                            <span
+                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                    result.success === true ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                                }`}
+                            >
+                                {result.success === true ? 'Success' : 'Error'}
+                            </span>
+                        </div>
+                        {normalizedResponseData && (
+                            <div className="space-y-3">
+                                <ScalarGrid data={normalizedResponseData} />
+                                <ObjectSections data={normalizedResponseData} />
+                                <ArraySections data={normalizedResponseData} />
+                            </div>
+                        )}
+                        <details className="mt-3">
+                            <summary className="cursor-pointer text-xs font-medium text-gray-600 dark:text-gray-300">View raw JSON</summary>
+                            <pre className="mt-2 max-h-[480px] overflow-auto rounded border border-gray-200 bg-white p-3 text-xs text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                                {JSON.stringify(result, null, 2)}
+                            </pre>
+                        </details>
                     </div>
                 )}
 
-                {loading && <p className="text-sm text-gray-500">Loading…</p>}
+                {loading && active !== 'sync' && <p className="text-sm text-gray-500">Loading…</p>}
             </div>
         </AdminLayout>
     );

@@ -18,12 +18,16 @@ class VouchagramOrderFulfillmentService
     public function fulfillIfApplicable(Order $order): void
     {
         $product = Product::find($order->product_id);
-        if (! $product || $product->source_provider !== 'vouchagram') {
+        if (! $product || ! $this->isVouchagramProduct($product)) {
             return;
         }
 
         try {
-            if ($order->tenant_id) {
+            if ($product->source_provider === 'vouchagram_pull') {
+                $this->applyResult($order, VoucherProviderFactory::make('vouchagram_pull')->placeOrder($this->buildPullPayload($order, $product)));
+            } elseif ($product->source_provider === 'vouchagram_send') {
+                $this->applyResult($order, VoucherProviderFactory::make('vouchagram_send')->placeOrder($this->buildSendPayload($order, $product)));
+            } elseif ($order->tenant_id) {
                 $this->applyResult($order, VoucherProviderFactory::make('vouchagram_pull')->placeOrder($this->buildPullPayload($order, $product)));
             } else {
                 $this->applyResult($order, VoucherProviderFactory::make('vouchagram_send')->placeOrder($this->buildSendPayload($order, $product)));
@@ -84,6 +88,11 @@ class VouchagramOrderFulfillmentService
             'quantity' => min(10, max(1, (int) $order->quantity)),
             'denomination' => (string) $order->denomination,
         ];
+    }
+
+    private function isVouchagramProduct(Product $product): bool
+    {
+        return in_array((string) $product->source_provider, ['vouchagram', 'vouchagram_send', 'vouchagram_pull'], true);
     }
 
     private function externalOrderId(Order $order): string

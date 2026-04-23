@@ -24,6 +24,7 @@ class Order extends Model
         'sender_email', 'sender_phone_no', 'sender_post_code', 'sender_address_1',
         'sender_address_2', 'sender_city', 'sender_state', 'sku', 'amount',
         'receiver_name', 'receiver_email', 'receiver_mobile', 'receiver_msg',
+        'gift_theme_id', 'gift_message_title', 'gift_delivery_option', 'gift_delivery_at',
         'cards', 'order_cancel', 'order_payment', 'payment_method', 'currency', 'additionalTxnFields',
         'grand_payable_amount', 'grand_total', 'discounted_amount_value', 'amount_payable_after_discount',
         'unit_price', 'subtotal', 'discount_percentage', 'discount_amount', 'gst_percentage', 'gst_amount',
@@ -61,6 +62,8 @@ class Order extends Model
         'last_code_viewed_at' => 'datetime',
         'checker_action_at' => 'datetime',
         'is_vpn_purchase' => 'boolean',
+        'gift_theme_id' => 'integer',
+        'gift_delivery_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

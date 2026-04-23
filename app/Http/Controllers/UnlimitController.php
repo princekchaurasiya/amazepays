@@ -19,6 +19,26 @@ class UnlimitController extends Controller
      */
     public function checkout(Request $request)
     {
+        $allowed = [
+            'billing_name',
+            'billing_email',
+            'billing_tel',
+            'billing_address',
+            'billing_city',
+            'billing_state',
+            'billing_zip',
+            'billing_country',
+            'denomination',
+            'sku',
+            'order_id',
+        ];
+        $unknown = array_values(array_diff(array_keys($request->all()), $allowed));
+        if ($unknown !== []) {
+            return back()->withErrors([
+                'unexpected_fields' => 'Unexpected input fields detected: '.implode(', ', $unknown),
+            ])->withInput();
+        }
+
         $validated = $request->validate([
             'billing_name' => 'required|string',
             'billing_email' => 'required|email',

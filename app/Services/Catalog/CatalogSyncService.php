@@ -3,6 +3,8 @@
 namespace App\Services\Catalog;
 
 use App\Models\Product;
+use App\Models\VouchagramCatalogSnapshot;
+use App\Services\Voucher\VouchagramCatalogMapper;
 use App\Services\Voucher\VoucherProviderFactory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,25 +22,74 @@ class CatalogSyncService
     ) {}
 
     /**
-     * Sync products from a specific provider.
+     * Sync products from a specific provider (fetches catalog from the provider API).
      *
+     * @param  array{default_show_product?: bool|null}  $options
      * @return array{created: int, updated: int, deactivated: int}
      */
-    public function syncProvider(string $providerName): array
+    public function syncProvider(string $providerName, array $options = []): array
     {
         $provider = $this->providerFactory->make($providerName);
         $catalog = $provider->fetchCatalog();
 
+        return $this->syncProviderCatalog($providerName, $catalog, $options);
+    }
+
+    /**
+     * Upsert products from a saved Vouchagram catalog snapshot (no live API call).
+     *
+     * @return array{created: int, updated: int, deactivated: int}
+     */
+    public function syncProviderFromSnapshot(int $snapshotId): array
+    {
+        $snapshot = VouchagramCatalogSnapshot::query()->findOrFail($snapshotId);
+
+        $providerName = $snapshot->mode === 'pull' ? 'vouchagram_pull' : 'vouchagram_send';
+        $options = $snapshot->mode === 'pull' ? ['default_show_product' => false] : [];
+
+        $brandRows = [];
+        $snapshot->items()->orderBy('id')->chunkById(500, function ($items) use (&$brandRows) {
+            foreach ($items as $item) {
+                if (is_array($item->payload)) {
+                    $brandRows[] = $item->payload;
+                }
+            }
+        });
+
+        $catalog = VouchagramCatalogMapper::mapBrandRowsToCatalogItems($brandRows);
+
+        return $this->syncProviderCatalog($providerName, $catalog, $options);
+    }
+
+    /**
+     * Apply a normalized catalog array to the products table for one provider.
+     *
+     * @param  array<int, array<string, mixed>>  $catalog
+     * @param  array{default_show_product?: bool|null}  $options
+     * @return array{created: int, updated: int, deactivated: int}
+     */
+    public function syncProviderCatalog(string $providerName, array $catalog, array $options = []): array
+    {
+        $defaultShowProduct = array_key_exists('default_show_product', $options)
+            ? $options['default_show_product']
+            : null;
+
         $created = 0;
         $updated = 0;
-        $deactivated = 0;
         $seenSkus = [];
 
-        DB::transaction(function () use ($catalog, $providerName, &$created, &$updated, &$seenSkus) {
+        DB::transaction(function () use ($catalog, $providerName, $defaultShowProduct, &$created, &$updated, &$seenSkus) {
             foreach ($catalog as $item) {
-                $seenSkus[] = $item['sku'];
+                $sku = isset($item['sku']) ? (string) $item['sku'] : '';
+                if ($sku === '') {
+                    continue;
+                }
+                $seenSkus[] = $sku;
 
-                $product = Product::where('sku', $item['sku'])->first();
+                $product = Product::query()
+                    ->where('sku', $sku)
+                    ->where('source_provider', $providerName)
+                    ->first();
 
                 $imageUrl = $item['image_url'] ?? $item['image'] ?? null;
                 $images = null;
@@ -50,7 +101,7 @@ class CatalogSyncService
                 if ($priceVal === null && isset($item['denomination'])) {
                     $priceVal = json_encode([
                         'type' => 'SLAB',
-                        'values' => [(float) $item['denomination']],
+                        'denominations' => [(float) $item['denomination']],
                         'currency' => $item['currency'] ?? 'INR',
                     ]);
                 } elseif (is_array($priceVal)) {
@@ -65,12 +116,12 @@ class CatalogSyncService
                 }
                 if ($derivedDenom === null && is_array($item['price'] ?? null)) {
                     $p = $item['price'];
-                    if (strtoupper((string) ($p['type'] ?? '')) === 'SLAB'
-                        && isset($p['values'])
-                        && is_array($p['values'])
-                        && count($p['values']) === 1) {
-                        $derivedDenom = (float) $p['values'][0];
-                        $derivedSelling = $derivedDenom;
+                    if (strtoupper((string) ($p['type'] ?? '')) === 'SLAB') {
+                        $slabList = $p['denominations'] ?? $p['values'] ?? [];
+                        if (is_array($slabList) && count($slabList) === 1) {
+                            $derivedDenom = (float) $slabList[0];
+                            $derivedSelling = $derivedDenom;
+                        }
                     }
                 }
                 if (isset($item['selling_price']) && is_numeric($item['selling_price'])) {
@@ -107,6 +158,7 @@ class CatalogSyncService
                     'tnc' => $item['tnc'] ?? $item['terms'] ?? null,
                     'last_synced_at' => now(),
                     'sync_status' => 'synced',
+                    'catalog_audience' => Product::defaultCatalogAudienceForSourceProvider($providerName),
                 ], fn ($v) => $v !== null);
 
                 $providerPayload = array_merge($providerPayload, $pricingPatch);
@@ -119,10 +171,14 @@ class CatalogSyncService
                     }
                     $updated++;
                 } else {
-                    $newProduct = Product::create(array_merge($providerPayload, [
-                        'sku' => $item['sku'],
+                    $createAttrs = array_merge($providerPayload, [
+                        'sku' => $sku,
                         'source_provider' => $providerName,
-                    ]));
+                    ]);
+                    if ($defaultShowProduct !== null) {
+                        $createAttrs['show_product'] = $defaultShowProduct;
+                    }
+                    $newProduct = Product::create($createAttrs);
                     $slug = $this->generateUniqueSlug($newProduct);
                     $newProduct->update(['slug' => $slug, 'url' => $slug]);
                     $created++;
@@ -130,9 +186,14 @@ class CatalogSyncService
             }
         });
 
-        $deactivated = Product::where('source_provider', $providerName)
-            ->whereNotIn('sku', $seenSkus)
-            ->update(['show_product' => false]);
+        $seenSkus = array_values(array_unique($seenSkus));
+
+        $deactivated = 0;
+        if ($seenSkus !== []) {
+            $deactivated = Product::where('source_provider', $providerName)
+                ->whereNotIn('sku', $seenSkus)
+                ->update(['show_product' => false]);
+        }
 
         Log::info("Catalog sync complete for {$providerName}", compact('created', 'updated', 'deactivated'));
 

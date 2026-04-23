@@ -9,6 +9,7 @@ use App\Models\Wallet;
 use App\Models\WalletLoadRequest;
 use App\Services\SecurityEventService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,14 +25,14 @@ class DashboardController extends Controller
         $dashboardType = $this->resolveDashboardType($user);
 
         if ($dashboardType === 'b2b') {
-            return $this->renderB2bDashboard($user);
+            return $this->renderB2bDashboard($user, $request);
         }
 
         if ($dashboardType === 'finance') {
-            return $this->renderFinanceDashboard();
+            return $this->renderFinanceDashboard($request);
         }
 
-        return $this->renderAdminDashboard();
+        return $this->renderAdminDashboard($request);
     }
 
     private function resolveDashboardType(User $user): string
@@ -51,8 +52,85 @@ class DashboardController extends Controller
         return 'admin';
     }
 
-    private function renderAdminDashboard(): Response
+    /**
+     * @return int One of 7, 14, 30, 60, 90
+     */
+    private function resolveChartDays(Request $request): int
     {
+        $allowed = [7, 14, 30, 60, 90];
+        $raw = (int) $request->input('chart_days', 30);
+
+        return in_array($raw, $allowed, true) ? $raw : 30;
+    }
+
+    /**
+     * @return Collection<int, object{date: string, orders: int, revenue: float}>
+     */
+    private function revenueChartForDays(int $days, ?int $tenantId = null)
+    {
+        $start = now()->copy()->subDays($days - 1)->startOfDay();
+        $end = now()->endOfDay();
+
+        return Order::query()
+            ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
+            ->whereBetween('created_at', [$start, $end])
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as orders, SUM(grand_payable_amount) as revenue')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function adminStatLinks(): array
+    {
+        $today = today()->toDateString();
+
+        return [
+            'orders_today' => route('admin.orders.index', ['date_from' => $today, 'date_to' => $today]),
+            'revenue_today' => route('admin.orders.index', ['date_from' => $today, 'date_to' => $today]),
+            'total_users' => route('admin.users.index'),
+            'wallet_balance' => route('admin.wallets.index'),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function financeStatLinks(): array
+    {
+        $today = today()->toDateString();
+
+        return [
+            'orders_today' => route('admin.orders.index', ['date_from' => $today, 'date_to' => $today]),
+            'revenue_today' => route('admin.orders.index', ['date_from' => $today, 'date_to' => $today]),
+            'pending_loads' => route('admin.wallets.load_requests'),
+            'wallet_balance' => route('admin.wallets.index'),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function b2bStatLinks(): array
+    {
+        $today = today()->toDateString();
+        $weekStart = now()->copy()->startOfWeek()->toDateString();
+        $weekEnd = now()->copy()->endOfWeek()->toDateString();
+
+        return [
+            'orders_today' => route('admin.b2b.orders', ['date_from' => $today, 'date_to' => $today]),
+            'revenue_today' => route('admin.b2b.orders', ['date_from' => $today, 'date_to' => $today]),
+            'orders_this_week' => route('admin.b2b.orders', ['date_from' => $weekStart, 'date_to' => $weekEnd]),
+            'b2b_wallet' => route('admin.b2b.wallet'),
+        ];
+    }
+
+    private function renderAdminDashboard(Request $request): Response
+    {
+        $chartDays = $this->resolveChartDays($request);
+
         $stats = [
             'orders_today' => Order::whereDate('created_at', today())->count(),
             'revenue_today' => (float) Order::whereDate('created_at', today())->sum('grand_payable_amount'),
@@ -68,16 +146,14 @@ class DashboardController extends Controller
             ->limit(10)
             ->get(['id', 'user_id', 'order_status', 'grand_payable_amount', 'created_at']);
 
-        $revenueChart = Order::whereBetween('created_at', [now()->subDays(29), now()])
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as orders, SUM(grand_payable_amount) as revenue')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+        $revenueChart = $this->revenueChartForDays($chartDays);
 
         $securityOverview = $this->securityEvents->getOverview();
 
         return Inertia::render('Admin/Dashboard', [
             'dashboardType' => 'admin',
+            'chartDays' => $chartDays,
+            'statLinks' => $this->adminStatLinks(),
             'stats' => $stats,
             'recentOrders' => $recentOrders,
             'revenueChart' => $revenueChart,
@@ -86,8 +162,10 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function renderFinanceDashboard(): Response
+    private function renderFinanceDashboard(Request $request): Response
     {
+        $chartDays = $this->resolveChartDays($request);
+
         $stats = [
             'orders_today' => Order::whereDate('created_at', today())->count(),
             'revenue_today' => (float) Order::whereDate('created_at', today())->sum('grand_payable_amount'),
@@ -101,14 +179,12 @@ class DashboardController extends Controller
             ->limit(15)
             ->get(['id', 'user_id', 'order_status', 'grand_payable_amount', 'created_at']);
 
-        $revenueChart = Order::whereBetween('created_at', [now()->subDays(29), now()])
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as orders, SUM(grand_payable_amount) as revenue')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+        $revenueChart = $this->revenueChartForDays($chartDays);
 
         return Inertia::render('Admin/Dashboard', [
             'dashboardType' => 'finance',
+            'chartDays' => $chartDays,
+            'statLinks' => $this->financeStatLinks(),
             'stats' => $stats,
             'recentOrders' => $recentOrders,
             'revenueChart' => $revenueChart,
@@ -123,9 +199,11 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function renderB2bDashboard(User $user): Response
+    private function renderB2bDashboard(User $user, Request $request): Response
     {
-        $tenant = $user->tenants()->first();
+        $chartDays = $this->resolveChartDays($request);
+
+        $tenant = $user->currentTenant();
 
         $tenantId = $tenant?->id;
 
@@ -147,15 +225,12 @@ class DashboardController extends Controller
             ->limit(10)
             ->get(['id', 'user_id', 'order_status', 'grand_payable_amount', 'created_at']);
 
-        $revenueChart = $scoped()
-            ->whereBetween('created_at', [now()->subDays(29), now()])
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as orders, SUM(grand_payable_amount) as revenue')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+        $revenueChart = $this->revenueChartForDays($chartDays, $tenantId);
 
         return Inertia::render('Admin/Dashboard', [
             'dashboardType' => 'b2b',
+            'chartDays' => $chartDays,
+            'statLinks' => $this->b2bStatLinks(),
             'stats' => $stats,
             'recentOrders' => $recentOrders,
             'revenueChart' => $revenueChart,

@@ -1,19 +1,30 @@
 import React, { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Eye, Pencil, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import ConfirmDialog from './ConfirmDialog';
 
 export type ActionButtonsProps = {
     /** Detail / read-first link */
     viewHref?: string;
-    /** Edit link */
+    /**
+     * Navigate to edit URL. Mutually exclusive with {@link onEditClick} — pass only one.
+     */
     editHref?: string;
+    /**
+     * Inline edit handler (button). Mutually exclusive with {@link editHref} — pass only one.
+     */
+    onEditClick?: () => void;
     /** Called after user confirms delete in the built-in dialog */
     onDelete?: () => void;
     deleteConfirmTitle?: string;
     deleteConfirmMessage?: string;
     /** e.g. toggle active/inactive */
     onToggle?: () => void;
+    /**
+     * Current “on” state for the row (e.g. is_active). Drives ToggleRight (on) vs ToggleLeft (off).
+     * Pass whenever using onToggle; avoids fragile string matching on titles.
+     */
+    toggleOn?: boolean;
     toggleLabel?: string;
     /** Shown when onToggle is set (browser tooltip) */
     toggleTitle?: string;
@@ -27,19 +38,27 @@ export type ActionButtonsProps = {
 export default function ActionButtons({
     viewHref,
     editHref,
+    onEditClick,
     onDelete,
-    deleteConfirmTitle = 'Delete this item?',
-    deleteConfirmMessage = 'This cannot be undone.',
+    deleteConfirmTitle,
+    deleteConfirmMessage,
     onToggle,
+    toggleOn,
     toggleLabel,
     toggleTitle,
     className = '',
 }: ActionButtonsProps) {
+    const page = usePage<{ i18n?: { admin?: { actions?: Record<string, string> } } }>();
+    const text = page.props.i18n?.admin?.actions ?? {};
+    const t = (key: string, fallback: string) => text[key] || fallback;
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const resolvedDeleteTitle = deleteConfirmTitle ?? t('delete_confirm_title', 'Delete this item?');
+    const resolvedDeleteMessage = deleteConfirmMessage ?? t('delete_confirm_message', 'This cannot be undone.');
 
     const showView = Boolean(viewHref);
-    const showEdit = Boolean(editHref);
+    const showEditButton = Boolean(onEditClick);
+    const showEditLink = Boolean(editHref) && !showEditButton;
 
     const btnClass =
         'inline-flex items-center justify-center rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-indigo-400 transition-colors';
@@ -57,9 +76,15 @@ export default function ActionButtons({
         }
     };
 
-    if (!viewHref && !editHref && !onToggle && !onDelete) {
+    if (!viewHref && !showEditLink && !showEditButton && !onToggle && !onDelete) {
         return <span className="text-gray-400 text-xs">—</span>;
     }
+
+    const labelLower = (toggleLabel ?? '').toLowerCase();
+    /** Safe fallback only when toggleOn omitted: “off” action implies row is on. Never scan toggleTitle (substring false positives). */
+    const inferredToggleOn =
+        labelLower.includes('disable') || /^deactiv/i.test(toggleLabel ?? '');
+    const resolvedToggleOn = toggleOn ?? inferredToggleOn;
 
     return (
         <>
@@ -67,23 +92,34 @@ export default function ActionButtons({
                 open={deleteOpen}
                 onClose={() => setDeleteOpen(false)}
                 onConfirm={handleDeleteConfirm}
-                title={deleteConfirmTitle}
-                message={deleteConfirmMessage}
-                confirmLabel="Delete"
+                title={resolvedDeleteTitle}
+                message={resolvedDeleteMessage}
+                confirmLabel={t('delete', 'Delete')}
                 variant="danger"
                 loading={deleting}
             />
             <div className={`inline-flex flex-wrap items-center gap-0.5 ${className}`}>
                 {showView && (
-                    <Link href={viewHref!} className={btnClass} title="View">
+                    <Link href={viewHref!} className={btnClass} title={t('view', 'View')}>
                         <Eye size={16} aria-hidden />
-                        <span className="sr-only">View</span>
+                        <span className="sr-only">{t('view', 'View')}</span>
                     </Link>
                 )}
-                {showEdit && (
-                    <Link href={editHref!} className={btnClass} title="Edit">
+                {showEditButton && (
+                    <button
+                        type="button"
+                        onClick={onEditClick}
+                        className={btnClass}
+                        title={t('edit', 'Edit')}
+                    >
                         <Pencil size={16} aria-hidden />
-                        <span className="sr-only">Edit</span>
+                        <span className="sr-only">{t('edit', 'Edit')}</span>
+                    </button>
+                )}
+                {showEditLink && (
+                    <Link href={editHref!} className={btnClass} title={t('edit', 'Edit')}>
+                        <Pencil size={16} aria-hidden />
+                        <span className="sr-only">{t('edit', 'Edit')}</span>
                     </Link>
                 )}
                 {onToggle && (
@@ -91,14 +127,14 @@ export default function ActionButtons({
                         type="button"
                         onClick={onToggle}
                         className={btnClass}
-                        title={toggleTitle ?? toggleLabel ?? 'Toggle'}
+                        title={toggleTitle ?? toggleLabel ?? t('toggle', 'Toggle')}
                     >
-                        {toggleLabel?.toLowerCase().includes('deactiv') ? (
-                            <ToggleLeft size={16} aria-hidden />
-                        ) : (
+                        {resolvedToggleOn ? (
                             <ToggleRight size={16} aria-hidden />
+                        ) : (
+                            <ToggleLeft size={16} aria-hidden />
                         )}
-                        <span className="sr-only">{toggleLabel ?? 'Toggle'}</span>
+                        <span className="sr-only">{toggleLabel ?? t('toggle', 'Toggle')}</span>
                     </button>
                 )}
                 {onDelete && (
@@ -106,10 +142,10 @@ export default function ActionButtons({
                         type="button"
                         onClick={() => setDeleteOpen(true)}
                         className={`${btnClass} hover:text-red-600 dark:hover:text-red-400`}
-                        title="Delete"
+                        title={t('delete', 'Delete')}
                     >
                         <Trash2 size={16} aria-hidden />
-                        <span className="sr-only">Delete</span>
+                        <span className="sr-only">{t('delete', 'Delete')}</span>
                     </button>
                 )}
             </div>

@@ -24,7 +24,7 @@ class StorefrontBrandController extends Controller
 
         $products = Product::query()
             ->where('brand_id', $brand->id)
-            ->where('show_product', true)
+            ->forStorefrontCatalog()
             ->get();
 
         Log::info('Fetched products for brand:', ['brand_id' => $brand->id, 'products_count' => $products->count()]);

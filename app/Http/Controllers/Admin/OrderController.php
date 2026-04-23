@@ -21,6 +21,11 @@ class OrderController extends Controller
     /** List all orders with search + filters. */
     public function index(Request $request)
     {
+        $request->validate([
+            'date_from' => 'nullable|date_format:Y-m-d',
+            'date_to' => 'nullable|date_format:Y-m-d',
+        ]);
+
         $query = Order::with(['user', 'product', 'orderSummary'])->latest();
 
         if ($request->filled('search')) {
@@ -35,9 +40,17 @@ class OrderController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->input('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->input('date_to'));
+        }
+
         return Inertia::render('Admin/Orders/Index', [
-            'orders' => $query->paginate(25),
-            'filters' => $request->only('search', 'status'),
+            'orders' => $query->paginate(25)->withQueryString(),
+            'filters' => $request->only('search', 'status', 'date_from', 'date_to'),
         ]);
     }
 

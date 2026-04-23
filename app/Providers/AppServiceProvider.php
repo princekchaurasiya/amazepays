@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Http\Services\WalletService;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\StorefrontBrand;
@@ -19,10 +18,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton(WalletService::class, function () {
-            return new WalletService;
-        });
-
         $this->app->singleton(VouchagramService::class, function () {
             return new VouchagramService;
         });

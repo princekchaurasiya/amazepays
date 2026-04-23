@@ -50,13 +50,13 @@
             @endif
 
             {{-- Hot deals --}}
-            @if ($homeSettings && $homeSettings->section_hot_deal_status && $priorityProducts && $priorityProducts->isNotEmpty())
+            @if ($homeSettings && $homeSettings->section_hot_deal_status && $hotDealProducts && $hotDealProducts->isNotEmpty())
                 <section id="storefront-section-hot" class="mb-12 scroll-mt-28" aria-labelledby="home-hot-heading">
                     <p id="home-hot-heading" class="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                         {{ $homeSettings->section_hot_deal_title ?? __('storefront.hot_deals') }}
                     </p>
                     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
-                        @foreach ($priorityProducts as $product)
+                        @foreach ($hotDealProducts as $product)
                             <div class="col">
                                 <x-product-card :product="$product" />
                             </div>
@@ -92,13 +92,13 @@
             @endif
 
             {{-- More deals --}}
-            @if ($homeSettings && $homeSettings->section_other_deal_status && $noPriorityProducts && $noPriorityProducts->isNotEmpty())
+            @if ($homeSettings && $homeSettings->section_other_deal_status && $otherDealProducts && $otherDealProducts->isNotEmpty())
                 <section id="storefront-section-deals" class="mb-12 scroll-mt-28" aria-labelledby="home-other-heading">
                     <p id="home-other-heading" class="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                         {{ $homeSettings->section_other_deal_title ?? __('storefront.other_deals') }}
                     </p>
                     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3">
-                        @foreach ($noPriorityProducts as $product)
+                        @foreach ($otherDealProducts as $product)
                             <div class="col">
                                 <x-product-card :product="$product" />
                             </div>

@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+/** Consumer `brand` / `accent` shades: keep in sync with `amazepays-mobile/src/designTokens.ts`. */
 export default {
     content: [
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',

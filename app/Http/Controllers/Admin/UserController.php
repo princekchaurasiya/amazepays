@@ -5,7 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Admin panel -- User management.
@@ -37,12 +41,60 @@ class UserController extends Controller
     }
 
     /** Show a single user with their orders and wallet. */
-    public function show(User $user)
+    public function show(Request $request, User $user)
     {
+        $assignableRoles = Role::query()
+            ->where('guard_name', 'web')
+            ->orderBy('name')
+            ->pluck('name')
+            ->all();
+
+        if (! $request->user()?->hasRole('super-admin')) {
+            $assignableRoles = array_values(array_filter(
+                $assignableRoles,
+                static fn (string $name) => $name !== 'super-admin'
+            ));
+        }
+
         return Inertia::render('Admin/Users/Show', [
             'user' => $user->load(['roles', 'wallet']),
             'orders' => $user->orders()->latest()->take(10)->get(),
+            'assignableRoles' => $assignableRoles,
+            'canAssignRoles' => Gate::allows('users.assign_roles'),
         ]);
+    }
+
+    public function syncRoles(Request $request, User $user)
+    {
+        Gate::authorize('users.assign_roles');
+
+        $validated = $request->validate([
+            'roles' => 'nullable|array',
+            'roles.*' => ['string', Rule::exists('roles', 'name')->where('guard_name', 'web')],
+        ]);
+
+        $names = array_values(array_unique($validated['roles'] ?? []));
+
+        if (in_array('super-admin', $names, true) && ! $request->user()?->hasRole('super-admin')) {
+            return back()->withErrors(['roles' => 'Only a super-admin may assign the super-admin role.']);
+        }
+
+        if ($user->hasRole('super-admin') && ! in_array('super-admin', $names, true)) {
+            $remaining = User::query()->role('super-admin')->where('id', '!=', $user->id)->count();
+            if ($remaining < 1) {
+                return back()->withErrors(['roles' => 'Cannot remove the last super-admin account.']);
+            }
+        }
+
+        $old = $user->roles()->pluck('name')->sort()->values()->all();
+        $user->syncRoles($names);
+
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        $new = collect($names)->sort()->values()->all();
+        audit('user.roles_updated', $user, ['roles' => $old], ['roles' => $new]);
+
+        return back()->with('success', 'Roles updated.');
     }
 
     /** Update user profile (admin-level changes). */

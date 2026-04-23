@@ -7,6 +7,12 @@ type User = {
     name: string;
     email: string | null;
     mobile: string | null;
+    billing_address?: string | null;
+    billing_address_two?: string | null;
+    billing_city?: string | null;
+    billing_state?: string | null;
+    billing_zip?: string | null;
+    billing_country?: string | null;
 };
 
 export default function Profile() {
@@ -20,6 +26,12 @@ export default function Profile() {
         name: u.name ?? '',
         email: u.email ?? '',
         mobile: u.mobile ?? '',
+        billing_address: u.billing_address ?? '',
+        billing_address_two: u.billing_address_two ?? '',
+        billing_city: u.billing_city ?? '',
+        billing_state: u.billing_state ?? '',
+        billing_zip: u.billing_zip ?? '',
+        billing_country: u.billing_country ?? 'IN',
     });
 
     const submit = (e: React.FormEvent) => {
@@ -70,6 +82,76 @@ export default function Profile() {
                         />
                         {errors.mobile && <p className="text-sm text-red-600">{errors.mobile}</p>}
                     </div>
+
+                    <div className="border-t border-gray-200 pt-4">
+                        <h2 className="text-sm font-semibold text-gray-900">Billing details</h2>
+                        <p className="mt-1 text-xs text-gray-500">Used for provider/payment validation during checkout.</p>
+                    </div>
+
+                    <div>
+                        <label className="text-sm font-medium text-gray-700">Address line 1</label>
+                        <input
+                            className="mt-1 w-full rounded-lg border px-3 py-2"
+                            value={data.billing_address}
+                            onChange={(e) => setData('billing_address', e.target.value)}
+                        />
+                        {errors.billing_address && <p className="text-sm text-red-600">{errors.billing_address}</p>}
+                    </div>
+
+                    <div>
+                        <label className="text-sm font-medium text-gray-700">Address line 2</label>
+                        <input
+                            className="mt-1 w-full rounded-lg border px-3 py-2"
+                            value={data.billing_address_two}
+                            onChange={(e) => setData('billing_address_two', e.target.value)}
+                        />
+                        {errors.billing_address_two && <p className="text-sm text-red-600">{errors.billing_address_two}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">City</label>
+                            <input
+                                className="mt-1 w-full rounded-lg border px-3 py-2"
+                                value={data.billing_city}
+                                onChange={(e) => setData('billing_city', e.target.value)}
+                            />
+                            {errors.billing_city && <p className="text-sm text-red-600">{errors.billing_city}</p>}
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">State</label>
+                            <input
+                                className="mt-1 w-full rounded-lg border px-3 py-2"
+                                value={data.billing_state}
+                                onChange={(e) => setData('billing_state', e.target.value)}
+                            />
+                            {errors.billing_state && <p className="text-sm text-red-600">{errors.billing_state}</p>}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">ZIP/Pincode</label>
+                            <input
+                                className="mt-1 w-full rounded-lg border px-3 py-2"
+                                value={data.billing_zip}
+                                onChange={(e) => setData('billing_zip', e.target.value)}
+                            />
+                            {errors.billing_zip && <p className="text-sm text-red-600">{errors.billing_zip}</p>}
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700">Country code</label>
+                            <input
+                                className="mt-1 w-full rounded-lg border px-3 py-2 uppercase"
+                                value={data.billing_country}
+                                onChange={(e) => setData('billing_country', e.target.value.toUpperCase())}
+                                maxLength={4}
+                            />
+                            {errors.billing_country && <p className="text-sm text-red-600">{errors.billing_country}</p>}
+                        </div>
+                    </div>
+
+                    {errors.unexpected_fields && <p className="text-sm text-red-600">{errors.unexpected_fields}</p>}
                     <button
                         type="submit"
                         disabled={processing}

@@ -4,6 +4,8 @@
 > **Last Updated:** April 2026  
 > **Platform:** iOS + Android (React Native)
 
+**Implementation status:** see [`amazepays-mobile/docs/MOBILE_PROGRESS.md`](../../amazepays-mobile/docs/MOBILE_PROGRESS.md). **Local emulators:** [`amazepays-mobile/docs/EMULATOR_SETUP.md`](../../amazepays-mobile/docs/EMULATOR_SETUP.md).
+
 ---
 
 ## Table of Contents
@@ -166,11 +168,13 @@ Root Navigator
 
 | Element | Source | Refresh |
 |---------|--------|---------|
-| Hero banners | `GET /api/v1/homepage` → slides | Pull-to-refresh |
-| Categories row | `GET /api/v1/categories` | Cached 15 min |
-| Featured products | `GET /api/v1/products?featured=true` | Cached 5 min |
-| Active offers | `GET /api/v1/offers` | Cached 5 min |
-| Brands grid | `GET /api/v1/brands` | Cached 15 min |
+| Hero banners | `GET /api/v1/home` → `data.slides` (each slide: `image_mobile`, `desktop_image`, optional links) | Pull-to-refresh / TanStack refetch |
+| Categories row | `GET /api/v1/catalog/categories` | Cached ~15 min |
+| Product list | `GET /api/v1/catalog` (pagination; filters: `search`, `category_id`, `brand_id`) | Cached ~5 min |
+| Active offers | (when exposed) offer validate endpoints — see API docs | — |
+| Brands grid | From catalog / product payloads or dedicated endpoint if added | — |
+
+**Admin:** Upload hero images under **Settings → Hero carousel** (`/panel/settings/hero-slides`). The **Homepage sections** `banner` row only toggles visibility of the hero block on the web home.
 
 ### 5.2 Product Detail Screen
 
@@ -304,8 +308,14 @@ The backend **only trusts fields validated per endpoint**; extra JSON keys are i
 import axios from 'axios';
 import * as Keychain from 'react-native-keychain';
 
+import { Platform } from 'react-native';
+
+// Android emulator: host machine is 10.0.2.2 (not localhost). Use composer `serve:mobile` (0.0.0.0:8000).
+const DEV_API_ORIGIN =
+  Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+
 const API_BASE = __DEV__
-  ? 'http://localhost:8000/api/v1'
+  ? `${DEV_API_ORIGIN}/api/v1`
   : 'https://api.amazepays.com/api/v1';
 
 const client = axios.create({

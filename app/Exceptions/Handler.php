@@ -41,6 +41,16 @@ class Handler extends ExceptionHandler
     public function register()
     {
         $this->reportable(function (Throwable $e) {});
+
+        $this->renderable(function (WalletFrozenException $e, $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'WALLET_FROZEN',
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+        });
     }
 
     /**
@@ -62,6 +72,18 @@ class Handler extends ExceptionHandler
 
         // Check if it's an authentication or validation exception
         if ($exception instanceof AuthenticationException || $exception instanceof ValidationException) {
+            return parent::render($request, $exception);
+        }
+
+        if ($exception instanceof WalletFrozenException) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'WALLET_FROZEN',
+                    'message' => $exception->getMessage(),
+                ], 422);
+            }
+
             return parent::render($request, $exception);
         }
 

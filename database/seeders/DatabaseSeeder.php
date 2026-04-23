@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             UserSeeder::class,
             CategorySeeder::class,
+            GiftCardThemeSeeder::class,
+            BrandCardThemeSeeder::class,
             AuditLogDemoSeeder::class,
             TicketDemoSeeder::class,
         ]);

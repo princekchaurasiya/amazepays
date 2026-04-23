@@ -43,7 +43,7 @@ class StorefrontCategoryController extends Controller
 
         $products = Product::query()
             ->whereIn('id', $productIds)
-            ->where('show_product', true)
+            ->forStorefrontCatalog()
             ->get();
 
         foreach ($products as $product) {

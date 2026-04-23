@@ -4,6 +4,7 @@ namespace App\Services\Pricing;
 
 use App\Data\PricingResult;
 use App\Exceptions\OrderCreationException;
+use App\Helpers\ProductHelper;
 use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
@@ -66,21 +67,29 @@ class PricingService
      */
     private function validateDenomination(Product $product, float $denomination): void
     {
-        $priceData = is_string($product->price)
-            ? json_decode($product->price, true)
-            : (array) $product->price;
+        $raw = $product->getAttributes()['price'] ?? null;
+        $priceData = ProductHelper::normalizePriceArray(
+            ProductHelper::decodePrice($raw) ?? []
+        );
 
-        $priceType = $priceData['type'] ?? 'RANGE';
+        $priceType = strtoupper((string) ($priceData['type'] ?? 'RANGE'));
 
         if ($priceType === 'SLAB') {
             $allowed = $priceData['denominations'] ?? [];
-            if (! in_array((string) $denomination, $allowed, true)) {
-                throw new OrderCreationException(
-                    "Invalid denomination ₹{$denomination}. Allowed: ".implode(', ', $allowed)
-                );
-            }
+            if ($allowed !== []) {
+                $denomFloat = round((float) $denomination, 6);
+                $ok = collect($allowed)->contains(function ($a) use ($denomFloat) {
+                    return abs((float) $a - $denomFloat) < 0.000001;
+                });
+                if (! $ok) {
+                    throw new OrderCreationException(
+                        "Invalid denomination ₹{$denomination}. Allowed: ".implode(', ', array_map('strval', $allowed))
+                    );
+                }
 
-            return;
+                return;
+            }
+            // SLAB with no slab list after normalization — validate as RANGE using min/max / columns
         }
 
         $min = (float) ($priceData['min'] ?? $product->minPrice ?? 0);

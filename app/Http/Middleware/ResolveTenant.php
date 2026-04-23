@@ -14,13 +14,10 @@ class ResolveTenant
     {
         $tenant = null;
 
-        // 1. Resolve from authenticated user's primary tenant
+        // 1. Resolve from authenticated user's tenant (primary pivot, else first link)
         if ($user = $request->user()) {
-            $tenantUser = $user->tenantUsers()->where('is_primary', true)->first();
-
-            if ($tenantUser) {
-                $tenant = $tenantUser->tenant;
-            }
+            $tenant = $user->tenants()->wherePivot('is_primary', true)->first()
+                ?? $user->tenants()->first();
         }
 
         // 2. Resolve from X-Tenant-Slug header (API requests)

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -70,6 +71,16 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    public function cart()
+    {
+        return $this->hasOne(Cart::class);
+    }
+
+    public function cartItems()
+    {
+        return $this->hasManyThrough(CartItem::class, Cart::class);
+    }
+
     // KGen Orders
     public function kgenOrders()
     {
@@ -121,12 +132,22 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
-    /**
-     * Primary tenant for B2B flows (first linked tenant).
-     */
+    /** @alias tenants() — used by middleware naming convention */
+    public function tenantUsers(): BelongsToMany
+    {
+        return $this->tenants();
+    }
+
+    public function currentTenant(): ?Tenant
+    {
+        $primary = $this->tenants()->wherePivot('is_primary', true)->first();
+
+        return $primary ?? $this->tenants()->first();
+    }
+
     public function currentTenantId(): ?int
     {
-        return $this->tenants()->first()?->id;
+        return $this->currentTenant()?->id;
     }
 
     public function auditLogs()
@@ -139,8 +160,12 @@ class User extends Authenticatable
      */
     public function homeUrl(): string
     {
-        if ($this->hasAnyRole(['super-admin', 'admin', 'finance', 'b2b-client', 'b2b-operator'])) {
-            return route('admin.dashboard');
+        try {
+            if ($this->hasAnyRole(['super-admin', 'admin', 'finance', 'b2b-client', 'b2b-operator'])) {
+                return route('admin.dashboard');
+            }
+        } catch (RoleDoesNotExist) {
+            // During early bootstrap/tests roles can be absent; default safely to storefront.
         }
 
         return route('home');

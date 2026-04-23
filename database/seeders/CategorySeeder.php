@@ -12,39 +12,45 @@ class CategorySeeder extends Seeder
     {
         $this->seedSyncedCategorySandbox();
 
-        $this->command->info('Seeding storefront navigation categories...');
+        $this->command->info('Seeding storefront navigation categories (≥20, with accent colors for tiles)...');
 
+        /** @var list<array{name: string, order: int, accent_color: string}> $defaults */
         $defaults = [
-            ['order' => 1, 'name' => 'New Brands'],
-            ['order' => 2, 'name' => 'Food'],
-            ['order' => 3, 'name' => 'Grocery'],
-            ['order' => 4, 'name' => 'One Stop Shop'],
-            ['order' => 5, 'name' => 'Hot Deals'],
-            ['order' => 6, 'name' => 'Travel'],
-            ['order' => 7, 'name' => 'Hotels'],
-            ['order' => 8, 'name' => 'Fashion'],
-            ['order' => 9, 'name' => 'Beauty'],
-            ['order' => 10, 'name' => 'Gaming'],
-            ['order' => 11, 'name' => 'Watches'],
-            ['order' => 12, 'name' => 'Electronics'],
-            ['order' => 13, 'name' => 'Entertainment'],
-            ['order' => 14, 'name' => 'Health & Wellness'],
-            ['order' => 15, 'name' => 'Jewellery'],
-            ['order' => 16, 'name' => 'Kids'],
-            ['order' => 17, 'name' => 'Home & Living'],
-            ['order' => 18, 'name' => 'Fitness'],
-            ['order' => 19, 'name' => 'E-commerce'],
-            ['order' => 20, 'name' => 'Dining'],
+            ['name' => 'New Brands', 'order' => 1, 'accent_color' => '#f97316'],
+            ['name' => 'Food', 'order' => 2, 'accent_color' => '#ef4444'],
+            ['name' => 'Grocery', 'order' => 3, 'accent_color' => '#84cc16'],
+            ['name' => 'One Stop Shop', 'order' => 4, 'accent_color' => '#8b5cf6'],
+            ['name' => 'Hot Deals', 'order' => 5, 'accent_color' => '#dc2626'],
+            ['name' => 'Travel', 'order' => 6, 'accent_color' => '#0ea5e9'],
+            ['name' => 'Hotels', 'order' => 7, 'accent_color' => '#6366f1'],
+            ['name' => 'Fashion', 'order' => 8, 'accent_color' => '#ec4899'],
+            ['name' => 'Beauty', 'order' => 9, 'accent_color' => '#d946ef'],
+            ['name' => 'Gaming', 'order' => 10, 'accent_color' => '#22c55e'],
+            ['name' => 'Watches', 'order' => 11, 'accent_color' => '#78716b'],
+            ['name' => 'Electronics', 'order' => 12, 'accent_color' => '#3b82f6'],
+            ['name' => 'Entertainment', 'order' => 13, 'accent_color' => '#a855f7'],
+            ['name' => 'Health & Wellness', 'order' => 14, 'accent_color' => '#14b8a6'],
+            ['name' => 'Jewellery', 'order' => 15, 'accent_color' => '#ca8a04'],
+            ['name' => 'Kids', 'order' => 16, 'accent_color' => '#fb923c'],
+            ['name' => 'Home & Living', 'order' => 17, 'accent_color' => '#64748b'],
+            ['name' => 'Fitness', 'order' => 18, 'accent_color' => '#10b981'],
+            ['name' => 'E-commerce', 'order' => 19, 'accent_color' => '#06b6d4'],
+            ['name' => 'Dining', 'order' => 20, 'accent_color' => '#f43f5e'],
+            ['name' => 'Books & Learning', 'order' => 21, 'accent_color' => '#0f7669'],
+            ['name' => 'Auto & Fuel', 'order' => 22, 'accent_color' => '#475569'],
         ];
 
         foreach ($defaults as $row) {
-            Category::firstOrCreate(
+            Category::updateOrCreate(
                 ['name' => $row['name']],
-                ['order' => $row['order']]
+                [
+                    'order' => $row['order'],
+                    'accent_color' => $row['accent_color'],
+                ]
             );
         }
 
-        $this->command->info('Storefront categories seeded: '.count($defaults).' rows (firstOrCreate by name).');
+        $this->command->info('Storefront categories seeded: '.count($defaults).' rows (updateOrCreate by name — safe to re-run).');
     }
 
     /**

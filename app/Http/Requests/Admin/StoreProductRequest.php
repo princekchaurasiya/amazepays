@@ -8,6 +8,19 @@ use Illuminate\Validation\Rule;
 
 class StoreProductRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('hot_deal_rank') && $this->input('hot_deal_rank') === '') {
+            $this->merge(['hot_deal_rank' => null]);
+        }
+
+        if (! $this->filled('catalog_audience') && $this->filled('source_provider')) {
+            $this->merge([
+                'catalog_audience' => Product::defaultCatalogAudienceForSourceProvider($this->string('source_provider')->toString()),
+            ]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->user()->can('products.create');
@@ -17,8 +30,13 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'product_name' => 'required|string|max:255',
-            'sku' => ['required', 'string', Rule::unique((new Product)->getTable(), 'sku')],
-            'source_provider' => 'required|string|in:woohoo,kgen,value_design,lysto,ezpin,gyftrr,manual,vouchagram',
+            'sku' => [
+                'required',
+                'string',
+                Rule::unique('products', 'sku')->where(fn ($q) => $q->where('source_provider', $this->input('source_provider'))),
+            ],
+            'source_provider' => 'required|string|in:woohoo,kgen,value_design,lysto,ezpin,gyftrr,manual,vouchagram,vouchagram_send,vouchagram_pull',
+            'catalog_audience' => 'required|string|in:b2c,b2b,both',
             'selling_price' => 'required|numeric|min:0',
             'mrp' => 'nullable|numeric|min:0',
             'denomination' => 'nullable|numeric|min:0',
@@ -28,7 +46,7 @@ class StoreProductRequest extends FormRequest
             'how_to_redeem' => 'nullable|string',
             'terms_and_conditions' => 'nullable|string',
             'show_product' => 'boolean',
-            'priority' => 'integer|min:0',
+            'hot_deal_rank' => 'nullable|numeric|min:0',
             'display_order' => 'integer|min:0',
             'custom_image' => 'nullable|image|max:2048',
         ];

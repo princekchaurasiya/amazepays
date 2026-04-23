@@ -8,12 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 class WalletTransaction extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'wallet_id',
         'amount',
         'type',
         'reference',
-        'description'
+        'description',
+        'idempotency_key',
+        'reference_type',
+        'reference_id',
     ];
 
     protected $casts = [

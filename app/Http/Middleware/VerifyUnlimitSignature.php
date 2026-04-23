@@ -10,17 +10,23 @@ class VerifyUnlimitSignature
 {
     public function handle(Request $request, Closure $next)
     {
-        Log::info('Unlimit callback received:', [
-            'headers' => $request->headers->all(),
-            'body' => $request->getContent(),
-        ]);
         $signatureHeader = $request->header('Signature');
 
-        if (!$signatureHeader) {
+        if (! $signatureHeader) {
+            Log::warning('Unlimit callback missing signature header', [
+                'path' => $request->path(),
+                'ip' => $request->ip(),
+            ]);
+
             return response()->json(['error' => 'Missing signature'], 400);
         }
 
         $callbackSecret = config('services.unlimit.callback_secret');
+        if (! is_string($callbackSecret) || $callbackSecret === '') {
+            Log::error('Unlimit callback secret missing in configuration');
+
+            return response()->json(['error' => 'Signature verification unavailable'], 503);
+        }
 
         // Get raw request body (important: don't re-encode JSON)
         $rawBody = $request->getContent();
@@ -31,10 +37,10 @@ class VerifyUnlimitSignature
         // Hash with SHA-512
         $expectedSignature = hash('sha512', $stringToSign);
 
-        if (!hash_equals($expectedSignature, $signatureHeader)) {
+        if (! hash_equals($expectedSignature, $signatureHeader)) {
             Log::warning('Invalid Unlimit callback signature', [
-                'expected' => $expectedSignature,
-                'received' => $signatureHeader,
+                'path' => $request->path(),
+                'ip' => $request->ip(),
             ]);
 
             return response()->json(['error' => 'Invalid signature'], 403);

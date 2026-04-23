@@ -1,4 +1,4 @@
-import React, { FormEvent, useState } from 'react';
+import React, { FormEvent, useMemo, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { ActionButtons, Breadcrumbs } from '@/Components/Admin';
@@ -25,16 +25,45 @@ type Paginated<T> = {
 
 type Props = {
     orders: Paginated<OrderRow>;
-    filters: { search?: string; status?: string };
+    filters: { search?: string; status?: string; date_from?: string; date_to?: string };
 };
 
 export default function Index({ orders, filters }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
     const [status, setStatus] = useState(filters.status ?? '');
+    const [dateFrom, setDateFrom] = useState(filters.date_from ?? '');
+    const [dateTo, setDateTo] = useState(filters.date_to ?? '');
+
+    const querySuffix = useMemo(() => {
+        const q = new URLSearchParams();
+        if (search) {
+            q.set('search', search);
+        }
+        if (status) {
+            q.set('status', status);
+        }
+        if (dateFrom) {
+            q.set('date_from', dateFrom);
+        }
+        if (dateTo) {
+            q.set('date_to', dateTo);
+        }
+        const s = q.toString();
+        return s ? `&${s}` : '';
+    }, [search, status, dateFrom, dateTo]);
 
     const applyFilters = (e?: FormEvent) => {
         e?.preventDefault();
-        router.get('/panel/orders', { search: search || undefined, status: status || undefined }, { preserveState: true });
+        router.get(
+            '/panel/orders',
+            {
+                search: search || undefined,
+                status: status || undefined,
+                date_from: dateFrom || undefined,
+                date_to: dateTo || undefined,
+            },
+            { preserveState: true },
+        );
     };
 
     return (
@@ -68,6 +97,24 @@ export default function Index({ orders, filters }: Props) {
                             onChange={e => setStatus(e.target.value)}
                             placeholder="e.g. pending"
                             className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700"
+                        />
+                    </div>
+                    <div className="w-40">
+                        <label className="block text-xs text-gray-500 mb-1">From</label>
+                        <input
+                            type="date"
+                            value={dateFrom}
+                            onChange={e => setDateFrom(e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+                        />
+                    </div>
+                    <div className="w-40">
+                        <label className="block text-xs text-gray-500 mb-1">To</label>
+                        <input
+                            type="date"
+                            value={dateTo}
+                            onChange={e => setDateTo(e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                     </div>
                     <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
@@ -119,7 +166,7 @@ export default function Index({ orders, filters }: Props) {
                             <div className="flex gap-2">
                                 {orders.current_page > 1 && (
                                     <Link
-                                        href={`/panel/orders?page=${orders.current_page - 1}&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`}
+                                        href={`/panel/orders?page=${orders.current_page - 1}${querySuffix}`}
                                         preserveState
                                         className="px-3 py-1 rounded border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                                     >
@@ -128,7 +175,7 @@ export default function Index({ orders, filters }: Props) {
                                 )}
                                 {orders.current_page < orders.last_page && (
                                     <Link
-                                        href={`/panel/orders?page=${orders.current_page + 1}&search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}`}
+                                        href={`/panel/orders?page=${orders.current_page + 1}${querySuffix}`}
                                         preserveState
                                         className="px-3 py-1 rounded border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                                     >

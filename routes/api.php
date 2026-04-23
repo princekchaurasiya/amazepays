@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CatalogController;
+use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\TransactionPinController;
 use App\Http\Controllers\Api\V1\WalletController;
@@ -43,6 +44,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     | Public Catalog (B2C — browsing allowed without login)
     |--------------------------------------------------------------------------
     */
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+
     Route::prefix('catalog')->name('catalog.')->group(function () {
         Route::get('/', [CatalogController::class, 'index'])->name('index');
         Route::get('/categories', [CatalogController::class, 'categories'])->name('categories');

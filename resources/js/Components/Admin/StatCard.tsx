@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from '@inertiajs/react';
 
 type Props = {
     label: string;
@@ -6,6 +7,7 @@ type Props = {
     icon: React.ElementType;
     color?: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'indigo';
     trend?: { value: number; label: string };
+    href?: string;
 };
 
 const colorClasses: Record<string, string> = {
@@ -17,9 +19,14 @@ const colorClasses: Record<string, string> = {
     indigo: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
 };
 
-export default function StatCard({ label, value, icon: Icon, color = 'blue', trend }: Props) {
-    return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 flex items-center gap-4">
+const shellClass =
+    'bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 flex items-center gap-4';
+const interactiveClass =
+    'transition hover:ring-2 hover:ring-indigo-200 dark:hover:ring-indigo-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500';
+
+export default function StatCard({ label, value, icon: Icon, color = 'blue', trend, href }: Props) {
+    const body = (
+        <>
             <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${colorClasses[color]}`}>
                 <Icon size={22} />
             </div>
@@ -32,6 +39,16 @@ export default function StatCard({ label, value, icon: Icon, color = 'blue', tre
                     </p>
                 )}
             </div>
-        </div>
+        </>
     );
+
+    if (href) {
+        return (
+            <Link href={href} className={`${shellClass} ${interactiveClass} block`}>
+                {body}
+            </Link>
+        );
+    }
+
+    return <div className={shellClass}>{body}</div>;
 }

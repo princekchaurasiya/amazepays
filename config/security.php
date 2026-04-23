@@ -24,7 +24,7 @@ return [
         'fail_behavior' => 'closed',
 
         // Routes that skip VPN check entirely (health, static assets)
-        'exempt_routes' => ['api/health', 'api/status', 'up'],
+        'exempt_routes' => ['api/health', 'api/v1/health', 'api/status', 'up'],
 
         // Per route-group overrides: 'block' | 'flag' | 'log_only' | null (use global)
         'route_groups' => [

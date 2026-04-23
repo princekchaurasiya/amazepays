@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Http\Requests\Concerns\RejectsUnexpectedInput;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PlaceOrderRequest extends FormRequest
 {
+    use RejectsUnexpectedInput;
+
     public function authorize(): bool
     {
         return true;

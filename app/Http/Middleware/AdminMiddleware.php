@@ -11,20 +11,18 @@ class AdminMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {
-        if (!Auth::check() || !Auth::user()->hasRole('admin')) {
+        if (! Auth::check() || ! Auth::user()->hasRole('admin')) {
             return redirect('/')->with('error', 'Unauthorized access');
         }
 
-        if (!$request->user() || !$request->user()->is_admin) {
-        abort(403, 'Unauthorized');
+        if (! $request->user() || ! $request->user()->is_admin) {
+            abort(403, 'Unauthorized');
         }
 
         return $next($request);
     }
-} 
+}

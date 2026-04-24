@@ -10,10 +10,10 @@ class EvcStatus extends Model
     use HasFactory;
 
     protected $fillable = [
-    'order_id',
-    'request_ref_no',
-    'status',
-    'details',
+        'order_id',
+        'request_ref_no',
+        'status',
+        'details',
     ];
 
     protected $casts = [

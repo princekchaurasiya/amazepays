@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Models\Slide;
 use App\Services\Storefront\SlidePresentationService;
-use Illuminate\Http\JsonResponse;
+use App\Support\Http\ResponsePayload;
 
 /**
  * Public storefront home payload (hero slides) for mobile and external clients.
@@ -19,7 +19,7 @@ class HomeController extends Controller
         private SlidePresentationService $slidePresentation,
     ) {}
 
-    public function index(): JsonResponse
+    public function index(): ResponsePayload
     {
         $slides = $this->slidePresentation->homepageSlides();
         $this->slidePresentation->attachSlugs($slides);

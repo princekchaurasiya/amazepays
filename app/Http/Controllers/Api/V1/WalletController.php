@@ -8,7 +8,7 @@ use App\Http\Traits\ApiResponse;
 use App\Models\WalletLoadRequest;
 use App\Models\WalletTransaction;
 use App\Services\Wallet\WalletLoadRequestService;
-use Illuminate\Http\JsonResponse;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Http\Request;
 
 /**
@@ -21,7 +21,7 @@ class WalletController extends Controller
     public function __construct(private WalletLoadRequestService $loadRequestService) {}
 
     /** Get the user's current wallet balance. */
-    public function balance(Request $request): JsonResponse
+    public function balance(Request $request): ResponsePayload
     {
         $wallet = $request->user()->wallet;
 
@@ -33,7 +33,7 @@ class WalletController extends Controller
     }
 
     /** List wallet transactions with pagination. */
-    public function transactions(Request $request): JsonResponse
+    public function transactions(Request $request): ResponsePayload
     {
         $wallet = $request->user()->wallet;
 
@@ -49,7 +49,7 @@ class WalletController extends Controller
     }
 
     /** Submit a wallet load request (bank transfer proof). */
-    public function requestLoad(SubmitWalletLoadRequest $request): JsonResponse
+    public function requestLoad(SubmitWalletLoadRequest $request): ResponsePayload
     {
         $loadRequest = $this->loadRequestService->submitForUser($request->user(), $request);
 
@@ -61,7 +61,7 @@ class WalletController extends Controller
     }
 
     /** Check the status of a wallet load request. */
-    public function loadRequestStatus(Request $request, WalletLoadRequest $loadRequest): JsonResponse
+    public function loadRequestStatus(Request $request, WalletLoadRequest $loadRequest): ResponsePayload
     {
         if ($loadRequest->user_id !== $request->user()->id) {
             return $this->notFound();

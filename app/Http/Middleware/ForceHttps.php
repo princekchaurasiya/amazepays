@@ -15,16 +15,14 @@ class ForceHttps
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {
         // Only enforce HTTPS in production
-        if (app()->environment('production') && !$request->secure()) {
+        if (app()->environment('production') && ! $request->secure()) {
             $url = $request->getRequestUri();
-            
+
             // Check if this is a payment-related route
             $paymentRoutes = [
                 '/payment/',
@@ -33,7 +31,7 @@ class ForceHttps
                 '/checkout',
                 '/woohoo/',
             ];
-            
+
             $isPaymentRoute = false;
             foreach ($paymentRoutes as $route) {
                 if (str_contains($url, $route)) {
@@ -41,13 +39,13 @@ class ForceHttps
                     break;
                 }
             }
-            
+
             if ($isPaymentRoute) {
                 Log::warning('⚠️ HTTP request to payment route in production', [
                     'url' => $url,
-                    'ip' => $request->ip()
+                    'ip' => $request->ip(),
                 ]);
-                
+
                 // Redirect to HTTPS version
                 return redirect()->secure($request->getRequestUri());
             }

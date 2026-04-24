@@ -1,59 +1,74 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
 {
     use HasFactory;
 
+    protected $table = 'payments';
+
     protected $fillable = [
+        'tenant_id',
+        'order_id',
         'user_id',
-        'payment_method',
+        'gateway',
+        'environment',
         'merchant_order_id',
-        'merchant_order_description',
-        'payment_id',
-        'type',
+        'gateway_payment_id',
+        'gateway_reference',
         'status',
-        'amount',
+        'method_category',
+        'method_detail',
+        'amount_minor',
         'currency',
-        'created_at_api',
-        'decline_reason',
-        'decline_code',
-        'is_3d',
-        'arn',
-        'rrn',
-        'original_amount',
-        'masked_pan',
-        'holder',
-        'issuing_country_code',
-        'customer_email',
-        'customer_ip',
-        'customer_locale',
+        'fee_minor',
+        'tax_on_fee_minor',
+        'settlement_amount_minor',
+        'payment_instrument_id',
+        'applied_bank_offer_id',
+        'emi_tenure_months',
+        'emi_processing_fee_minor',
+        'idempotency_key',
+        'failure_code',
+        'failure_reason',
+        'initiated_at',
+        'authorized_at',
+        'captured_at',
+        'failed_at',
     ];
 
     protected $casts = [
-        'is_3d' => 'boolean',
-        'created_at_api' => 'datetime',
-        'amount' => 'decimal:2',
-        'original_amount' => 'decimal:2',
+        'amount_minor' => 'integer',
+        'fee_minor' => 'integer',
+        'tax_on_fee_minor' => 'integer',
+        'settlement_amount_minor' => 'integer',
+        'emi_tenure_months' => 'integer',
+        'emi_processing_fee_minor' => 'integer',
+        'initiated_at' => 'datetime',
+        'authorized_at' => 'datetime',
+        'captured_at' => 'datetime',
+        'failed_at' => 'datetime',
     ];
 
-    /**
-     * Relationships
-     */
-
-    // User who made the payment (if user_id exists in table)
-    public function user()
+    public function tenant(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Tenant::class);
     }
 
-    // Order associated with payment (if order_id exists)
-    public function order()
+    public function order(): BelongsTo
     {
-        return $this->belongsTo(Order::class, 'merchant_order_id', 'merchant_order_id');
+        return $this->belongsTo(Order::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

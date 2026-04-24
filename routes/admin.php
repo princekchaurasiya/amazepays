@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GiftThemeController;
 use App\Http\Controllers\Admin\KGenAdminController;
+use App\Http\Controllers\Admin\KGenDistributorWalletController;
 use App\Http\Controllers\Admin\OfferController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
@@ -18,10 +19,13 @@ use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ValueDesignAdminController;
+use App\Http\Controllers\Admin\Voucher\LystoGiftCardController;
 use App\Http\Controllers\Admin\VouchagramController;
 use App\Http\Controllers\Admin\WalletController;
 use App\Http\Controllers\Admin\WoohooAdminController;
 use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\Voucher\ValueDesignStorefrontController;
+use App\Http\Controllers\StoreController;
 use App\Models\Slide;
 use Illuminate\Support\Facades\Route;
 
@@ -37,7 +41,7 @@ use Illuminate\Support\Facades\Route;
 | Admin panel lives at /panel
 */
 
-Route::prefix('panel')->name('admin.')->middleware(['auth', 'two.factor'])->group(function () {
+Route::prefix('panel')->name('panel.')->middleware(['auth', 'two.factor'])->group(function () {
 
     // 2FA setup / challenge (exempt from two.factor middleware)
     Route::prefix('2fa')->name('2fa.')->withoutMiddleware('two.factor')->group(function () {
@@ -320,15 +324,41 @@ Route::prefix('panel')->name('admin.')->middleware(['auth', 'two.factor'])->grou
         ->middleware('permission:providers.view');
     Route::get('/value-design', [ValueDesignAdminController::class, 'index'])->name('value-design.index')
         ->middleware('permission:providers.view');
+    Route::get('/lysto', fn () => redirect()->route('panel.lysto.gift-cards.index'))->name('lysto.index')
+        ->middleware('permission:providers.view');
     Route::prefix('value-design')->name('value-design.')->middleware('permission:providers.view')->group(function () {
         Route::post('/token', [ValueDesignAdminController::class, 'token'])->name('token');
         Route::post('/brands', [ValueDesignAdminController::class, 'brands'])->name('brands');
+        Route::post('/brands/clear-cache', [ValueDesignStorefrontController::class, 'clearBrandsCache'])->name('brands.clear-cache');
+        Route::post('/test-connection', [ValueDesignStorefrontController::class, 'testConnection'])->name('test-connection');
         Route::post('/stores', [ValueDesignAdminController::class, 'stores'])->name('stores');
         Route::post('/evc', [ValueDesignAdminController::class, 'evc'])->name('evc');
         Route::post('/evc-status', [ValueDesignAdminController::class, 'evcStatus'])->name('evc-status');
         Route::post('/activated-evc', [ValueDesignAdminController::class, 'activatedEvc'])->name('activated-evc');
         Route::post('/wallet-balance', [ValueDesignAdminController::class, 'walletBalance'])->name('wallet-balance');
         Route::post('/sync-catalog', [ValueDesignAdminController::class, 'syncCatalog'])->name('sync-catalog');
+
+        // Store locator workspace (Inertia)
+        Route::get('/stores/select', [StoreController::class, 'showForm'])->name('stores.form');
+        Route::get('/stores/filter', [StoreController::class, 'filterStores'])->name('stores.filter');
+        Route::post('/stores/fetch', [StoreController::class, 'fetchStoresForBrand'])->name('stores.fetch');
+        Route::post('/stores/sync', [StoreController::class, 'syncAndShow'])->name('stores.sync');
+        Route::get('/stores/export', [StoreController::class, 'exportStores'])->name('stores.export');
+    });
+
+    Route::prefix('kgen')->name('kgen.')->middleware('permission:providers.view')->group(function () {
+        Route::get('/wallet', [KGenDistributorWalletController::class, 'wallet'])->name('wallet');
+        Route::get('/wallet/export-csv', [KGenDistributorWalletController::class, 'exportCsv'])->name('wallet.exportCsv');
+        Route::get('/wallet/latest-balance', [KGenDistributorWalletController::class, 'latest'])->name('wallet.latest');
+        Route::get('/transactions', [KGenDistributorWalletController::class, 'index'])->name('transactions.index');
+    });
+
+    Route::prefix('lysto')->name('lysto.')->middleware('permission:providers.view')->group(function () {
+        Route::get('/gift-cards', [LystoGiftCardController::class, 'index'])->name('gift-cards.index');
+        Route::get('/gift-cards/{giftcard_id}/skus', [LystoGiftCardController::class, 'getSkus'])->name('gift-cards.skus');
+        Route::get('/orders', [LystoGiftCardController::class, 'getOrder'])->name('orders.index');
+        Route::get('/wallet', [LystoGiftCardController::class, 'getWalletBalance'])->name('wallet');
+        Route::post('/gift-cards/purchase', [LystoGiftCardController::class, 'purchase'])->name('gift-cards.purchase');
     });
     Route::get('/woohoo-admin', [WoohooAdminController::class, 'index'])->name('woohoo.index')
         ->middleware('permission:providers.view');

@@ -2,10 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use App\Http\Services\AthenaGiftCardService;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class FetchLystoGiftCards extends Command
 {
@@ -14,7 +13,7 @@ class FetchLystoGiftCards extends Command
      *
      * @var string
      */
-    protected $signature = 'fetch:lystoGiftCards {--brand=} {--page=0} {--size=20}';
+    protected $signature = 'fetch:lysto-gift-cards {--brand=} {--page=0} {--size=20}';
 
     /**
      * The console command description.
@@ -39,9 +38,10 @@ class FetchLystoGiftCards extends Command
             if (empty($apiKey) || empty($partnerId)) {
                 $this->error('❌ Lysto API credentials are not configured. Please check your .env file.');
                 Log::error('FetchLystoGiftCards: Missing API credentials', [
-                    'has_api_key' => !empty($apiKey),
-                    'has_partner_id' => !empty($partnerId)
+                    'has_api_key' => ! empty($apiKey),
+                    'has_partner_id' => ! empty($partnerId),
                 ]);
+
                 return Command::FAILURE;
             }
 
@@ -50,25 +50,26 @@ class FetchLystoGiftCards extends Command
             $pageSize = (int) $this->option('size');
 
             $this->info('🔄 Fetching Lysto gift cards...');
-            
+
             if ($brand) {
                 $this->line("Brand filter: {$brand}");
             }
             $this->line("Page: {$pageNumber}, Page Size: {$pageSize}");
-            
+
             Log::info('FetchLystoGiftCards: API request', [
                 'base_url' => $baseUrl,
                 'brand' => $brand,
                 'page_number' => $pageNumber,
-                'page_size' => $pageSize
+                'page_size' => $pageSize,
             ]);
 
-            $service = new AthenaGiftCardService();
+            $service = new AthenaGiftCardService;
             $response = $service->listGiftCards($brand, $pageNumber, $pageSize);
 
-            if (!isset($response['status']) || $response['status'] !== 200) {
+            if (! isset($response['status']) || $response['status'] !== 200) {
                 $this->error('❌ Invalid response format or status.');
                 Log::error('FetchLystoGiftCards: Invalid response', ['response' => $response]);
+
                 return Command::FAILURE;
             }
 
@@ -77,7 +78,7 @@ class FetchLystoGiftCards extends Command
 
             $this->info("✅ Successfully fetched {$totalCards} gift card(s)");
             $this->line('');
-            
+
             if ($totalCards > 0) {
                 $this->line('Gift Cards:');
                 $this->table(
@@ -91,28 +92,29 @@ class FetchLystoGiftCards extends Command
                         ];
                     }, array_slice($giftCards, 0, 10)) // Show first 10
                 );
-                
+
                 if ($totalCards > 10) {
-                    $this->line("... and " . ($totalCards - 10) . " more gift cards");
+                    $this->line('... and '.($totalCards - 10).' more gift cards');
                 }
             } else {
                 $this->warn('No gift cards found.');
             }
-            
+
             Log::info('FetchLystoGiftCards: Gift cards fetched successfully', [
                 'total_cards' => $totalCards,
                 'page_number' => $pageNumber,
-                'page_size' => $pageSize
+                'page_size' => $pageSize,
             ]);
 
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error('❌ Exception occurred: ' . $e->getMessage());
+            $this->error('❌ Exception occurred: '.$e->getMessage());
             Log::error('FetchLystoGiftCards: Exception', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return Command::FAILURE;
         }
     }

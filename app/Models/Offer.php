@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,30 +12,41 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Offer extends Model
 {
+    use HasFactory;
     use SoftDeletes;
 
-    public static array $offerTypes = [
-        'flat_discount', 'percentage_discount', 'cashback',
-        'buy_x_get_y', 'first_purchase', 'category_specific',
-        'brand_specific', 'product_specific',
-    ];
+    protected $table = 'offers';
 
     protected $fillable = [
-        'tenant_id', 'name', 'code', 'type', 'discount_value', 'discount_percentage',
-        'min_order_value', 'max_discount', 'usage_limit', 'per_user_limit',
-        'is_active', 'is_public', 'start_date', 'end_date',
-        'applicable_product_ids', 'applicable_category_ids', 'applicable_brand_ids',
-        'description',
+        'tenant_id',
+        'campaign_id',
+        'name',
+        'code',
+        'discount_type',
+        'discount_percent',
+        'discount_amount_minor',
+        'max_discount_amount_minor',
+        'min_cart_amount_minor',
+        'applies_to',
+        'stackable',
+        'status',
+        'requires_code',
+        'usage_limit_global',
+        'usage_limit_per_user',
+        'starts_at',
+        'ends_at',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
-        'is_public' => 'boolean',
-        'start_date' => 'datetime',
-        'end_date' => 'datetime',
-        'applicable_product_ids' => 'array',
-        'applicable_category_ids' => 'array',
-        'applicable_brand_ids' => 'array',
+        'discount_percent' => 'decimal:3',
+        'discount_amount_minor' => 'integer',
+        'max_discount_amount_minor' => 'integer',
+        'min_cart_amount_minor' => 'integer',
+        'requires_code' => 'boolean',
+        'usage_limit_global' => 'integer',
+        'usage_limit_per_user' => 'integer',
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
     ];
 
     public function tenant(): BelongsTo
@@ -40,63 +54,13 @@ class Offer extends Model
         return $this->belongsTo(Tenant::class);
     }
 
+    public function campaign(): BelongsTo
+    {
+        return $this->belongsTo(PromotionCampaign::class, 'campaign_id');
+    }
+
     public function usages(): HasMany
     {
         return $this->hasMany(OfferUsage::class);
-    }
-
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true)
-            ->where(function ($q) {
-                $q->whereNull('start_date')->orWhere('start_date', '<=', now());
-            })
-            ->where(function ($q) {
-                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
-            });
-    }
-
-    public function scopePublic($query)
-    {
-        return $query->active()->where('is_public', true);
-    }
-
-    public function isExpired(): bool
-    {
-        return $this->end_date && $this->end_date->isPast();
-    }
-
-    public function isUsageLimitReached(): bool
-    {
-        if (! $this->usage_limit) {
-            return false;
-        }
-
-        return $this->usages()->count() >= $this->usage_limit;
-    }
-
-    public function isUsedByUser(int $userId): bool
-    {
-        return $this->usages()->where('user_id', $userId)->count() >= $this->per_user_limit;
-    }
-
-    public function calculateDiscount(float $orderAmount): float
-    {
-        if ($orderAmount < $this->min_order_value) {
-            return 0;
-        }
-
-        $discount = match ($this->type) {
-            'flat_discount' => $this->discount_value,
-            'percentage_discount', 'cashback' => ($orderAmount * $this->discount_percentage) / 100,
-            'first_purchase' => $this->discount_value > 0 ? $this->discount_value : ($orderAmount * $this->discount_percentage) / 100,
-            default => 0,
-        };
-
-        if ($this->max_discount && $discount > $this->max_discount) {
-            return $this->max_discount;
-        }
-
-        return round($discount, 2);
     }
 }

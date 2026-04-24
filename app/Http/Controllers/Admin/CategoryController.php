@@ -89,7 +89,7 @@ class CategoryController extends Controller
 
         audit('category.created', $category, [], $data);
 
-        return redirect()->route('admin.categories.index')
+        return redirect()->route('panel.categories.index')
             ->with('success', 'Category created.');
     }
 
@@ -127,7 +127,7 @@ class CategoryController extends Controller
 
         audit('category.updated', $category, $old, $data);
 
-        return redirect()->route('admin.categories.index')
+        return redirect()->route('panel.categories.index')
             ->with('success', 'Category updated.');
     }
 
@@ -144,7 +144,7 @@ class CategoryController extends Controller
 
         $category->delete();
 
-        return redirect()->route('admin.categories.index')
+        return redirect()->route('panel.categories.index')
             ->with('success', 'Category deleted.');
     }
 

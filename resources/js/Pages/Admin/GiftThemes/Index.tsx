@@ -8,8 +8,8 @@ import {
     AdminNameSlugFields,
     Breadcrumbs,
     StatusBadge,
-    type AdminImagePreviewItem,
 } from '@/Components/Admin';
+import type { AdminImagePreviewItem } from '@/Components/Admin/AdminImagePreviewList';
 import { Brush, Plus } from 'lucide-react';
 
 type ThemeRow = {

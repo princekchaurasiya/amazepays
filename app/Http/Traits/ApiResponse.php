@@ -2,7 +2,8 @@
 
 namespace App\Http\Traits;
 
-use Illuminate\Http\JsonResponse;
+use App\Enums\ResponseCode;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 trait ApiResponse
@@ -10,19 +11,21 @@ trait ApiResponse
     /**
      * Return a success response with the standard envelope.
      */
-    protected function ok(string $message, array $data = [], int $status = 200): JsonResponse
+    protected function ok(string $message, array $data = [], int $status = 200): ResponsePayload
     {
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'data' => $data,
-        ], $status);
+        return new ResponsePayload(
+            success: true,
+            code: $status === 201 ? ResponseCode::CREATED : ResponseCode::OK,
+            messageKey: $message,
+            data: $data,
+            httpStatus: $status,
+        );
     }
 
     /**
      * Return a 201 Created response.
      */
-    protected function created(string $message, array $data = []): JsonResponse
+    protected function created(string $message, array $data = []): ResponsePayload
     {
         return $this->ok($message, $data, 201);
     }
@@ -30,49 +33,46 @@ trait ApiResponse
     /**
      * Return a paginated response with meta information.
      */
-    protected function paginated(LengthAwarePaginator $paginator, string $key = 'items'): JsonResponse
+    protected function paginated(LengthAwarePaginator $paginator, string $key = 'items'): ResponsePayload
     {
-        return response()->json([
-            'success' => true,
-            'data' => $paginator->items(),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-            ],
-        ]);
+        return ResponsePayload::paginated($paginator);
     }
 
     /**
      * Return a standard error response.
      */
-    protected function error(string $code, string $message, int $status = 400, array $details = []): JsonResponse
+    protected function error(string $code, string $message, int $status = 400, array $details = []): ResponsePayload
     {
-        $error = ['code' => $code, 'message' => $message];
+        // For legacy call sites we accept a string $code and map to ResponseCode when possible.
+        $enum = ResponseCode::tryFrom($code) ?? ResponseCode::INTERNAL_ERROR;
 
-        if ($details) {
-            $error['details'] = $details;
-        }
-
-        return response()->json([
-            'success' => false,
-            'error' => $error,
-        ], $status);
+        return ResponsePayload::fail($enum, $message, $details, $status);
     }
 
-    protected function notFound(string $message = ''): JsonResponse
+    protected function notFound(string $message = ''): ResponsePayload
     {
-        return $this->error('NOT_FOUND', $message !== '' ? $message : __('api.resource_not_found'), 404);
+        return ResponsePayload::fail(
+            ResponseCode::NOT_FOUND,
+            $message !== '' ? $message : 'api.resource_not_found',
+            httpStatus: 404
+        );
     }
 
-    protected function forbidden(string $message = ''): JsonResponse
+    protected function forbidden(string $message = ''): ResponsePayload
     {
-        return $this->error('FORBIDDEN', $message !== '' ? $message : __('api.access_denied'), 403);
+        return ResponsePayload::fail(
+            ResponseCode::FORBIDDEN,
+            $message !== '' ? $message : 'api.access_denied',
+            httpStatus: 403
+        );
     }
 
-    protected function unauthorized(string $message = ''): JsonResponse
+    protected function unauthorized(string $message = ''): ResponsePayload
     {
-        return $this->error('UNAUTHENTICATED', $message !== '' ? $message : __('api.authentication_required'), 401);
+        return ResponsePayload::fail(
+            ResponseCode::UNAUTHENTICATED,
+            $message !== '' ? $message : 'api.authentication_required',
+            httpStatus: 401
+        );
     }
 }

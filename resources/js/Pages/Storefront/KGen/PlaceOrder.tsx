@@ -36,7 +36,9 @@ export default function KGenPlaceOrder({
                         />
                         {errors.variantId ? <p className="mt-1 text-sm text-red-600">{errors.variantId}</p> : null}
                     </div>
-                    {errors.error ? <p className="text-sm text-red-600">{String(errors.error)}</p> : null}
+                    {(errors as Record<string, unknown>).error ? (
+                        <p className="text-sm text-red-600">{String((errors as Record<string, unknown>).error)}</p>
+                    ) : null}
                     <button
                         type="submit"
                         disabled={processing}

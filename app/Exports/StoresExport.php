@@ -3,51 +3,57 @@
 namespace App\Exports;
 
 use App\Models\StoreDetail;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Illuminate\Contracts\View\View;
-use Maatwebsite\Excel\Concerns\FromView;
 
 class StoresExport implements FromCollection
 {
     /**
-    * @return \Illuminate\Support\Collection
-    */
-    protected $filters;
+     * @return Collection
+     */
+    /** @var array<string, mixed> */
+    protected array $filters;
 
-    public function __construct($filters = [])
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function __construct(array $filters = [])
     {
         $this->filters = $filters;
     }
 
     public function collection()
     {
-        return StoreDetail::all();
-    }
-
-    public function view(): View
-    {
         $query = StoreDetail::query();
 
-        if (!empty($this->filters['brand_code'])) {
+        if (! empty($this->filters['brand_code'])) {
             $query->where('brand_code', $this->filters['brand_code']);
         }
 
-        if (!empty($this->filters['country'])) {
+        if (! empty($this->filters['brand_name'])) {
+            $query->where('brand_name', $this->filters['brand_name']);
+        }
+
+        if (! empty($this->filters['country'])) {
             $query->where('country', $this->filters['country']);
         }
 
-        if (!empty($this->filters['min_price'])) {
-            $query->where('price', '>=', $this->filters['min_price']);
+        if (! empty($this->filters['state'])) {
+            $query->where('state', $this->filters['state']);
         }
 
-        if (!empty($this->filters['max_price'])) {
-            $query->where('price', '<=', $this->filters['max_price']);
+        if (! empty($this->filters['city'])) {
+            $query->where('city', $this->filters['city']);
         }
 
-        if (!empty($this->filters['search'])) {
-            $query->where('store_name', 'like', '%' . $this->filters['search'] . '%');
+        if (! empty($this->filters['contact_number'])) {
+            $query->where('contact_number', 'like', '%'.$this->filters['contact_number'].'%');
         }
 
-        return view('stores.export', ['stores' => $query->get()]);
+        if (! empty($this->filters['store_name'])) {
+            $query->where('store_name', 'like', '%'.$this->filters['store_name'].'%');
+        }
+
+        return $query->get();
     }
 }

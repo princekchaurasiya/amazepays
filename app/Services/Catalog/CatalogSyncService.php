@@ -169,6 +169,7 @@ class CatalogSyncService
                         $slug = $this->generateUniqueSlug($product);
                         $product->update(['slug' => $slug, 'url' => $slug]);
                     }
+                    $this->ensureDefaultAudiences($product->id, $providerName);
                     $updated++;
                 } else {
                     $createAttrs = array_merge($providerPayload, [
@@ -181,6 +182,7 @@ class CatalogSyncService
                     $newProduct = Product::create($createAttrs);
                     $slug = $this->generateUniqueSlug($newProduct);
                     $newProduct->update(['slug' => $slug, 'url' => $slug]);
+                    $this->ensureDefaultAudiences($newProduct->id, $providerName);
                     $created++;
                 }
             }
@@ -208,7 +210,7 @@ class CatalogSyncService
     public function syncAll(): array
     {
         $results = [];
-        $providers = config('services.voucher_providers', ['woohoo', 'kgen', 'value_design', 'lysto']);
+        $providers = config('voucher.providers', ['woohoo', 'kgen', 'value_design', 'lysto']);
 
         foreach ($providers as $provider) {
             try {
@@ -220,6 +222,40 @@ class CatalogSyncService
         }
 
         return $results;
+    }
+
+    private function ensureDefaultAudiences(int $productId, string $providerName): void
+    {
+        $count = DB::table('product_audiences')->where('product_id', $productId)->count();
+        if ($count > 0) {
+            return;
+        }
+
+        $aud = Product::defaultCatalogAudienceForSourceProvider($providerName);
+
+        $rows = [];
+        if ($aud === Product::CATALOG_AUDIENCE_B2C || $aud === Product::CATALOG_AUDIENCE_BOTH) {
+            $rows[] = [
+                'product_id' => $productId,
+                'audience_type' => 'b2c_public',
+                'audience_ref_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+        if ($aud === Product::CATALOG_AUDIENCE_B2B || $aud === Product::CATALOG_AUDIENCE_BOTH) {
+            $rows[] = [
+                'product_id' => $productId,
+                'audience_type' => 'b2b_partner',
+                'audience_ref_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        if ($rows !== []) {
+            DB::table('product_audiences')->insert($rows);
+        }
     }
 
     private function generateUniqueSlug(Product $product): string

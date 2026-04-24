@@ -33,19 +33,20 @@ All route files are registered in `bootstrap/app.php`.
 
 | Method | URI | Name | Controller |
 |---|---|---|---|
-| GET/POST | `/checkout/{slug}` | `checkoutPage` | `ProductPageController@storePayNowData` |
+| GET | `/checkout/{slug}` | `checkoutPage` | `StorefrontProductController@showCheckout` |
+| POST | `/checkout/{slug}` | `checkoutPage.post` | `CheckoutSessionController@submitCheckout` |
+| POST | `/checkout/session/billing` | `checkout.session.billing.update` | `CheckoutSessionController@updateBillingDetails` |
 | POST | `/woohoo/create-order` | `woohoo.createOrder` | `WoohooOrderController@createOrder` |
 | POST | `/unlimit/checkout` | `unlimit.checkout` | `UnlimitController@checkout` |
-| GET/POST | `/vd-checkout` | `vdcheckoutPage` | `VDPageController@storePayNowData` |
+| POST | `/vd/checkout/session` | `vd.checkout.session.update` | `Voucher\\ValueDesignCheckoutController@updateSession` |
+| POST | `/vd-checkout` | `vdcheckoutPage` | `Voucher\\ValueDesignCheckoutController@submit` |
 
 ### `routes/payments.php` -- Payment Processing
 
 | Method | URI | Name | Controller |
 |---|---|---|---|
 | GET/POST | `/unlimit/return` | `unlimit.return` | `WoohooProcessingController@handleReturn` |
-| POST | `/payment/upi` | `payment.upi` | `UPIPaymentController@store` |
-| GET | `/vd/payment/return` | `vd.return` | `VDPaymentController@handleReturnSuccess` |
-| GET | `/kgen-payment/initiate` | `kgen.payment.initiate` | `KGenPaymentController@initiate` |
+| POST | `/payment/upi` | `payment.upi` | `Payment\\PaymentSessionController@upi` |
 
 ### `routes/webhooks.php` -- Inbound Webhooks
 
@@ -60,7 +61,7 @@ These live under prefix `/api/v1/webhooks` (see `routes/api.php`). Handlers whit
 
 | Method | URI | Name | Controller |
 |---|---|---|---|
-| POST | `/api/v1/webhooks/ccavenue` | `api.v1.webhooks.ccavenue` | `Payment\CCAvenuCallbackController@handle` |
+| POST | `/api/v1/webhooks/ccavenue` | `api.v1.webhooks.ccavenue` | `Payment\CCAvenueCallbackController@handle` |
 | POST | `/api/v1/webhooks/unlimit` | `api.v1.webhooks.unlimit` | `Payment\UnlimitCallbackController@handle` |
 | POST | `/api/v1/webhooks/razorpay` | `api.v1.webhooks.razorpay` | `Payment\RazorpayCallbackController@handle` |
 | POST | `/api/v1/webhooks/woohoo` | `api.v1.webhooks.woohoo` | `Voucher\WoohooCallbackController@handle` |
@@ -71,8 +72,8 @@ All routes prefixed with `/panel` and require `auth` + `two.factor` middleware.
 
 | Method | URI | Name | Controller |
 |---|---|---|---|
-| GET | `/panel` | `admin.dashboard` | `DashboardController@index` |
-| GET | `/panel/products` | `admin.products.index` | `ProductController@index` |
+| GET | `/panel` | `panel.dashboard` | `DashboardController@index` |
+| GET | `/panel/products` | `panel.products.index` | `ProductController@index` |
 | GET | `/panel/orders` | `admin.orders.index` | `OrderController@index` |
 | GET | `/panel/users` | `admin.users.index` | `UserController@index` |
 | GET | `/panel/tenants` | `admin.tenants.index` | `TenantController@index` |
@@ -81,8 +82,8 @@ All routes prefixed with `/panel` and require `auth` + `two.factor` middleware.
 | GET | `/panel/audit-logs` | `admin.audit-logs.index` | `AuditLogController@index` |
 | GET | `/panel/security` | `admin.security.index` | `SecurityDashboardController@index` |
 | GET | `/panel/settings` | `admin.settings.index` | `SettingsController@index` |
-| GET | `/panel/vouchagram` | `admin.vouchagram.index` | `VouchagramController@index` |
-| POST | `/panel/vouchagram/*` | `admin.vouchagram.*` | `VouchagramController` (API tools, sync) |
+| GET | `/panel/vouchagram` | `panel.vouchagram.index` | `VouchagramController@index` |
+| POST | `/panel/vouchagram/*` | `panel.vouchagram.*` | `VouchagramController` (API tools, sync) |
 
 ### `routes/api.php` -- Mobile App & B2B API
 

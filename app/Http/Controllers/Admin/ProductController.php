@@ -40,7 +40,7 @@ class ProductController extends Controller
         $this->authorizeCatalogScopeForList($scope);
 
         if (! $request->filled('catalog_scope')) {
-            return redirect()->route('admin.products.index', array_merge(
+            return redirect()->route('panel.products.index', array_merge(
                 $request->query(),
                 ['catalog_scope' => $scope]
             ));
@@ -324,7 +324,7 @@ class ProductController extends Controller
 
         audit('product.created', $product, [], $request->validated());
 
-        return redirect()->route('admin.products.index')
+        return redirect()->route('panel.products.index')
             ->with('success', 'Product created successfully.');
     }
 
@@ -490,7 +490,7 @@ class ProductController extends Controller
         audit('product.deleted', $product, $product->toArray(), []);
         $product->delete();
 
-        return redirect()->route('admin.products.index')
+        return redirect()->route('panel.products.index')
             ->with('success', 'Product deleted.');
     }
 

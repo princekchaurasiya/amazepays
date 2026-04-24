@@ -2,12 +2,16 @@
 
 namespace App\Exceptions;
 
+use App\Enums\ResponseCode;
+use App\Exceptions\Checkout\KycRequiredException;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
 // use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
@@ -42,13 +46,28 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {});
 
+        $this->renderable(function (KycRequiredException $e, $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return ResponsePayload::fail(
+                    ResponseCode::KYC_REQUIRED,
+                    'responses.KYC_REQUIRED',
+                    [
+                        'required_threshold_amount_minor' => (int) $e->threshold->threshold_amount_minor,
+                        'currency' => (string) $e->threshold->currency,
+                        'required_document_types' => $e->threshold->required_document_types,
+                        'missing_document_types' => $e->missingDocumentTypes,
+                        'enforcement' => (string) $e->threshold->enforcement,
+                    ],
+                    422
+                );
+            }
+        });
+
         $this->renderable(function (WalletFrozenException $e, $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'code' => 'WALLET_FROZEN',
-                    'message' => $e->getMessage(),
-                ], 422);
+                return ResponsePayload::fail(ResponseCode::WALLET_FROZEN, 'wallet.frozen', [
+                    'reason' => $e->getMessage(),
+                ]);
             }
         });
     }
@@ -77,11 +96,9 @@ class Handler extends ExceptionHandler
 
         if ($exception instanceof WalletFrozenException) {
             if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'code' => 'WALLET_FROZEN',
-                    'message' => $exception->getMessage(),
-                ], 422);
+                return ResponsePayload::fail(ResponseCode::WALLET_FROZEN, 'wallet.frozen', [
+                    'reason' => $exception->getMessage(),
+                ]);
             }
 
             return parent::render($request, $exception);
@@ -105,19 +122,33 @@ class Handler extends ExceptionHandler
 
             // Show user-friendly error page
             if ($request->expectsJson()) {
-                return response()->json([
-                    'message' => 'We are experiencing some technical difficulties. Please try again later.',
-                ], 500);
+                return ResponsePayload::fail(ResponseCode::INTERNAL_ERROR, 'errors.technical_difficulties');
             }
 
             // If admin request, show admin error page, otherwise show public error page
             if ($isAdminRequest) {
-                return response()->view('errors.admin-500', [
-                    'exception' => $exception,
-                ], 500);
+                if ($request->header('X-Inertia')) {
+                    return Inertia::render('Error', [
+                        'status' => 500,
+                        'message' => 'Something went wrong.',
+                    ])->toResponse($request)->setStatusCode(500);
+                }
+
+                return response('Something went wrong.', 500, [
+                    'Content-Type' => 'text/plain; charset=UTF-8',
+                ]);
             }
 
-            return response()->view('errors.500', [], 500);
+            if ($request->header('X-Inertia')) {
+                return Inertia::render('Error', [
+                    'status' => 500,
+                    'message' => 'Something went wrong.',
+                ])->toResponse($request)->setStatusCode(500);
+            }
+
+            return response('Something went wrong.', 500, [
+                'Content-Type' => 'text/plain; charset=UTF-8',
+            ]);
         }
 
         // Check if it's a general exception (not specifically handled)
@@ -132,19 +163,33 @@ class Handler extends ExceptionHandler
 
             // Show user-friendly error page instead of exposing error details
             if ($request->expectsJson()) {
-                return response()->json([
-                    'message' => 'We are experiencing some technical difficulties. Please try again later.',
-                ], 500);
+                return ResponsePayload::fail(ResponseCode::INTERNAL_ERROR, 'errors.technical_difficulties');
             }
 
             // If admin request, show admin error page, otherwise show public error page
             if ($isAdminRequest) {
-                return response()->view('errors.admin-500', [
-                    'exception' => $exception,
-                ], 500);
+                if ($request->header('X-Inertia')) {
+                    return Inertia::render('Error', [
+                        'status' => 500,
+                        'message' => 'Something went wrong.',
+                    ])->toResponse($request)->setStatusCode(500);
+                }
+
+                return response('Something went wrong.', 500, [
+                    'Content-Type' => 'text/plain; charset=UTF-8',
+                ]);
             }
 
-            return response()->view('errors.500', [], 500);
+            if ($request->header('X-Inertia')) {
+                return Inertia::render('Error', [
+                    'status' => 500,
+                    'message' => 'Something went wrong.',
+                ])->toResponse($request)->setStatusCode(500);
+            }
+
+            return response('Something went wrong.', 500, [
+                'Content-Type' => 'text/plain; charset=UTF-8',
+            ]);
         }
 
         if (str_contains($message, 'Address in mailbox given [] does not comply with RFC 2822, 3.6.2.') ||
@@ -152,9 +197,7 @@ class Handler extends ExceptionHandler
         str_contains($message, 'Order failed: Duplicate reference number provided') ||
         str_contains($message, 'Error code: 400')) {
 
-            return response()->json([
-                'message' => 'Please place a fresh new order',
-            ], 400);
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'orders.place_fresh_order', httpStatus: 400);
         }
 
         return parent::render($request, $exception);

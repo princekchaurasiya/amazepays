@@ -15,12 +15,11 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolesAndPermissionsSeeder::class,
-            UserSeeder::class,
-            CategorySeeder::class,
-            GiftCardThemeSeeder::class,
-            BrandCardThemeSeeder::class,
-            AuditLogDemoSeeder::class,
-            TicketDemoSeeder::class,
+            BaselineTenantAndUsersSeeder::class,
+            BankIssuersAndInstrumentsSeeder::class,
+            KycThresholdsSeeder::class,
+            LoyaltyProgramSeeder::class,
+            TaxReferenceSeeder::class,
         ]);
     }
 }

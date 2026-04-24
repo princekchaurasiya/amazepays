@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\GiftCardTheme;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -222,7 +223,7 @@ class GiftThemeController extends Controller
         return $payload;
     }
 
-    private function storePublicFile(?\Illuminate\Http\UploadedFile $file, string $folder): ?string
+    private function storePublicFile(?UploadedFile $file, string $folder): ?string
     {
         if (! $file) {
             return null;
@@ -248,14 +249,14 @@ class GiftThemeController extends Controller
     }
 
     /**
-     * @return list<\Illuminate\Http\UploadedFile>
+     * @return list<UploadedFile>
      */
     private function extractGalleryUploads(Request $request): array
     {
         $candidates = ['gallery_files', 'image', 'images', 'gallery_images'];
         foreach ($candidates as $key) {
             $direct = $request->file($key);
-            if ($direct instanceof \Illuminate\Http\UploadedFile) {
+            if ($direct instanceof UploadedFile) {
                 return [$direct];
             }
             if (is_array($direct) && $direct !== []) {
@@ -263,7 +264,7 @@ class GiftThemeController extends Controller
             }
 
             $nested = data_get($request->allFiles(), $key);
-            if ($nested instanceof \Illuminate\Http\UploadedFile) {
+            if ($nested instanceof UploadedFile) {
                 return [$nested];
             }
             if (is_array($nested) && $nested !== []) {
@@ -282,11 +283,11 @@ class GiftThemeController extends Controller
 
     /**
      * @param  mixed  $value
-     * @return list<\Illuminate\Http\UploadedFile>
+     * @return list<UploadedFile>
      */
     private function flattenUploadedFiles($value): array
     {
-        if ($value instanceof \Illuminate\Http\UploadedFile) {
+        if ($value instanceof UploadedFile) {
             return [$value];
         }
         if (! is_array($value)) {
@@ -316,7 +317,7 @@ class GiftThemeController extends Controller
         }
     }
 
-    private function hashUploadedFile(\Illuminate\Http\UploadedFile $file): ?string
+    private function hashUploadedFile(UploadedFile $file): ?string
     {
         $realPath = $file->getRealPath();
         if (! $realPath || ! is_file($realPath)) {
@@ -344,4 +345,3 @@ class GiftThemeController extends Controller
         return is_string($hash) && $hash !== '' ? $hash : null;
     }
 }
-

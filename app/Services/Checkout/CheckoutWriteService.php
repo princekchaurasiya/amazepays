@@ -3,9 +3,11 @@
 namespace App\Services\Checkout;
 
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class CheckoutWriteService
 {
@@ -54,14 +56,16 @@ class CheckoutWriteService
                 ]);
             }
 
+            $subtotalMinor = (int) round($grandPayableAmount * 100);
+            $discountMinor = (int) round($discountAmount * 100);
+            $grandTotalMinor = max(0, $subtotalMinor - $discountMinor);
+
             $recentOrder = Order::query()
                 ->where('user_id', $userId)
-                ->where('sku', $productLocked->sku)
-                ->where('denomination', $denomination)
-                ->where('quantity', $quantity)
+                ->where('status', 'created')
                 ->where('created_at', '>=', now()->subSeconds(5))
-                ->where('order_status', 'Pending')
                 ->lockForUpdate()
+                ->latest('id')
                 ->first();
 
             if ($recentOrder) {
@@ -70,32 +74,36 @@ class CheckoutWriteService
                 ]);
             }
 
+            $orderNumber = 'AMZ'.now()->format('YmdHis').Str::upper(Str::random(6));
+
             $order = Order::query()->create([
+                'tenant_id' => 1,
                 'user_id' => $userId,
-                'sku' => $productLocked->sku,
-                'product_name' => $productLocked->name,
-                'product_id' => $productLocked->id,
-                'denomination' => $denomination,
-                'quantity' => $quantity,
-                'grand_payable_amount' => $grandPayableAmount,
-                'discounted_amount_value' => $discountAmount,
-                'amount_payable_after_discount' => $totalPayableAmountAfterDiscount,
-                'gift_send_option' => $validated['gift_send_option'],
-                'delivery_mode' => 'both',
-                'gift_theme_id' => isset($validated['gift_theme_id']) ? (int) $validated['gift_theme_id'] : null,
-                'gift_message_title' => $validated['gift_message_title'] ?? null,
-                'gift_delivery_option' => $validated['gift_delivery_option'] ?? null,
-                'gift_delivery_at' => (($validated['gift_delivery_option'] ?? null) === 'send_later') ? ($validated['gift_delivery_at'] ?? null) : null,
-                'sender_first_name' => $validated['sender_first_name'] ?? null,
-                'receiver_name' => $validated['receiver_name'] ?? null,
-                'receiver_email' => $validated['receiver_email'] ?? null,
-                'receiver_mobile' => $validated['receiver_mobile'] ?? null,
-                'receiver_msg' => $validated['receiver_msg'] ?? null,
-                'order_status' => 'Pending',
+                'order_number' => $orderNumber,
+                'channel' => 'storefront',
+                'status' => 'created',
+                'subtotal_minor' => $subtotalMinor,
+                'discount_total_minor' => $discountMinor,
+                'tax_total_minor' => 0,
+                'grand_total_minor' => $grandTotalMinor,
+                'currency' => 'INR',
             ]);
 
-            $order->refno = 'Amz'.now()->format('Ymd').str_pad((string) $order->id, 6, '0', STR_PAD_LEFT);
-            $order->save();
+            OrderItem::query()->create([
+                'order_id' => (int) $order->id,
+                'product_id' => (int) $productLocked->id,
+                'denomination_id' => null,
+                'sku_snapshot' => (string) ($productLocked->sku ?? ''),
+                'name_snapshot' => (string) ($productLocked->name ?? ''),
+                'quantity' => $quantity,
+                'unit_amount_minor' => (int) round($denomination * 100),
+                'line_subtotal_minor' => $subtotalMinor,
+                'line_discount_minor' => $discountMinor,
+                'line_tax_minor' => 0,
+                'line_total_minor' => $grandTotalMinor,
+                'currency' => 'INR',
+                'fulfilment_status' => 'pending',
+            ]);
 
             return $order;
         });
@@ -146,36 +154,43 @@ class CheckoutWriteService
                 ]);
             }
 
+            $subtotalMinor = (int) round($grandPayableAmount * 100);
+            $discountMinor = (int) round($discountAmount * 100);
+            $grandTotalMinor = max(0, $subtotalMinor - $discountMinor);
+
             $order = Order::query()
                 ->where('user_id', $userId)
-                ->where('product_id', $productLocked->id)
-                ->where('order_status', 'Pending')
+                ->where('status', 'created')
                 ->lockForUpdate()
                 ->latest('id')
                 ->first();
 
             if ($order) {
                 $order->fill([
-                    'sku' => $productLocked->sku,
-                    'product_name' => $productLocked->name,
-                    'denomination' => $denomination,
-                    'quantity' => $quantity,
-                    'grand_payable_amount' => $grandPayableAmount,
-                    'discounted_amount_value' => $discountAmount,
-                    'amount_payable_after_discount' => $totalPayableAmountAfterDiscount,
-                    'gift_send_option' => $validated['gift_send_option'],
-                    'delivery_mode' => 'both',
-                    'gift_theme_id' => isset($validated['gift_theme_id']) ? (int) $validated['gift_theme_id'] : null,
-                    'gift_message_title' => $validated['gift_message_title'] ?? null,
-                    'gift_delivery_option' => $validated['gift_delivery_option'] ?? null,
-                    'gift_delivery_at' => (($validated['gift_delivery_option'] ?? null) === 'send_later') ? ($validated['gift_delivery_at'] ?? null) : null,
-                    'sender_first_name' => $validated['sender_first_name'] ?? null,
-                    'receiver_name' => $validated['receiver_name'] ?? null,
-                    'receiver_email' => $validated['receiver_email'] ?? null,
-                    'receiver_mobile' => $validated['receiver_mobile'] ?? null,
-                    'receiver_msg' => $validated['receiver_msg'] ?? null,
+                    'subtotal_minor' => $subtotalMinor,
+                    'discount_total_minor' => $discountMinor,
+                    'tax_total_minor' => 0,
+                    'grand_total_minor' => $grandTotalMinor,
+                    'currency' => 'INR',
                 ]);
                 $order->save();
+
+                // Replace order items (single-item checkout draft).
+                $order->items()->delete();
+                $order->items()->create([
+                    'product_id' => (int) $productLocked->id,
+                    'denomination_id' => null,
+                    'sku_snapshot' => (string) ($productLocked->sku ?? ''),
+                    'name_snapshot' => (string) ($productLocked->name ?? ''),
+                    'quantity' => $quantity,
+                    'unit_amount_minor' => (int) round($denomination * 100),
+                    'line_subtotal_minor' => $subtotalMinor,
+                    'line_discount_minor' => $discountMinor,
+                    'line_tax_minor' => 0,
+                    'line_total_minor' => $grandTotalMinor,
+                    'currency' => 'INR',
+                    'fulfilment_status' => 'pending',
+                ]);
 
                 return $order;
             }
@@ -240,4 +255,3 @@ class CheckoutWriteService
         }
     }
 }
-

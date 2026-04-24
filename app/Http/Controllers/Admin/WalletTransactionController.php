@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -11,8 +12,7 @@ class WalletTransactionController extends Controller
     public function index(Request $request)
     {
         $transactions = WalletTransaction::with('wallet.user')
-            ->when($request->type, fn ($q) =>
-                $q->where('type', $request->type)
+            ->when($request->type, fn ($q) => $q->where('type', $request->type)
             )
             ->latest()
             ->paginate(20);
@@ -34,10 +34,10 @@ class WalletTransactionController extends Controller
                 'Type',
                 'Reference',
                 'Description',
-                'Date'
+                'Date',
             ]);
 
-            \App\Models\WalletTransaction::with('wallet.user')
+            WalletTransaction::with('wallet.user')
                 ->orderBy('id')
                 ->chunk(500, function ($transactions) use ($handle) {
                     foreach ($transactions as $tx) {

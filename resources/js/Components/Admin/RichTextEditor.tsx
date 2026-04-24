@@ -69,7 +69,7 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Start t
         const cur = editor.getHTML();
         const next = value || '';
         if (next !== cur) {
-            editor.commands.setContent(next, false);
+            editor.commands.setContent(next, { emitUpdate: false });
         }
     }, [value, editor]);
 

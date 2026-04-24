@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class KgenProduct extends Model
 {
     use HasFactory;
+
     protected $table = 'kgen_products';
 
     protected $fillable = [
@@ -24,7 +25,7 @@ class KgenProduct extends Model
 
     protected $casts = [
         'attachments' => 'array',
-        'categories'  => 'array',
-        'variants'    => 'array',
+        'categories' => 'array',
+        'variants' => 'array',
     ];
 }

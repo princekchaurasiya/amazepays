@@ -21,9 +21,9 @@
                 <a href="javascript:history.back()" class="auth-link">Go back</a>
                 <span class="text-gray-300" aria-hidden="true">&middot;</span>
                 <a href="{{ route('home') }}" class="auth-link">Home</a>
-                @if(Route::has('admin.dashboard'))
+                @if(Route::has('panel.dashboard'))
                     <span class="text-gray-300" aria-hidden="true">&middot;</span>
-                    <a href="{{ route('admin.dashboard') }}" class="auth-link">Admin dashboard</a>
+                    <a href="{{ route('panel.dashboard') }}" class="auth-link">Admin dashboard</a>
                 @endif
             </div>
             <p class="mt-8 text-xs text-slate-500">

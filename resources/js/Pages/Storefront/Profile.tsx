@@ -18,21 +18,21 @@ type User = {
 export default function Profile() {
     const page = usePage<{ auth: { user: User | null } }>();
     const u = page.props.auth?.user;
+    const { data, setData, post, processing, errors } = useForm({
+        name: u?.name ?? '',
+        email: u?.email ?? '',
+        mobile: u?.mobile ?? '',
+        billing_address: u?.billing_address ?? '',
+        billing_address_two: u?.billing_address_two ?? '',
+        billing_city: u?.billing_city ?? '',
+        billing_state: u?.billing_state ?? '',
+        billing_zip: u?.billing_zip ?? '',
+        billing_country: u?.billing_country ?? 'IN',
+    });
+
     if (!u) {
         return null;
     }
-
-    const { data, setData, post, processing, errors } = useForm({
-        name: u.name ?? '',
-        email: u.email ?? '',
-        mobile: u.mobile ?? '',
-        billing_address: u.billing_address ?? '',
-        billing_address_two: u.billing_address_two ?? '',
-        billing_city: u.billing_city ?? '',
-        billing_state: u.billing_state ?? '',
-        billing_zip: u.billing_zip ?? '',
-        billing_country: u.billing_country ?? 'IN',
-    });
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -151,7 +151,6 @@ export default function Profile() {
                         </div>
                     </div>
 
-                    {errors.unexpected_fields && <p className="text-sm text-red-600">{errors.unexpected_fields}</p>}
                     <button
                         type="submit"
                         disabled={processing}

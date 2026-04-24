@@ -10,7 +10,7 @@ class CommonController extends Controller
     {
         return response()->json([
             'status' => true,
-            'received_keys' => array_keys($request->all()),
+            'received_keys' => $request->keys(),
         ]);
     }
 }

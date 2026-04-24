@@ -2,7 +2,7 @@
 
 use Illuminate\Http\JsonResponse;
 
-if (!function_exists('kgenError')) {
+if (! function_exists('kgenError')) {
     function kgenError(string $message, string $errCode): JsonResponse
     {
         $statusCode = match ($errCode) {
@@ -19,7 +19,7 @@ if (!function_exists('kgenError')) {
         };
 
         return response()->json([
-            'error'   => $message,
+            'error' => $message,
             'errCode' => $errCode,
         ], $statusCode);
     }

@@ -19,9 +19,12 @@ use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\StepUpAuth;
 use App\Http\Middleware\ThreatDetection;
+use App\Http\Middleware\VerifyCCAvenueSignature;
 use App\Http\Middleware\VerifyIpWhitelist;
+use App\Http\Middleware\VerifyRazorpaySignature;
 use App\Http\Middleware\VerifyTransactionPin;
 use App\Http\Middleware\VerifyUnlimitSignature;
+use App\Http\Middleware\VerifyWoohooSignature;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -105,6 +108,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.key' => AuthenticateApiKey::class,
             'check.transaction' => CheckUserTransactionStatus::class,
             'verify.unlimit.signature' => VerifyUnlimitSignature::class,
+            'verify.ccavenue.signature' => VerifyCCAvenueSignature::class,
+            'verify.razorpay.signature' => VerifyRazorpaySignature::class,
+            'verify.woohoo.signature' => VerifyWoohooSignature::class,
         ]);
 
         // Redis rate limiting requires ext-redis (phpredis) or predis + a Redis server.

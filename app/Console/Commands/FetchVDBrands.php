@@ -2,11 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Services\VDWebApiService;
+use App\Models\Brand;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Http\Services\VDWebApiService;
-use App\Models\Brand;
 
 class FetchVDBrands extends Command
 {
@@ -15,7 +15,7 @@ class FetchVDBrands extends Command
      *
      * @var string
      */
-    protected $signature = 'fetch:vdBrands';
+    protected $signature = 'fetch:value-design-brands';
 
     /**
      * The console command description.
@@ -25,6 +25,7 @@ class FetchVDBrands extends Command
     protected $description = 'Fetch and store Value Design brands from API';
 
     protected $baseUrl = 'https://at.valuedesign.co.in/distributor/';
+
     protected $vdWebApiService;
 
     /**
@@ -48,10 +49,11 @@ class FetchVDBrands extends Command
         try {
             $this->info('🔄 Fetching Value Design token...');
             $token = $this->vdWebApiService->getToken();
-            
-            if (!$token) {
+
+            if (! $token) {
                 $this->error('❌ Failed to get Value Design token');
                 Log::error('FetchVDBrands: Failed to get token');
+
                 return Command::FAILURE;
             }
 
@@ -59,28 +61,30 @@ class FetchVDBrands extends Command
             Log::info('FetchVDBrands: Token retrieved', ['token_length' => strlen($token)]);
 
             $this->info('🔄 Fetching brands from Value Design API...');
-            
+
             $response = Http::withHeaders([
                 'token' => $token,
-            ])->post($this->baseUrl . 'api-getbrand/', [
+            ])->post($this->baseUrl.'api-getbrand/', [
                 'BrandCode' => '', // Empty string to fetch all brands
             ]);
 
-            if (!$response->successful()) {
-                $this->error('❌ Failed to fetch brands. Status Code: ' . $response->status());
+            if (! $response->successful()) {
+                $this->error('❌ Failed to fetch brands. Status Code: '.$response->status());
                 Log::error('FetchVDBrands: API request failed', [
                     'status_code' => $response->status(),
-                    'response_body' => $response->body()
+                    'response_body' => $response->body(),
                 ]);
+
                 return Command::FAILURE;
             }
 
             $brands = $response->json();
             $encryptedBrandData = $brands['data'] ?? null;
 
-            if (!$encryptedBrandData) {
+            if (! $encryptedBrandData) {
                 $this->error('❌ No data field in response');
                 Log::error('FetchVDBrands: No data field in response', ['response' => $brands]);
+
                 return Command::FAILURE;
             }
 
@@ -88,9 +92,10 @@ class FetchVDBrands extends Command
             $decryptedBrandData = $this->vdWebApiService->decryptAES($encryptedBrandData);
             $brandsArray = json_decode($decryptedBrandData, true);
 
-            if (!is_array($brandsArray)) {
+            if (! is_array($brandsArray)) {
                 $this->error('❌ Invalid JSON data for brands');
                 Log::error('FetchVDBrands: Invalid JSON data', ['decrypted_data' => $decryptedBrandData]);
+
                 return Command::FAILURE;
             }
 
@@ -108,7 +113,7 @@ class FetchVDBrands extends Command
                         'min_price' => $brandData['minPrice'] ?? null,
                         'max_price' => $brandData['maxPrice'] ?? null,
                         'denomination_list' => $brandData['DenominationList'] ?? null,
-                        'stock_available' => !empty($brandData['StockAvailable']) ? (int) $brandData['StockAvailable'] : 0,
+                        'stock_available' => ! empty($brandData['StockAvailable']) ? (int) $brandData['StockAvailable'] : 0,
                         'category' => $brandData['Category'] ?? null,
                         'description' => $brandData['Description'] ?? null,
                         'images' => json_decode($brandData['Images'], true) ?: null,
@@ -127,21 +132,22 @@ class FetchVDBrands extends Command
 
             $totalCount = count($brandsArray);
             $this->info("✅ Successfully processed {$totalCount} brands (New: {$storedCount}, Updated: {$updatedCount})");
-            
+
             Log::info('FetchVDBrands: Brands stored successfully', [
                 'total_count' => $totalCount,
                 'new_count' => $storedCount,
-                'updated_count' => $updatedCount
+                'updated_count' => $updatedCount,
             ]);
 
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error('❌ Exception occurred: ' . $e->getMessage());
+            $this->error('❌ Exception occurred: '.$e->getMessage());
             Log::error('FetchVDBrands: Exception', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return Command::FAILURE;
         }
     }

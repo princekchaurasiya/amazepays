@@ -12,6 +12,7 @@ class PaymentGatewayFactory
         'ccavenue' => CCAvenuGateway::class,
         'unlimit' => UnlimitGateway::class,
         'razorpay' => RazorpayGateway::class,
+        'mock_razorpay' => MockRazorpayGateway::class,
     ];
 
     public static function make(string $gateway, array $credentials = []): PaymentGatewayInterface

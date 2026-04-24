@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Download, Search } from 'lucide-react';
+import AdminExportButton from '@/Components/Admin/AdminExportButton';
+import { Search } from 'lucide-react';
 
 type Category = { id: number; name: string; slug: string };
 type Row = {
@@ -60,13 +61,11 @@ export default function PriceList({ tenant, categories, rows, currencyOptions, f
                         </p>
                     </div>
                     {tenant && (
-                        <a
+                        <AdminExportButton
                             href={exportUrl()}
-                            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-                        >
-                            <Download className="h-4 w-4" />
-                            Download Excel
-                        </a>
+                            label="Download Excel"
+                            requiredPermission="b2b.price_list.view"
+                        />
                     )}
                 </div>
 

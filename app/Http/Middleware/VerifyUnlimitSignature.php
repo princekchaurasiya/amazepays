@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ResponseCode;
+use App\Support\Http\ResponsePayload;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -18,21 +20,21 @@ class VerifyUnlimitSignature
                 'ip' => $request->ip(),
             ]);
 
-            return response()->json(['error' => 'Missing signature'], 400);
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'payments.missing_signature', httpStatus: 400);
         }
 
         $callbackSecret = config('services.unlimit.callback_secret');
         if (! is_string($callbackSecret) || $callbackSecret === '') {
             Log::error('Unlimit callback secret missing in configuration');
 
-            return response()->json(['error' => 'Signature verification unavailable'], 503);
+            return ResponsePayload::fail(ResponseCode::INTERNAL_ERROR, 'payments.signature_unavailable', httpStatus: 503);
         }
 
         // Get raw request body (important: don't re-encode JSON)
         $rawBody = $request->getContent();
 
         // Concatenate body + secret
-        $stringToSign = $rawBody . $callbackSecret;
+        $stringToSign = $rawBody.$callbackSecret;
 
         // Hash with SHA-512
         $expectedSignature = hash('sha512', $stringToSign);
@@ -43,8 +45,11 @@ class VerifyUnlimitSignature
                 'ip' => $request->ip(),
             ]);
 
-            return response()->json(['error' => 'Invalid signature'], 403);
+            return ResponsePayload::fail(ResponseCode::FORBIDDEN, 'payments.invalid_signature', httpStatus: 403);
         }
+
+        $request->attributes->set('signature_verified', true);
+        $request->attributes->set('signature_header', (string) $signatureHeader);
 
         return $next($request);
     }

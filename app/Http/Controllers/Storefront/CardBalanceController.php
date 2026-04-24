@@ -22,7 +22,7 @@ class CardBalanceController extends Controller
     public function check(Request $request)
     {
         $allowed = ['cardNumber', 'pin', 'sku'];
-        $unknown = array_values(array_diff(array_keys($request->all()), $allowed));
+        $unknown = array_values(array_diff($request->keys(), $allowed));
         if ($unknown !== []) {
             return back()->withErrors([
                 'unexpected_fields' => 'Unexpected input fields detected: '.implode(', ', $unknown),
@@ -46,4 +46,3 @@ class CardBalanceController extends Controller
             ->with('card_balance_result', $response);
     }
 }
-

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class KgenStoreOrder extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'user_id',
         'orderID',
@@ -39,7 +40,6 @@ class KgenStoreOrder extends Model
         'vouchers',
         'fulfillmentStatus',
         'allocatedQty',
-        'fulfilledQty'
+        'fulfilledQty',
     ];
-
 }

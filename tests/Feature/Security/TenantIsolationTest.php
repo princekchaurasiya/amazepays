@@ -63,11 +63,9 @@ class TenantIsolationTest extends TestCase
 
     private function createTenantWithUser(): array
     {
-        $tenant = Tenant::factory()->create(['status' => 'active', 'type' => 'b2b']);
-        $user = User::factory()->create();
+        $tenant = Tenant::factory()->create(['status' => 'active', 'type' => 'b2b_partner']);
+        $user = User::factory()->create(['tenant_id' => $tenant->id, 'account_type' => 'partner']);
         $user->assignRole('b2b-client');
-
-        $tenant->users()->attach($user->id, ['role' => 'owner', 'is_primary' => true]);
 
         return [$tenant, $user];
     }

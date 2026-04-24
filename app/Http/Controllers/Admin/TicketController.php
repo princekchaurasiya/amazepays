@@ -109,7 +109,7 @@ class TicketController extends Controller
 
         audit('ticket.created', $ticket, [], $validated);
 
-        return redirect()->route('admin.tickets.show', $ticket)
+        return redirect()->route('panel.tickets.show', $ticket)
             ->with('success', 'Ticket created.');
     }
 

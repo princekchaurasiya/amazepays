@@ -88,10 +88,10 @@ class DashboardController extends Controller
         $today = today()->toDateString();
 
         return [
-            'orders_today' => route('admin.orders.index', ['date_from' => $today, 'date_to' => $today]),
-            'revenue_today' => route('admin.orders.index', ['date_from' => $today, 'date_to' => $today]),
-            'total_users' => route('admin.users.index'),
-            'wallet_balance' => route('admin.wallets.index'),
+            'orders_today' => route('panel.orders.index', ['date_from' => $today, 'date_to' => $today]),
+            'revenue_today' => route('panel.orders.index', ['date_from' => $today, 'date_to' => $today]),
+            'total_users' => route('panel.users.index'),
+            'wallet_balance' => route('panel.wallets.index'),
         ];
     }
 
@@ -103,10 +103,10 @@ class DashboardController extends Controller
         $today = today()->toDateString();
 
         return [
-            'orders_today' => route('admin.orders.index', ['date_from' => $today, 'date_to' => $today]),
-            'revenue_today' => route('admin.orders.index', ['date_from' => $today, 'date_to' => $today]),
-            'pending_loads' => route('admin.wallets.load_requests'),
-            'wallet_balance' => route('admin.wallets.index'),
+            'orders_today' => route('panel.orders.index', ['date_from' => $today, 'date_to' => $today]),
+            'revenue_today' => route('panel.orders.index', ['date_from' => $today, 'date_to' => $today]),
+            'pending_loads' => route('panel.wallets.load-requests'),
+            'wallet_balance' => route('panel.wallets.index'),
         ];
     }
 
@@ -120,10 +120,10 @@ class DashboardController extends Controller
         $weekEnd = now()->copy()->endOfWeek()->toDateString();
 
         return [
-            'orders_today' => route('admin.b2b.orders', ['date_from' => $today, 'date_to' => $today]),
-            'revenue_today' => route('admin.b2b.orders', ['date_from' => $today, 'date_to' => $today]),
-            'orders_this_week' => route('admin.b2b.orders', ['date_from' => $weekStart, 'date_to' => $weekEnd]),
-            'b2b_wallet' => route('admin.b2b.wallet'),
+            'orders_today' => route('b2b.orders.index', ['date_from' => $today, 'date_to' => $today]),
+            'revenue_today' => route('b2b.orders.index', ['date_from' => $today, 'date_to' => $today]),
+            'orders_this_week' => route('b2b.orders.index', ['date_from' => $weekStart, 'date_to' => $weekEnd]),
+            'b2b_wallet' => route('b2b.wallet.show'),
         ];
     }
 

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 import { ProductInfoModal, type ProductInfoSection, ProductPurchasePanel, type GiftPersonalizationState } from '@/Components/Storefront';
+import { Gift } from 'lucide-react';
 
 export default function ProductPage({
     productDetails,
@@ -153,137 +154,152 @@ export default function ProductPage({
     return (
         <StorefrontLayout>
             <Head title={name} />
+            {/* Responsive: single column <lg, two columns at lg+, with a stable left “brand card” stack. */}
             <div className="mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
                 <div className="grid w-full min-w-0 items-start gap-8 md:grid-cols-2 xl:grid-cols-12">
                     <div
-                        className={`w-full min-w-0 overflow-hidden rounded-2xl bg-gray-100 ring-1 ring-gray-200 ${
+                        className={`w-full min-w-0 ${
                             giftCustomizeMode ? 'xl:col-span-5 xl:sticky xl:top-24 self-start' : 'xl:col-span-6'
                         }`}
                     >
-                        <div className={`mx-auto w-full min-w-0 px-4 pt-4 md:pt-6 ${giftCustomizeMode ? 'max-w-[312px]' : 'max-w-[390px]'}`}>
-                            <div
-                                className="rounded-2xl border border-gray-200 p-4 shadow-md ring-1 ring-black/5"
-                                style={{ backgroundColor: cardTheme.bgColor }}
-                            >
-                                {giftCustomizeMode && giftSendOption === 'send_as_gift' ? (
-                                    <div className="overflow-hidden rounded-xl border border-gray-300 bg-white shadow-md ring-1 ring-black/10">
-                                        {activeGiftThemeImage ? (
-                                            <div className="aspect-[16/10] overflow-hidden bg-gray-100">
-                                                <img
-                                                    src={activeGiftThemeImage}
-                                                    alt={activeGiftTheme?.name ? `${String(activeGiftTheme.name)} theme` : 'Gift theme'}
-                                                    className="h-full w-full object-cover"
-                                                />
+                        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <div className="bg-product-navy px-5 py-5 text-white">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
+                                        <Gift className="h-6 w-6 text-white" aria-hidden="true" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-semibold uppercase tracking-widest text-white/70">
+                                            {t('digital_card_title', 'Digital Card')}
+                                        </p>
+                                        <h2 className="mt-1 break-words text-lg font-semibold leading-tight">{name}</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-5">
+                                <div className="rounded-xl border border-gray-200 bg-product-canvas p-4">
+                                    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm" style={{ backgroundColor: cardTheme.bgColor }}>
+                                        {giftCustomizeMode && giftSendOption === 'send_as_gift' ? (
+                                            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                                                {activeGiftThemeImage ? (
+                                                    <div className="aspect-[16/10] overflow-hidden bg-gray-100">
+                                                        <img
+                                                            src={activeGiftThemeImage}
+                                                            alt={activeGiftTheme?.name ? `${String(activeGiftTheme.name)} theme` : 'Gift theme'}
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex aspect-[16/10] items-center justify-center bg-gray-100 text-sm font-medium text-gray-500">
+                                                        {t('theme_fallback', 'Theme preview')}
+                                                    </div>
+                                                )}
+                                                <div className="space-y-2 border-t border-gray-200 bg-white px-4 py-3 text-center">
+                                                    <p className="text-xs font-semibold text-gray-600">
+                                                        {t('gift_preview_recipient', 'Dear')}{' '}
+                                                        {giftPreviewData.receiver_name || t('gift_preview_recipient_placeholder', '[Recipient]')}
+                                                    </p>
+                                                    <p className="text-lg font-bold text-gray-900">
+                                                        {giftPreviewData.gift_message_title || t('gift_preview_title', 'Your message title goes here')}
+                                                    </p>
+                                                    <p className="line-clamp-3 text-sm text-gray-700">
+                                                        {giftPreviewData.receiver_msg || t('gift_preview_message', 'Your personalized message will be shown here.')}
+                                                    </p>
+                                                    <p className="text-xs font-semibold text-gray-700">
+                                                        {giftPreviewData.sender_first_name
+                                                            ? `${t('gift_preview_from', 'From')}: ${giftPreviewData.sender_first_name}`
+                                                            : t('gift_preview_from_placeholder', 'From [Your Name]')}
+                                                    </p>
+                                                </div>
                                             </div>
+                                        ) : !imageFailed && img ? (
+                                            <img
+                                                src={img}
+                                                alt={name}
+                                                loading="eager"
+                                                decoding="async"
+                                                onError={() => setImageFailed(true)}
+                                                className="aspect-[16/10] w-full rounded-xl object-contain bg-white/70 p-2"
+                                            />
                                         ) : (
-                                            <div className="flex aspect-[16/10] items-center justify-center bg-gray-100 text-sm font-medium text-gray-500">
-                                                {t('theme_fallback', 'Theme preview')}
+                                            <div className="flex aspect-[16/10] items-center justify-center rounded-xl bg-white/70 p-3">
+                                                {cardTheme.logoUrl ? (
+                                                    <img
+                                                        src={cardTheme.logoUrl}
+                                                        alt={`${name} logo`}
+                                                        onError={() => setImageFailed(true)}
+                                                        className="max-h-20 w-auto object-contain"
+                                                    />
+                                                ) : (
+                                                    <div className="text-4xl font-bold" style={{ color: cardTheme.textColor }}>
+                                                        {name.slice(0, 1)}
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
-                                        <div className="space-y-2 border-t border-gray-300 bg-white px-4 py-3 text-center">
-                                            <p className="text-xs font-semibold text-gray-600">
-                                                {t('gift_preview_recipient', 'Dear')}{' '}
-                                                {giftPreviewData.receiver_name || t('gift_preview_recipient_placeholder', '[Recipient]')}
+
+                                        <div className="mt-4 text-center">
+                                            <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: cardTheme.textColor }}>
+                                                {t('card_total_value', 'Card Total Value')}
                                             </p>
-                                            <p className="text-lg font-bold text-gray-900">
-                                                {giftPreviewData.gift_message_title || t('gift_preview_title', 'Your message title goes here')}
+                                            <p className="mt-1 text-4xl font-extrabold leading-none" style={{ color: cardTheme.textColor }}>
+                                                ₹{Math.round(cardTotalValue).toLocaleString('en-IN')}
                                             </p>
-                                            <p className="line-clamp-3 text-sm text-gray-700">
-                                                {giftPreviewData.receiver_msg || t('gift_preview_message', 'Your personalized message will be shown here.')}
-                                            </p>
-                                            <p className="text-xs font-semibold text-gray-700">
-                                                {giftPreviewData.sender_first_name
-                                                    ? `${t('gift_preview_from', 'From')}: ${giftPreviewData.sender_first_name}`
-                                                    : t('gift_preview_from_placeholder', 'From [Your Name]')}
+                                            <p className="mt-2 text-sm font-semibold" style={{ color: cardTheme.accentColor }}>
+                                                {Number(productDetails.discount_percentage ?? 0) > 0
+                                                    ? t('get_for_off', 'Get for :percent% off').replace(':percent', String(Number(productDetails.discount_percentage)))
+                                                    : ''}
                                             </p>
                                         </div>
                                     </div>
-                                ) : !imageFailed && img ? (
-                                    <img
-                                        src={img}
-                                        alt={name}
-                                        loading="eager"
-                                        decoding="async"
-                                        onError={() => setImageFailed(true)}
-                                        className="aspect-[16/10] w-full rounded-xl object-contain bg-white/70 p-2"
-                                    />
-                                ) : (
-                                    <div className="flex aspect-[16/10] items-center justify-center rounded-xl bg-white/70 p-3">
-                                        {cardTheme.logoUrl ? (
-                                            <img
-                                                src={cardTheme.logoUrl}
-                                                alt={`${name} logo`}
-                                                onError={() => setImageFailed(true)}
-                                                className="max-h-20 w-auto object-contain"
-                                            />
-                                        ) : (
-                                            <div className="text-4xl font-bold" style={{ color: cardTheme.textColor }}>
-                                                {name.slice(0, 1)}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                                <div className="mt-4 text-center">
-                                    <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: cardTheme.textColor }}>
-                                        {t('card_total_value', 'Card Total Value')}
-                                    </p>
-                                    <p className="mt-1 text-4xl font-extrabold leading-none" style={{ color: cardTheme.textColor }}>
-                                        ₹{Math.round(cardTotalValue).toLocaleString('en-IN')}
-                                    </p>
-                                    <p className="mt-2 text-sm font-semibold" style={{ color: cardTheme.accentColor }}>
-                                        {Number(productDetails.discount_percentage ?? 0) > 0
-                                            ? t('get_for_off', 'Get for :percent% off').replace(':percent', String(Number(productDetails.discount_percentage)))
-                                            : ''}
-                                    </p>
                                 </div>
-                            </div>
-                        </div>
-                        <div className={`px-4 pt-2 text-center md:px-6 ${giftCustomizeMode ? 'pb-2' : 'pb-4'}`}>
-                            <h2 className="break-words text-2xl font-bold text-gray-900">{name}</h2>
-                            {(hasAboutBrandCard || hasValidityCard) && (
+
                                 <div className="mt-4 space-y-3">
                                     {hasAboutBrandCard ? (
                                         <button
                                             type="button"
                                             onClick={() => openInfoSection('about-brand')}
-                                            className="mx-auto inline-flex rounded-full border border-gray-800 px-8 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                                            className="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:border-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-product-primary focus-visible:ring-offset-2"
                                         >
                                             {t('about_the_brand', 'About the Brand')}
                                         </button>
                                     ) : null}
+
                                     {hasValidityCard ? (
-                                        <p className="text-sm text-gray-700">
+                                        <div className="rounded-lg border border-gray-200 bg-product-canvas px-4 py-3 text-sm text-gray-700">
                                             <span className="font-semibold text-gray-900">{t('validity', 'Validity')}:</span> {validityText}
-                                        </p>
+                                        </div>
                                     ) : null}
                                 </div>
-                            )}
-                        </div>
-                        {infoSections.length > 0 ? (
-                            <div className="mt-1 flex flex-wrap items-center gap-4 border-t border-gray-200 bg-white px-4 py-3">
-                                {infoSections.map((section) => (
-                                    <button
-                                        key={section.id}
-                                        type="button"
-                                        onClick={() => openInfoSection(section.id)}
-                                        className={`text-xs font-medium ${
-                                            section.id === activeInfoSectionId && infoModalOpen
-                                                ? 'text-gray-900 underline decoration-gray-400 underline-offset-4'
-                                                : 'text-gray-700 hover:text-gray-900'
-                                        }`}
-                                    >
-                                        {section.label}
-                                    </button>
-                                ))}
+
+                                {infoSections.length > 0 ? (
+                                    <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-gray-200 pt-4">
+                                        {infoSections.map((section) => (
+                                            <button
+                                                key={section.id}
+                                                type="button"
+                                                onClick={() => openInfoSection(section.id)}
+                                                className={`text-xs font-medium ${
+                                                    section.id === activeInfoSectionId && infoModalOpen
+                                                        ? 'text-gray-900 underline decoration-gray-400 underline-offset-4'
+                                                        : 'text-gray-700 hover:text-gray-900'
+                                                }`}
+                                            >
+                                                {section.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : null}
                             </div>
-                        ) : null}
+                        </div>
                     </div>
                     <div className={`w-full min-w-0 ${giftCustomizeMode ? 'xl:col-span-7' : 'xl:col-span-6'}`}>
                         {productDetails.discount_percentage != null && Number(productDetails.discount_percentage) > 0 && (
                             <p className="mt-2 text-emerald-600">{String(productDetails.discount_percentage)}% off</p>
                         )}
                         {slug ? (
-                            <div className="mt-2 md:mt-0">
+                            <div className="mt-2 flex w-full justify-end md:mt-0">
                                 <ProductPurchasePanel
                                     slug={slug}
                                     loggedIn={loggedIn}
@@ -309,6 +325,7 @@ export default function ProductPage({
                 activeSectionId={activeInfoSectionId}
                 onChangeSection={setActiveInfoSectionId}
                 onClose={() => setInfoModalOpen(false)}
+                sideImageUrl={!imageFailed && img ? img : null}
             />
         </StorefrontLayout>
     );

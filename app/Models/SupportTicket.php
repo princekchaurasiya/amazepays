@@ -1,22 +1,44 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class SupportTicket extends Model
 {
+    use HasFactory;
+    use SoftDeletes;
+
+    protected $table = 'support_tickets';
+
     protected $fillable = [
-        'ticket_number', 'user_id', 'order_id', 'subject', 'description',
-        'category', 'priority', 'status', 'assigned_to', 'resolved_by',
-        'resolved_at', 'resolution_note',
+        'tenant_id',
+        'user_id',
+        'order_id',
+        'assigned_to_user_id',
+        'ticket_number',
+        'subject',
+        'status',
+        'priority',
+        'category',
+        'subject_email',
+        'subject_mobile',
+        'first_response_at',
+        'resolved_at',
+        'closed_at',
     ];
 
     protected $casts = [
+        'first_response_at' => 'datetime',
         'resolved_at' => 'datetime',
+        'closed_at' => 'datetime',
     ];
 
     public static function generateTicketNumber(): string
@@ -45,16 +67,16 @@ class SupportTicket extends Model
 
     public function assignedTo(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_to');
-    }
-
-    public function resolvedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'resolved_by');
+        return $this->belongsTo(User::class, 'assigned_to_user_id');
     }
 
     public function messages(): HasMany
     {
-        return $this->hasMany(TicketMessage::class, 'ticket_id')->orderBy('created_at');
+        return $this->hasMany(SupportTicketMessage::class, 'ticket_id')->orderBy('sent_at');
+    }
+
+    public function statusHistory(): HasMany
+    {
+        return $this->hasMany(SupportTicketStatusHistory::class, 'ticket_id')->orderBy('occurred_at');
     }
 }

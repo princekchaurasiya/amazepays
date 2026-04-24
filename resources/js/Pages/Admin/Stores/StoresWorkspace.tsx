@@ -45,7 +45,7 @@ export default function StoresWorkspace({
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
         const q = Object.fromEntries(fd.entries()) as Record<string, string>;
-        router.get('/admin/stores/filter', q, { preserveState: true });
+        router.get('/panel/value-design/stores/filter', q, { preserveState: true });
     };
 
     return (
@@ -54,7 +54,7 @@ export default function StoresWorkspace({
             <div className="space-y-6 p-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <h1 className="text-2xl font-bold text-gray-900">VD stores</h1>
-                    <Link href="/admin/stores/select" className="text-sm font-medium text-indigo-600 hover:underline">
+                    <Link href="/panel/value-design/stores/select" className="text-sm font-medium text-indigo-600 hover:underline">
                         Select brand / fetch
                     </Link>
                 </div>
@@ -75,7 +75,7 @@ export default function StoresWorkspace({
 
                 {mode === 'form' ? (
                     <form
-                        action="/admin/stores/fetch"
+                        action="/panel/value-design/stores/fetch"
                         method="post"
                         className="max-w-md space-y-4 rounded-lg border border-gray-200 bg-white p-6"
                     >

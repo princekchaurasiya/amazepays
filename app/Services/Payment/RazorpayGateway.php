@@ -163,6 +163,7 @@ class RazorpayGateway implements PaymentGatewayInterface
     {
         $event = $payload['event'] ?? '';
         $payment = $payload['payload']['payment']['entity'] ?? [];
+        $order = $payload['payload']['order']['entity'] ?? [];
 
         $status = match ($event) {
             'payment.captured' => 'paid',
@@ -174,7 +175,7 @@ class RazorpayGateway implements PaymentGatewayInterface
             success: $status === 'paid',
             status: $status,
             transactionId: $payment['id'] ?? null,
-            gatewayOrderId: $payment['order_id'] ?? null,
+            gatewayOrderId: $payment['order_id'] ?? ($order['id'] ?? null),
             amount: isset($payment['amount']) ? $payment['amount'] / 100 : null,
             paymentMethod: $payment['method'] ?? null,
             raw: $payload,

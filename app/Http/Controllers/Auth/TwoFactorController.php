@@ -42,7 +42,7 @@ class TwoFactorController extends Controller
             'action' => '2fa_enabled',
         ]);
 
-        return redirect()->route('admin.dashboard')
+        return redirect()->route('panel.dashboard')
             ->with('success', 'Two-factor authentication enabled successfully.');
     }
 
@@ -66,7 +66,7 @@ class TwoFactorController extends Controller
                 'action' => '2fa_verified',
             ]);
 
-            return redirect()->intended(route('admin.dashboard'));
+            return redirect()->intended(route('panel.dashboard'));
         }
 
         // Try recovery code
@@ -77,7 +77,7 @@ class TwoFactorController extends Controller
                 'action' => '2fa_recovery_code_used',
             ]);
 
-            return redirect()->intended(route('admin.dashboard'))
+            return redirect()->intended(route('panel.dashboard'))
                 ->with('warning', 'Recovery code used. Please set up 2FA again.');
         }
 

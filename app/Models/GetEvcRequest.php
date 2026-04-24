@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class GetEvcRequest extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'order_id',
         'distributor_id',

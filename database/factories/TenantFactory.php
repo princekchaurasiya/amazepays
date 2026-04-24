@@ -18,11 +18,13 @@ class TenantFactory extends Factory
         return [
             'name' => $name,
             'slug' => Str::slug($name).'-'.$this->faker->unique()->numerify('###'),
-            'type' => 'b2b',
+            'display_name' => $name,
+            'type' => 'b2c_brand',
             'status' => 'active',
-            'business_name' => $name,
-            'contact_email' => $this->faker->safeEmail(),
-            'contact_phone' => $this->faker->phoneNumber(),
+            'default_locale' => 'en',
+            'default_currency' => 'INR',
+            'default_timezone' => 'Asia/Kolkata',
+            'settings' => null,
         ];
     }
 }

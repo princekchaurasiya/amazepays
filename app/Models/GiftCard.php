@@ -8,5 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class GiftCard extends Model
 {
     use HasFactory;
+
     protected $table = 'gift_card';
+
+    protected $guarded = ['*'];
 }

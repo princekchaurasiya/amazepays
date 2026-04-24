@@ -58,7 +58,7 @@ class OfferController extends Controller
 
         audit('offer.created', $offer, [], $validated);
 
-        return redirect()->route('admin.offers.index')
+        return redirect()->route('panel.offers.index')
             ->with('success', 'Offer created successfully.');
     }
 
@@ -107,7 +107,7 @@ class OfferController extends Controller
         audit('offer.deleted', $offer, $offer->toArray(), []);
         $offer->delete();
 
-        return redirect()->route('admin.offers.index')
+        return redirect()->route('panel.offers.index')
             ->with('success', 'Offer deleted.');
     }
 

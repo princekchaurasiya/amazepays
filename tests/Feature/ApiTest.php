@@ -2,11 +2,10 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Tests\TestCase;
 
 class ApiTest extends TestCase
 {
@@ -18,7 +17,7 @@ class ApiTest extends TestCase
     public function test_send_user_login_otp()
     {
         $response = $this->postJson('/api/auth/sendUserLoginOtp', [
-            'phone' => '1234567890'
+            'phone' => '1234567890',
         ]);
 
         // Should return 200 or 422 depending on validation
@@ -32,7 +31,7 @@ class ApiTest extends TestCase
     {
         $response = $this->postJson('/api/auth/verifyUserLoginOtp', [
             'phone' => '1234567890',
-            'otp' => '123456'
+            'otp' => '123456',
         ]);
 
         // Should return 200 or 422 depending on validation
@@ -92,7 +91,7 @@ class ApiTest extends TestCase
     public function test_wallet_deposit_requires_auth()
     {
         $response = $this->postJson('/api/wallet/deposit', [
-            'amount' => 100
+            'amount' => 100,
         ]);
 
         // Should return 401 (unauthorized) without authentication

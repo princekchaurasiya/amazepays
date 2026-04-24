@@ -23,7 +23,7 @@ class ValueDesignAdminController extends Controller
 
         return Inertia::render('Admin/ValueDesign/Index', [
             'configured' => $this->valueDesign->isConfigured(),
-            'distributorId' => config('services.value_design.distributor_id'),
+            'distributorId' => config('valuedesign.distributor_id'),
             'syncedProducts' => Product::query()
                 ->where('source_provider', 'value_design')
                 ->orderByDesc('updated_at')
@@ -50,14 +50,14 @@ class ValueDesignAdminController extends Controller
                 ])
                 ->values(),
             'routes' => [
-                'token' => route('admin.value-design.token'),
-                'brands' => route('admin.value-design.brands'),
-                'stores' => route('admin.value-design.stores'),
-                'evc' => route('admin.value-design.evc'),
-                'status' => route('admin.value-design.evc-status'),
-                'activated' => route('admin.value-design.activated-evc'),
-                'wallet' => route('admin.value-design.wallet-balance'),
-                'syncCatalog' => route('admin.value-design.sync-catalog'),
+                'token' => route('panel.value-design.token'),
+                'brands' => route('panel.value-design.brands'),
+                'stores' => route('panel.value-design.stores'),
+                'evc' => route('panel.value-design.evc'),
+                'status' => route('panel.value-design.evc-status'),
+                'activated' => route('panel.value-design.activated-evc'),
+                'wallet' => route('panel.value-design.wallet-balance'),
+                'syncCatalog' => route('panel.value-design.sync-catalog'),
             ],
         ]);
     }

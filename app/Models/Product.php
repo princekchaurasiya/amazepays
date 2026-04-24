@@ -4,13 +4,13 @@ namespace App\Models;
 
 use App\Helpers\ProductHelper;
 use App\Helpers\ProductImageHelper;
-use App\Models\BrandCardTheme;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Facades\Schema;
 
 class Product extends Model
 {
@@ -260,8 +260,11 @@ class Product extends Model
     public const CATALOG_AUDIENCE_B2B = 'b2b';
 
     public const CATALOG_AUDIENCE_BOTH = 'both';
+
     public const GIFT_OPTION_BOTH = 'both';
+
     public const GIFT_OPTION_SELF_ONLY = 'self_only';
+
     public const GIFT_OPTION_GIFT_ONLY = 'gift_only';
 
     /**
@@ -271,6 +274,15 @@ class Product extends Model
     {
         $p = (string) $provider;
 
+        $defaults = config('voucher.default_audiences', []);
+        $configured = is_array($defaults) ? ($defaults[$p] ?? null) : null;
+        $candidate = is_string($configured) ? strtolower(trim($configured)) : '';
+
+        if (in_array($candidate, [self::CATALOG_AUDIENCE_B2C, self::CATALOG_AUDIENCE_B2B, self::CATALOG_AUDIENCE_BOTH], true)) {
+            return $candidate;
+        }
+
+        // Fallback (legacy defaults)
         return match ($p) {
             'vouchagram_pull' => self::CATALOG_AUDIENCE_B2B,
             'vouchagram_send', 'vouchagram', 'value_design' => self::CATALOG_AUDIENCE_B2C,
@@ -360,7 +372,7 @@ class Product extends Model
         ];
 
         $theme = null;
-        if (class_exists(BrandCardTheme::class) && \Illuminate\Support\Facades\Schema::hasTable('brand_card_themes')) {
+        if (class_exists(BrandCardTheme::class) && Schema::hasTable('brand_card_themes')) {
             $theme = BrandCardTheme::query()
                 ->active()
                 ->where(function ($query) {

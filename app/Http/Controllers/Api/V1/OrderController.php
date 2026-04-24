@@ -12,7 +12,7 @@ use App\Models\SecurityEventLog;
 use App\Services\Order\OrderCreationService;
 use App\Services\Payment\PaymentService;
 use App\Services\SecurityEventService;
-use Illuminate\Http\JsonResponse;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Http\Request;
 
 /**
@@ -32,7 +32,7 @@ class OrderController extends Controller
     ) {}
 
     /** List authenticated user's orders with pagination. */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): ResponsePayload
     {
         $orders = Order::where('user_id', $request->user()->id)
             ->latest()
@@ -42,7 +42,7 @@ class OrderController extends Controller
     }
 
     /** Show a single order (scoped to the authenticated user). */
-    public function show(Request $request, Order $order): JsonResponse
+    public function show(Request $request, Order $order): ResponsePayload
     {
         if ($order->user_id !== $request->user()->id) {
             return $this->notFound();
@@ -55,7 +55,7 @@ class OrderController extends Controller
      * Retrieve the voucher code for a completed order.
      * Protected by step-up auth + transaction PIN (via middleware).
      */
-    public function getVoucherCode(Request $request, Order $order): JsonResponse
+    public function getVoucherCode(Request $request, Order $order): ResponsePayload
     {
         if ($order->user_id !== $request->user()->id) {
             return $this->notFound();
@@ -107,7 +107,7 @@ class OrderController extends Controller
      * Monetary values are calculated server-side by PricingService.
      * The request only carries product_id, quantity, denomination, and payment method.
      */
-    public function placeOrder(PlaceOrderRequest $request): JsonResponse
+    public function placeOrder(PlaceOrderRequest $request): ResponsePayload
     {
         $validated = $request->validated();
         $user = $request->user();

@@ -10,6 +10,8 @@ use App\Models\StorefrontBrand;
 use App\Services\Storefront\SlidePresentationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -76,7 +78,7 @@ class SlideController extends Controller
 
         Slide::create($data);
 
-        return redirect()->route('admin.settings.hero-slides.index')->with('success', 'Slide created.');
+        return redirect()->route('panel.settings.hero-slides.index')->with('success', 'Slide created.');
     }
 
     public function edit(Slide $slide): Response
@@ -127,11 +129,11 @@ class SlideController extends Controller
         $this->deletePublicPath($slide->image_mobile);
         $slide->delete();
 
-        return redirect()->route('admin.settings.hero-slides.index')->with('success', 'Slide removed.');
+        return redirect()->route('panel.settings.hero-slides.index')->with('success', 'Slide removed.');
     }
 
     /**
-     * @return array{products: \Illuminate\Support\Collection, categories: \Illuminate\Support\Collection, brands: \Illuminate\Support\Collection}
+     * @return array{products: Collection, categories: Collection, brands: Collection}
      */
     private function formOptions(): array
     {
@@ -190,7 +192,7 @@ class SlideController extends Controller
         return $data;
     }
 
-    private function storeUploaded(?\Illuminate\Http\UploadedFile $file, string $prefix): ?string
+    private function storeUploaded(?UploadedFile $file, string $prefix): ?string
     {
         if (! $file) {
             return null;

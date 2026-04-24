@@ -199,4 +199,3 @@ class OrderFulfillmentOrchestrator
         return $order->order_number ?: null;
     }
 }
-

@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Services\AthenaGiftCardService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use App\Http\Services\AthenaGiftCardService;
 
 class GetLystoWalletBalance extends Command
 {
@@ -13,7 +13,7 @@ class GetLystoWalletBalance extends Command
      *
      * @var string
      */
-    protected $signature = 'get:lystoWalletBalance';
+    protected $signature = 'fetch:lysto-distributor-wallet-balance';
 
     /**
      * The console command description.
@@ -37,22 +37,24 @@ class GetLystoWalletBalance extends Command
             if (empty($apiKey) || empty($partnerId)) {
                 $this->error('❌ Lysto API credentials are not configured. Please check your .env file.');
                 Log::error('GetLystoWalletBalance: Missing API credentials', [
-                    'has_api_key' => !empty($apiKey),
-                    'has_partner_id' => !empty($partnerId)
+                    'has_api_key' => ! empty($apiKey),
+                    'has_partner_id' => ! empty($partnerId),
                 ]);
+
                 return Command::FAILURE;
             }
 
             $this->info('🔄 Fetching Lysto wallet balance...');
-            
+
             Log::info('GetLystoWalletBalance: API request');
 
-            $service = new AthenaGiftCardService();
+            $service = new AthenaGiftCardService;
             $response = $service->getWalletBalance();
 
-            if (!isset($response['balance'])) {
+            if (! isset($response['balance'])) {
                 $this->error('❌ Invalid response format. Balance field not found.');
                 Log::error('GetLystoWalletBalance: Invalid response format', ['response' => $response]);
+
                 return Command::FAILURE;
             }
 
@@ -62,25 +64,26 @@ class GetLystoWalletBalance extends Command
             $this->info('✅ Wallet balance retrieved successfully');
             $this->line('');
             $this->line('Wallet Balance Details:');
-            $this->line('Balance: ' . number_format($balance, 2) . ' ' . $currency);
-            
+            $this->line('Balance: '.number_format($balance, 2).' '.$currency);
+
             if (isset($response['currency'])) {
-                $this->line('Currency: ' . $response['currency']);
+                $this->line('Currency: '.$response['currency']);
             }
-            
+
             Log::info('GetLystoWalletBalance: Wallet balance retrieved', [
                 'balance' => $balance,
-                'currency' => $currency
+                'currency' => $currency,
             ]);
 
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error('❌ Exception occurred: ' . $e->getMessage());
+            $this->error('❌ Exception occurred: '.$e->getMessage());
             Log::error('GetLystoWalletBalance: Exception', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return Command::FAILURE;
         }
     }

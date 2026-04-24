@@ -67,7 +67,8 @@ export default function Create({ prefillUser, prefillOrders, prefillOrderId }: P
             description: d.description,
             category: d.category,
             priority: d.priority,
-        })).post('/panel/tickets');
+        }));
+        form.post('/panel/tickets');
     };
 
     const inputCls = 'w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700 dark:border-gray-600';

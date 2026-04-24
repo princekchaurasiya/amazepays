@@ -143,7 +143,7 @@ class ThreatDetectionService
     private function hasAttackPayload(Request $request): bool
     {
         $input = json_encode(array_merge(
-            $request->all(),
+            $request->input(),
             $request->headers->all()
         ));
 

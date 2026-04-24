@@ -25,45 +25,36 @@ export default function GiftOptionSelector({ policy, value, onChange }: Props) {
     const t = (key: string, fallback: string) => text[key] || fallback;
 
     return (
-        <div className="mt-5">
-            <p className="text-sm font-semibold text-gray-900">{t('for_yourself_or_gift', 'For yourself or as a gift?')}</p>
-            <div className="mt-2 grid grid-cols-2 gap-3">
+        <div className="mb-5">
+            <p className="mb-2 text-sm font-medium text-gray-700">{t('for_yourself_or_gift', 'For yourself or as a gift?')}</p>
+            <div className="grid grid-cols-2 gap-2">
                 <button
                     type="button"
                     disabled={!selfEnabled}
                     onClick={() => onChange('buy_for_self')}
-                    className={`rounded-xl border p-3 text-left transition ${
+                    aria-pressed={value === 'buy_for_self'}
+                    className={`inline-flex items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-product-primary/40 focus-visible:ring-offset-2 ${
                         value === 'buy_for_self'
-                            ? 'border-gray-900 ring-1 ring-gray-900'
-                            : 'border-gray-300'
-                    } ${!selfEnabled ? 'cursor-not-allowed opacity-50' : 'hover:border-gray-500'}`}
+                            ? 'border-product-primary bg-blue-50 text-product-primary'
+                            : 'border-gray-300 text-gray-600 hover:border-product-primary/40'
+                    } ${!selfEnabled ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
-                    <div className="flex items-center gap-2">
-                        <UserRound className="h-4 w-4 text-gray-700" />
-                        <p className="text-sm font-semibold">{t('for_myself', 'For Myself')}</p>
-                    </div>
-                    <p className="mt-1 text-xs text-gray-600">
-                        {selfEnabled ? t('for_myself_hint', 'The gift card is instantly added to your account.') : t('option_not_available', 'Not available for this product')}
-                    </p>
+                    <UserRound className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {t('for_myself', 'For Myself')}
                 </button>
-
                 <button
                     type="button"
                     disabled={!giftEnabled}
                     onClick={() => onChange('send_as_gift')}
-                    className={`rounded-xl border p-3 text-left transition ${
+                    aria-pressed={value === 'send_as_gift'}
+                    className={`inline-flex items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-product-primary/40 focus-visible:ring-offset-2 ${
                         value === 'send_as_gift'
-                            ? 'border-gray-900 ring-1 ring-gray-900'
-                            : 'border-gray-300'
-                    } ${!giftEnabled ? 'cursor-not-allowed opacity-50' : 'hover:border-gray-500'}`}
+                            ? 'border-product-primary bg-blue-50 text-product-primary'
+                            : 'border-gray-300 text-gray-600 hover:border-product-primary/40'
+                    } ${!giftEnabled ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
-                    <div className="flex items-center gap-2">
-                        <Gift className="h-4 w-4 text-gray-700" />
-                        <p className="text-sm font-semibold">{t('buy_as_gift', 'Buy as Gift')}</p>
-                    </div>
-                    <p className="mt-1 text-xs text-gray-600">
-                        {giftEnabled ? t('buy_as_gift_hint', 'Send this as a gift to someone special.') : t('option_not_available', 'Not available for this product')}
-                    </p>
+                    <Gift className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    {t('buy_as_gift', 'Buy as Gift')}
                 </button>
             </div>
         </div>

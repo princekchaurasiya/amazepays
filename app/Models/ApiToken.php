@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 
 class ApiToken extends Model
 {
@@ -16,4 +15,3 @@ class ApiToken extends Model
         'expires_at',
     ];
 }
-

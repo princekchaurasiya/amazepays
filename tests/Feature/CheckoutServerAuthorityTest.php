@@ -23,7 +23,7 @@ class CheckoutServerAuthorityTest extends TestCase
         foreach (['super-admin', 'admin', 'finance', 'b2b-client', 'b2b-operator', 'b2c-user'] as $roleName) {
             Role::findOrCreate($roleName, 'web');
         }
-        $this->withoutMiddleware(\App\Http\Middleware\HandleInertiaRequests::class);
+        $this->withoutMiddleware(HandleInertiaRequests::class);
     }
 
     /**
@@ -250,4 +250,3 @@ class CheckoutServerAuthorityTest extends TestCase
         $response->assertRedirect('/checkout/checkout-product-5');
     }
 }
-

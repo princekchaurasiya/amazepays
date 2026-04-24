@@ -46,4 +46,3 @@ class BillingRequirementResolverTest extends TestCase
         ], $fields);
     }
 }
-

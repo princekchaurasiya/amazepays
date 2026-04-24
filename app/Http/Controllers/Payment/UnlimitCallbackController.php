@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Payment;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Services\Payment\PaymentService;
-use Illuminate\Http\JsonResponse;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Http\Request;
 
 /**
@@ -19,13 +19,18 @@ class UnlimitCallbackController extends Controller
         private PaymentService $paymentService,
     ) {}
 
-    public function handle(Request $request): JsonResponse
+    public function handle(Request $request): ResponsePayload
     {
-        $payload = $request->only(['payment_data', 'merchant_order']);
+        // Preserve full raw payload for forensics (webhooks are not user input).
+        // Still avoid passing framework-added fields like files.
+        $payload = $request->json()->all() ?: $request->input();
 
         $result = $this->paymentService->handleGatewayCallback('unlimit', $payload);
 
-        return $this->ok('Webhook processed.', [
+        $request->attributes->set('is_webhook_ack', true);
+        $request->attributes->set('webhook_gateway', 'unlimit');
+
+        return $this->ok('payments.webhook_received', [
             'payment_status' => $result->status,
             'success' => $result->success,
         ]);

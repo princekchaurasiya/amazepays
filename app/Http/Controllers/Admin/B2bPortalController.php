@@ -138,7 +138,7 @@ class B2bPortalController extends Controller
         $tenant->products()->sync($requested);
         audit('tenant.products_assigned', $tenant, [], ['product_ids' => $requested]);
 
-        return redirect()->route('admin.b2b.catalog')->with('success', 'Company catalog updated.');
+        return redirect()->route('b2b.catalog.manage')->with('success', 'Company catalog updated.');
     }
 
     public function priceList(Request $request): Response
@@ -324,7 +324,7 @@ class B2bPortalController extends Controller
             return back()->withErrors(['order' => $e->getMessage()]);
         }
 
-        return redirect()->route('admin.b2b.orders')->with('success', 'Order placed successfully.');
+        return redirect()->route('b2b.orders.index')->with('success', 'Order placed successfully.');
     }
 
     public function orders(Request $request): Response

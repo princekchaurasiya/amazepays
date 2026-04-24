@@ -109,7 +109,7 @@ export default function BulkEditProductsModal({
             }
         }
 
-        router.patch('/panel/products/bulk-update', payload, {
+        router.patch('/panel/products/bulk-update', payload as any, {
             preserveScroll: true,
             onSuccess: () => {
                 onSuccess();

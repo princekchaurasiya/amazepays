@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Models\TransactionPin;
-use Illuminate\Http\JsonResponse;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -20,7 +20,7 @@ class TransactionPinController extends Controller
     use ApiResponse;
 
     /** Set a new transaction PIN (first-time setup). */
-    public function set(Request $request): JsonResponse
+    public function set(Request $request): ResponsePayload
     {
         $validated = $request->validate([
             'pin' => 'required|digits:4',
@@ -42,7 +42,7 @@ class TransactionPinController extends Controller
     }
 
     /** Change the transaction PIN (requires current PIN). */
-    public function change(Request $request): JsonResponse
+    public function change(Request $request): ResponsePayload
     {
         $validated = $request->validate([
             'current_pin' => 'required|digits:4',
@@ -63,7 +63,7 @@ class TransactionPinController extends Controller
     }
 
     /** Verify the transaction PIN (used by middleware for step-up auth). */
-    public function verify(Request $request): JsonResponse
+    public function verify(Request $request): ResponsePayload
     {
         $validated = $request->validate([
             'pin' => 'required|digits:4',

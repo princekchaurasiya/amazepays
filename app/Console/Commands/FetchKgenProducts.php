@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\KgenProduct;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Models\KgenProduct;
 
 class FetchKgenProducts extends Command
 {
@@ -14,7 +14,7 @@ class FetchKgenProducts extends Command
      *
      * @var string
      */
-    protected $signature = 'fetch:kgenProducts';
+    protected $signature = 'fetch:kgen-products';
 
     /**
      * The console command description.
@@ -34,7 +34,7 @@ class FetchKgenProducts extends Command
             $clientId = env('EXLR8_USER_ID');
             $clientSecret = env('EXLR8_USER_SECRET');
 
-            if (!$baseUrl || !$partnerId || !$clientId || !$clientSecret) {
+            if (! $baseUrl || ! $partnerId || ! $clientId || ! $clientSecret) {
                 $this->error('KGen API credentials are not configured. Please check your .env file.');
                 Log::error('KGen API credentials missing', [
                     'baseUrl' => $baseUrl ? 'set' : 'missing',
@@ -42,18 +42,19 @@ class FetchKgenProducts extends Command
                     'clientId' => $clientId ? 'set' : 'missing',
                     'clientSecret' => $clientSecret ? 'set' : 'missing',
                 ]);
+
                 return 1;
             }
 
-            $url = rtrim($baseUrl, '/') . '/products/delivery-partners/' . $partnerId;
-            
+            $url = rtrim($baseUrl, '/').'/products/delivery-partners/'.$partnerId;
+
             Log::info('KGen Products Request', [
                 'url' => $url,
                 'method' => 'get',
                 'headers' => [
                     'x-client-id' => $clientId,
-                    'x-client-secret' => '***'
-                ]
+                    'x-client-secret' => '***',
+                ],
             ]);
 
             $response = Http::withHeaders([
@@ -68,15 +69,16 @@ class FetchKgenProducts extends Command
 
             Log::info('KGen Products Response', [
                 'status_code' => $statusCode,
-                'data' => $responseData
+                'data' => $responseData,
             ]);
 
-            if (!$response->successful()) {
-                $errorMessage = 'Failed to fetch KGen products. Status Code: ' . $statusCode;
+            if (! $response->successful()) {
+                $errorMessage = 'Failed to fetch KGen products. Status Code: '.$statusCode;
                 $this->error($errorMessage);
                 Log::error('Something went wrong while fetching KGen products', [
-                    'error' => $response->body()
+                    'error' => $response->body(),
                 ]);
+
                 return 1;
             }
 
@@ -85,6 +87,7 @@ class FetchKgenProducts extends Command
             if (empty($products)) {
                 $this->warn('No products found in the API response.');
                 Log::info('KGen Products: No products found in response');
+
                 return 0;
             }
 
@@ -109,16 +112,17 @@ class FetchKgenProducts extends Command
             $this->info("Successfully fetched and stored {$count} KGen products.");
             Log::info('KGen products updated in the database', [
                 'count' => $count,
-                'update_time' => now()->format('d/m/y H:i:s')
+                'update_time' => now()->format('d/m/y H:i:s'),
             ]);
 
             return 0;
         } catch (\Exception $e) {
-            $this->error('An error occurred: ' . $e->getMessage());
+            $this->error('An error occurred: '.$e->getMessage());
             Log::error('KGen Products fetch error', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return 1;
         }
     }

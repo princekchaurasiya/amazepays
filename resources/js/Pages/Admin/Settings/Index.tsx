@@ -171,14 +171,14 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
         };
 
         if (editingSection) {
-            router.put(`/panel/settings/sections/${editingSection.id}`, payload, opts);
+            router.put(`/panel/settings/sections/${editingSection.id}`, payload as any, opts);
         } else {
-            router.post('/panel/settings/sections', payload, opts);
+            router.post('/panel/settings/sections', payload as any, opts);
         }
     };
 
     const toggleSectionStatus = (row: SectionRow) => {
-        router.put(`/panel/settings/sections/${row.id}`, sectionPayload(row, { status: !row.status }), {
+        router.put(`/panel/settings/sections/${row.id}`, sectionPayload(row, { status: !row.status }) as any, {
             preserveScroll: true,
         });
     };

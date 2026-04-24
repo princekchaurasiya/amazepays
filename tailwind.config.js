@@ -35,6 +35,12 @@ export default {
                     700: '#a4520b',
                     950: '#1d0f02',
                 },
+                product: {
+                    canvas: '#f9fafb',
+                    navy: '#0d1117',
+                    primary: '#1D2C8C',
+                    accent: '#FF6A00',
+                },
             },
             keyframes: {
                 'slide-in-right': {

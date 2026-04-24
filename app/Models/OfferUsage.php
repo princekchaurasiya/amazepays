@@ -1,13 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OfferUsage extends Model
 {
-    protected $fillable = ['offer_id', 'user_id', 'order_id', 'discount_applied'];
+    use HasFactory;
+
+    protected $table = 'offer_usages';
+
+    protected $fillable = [
+        'offer_id',
+        'order_id',
+        'user_id',
+        'discount_amount_minor',
+        'currency',
+        'redeemed_at',
+    ];
+
+    protected $casts = [
+        'discount_amount_minor' => 'integer',
+        'redeemed_at' => 'datetime',
+    ];
 
     public function offer(): BelongsTo
     {

@@ -69,8 +69,6 @@ export default function CardBalance({ result }: { result?: BalanceResult | null 
                         {form.errors.sku ? <p className="mt-1 text-xs text-red-600">{form.errors.sku}</p> : null}
                     </div>
 
-                    {form.errors.unexpected_fields ? <p className="text-xs text-red-600">{form.errors.unexpected_fields}</p> : null}
-
                     <button
                         type="submit"
                         disabled={form.processing}

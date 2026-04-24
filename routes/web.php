@@ -1,33 +1,35 @@
 <?php
 
-use App\Http\Controllers\AthenaGiftCardController;
-use App\Http\Controllers\BrandExportController;
+use App\Enums\ResponseCode;
+use App\Http\Controllers\Admin\ExportController;
+use App\Http\Controllers\Admin\Voucher\LystoGiftCardController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\ContactUsController;
-use App\Http\Controllers\DeliveryPartnerController;
+use App\Http\Controllers\Voucher\KGenCatalogController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ErrorController;
-use App\Http\Controllers\GetEvcRequestController;
+use App\Http\Controllers\Voucher\ValueDesignEvcRequestController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\InvoiceController;
-use App\Http\Controllers\KGenOrderController;
-use App\Http\Controllers\KGenWalletController;
+use App\Http\Controllers\Admin\KGenDistributorWalletController;
+use App\Http\Controllers\Voucher\KGenOrderController;
 use App\Http\Controllers\MyOrderController;
 use App\Http\Controllers\PaymentStatusController;
 use App\Http\Controllers\ProductSlugController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
-use App\Http\Controllers\Storefront\CardBalanceController;
-use App\Http\Controllers\Storefront\StaticPageController;
 use App\Http\Controllers\SmsController;
 use App\Http\Controllers\StoreController;
+use App\Http\Controllers\Storefront\CardBalanceController;
+use App\Http\Controllers\Storefront\StaticPageController;
 use App\Http\Controllers\StorefrontBrandController;
 use App\Http\Controllers\StorefrontBusinessController;
 use App\Http\Controllers\StorefrontCategoryController;
 use App\Http\Controllers\TransactionReportController;
 use App\Http\Controllers\UserBlockController;
-use App\Http\Controllers\VDHomeController;
+use App\Http\Controllers\Voucher\ValueDesignStorefrontController;
 use App\Http\Controllers\ViewCardDetailsController;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -45,8 +47,15 @@ Route::redirect('/admin', '/panel', 301);
 Route::get('/', [HomePageController::class, 'homePage'])->name('home');
 Route::get('/product/{slug}', [ProductSlugController::class, 'getProductBySlug'])->name('get-product-by-slug');
 Route::get('/view-all-product', [HomePageController::class, 'viewAllProduct'])->name('view-all-product');
-Route::get('/search/suggest', [SearchController::class, 'suggest'])->name('search.suggest');
-Route::get('/search', [SearchController::class, 'search'])->name('search');
+
+// Throttled: suggest is the highest-risk scraping target on any storefront.
+Route::get('/search/suggest', [SearchController::class, 'suggest'])
+    ->middleware('throttle:60,1')
+    ->name('search.suggest');
+Route::get('/search', [SearchController::class, 'search'])
+    ->middleware('throttle:30,1')
+    ->name('search');
+
 Route::get('/category/{slug}', [StorefrontCategoryController::class, 'show'])->name('categories.show');
 Route::get('/brand/{slug}', [StorefrontBrandController::class, 'show'])->name('brands.show');
 Route::get('/business', [StorefrontBusinessController::class, 'show'])->name('business.landing');
@@ -84,70 +93,65 @@ Route::middleware('auth')->group(function () {
 
 // ── Contact & Misc ──────────────────────────────────────────────────
 Route::post('/save-contact', [ContactUsController::class, 'saveContact'])->name('save-contact');
-Route::post('/check-data', [CommonController::class, 'checkData'])->middleware('admin.user')->name('check-data');
 
 // ── Public Catalog APIs ─────────────────────────────────────────────
-Route::get('/api/vd-brands/home', [VDHomeController::class, 'getVDBrandsForHome'])->name('vd.brands.home');
+Route::get('/api/vd-brands/home', [ValueDesignStorefrontController::class, 'brandsForHome'])->name('vd.brands.home');
 
-// ── KGen Public Routes ──────────────────────────────────────────────
-Route::get('/kgen-products', [DeliveryPartnerController::class, 'showproducts'])->name('products');
-Route::get('/products/{productID}', [DeliveryPartnerController::class, 'getproductsbyID'])->name('products.getById');
-Route::get('/kgen-place-order', [KGenOrderController::class, 'showForm'])->name('place-order.form');
-Route::post('/kgen-place-order', [KGenOrderController::class, 'placeOrder'])->name('place-order.submit');
-Route::middleware('auth')->group(function () {
-    Route::get('/kgen-orders', [KGenOrderController::class, 'listOrders'])->name('orders.list');
-    Route::get('/get-kgenorders', [KGenOrderController::class, 'getOrders'])->name('orders.get');
+// ── KGen Routes ─────────────────────────────────────────────────────
+// All KGen URLs are grouped under a consistent prefix and naming scheme.
+Route::prefix('kgen')->name('kgen.')->group(function () {
+    Route::get('/products', [KGenCatalogController::class, 'showproducts'])->name('products');
+    Route::get('/products/{productID}', [KGenCatalogController::class, 'getproductsbyID'])->name('products.show');
+    Route::get('/place-order', [KGenOrderController::class, 'showForm'])->name('order.form');
+    Route::post('/place-order', [KGenOrderController::class, 'placeOrder'])->name('order.submit');
+    Route::get('/order/{order}/assets', [KGenOrderController::class, 'showAssets'])->name('order.assets');
+    Route::get('/order/{order}/download', [KGenOrderController::class, 'downloadAsset'])->name('order.download');
+    Route::get('/order/{orderID}/monitor', [KGenOrderController::class, 'monitorOrder'])->name('order.monitor');
+    Route::get('/order/success/{orderId}', [KGenOrderController::class, 'showSuccess'])->name('order.success');
+    Route::get('/order/failed/{orderId}', [KGenOrderController::class, 'showFailed'])->name('order.failed');
+    Route::get('/evc-request/create', [ValueDesignEvcRequestController::class, 'create'])->name('evc.request.create');
+    Route::post('/evc-request', [ValueDesignEvcRequestController::class, 'store'])->name('evc.request.store');
+
+    Route::middleware('auth')->group(function () {
+        Route::get('/orders', [KGenOrderController::class, 'listOrders'])->name('orders.list');
+        Route::get('/orders/data', [KGenOrderController::class, 'getOrders'])->name('orders.get');
+    });
 });
-Route::get('/order/{order}/assets', [KGenOrderController::class, 'showAssets'])->name('order.assets');
-Route::get('/order/{order}/download', [KGenOrderController::class, 'downloadAsset'])->name('order.download');
-Route::get('/order/{orderID}/monitor', [KGenOrderController::class, 'monitorOrder'])->name('order.monitor');
-Route::get('/kgen-order/success/{orderId}', [KGenOrderController::class, 'showSuccess'])->name('kgen.order.success');
-Route::get('/kgen-order/failed/{orderId}', [KGenOrderController::class, 'showFailed'])->name('kgen.order.failed');
-Route::get('/get-evc-request/create', [GetEvcRequestController::class, 'create'])->name('getevc.request');
-Route::post('/get-evc-request', [GetEvcRequestController::class, 'store']);
 
-// ── Admin-Only Legacy Routes (admin.user middleware) ────────────────
+// ── Admin-Only Routes (legacy admin.user middleware) ─────────────────
+// NOTE: Provider dashboards and tools are now under /panel (routes/admin.php).
 Route::middleware('admin.user')->group(function () {
-    Route::get('/admin/brands/export', [BrandExportController::class, 'export'])->name('brands.export');
-    Route::get('/admin/stores/filter', [StoreController::class, 'filterStores'])->name('admin.stores.filter');
-    Route::get('/admin/stores/select', [StoreController::class, 'showForm'])->name('admin.stores.form');
-    Route::post('/admin/stores/fetch', [StoreController::class, 'fetchStoresForBrand'])->name('admin.stores.fetch');
-    Route::post('/admin/stores/sync', [StoreController::class, 'syncAndShow'])->name('admin.stores.sync');
-    Route::get('/admin/stores/export', [StoreController::class, 'exportStores'])->name('admin.stores.export');
-    // Legacy VD routes are retired; keep redirects to the new panel.
-    Route::get('/admin/vd/brands', fn () => redirect('/panel/value-design'))->name('admin.vd.brands');
-    Route::get('/admin/vd/dashboard', fn () => redirect('/panel/value-design'))->name('admin.vd.dashboard');
-    Route::get('/admin/evc/request', fn () => redirect('/panel/value-design'))->name('admin.evc.request');
-    Route::post('/admin/evc/store-request', fn () => response()->json(['success' => false, 'message' => 'Legacy endpoint retired. Use /panel/value-design.'], 410))->name('admin.evc.store-request');
-    Route::post('/admin/evc/decrypt-store', fn () => response()->json(['success' => false, 'message' => 'Legacy endpoint retired. Use /panel/value-design.'], 410))->name('admin.evc.decrypt-store');
-    Route::post('/admin/evc/status', fn () => response()->json(['success' => false, 'message' => 'Legacy endpoint retired. Use /panel/value-design.'], 410))->name('admin.evc.status');
-    Route::get('/admin/evc/form', fn () => redirect('/panel/value-design'))->name('admin.evc.form');
-    Route::get('/admin/evc-details/{orderId}/{requestRefNo}', fn () => redirect('/panel/value-design'))->name('admin.evc.details');
-    Route::post('/admin/evc/get-activated', fn () => response()->json(['success' => false, 'message' => 'Legacy endpoint retired. Use /panel/value-design.'], 410))->name('admin.evc.activated');
-    Route::post('/admin/api/vd-brands/clear-cache', [VDHomeController::class, 'clearVDBrandsCache'])->name('admin.vd.brands.clear-cache');
-    Route::get('/admin/api/vd-brands/test-connection', [VDHomeController::class, 'testVDConnection'])->name('admin.vd.brands.test-connection');
-    Route::get('/admin/lysto/giftcards', [AthenaGiftCardController::class, 'index'])->name('admin.lysto.giftcards');
-    Route::get('/admin/lysto/giftcards/{giftcard_id}/skus', [AthenaGiftCardController::class, 'getSkus'])->name('admin.lysto.giftcards.show');
-    Route::get('/admin/lysto/orders', [AthenaGiftCardController::class, 'getOrder'])->name('admin.lysto.orders');
-    Route::get('/admin/lysto/wallet-balance', [AthenaGiftCardController::class, 'getWalletBalance'])->name('admin.lysto.wallet-balance');
-    Route::get('/admin/lysto/giftcards2', [AthenaGiftCardController::class, 'showGiftcards'])->name('admin.lysto.giftcards2.index');
-    Route::get('/admin/lysto/giftcard/purchase/view', [AthenaGiftCardController::class, 'purchaseView'])->name('admin.lysto.giftcard.purchase.view');
-    Route::post('/admin/lysto/giftcard/purchase', [AthenaGiftCardController::class, 'purchase'])->name('admin.lysto.giftcard.purchase');
-    Route::get('/admin/lysto/dashboard', fn () => Inertia::render('Admin/ValueDesign/VdDataPage', [
-        'title' => 'Lysto / Athena gift cards',
-        'data' => ['message' => 'Use routes under /admin/lysto/* for gift cards, SKUs, and orders.'],
-    ]))->name('admin.lysto.dashboard');
-    Route::get('/admin/kgen/wallet', [KGenWalletController::class, 'wallet'])->name('admin.kgen.wallet');
-    Route::get('/admin/kgen/wallet/export-csv', [KGenWalletController::class, 'exportCsv'])->name('admin.kgen.wallet.exportCsv');
-    Route::get('/admin/kgen/transactions', [KGenWalletController::class, 'index'])->name('admin.kgen.transactions.index');
-    Route::get('/admin/kgen/wallet/latest-balance', [KGenWalletController::class, 'latest'])->name('admin.kgen.wallet.latest');
-    Route::get('/admin/send-transaction-report/{id}', [TransactionReportController::class, 'sendToCardPay'])->name('send.transaction.report');
-    Route::get('/admin/invoices/{id}/create-invoice', [InvoiceController::class, 'storeAndSendInvoice'])->name('create_invoice');
+    Route::get('/admin/brands/export', [ExportController::class, 'brands'])->name('brands.export');
+    // Legacy VD routes retired (kept for inbound old bookmarks/links).
+    // NOTE: route names were also renamed to panel.* to avoid carrying the "admin" naming forward.
+    Route::get('/admin/vd/brands', fn () => redirect('/panel/value-design'))->name('panel.legacy.vd.brands');
+    Route::get('/admin/vd/dashboard', fn () => redirect('/panel/value-design'))->name('panel.legacy.vd.dashboard');
+    Route::get('/admin/evc/request', fn () => redirect('/panel/value-design'))->name('panel.legacy.vd.evc.request');
+    Route::post('/admin/evc/store-request', fn () => ResponsePayload::fail(ResponseCode::NOT_FOUND, 'payments.legacy_endpoint_retired_use_panel_value_design', httpStatus: 410))->name('panel.legacy.vd.evc.store-request');
+    Route::post('/admin/evc/decrypt-store', fn () => ResponsePayload::fail(ResponseCode::NOT_FOUND, 'payments.legacy_endpoint_retired_use_panel_value_design', httpStatus: 410))->name('panel.legacy.vd.evc.decrypt-store');
+    Route::post('/admin/evc/status', fn () => ResponsePayload::fail(ResponseCode::NOT_FOUND, 'payments.legacy_endpoint_retired_use_panel_value_design', httpStatus: 410))->name('panel.legacy.vd.evc.status');
+    // Legacy route removed (Blade view deleted); redirect to panel instead.
+    Route::get('/admin/evc/form', fn () => redirect('/panel/value-design'))->name('panel.legacy.vd.evc.form');
+    Route::get('/admin/evc-details/{orderId}/{requestRefNo}', fn () => redirect('/panel/value-design'))->name('panel.legacy.vd.evc.details');
+    Route::post('/admin/evc/get-activated', fn () => ResponsePayload::fail(ResponseCode::NOT_FOUND, 'payments.legacy_endpoint_retired_use_panel_value_design', httpStatus: 410))->name('panel.legacy.vd.evc.activated');
+    // Provider-distributor dashboards moved to /panel/*; legacy /admin/* routes removed.
+
+    // FIX: was GET — sends an external email/API call; must be POST to prevent
+    // accidental triggering via browser prefetch or URL sharing.
+    Route::post('/admin/send-transaction-report/{id}', [TransactionReportController::class, 'sendToCardPay'])->name('send.transaction.report');
+
+    // FIX: was GET — creates a database record; must be POST per HTTP semantics.
+    Route::post('/admin/invoices/{id}/create-invoice', [InvoiceController::class, 'storeAndSendInvoice'])->name('create_invoice');
+
     Route::post('/admin/upload-data', [DocumentController::class, 'uploadData'])->name('uploadData');
     Route::get('/admin/export-blocked-users', [UserBlockController::class, 'exportBlockedUsers'])->name('admin.export.blocked.users');
     Route::post('/admin/block-user', [UserBlockController::class, 'blockUser'])->name('admin.block.user');
     Route::post('/admin/unblock-user', [UserBlockController::class, 'unblockUser'])->name('admin.unblock.user');
     Route::get('/admin/check-user-restrictions', [UserBlockController::class, 'checkUserRestrictions'])->name('admin.check.user.restrictions');
+
+    // FIX: renamed from /check-data — descriptive name + moved inside admin.user guard.
+    // Ensure CommonController::checkData validates all inputs strictly.
+    Route::post('/admin/check-data', [CommonController::class, 'checkData'])->name('admin.check.data');
 });
 
 // ── Fallback ────────────────────────────────────────────────────────
@@ -162,18 +166,16 @@ Route::fallback(function () {
     if (str_starts_with($path, 'storage/')) {
         $relativePath = substr($path, 8);
         if ($relativePath === '' || str_contains($relativePath, '..') || str_contains($relativePath, "\0")) {
-            return response()->json([
-                'success' => false,
-                'error' => ['code' => 'FILE_NOT_FOUND', 'message' => 'The requested file does not exist.'],
-            ], 404);
+            return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
+                'reason' => 'storage_path_invalid',
+            ], httpStatus: 404);
         }
 
         $basePath = realpath(storage_path('app/public'));
         if ($basePath === false) {
-            return response()->json([
-                'success' => false,
-                'error' => ['code' => 'FILE_NOT_FOUND', 'message' => 'The requested file does not exist.'],
-            ], 404);
+            return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
+                'reason' => 'storage_base_missing',
+            ], httpStatus: 404);
         }
 
         $candidate = storage_path('app/public/'.str_replace('/', DIRECTORY_SEPARATOR, $relativePath));
@@ -183,24 +185,19 @@ Route::fallback(function () {
             && ($fullPath === $basePath || str_starts_with($fullPath, $basePath.DIRECTORY_SEPARATOR));
 
         if (! $isAllowedPath) {
-            return response()->json([
-                'success' => false,
-                'error' => ['code' => 'FILE_NOT_FOUND', 'message' => 'The requested file does not exist.'],
-            ], 404);
+            return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
+                'reason' => 'storage_path_disallowed',
+            ], httpStatus: 404);
         }
 
         if (is_file($fullPath)) {
             return response()->file($fullPath);
         }
 
-        return response()->json([
-            'success' => false,
-            'error' => ['code' => 'FILE_NOT_FOUND', 'message' => 'The requested file does not exist.'],
-        ], 404);
+        return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
+            'reason' => 'storage_file_missing',
+        ], httpStatus: 404);
     }
 
-    return response()->json([
-        'success' => false,
-        'error' => ['code' => 'NOT_FOUND', 'message' => 'The requested URL was not found on this server.'],
-    ], 404);
+    return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', httpStatus: 404);
 });

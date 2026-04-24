@@ -1,123 +1,130 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $table = 'orders';
 
     protected $fillable = [
-        'user_id',
         'tenant_id',
+        'user_id',
         'order_number',
-        'product_id',
+        'channel',
         'status',
-        'woohoo_order_id', 'order_status', 'denomination', 'sender_first_name',
-        'sender_email', 'sender_phone_no', 'sender_post_code', 'sender_address_1',
-        'sender_address_2', 'sender_city', 'sender_state', 'sku', 'amount',
-        'receiver_name', 'receiver_email', 'receiver_mobile', 'receiver_msg',
-        'gift_theme_id', 'gift_message_title', 'gift_delivery_option', 'gift_delivery_at',
-        'cards', 'order_cancel', 'order_payment', 'payment_method', 'currency', 'additionalTxnFields',
-        'grand_payable_amount', 'grand_total', 'discounted_amount_value', 'amount_payable_after_discount',
-        'unit_price', 'subtotal', 'discount_percentage', 'discount_amount', 'gst_percentage', 'gst_amount',
-        'offer_code', 'gift_option',
-        'gst_number', 'country', 'merchant_order_id', 'refno', 'product_name',
-        'quantity', 'gift_send_option', 'delivery_mode', 'vd_brand_code', 'vd_discount',
-        'price', 'offer_id', 'offer_discount', 'device_fingerprint', 'purchase_ip',
-        'purchase_country', 'code_view_count', 'last_code_viewed_at', 'is_vpn_purchase',
-        'maker_id', 'checker_id', 'checker_action_at',
-        'idempotency_key',
-        'billing_name', 'billing_email', 'billing_tel', 'billing_address', 'billing_address_two',
-        'billing_city', 'billing_state', 'billing_zip', 'billing_country', 'billing_gst_number',
-        'voucher_code', 'voucher_pin', 'expiry_date',
-        'vouchagram_reference_num', 'vouchagram_external_order_id', 'vouchagram_voucher_data',
+        'subtotal_minor',
+        'discount_total_minor',
+        'tax_total_minor',
+        'grand_total_minor',
+        'currency',
+        'placed_at',
     ];
 
     protected $casts = [
-        'cards' => 'array',
-        'vouchagram_voucher_data' => 'array',
-        'additionalTxnFields' => 'array',
-        'amount' => 'decimal:2',
-        'grand_payable_amount' => 'decimal:2',
-        'discounted_amount_value' => 'decimal:2',
-        'amount_payable_after_discount' => 'decimal:2',
-        'vd_discount' => 'decimal:2',
-        'grand_total' => 'decimal:2',
-        'unit_price' => 'decimal:2',
-        'subtotal' => 'decimal:2',
-        'discount_amount' => 'decimal:2',
-        'discount_percentage' => 'decimal:2',
-        'gst_percentage' => 'decimal:2',
-        'gst_amount' => 'decimal:2',
-        'price' => 'decimal:2',
-        'expiry_date' => 'date',
-        'last_code_viewed_at' => 'datetime',
-        'checker_action_at' => 'datetime',
-        'is_vpn_purchase' => 'boolean',
-        'gift_theme_id' => 'integer',
-        'gift_delivery_at' => 'datetime',
+        'subtotal_minor' => 'integer',
+        'discount_total_minor' => 'integer',
+        'tax_total_minor' => 'integer',
+        'grand_total_minor' => 'integer',
+        'placed_at' => 'datetime',
     ];
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
 
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
-    public function product(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'sku', 'sku');
+        return $this->belongsTo(User::class);
     }
 
-    public function orderSummary(): HasOne
+    public function items(): HasMany
     {
-        return $this->hasOne(OrderSummary::class, 'order_id');
+        return $this->hasMany(OrderItem::class);
     }
 
-    public function ccAvenuePayment(): HasOne
+    public function billingSnapshot(): HasOne
     {
-        return $this->hasOne(CcAvenuePayment::class, 'order_id');
+        return $this->hasOne(OrderBillingSnapshot::class);
     }
 
-    public function unlimitPayment(): HasOne
+    public function shippingSnapshot(): HasOne
     {
-        return $this->hasOne(UnlimitPayment::class, 'order_id');
+        return $this->hasOne(OrderShippingSnapshot::class);
+    }
+
+    public function discounts(): HasMany
+    {
+        return $this->hasMany(OrderDiscount::class);
+    }
+
+    public function taxBreakdowns(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            OrderTaxBreakdown::class,
+            OrderItem::class,
+            'order_id',
+            'order_item_id',
+            'id',
+            'id',
+        );
+    }
+
+    public function statusHistory(): HasMany
+    {
+        return $this->hasMany(OrderStatusHistory::class);
+    }
+
+    public function deviceContext(): HasOne
+    {
+        return $this->hasOne(OrderDeviceContext::class);
+    }
+
+    public function approvals(): HasMany
+    {
+        return $this->hasMany(OrderApproval::class);
+    }
+
+    public function codeReveals(): HasMany
+    {
+        return $this->hasMany(OrderCodeReveal::class);
+    }
+
+    public function summary(): HasOne
+    {
+        return $this->hasOne(OrderSummary::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     public function offerUsages(): HasMany
     {
-        return $this->hasMany(OfferUsage::class, 'order_id');
+        return $this->hasMany(OfferUsage::class);
     }
 
     public function supportTickets(): HasMany
     {
-        return $this->hasMany(SupportTicket::class, 'order_id');
+        return $this->hasMany(SupportTicket::class);
     }
 
-    public function scopeForUser($query, $userId)
+    public function kycRequirement(): HasOne
     {
-        return $query->where('user_id', $userId);
-    }
-
-    public function scopeCompleted($query)
-    {
-        return $query->where('order_status', 'COMPLETE');
-    }
-
-    public function scopePending($query)
-    {
-        return $query->where('order_status', 'PENDING');
+        return $this->hasOne(OrderKycRequirement::class);
     }
 }

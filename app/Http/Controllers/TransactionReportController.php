@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ApiToken;
+use App\TransactionReport;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\TransactionReport;
-use App\Models\ApiToken;
-use Carbon\Carbon;
 
 class TransactionReportController extends Controller
 {
@@ -15,7 +15,7 @@ class TransactionReportController extends Controller
     {
         $response = Http::asForm()
             ->withHeaders([
-                'Authorization' => 'Basic ' . base64_encode('1887:1zXIo78Jtw5U'),
+                'Authorization' => 'Basic '.base64_encode('1887:1zXIo78Jtw5U'),
             ])
             ->post('https://psp.in.unlimit.com/api/auth/token', [
                 'grant_type' => 'password',
@@ -24,76 +24,73 @@ class TransactionReportController extends Controller
             ]);
 
         $data = $response->json();
-        //dd($data);
+        // dd($data);
 
-    if (isset($data['access_token'])) {
-        ApiToken::create([
-            'access_token' => $data['access_token'],
-            'expires_at' => isset($data['expires_in']) 
-                ? Carbon::now()->addSeconds($data['expires_in']) 
-                : null,
-        ]);
+        if (isset($data['access_token'])) {
+            ApiToken::create([
+                'access_token' => $data['access_token'],
+                'expires_at' => isset($data['expires_in'])
+                    ? Carbon::now()->addSeconds($data['expires_in'])
+                    : null,
+            ]);
 
-        //return response()->json(['message' => 'Token saved.']);
-        return $data['access_token'];
+            // return response()->json(['message' => 'Token saved.']);
+            return $data['access_token'];
 
+        }
+
+        return response()->json(['error' => 'Token not received', 'response' => $data], 400);
     }
 
-    return response()->json(['error' => 'Token not received', 'response' => $data], 400);
-}
     public function sendToCardPay($id)
     {
-         $token = $this->getToken();
-         if (!$token) 
-         {
+        $token = $this->getToken();
+        if (! $token) {
             return redirect()->back()->with([
                 'message' => 'Failed to get access token.',
                 'alert-type' => 'error',
             ]);
         }
 
-        
         $report = TransactionReport::findOrFail($id);
 
         $reportTypes = is_array($report->report_type)
     ? $report->report_type
     : json_decode($report->report_type, true);
 
-
-       /* $payload = [
-            "callback_url" => "https://www.example.com/report-url",
-            "reports_data" => [
-                "end_date" => $report->end_date,
-                "report_type" => $reportTypes,
-                "start_date" => $report->start_date,
-            ],
-            "request" => [
-                "id" => $report->request_id,
-                "time" => now()->toIso8601String(),
-            ]
-        ];*/
+        /* $payload = [
+             "callback_url" => "https://www.example.com/report-url",
+             "reports_data" => [
+                 "end_date" => $report->end_date,
+                 "report_type" => $reportTypes,
+                 "start_date" => $report->start_date,
+             ],
+             "request" => [
+                 "id" => $report->request_id,
+                 "time" => now()->toIso8601String(),
+             ]
+         ];*/
 
         $payload = [
-            "request" => [
-                "id" => $report->request_id,
-                "time" => now()->toIso8601String(),
+            'request' => [
+                'id' => $report->request_id,
+                'time' => now()->toIso8601String(),
             ],
-            "reports_data" => [
-                "start_date" => $report->start_date,
-                "end_date" => $report->end_date,
-                "report_type" => $reportTypes,
-            ]
-            ];
-        
+            'reports_data' => [
+                'start_date' => $report->start_date,
+                'end_date' => $report->end_date,
+                'report_type' => $reportTypes,
+            ],
+        ];
 
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $token, // replace with real token
+            'Authorization' => 'Bearer '.$token, // replace with real token
             'Accept' => 'application/json',
         ])->post('https://psp.in.unlimit.com/api/reports', $payload);
 
         if ($response->successful()) {
             return redirect()->back()->with([
-                'message'    => 'Report preparation initiated!',
+                'message' => 'Report preparation initiated!',
                 'alert-type' => 'success',
             ]);
         } else {
@@ -104,7 +101,7 @@ class TransactionReportController extends Controller
             ]);
 
             return redirect()->back()->with([
-                'message'    => 'Failed to initiate report: ' . $response->body(),
+                'message' => 'Failed to initiate report: '.$response->body(),
                 'alert-type' => 'error',
             ]);
         }

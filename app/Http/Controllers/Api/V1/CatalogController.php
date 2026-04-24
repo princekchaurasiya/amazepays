@@ -7,7 +7,7 @@ use App\Http\Traits\ApiResponse;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\Catalog\ProductContentService;
-use Illuminate\Http\JsonResponse;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Http\Request;
 
 /**
@@ -22,7 +22,7 @@ class CatalogController extends Controller
     ) {}
 
     /** List visible products with filters, sorting, and pagination. */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): ResponsePayload
     {
         $query = Product::query()->forStorefrontCatalog()->with(['productMedia', 'categories']);
 
@@ -78,7 +78,7 @@ class CatalogController extends Controller
     }
 
     /** Show a single product by ID. */
-    public function show(Product $product): JsonResponse
+    public function show(Product $product): ResponsePayload
     {
         if (! $product->isListedOnConsumerStorefront()) {
             return $this->notFound();
@@ -98,7 +98,7 @@ class CatalogController extends Controller
     }
 
     /** List storefront navigation categories. */
-    public function categories(): JsonResponse
+    public function categories(): ResponsePayload
     {
         $categories = Category::orderBy('order')->get(['id', 'name', 'slug', 'thumbnail', 'accent_color']);
 

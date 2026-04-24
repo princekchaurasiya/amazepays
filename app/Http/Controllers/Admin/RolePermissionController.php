@@ -290,6 +290,6 @@ class RolePermissionController extends Controller
         $new = collect($names)->sort()->values()->all();
         audit('role.permissions_updated', $role, ['permissions' => $old], ['permissions' => $new]);
 
-        return redirect()->route('admin.settings.roles.edit', $role)->with('success', 'Permissions saved.');
+        return redirect()->route('panel.settings.roles.edit', $role)->with('success', 'Permissions saved.');
     }
 }

@@ -3,6 +3,7 @@ import { router, usePage } from '@inertiajs/react';
 import { paths } from '@/lib/paths';
 import GiftOptionSelector, { type GiftOption, type GiftOptionPolicy } from './GiftOptionSelector';
 import GiftPersonalizationPanel, { type GiftPersonalizationState, type GiftTheme } from './GiftPersonalizationPanel';
+import { Check, Clock, CreditCard, Loader2, ShieldCheck, ShoppingCart, Zap } from 'lucide-react';
 
 type PriceData = {
     type: 'SLAB' | 'RANGE';
@@ -97,6 +98,8 @@ export default function ProductPurchasePanel({
     onGiftSendOptionChange,
     onGiftDataChange,
 }: Props) {
+    /* UI: SLAB renders as selectable tiles, RANGE as rupee-prefixed input.
+       Layout stacks on mobile and aligns two columns inside the totals/actions card on larger screens. */
     type GiftFieldKey = keyof GiftPersonalizationState;
     const priceData = useMemo(() => normalizePriceData(price), [price]);
     const page = usePage<{ i18n?: { storefront?: { product?: Record<string, unknown> } } }>();
@@ -126,6 +129,7 @@ export default function ProductPurchasePanel({
         gift_delivery_at: '',
     });
     const [actionMessage, setActionMessage] = useState<string | null>(null);
+    const [pendingAction, setPendingAction] = useState<null | 'cart' | 'checkout'>(null);
 
     const canUseRange = priceData.type === 'RANGE' && priceData.min !== null && priceData.max !== null;
     const minAmount = priceData.min ?? 0;
@@ -314,57 +318,82 @@ export default function ProductPurchasePanel({
         return true;
     };
 
+    const rangeHintId = `range-hint-${slug}`;
+    const rangeErrorId = `range-error-${slug}`;
+
+    const isBusy = pendingAction !== null;
+    const inputBaseClass =
+        'w-full rounded-lg border bg-white py-2.5 pl-8 pr-3 text-sm [appearance:textfield] outline-none transition focus:border-product-primary focus:ring-2 focus:ring-product-primary/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
+
     return (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4 md:p-5 shadow-sm">
-            <div className="mb-3">
-                <p className="text-2xl font-semibold text-gray-900">{digitalCardTitle}</p>
-                <p className="mt-1 text-sm text-gray-500">{digitalCardSubtitle}</p>
-            </div>
+        <div className="w-full max-w-lg rounded-2xl border border-gray-200/80 bg-white p-6 shadow-md">
+            <h2 className="text-xl font-semibold text-gray-800">{digitalCardTitle}</h2>
+            <p className="mt-1 text-sm text-gray-500">{digitalCardSubtitle}</p>
+
             {priceData.type === 'RANGE' ? (
-                <div>
-                    <label className="text-sm font-semibold text-gray-900">{t('enter_amount', 'Enter amount')}</label>
-                    <input
-                        type="number"
-                        min={canUseRange ? priceData.min ?? undefined : undefined}
-                        max={canUseRange ? priceData.max ?? undefined : undefined}
-                        value={rangeInput}
-                        onChange={(e) => {
-                            const next = e.target.value;
-                            setRangeInput(next);
-                            const parsed = Number(next || 0);
-                            if (next === '') {
+                <div className="mb-4 mt-5">
+                    <label htmlFor={`range-${slug}`} className="mb-1 block text-sm font-medium text-gray-700">
+                        {t('enter_amount', 'Enter amount')}
+                    </label>
+                    <div className="relative">
+                        <span className="pointer-events-none absolute left-3 top-2.5 text-sm text-gray-500">{currencySymbol}</span>
+                        <input
+                            id={`range-${slug}`}
+                            type="number"
+                            min={canUseRange ? priceData.min ?? undefined : undefined}
+                            max={canUseRange ? priceData.max ?? undefined : undefined}
+                            value={rangeInput}
+                            inputMode="numeric"
+                            aria-invalid={errorField === 'denomination' && Boolean(error)}
+                            aria-describedby={errorField === 'denomination' && error ? rangeErrorId : rangeHintId}
+                            onChange={(e) => {
+                                const next = e.target.value;
+                                setRangeInput(next);
+                                const parsed = Number(next || 0);
+                                if (next === '') {
+                                    setError(null);
+                                    setErrorField(null);
+                                    return;
+                                }
+                                if (!Number.isFinite(parsed) || parsed <= 0) {
+                                    setError(tv('invalid_amount', 'Please enter a valid amount.'));
+                                    setErrorField('denomination');
+                                    return;
+                                }
+                                if (canUseRange && parsed < minAmount) {
+                                    setError(
+                                        tv('amount_min', 'The amount must be greater than or equal to :min.', {
+                                            min: formatMoney(minAmount, currencySymbol),
+                                        }),
+                                    );
+                                    setErrorField('denomination');
+                                    return;
+                                }
+                                if (canUseRange && parsed > maxAmount) {
+                                    setError(
+                                        tv('amount_max', 'The amount must be less than or equal to :max.', {
+                                            max: formatMoney(maxAmount, currencySymbol),
+                                        }),
+                                    );
+                                    setErrorField('denomination');
+                                    return;
+                                }
                                 setError(null);
                                 setErrorField(null);
-                                return;
-                            }
-                            if (!Number.isFinite(parsed) || parsed <= 0) {
-                                setError(tv('invalid_amount', 'Please enter a valid amount.'));
-                                setErrorField('denomination');
-                                return;
-                            }
-                            if (canUseRange && parsed < minAmount) {
-                                setError(tv('amount_min', 'The amount must be greater than or equal to :min.', { min: formatMoney(minAmount, currencySymbol) }));
-                                setErrorField('denomination');
-                                return;
-                            }
-                            if (canUseRange && parsed > maxAmount) {
-                                setError(tv('amount_max', 'The amount must be less than or equal to :max.', { max: formatMoney(maxAmount, currencySymbol) }));
-                                setErrorField('denomination');
-                                return;
-                            }
-                            setError(null);
-                            setErrorField(null);
-                        }}
-                        className={`mt-2 w-full rounded-lg border px-3 py-2 text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
-                            errorField === 'denomination' ? 'border-red-500 focus:border-red-500' : 'border-gray-300'
-                        }`}
-                        placeholder={t('enter_denomination', 'Enter denomination')}
-                    />
-                    <div className="mt-2">
+                            }}
+                            className={`${inputBaseClass} ${
+                                errorField === 'denomination' ? 'border-red-500 focus:ring-red-200' : 'border-gray-300'
+                            }`}
+                            placeholder={t('enter_denomination', 'Enter denomination')}
+                        />
+                    </div>
+                    <div className="mt-1.5">
                         {errorField === 'denomination' && error ? (
-                            <p className="text-xs text-red-600">{error}</p>
+                            <p id={rangeErrorId} className="text-xs text-red-600">
+                                {error}
+                            </p>
                         ) : canUseRange ? (
-                            <p className="text-xs text-gray-600">
+                            <p id={rangeHintId} className="text-xs text-gray-400">
                                 {t('range_hint', 'Enter a value between :min and :max.')
                                     .replace(':min', formatMoney(minAmount, currencySymbol))
                                     .replace(':max', formatMoney(maxAmount, currencySymbol))}
@@ -375,9 +404,9 @@ export default function ProductPurchasePanel({
                     </div>
                 </div>
             ) : (
-                <div>
-                    <p className="text-sm font-semibold text-gray-900">{t('select_amount', 'Select amount')}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                <div className="mb-4 mt-5">
+                    <p className="mb-1 text-sm font-medium text-gray-700">{t('select_amount', 'Select amount')}</p>
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
                         {priceData.denominations.map((deno) => (
                             <button
                                 key={deno}
@@ -387,13 +416,19 @@ export default function ProductPurchasePanel({
                                     setError(null);
                                     setErrorField(null);
                                 }}
-                                className={`rounded-full border px-3 py-1.5 text-sm ${
+                                aria-pressed={selectedDenomination === deno}
+                                className={`relative flex h-11 items-center justify-center rounded-lg border bg-white px-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-product-primary/40 ${
                                     selectedDenomination === deno
-                                        ? 'border-gray-900 bg-gray-900 text-white'
-                                        : 'border-gray-300 text-gray-700 hover:border-gray-500'
+                                        ? 'border-product-primary text-product-primary ring-1 ring-product-primary bg-blue-50'
+                                        : 'border-gray-300 text-gray-700 hover:border-product-primary/40'
                                 }`}
                             >
                                 {formatMoney(deno, currencySymbol)}
+                                {selectedDenomination === deno ? (
+                                    <span className="absolute right-1.5 top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-product-primary text-white">
+                                        <Check className="h-3 w-3" aria-hidden="true" />
+                                    </span>
+                                ) : null}
                             </button>
                         ))}
                     </div>
@@ -418,111 +453,189 @@ export default function ProductPurchasePanel({
             />
 
             {giftSendOption === 'send_as_gift' && giftCustomizeMode ? (
-                <GiftPersonalizationPanel
-                    themes={themes}
-                    data={giftData}
-                    text={(storefrontProductText.gift_panel as Record<string, string> | undefined) ?? {}}
-                    onChange={(next) => {
-                        const changedKeys = (Object.keys(next) as GiftFieldKey[]).filter((key) => next[key] !== giftData[key]);
-                        setGiftData(next);
-                        onGiftDataChange?.(next);
-                        if (changedKeys.length > 0) {
-                            setGiftErrors((prev) => {
-                                if (Object.keys(prev).length === 0) return prev;
-                                const copy = { ...prev };
-                                changedKeys.forEach((key) => {
-                                    delete copy[key];
+                <div className="mb-5">
+                    <GiftPersonalizationPanel
+                        themes={themes}
+                        data={giftData}
+                        text={(storefrontProductText.gift_panel as Record<string, string> | undefined) ?? {}}
+                        onChange={(next) => {
+                            const changedKeys = (Object.keys(next) as GiftFieldKey[]).filter((key) => next[key] !== giftData[key]);
+                            setGiftData(next);
+                            onGiftDataChange?.(next);
+                            if (changedKeys.length > 0) {
+                                setGiftErrors((prev) => {
+                                    if (Object.keys(prev).length === 0) return prev;
+                                    const copy = { ...prev };
+                                    changedKeys.forEach((key) => {
+                                        delete copy[key];
+                                    });
+                                    return copy;
                                 });
-                                return copy;
-                            });
-                        }
-                        setActionMessage(null);
-                    }}
-                    errors={giftErrors}
-                />
+                            }
+                            setActionMessage(null);
+                        }}
+                        errors={giftErrors}
+                    />
+                </div>
             ) : null}
 
-            <div className="mt-4 w-full min-w-0 rounded-2xl border border-gray-200 bg-white px-3 py-3 md:px-4">
-                <div className="flex w-full min-w-0 flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <p className="min-w-0 text-3xl font-semibold tracking-tight text-gray-900 lg:text-[38px]">{formatMoney(total, currencySymbol)}</p>
-                    <div className="flex w-full min-w-0 flex-wrap items-center gap-2 md:w-auto md:justify-end md:gap-3">
-                        <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-gray-300 px-2 py-1">
-                    <button
-                        type="button"
-                        className="h-7 w-7 rounded-full text-lg leading-none text-gray-700 hover:bg-gray-100"
-                        onClick={() => {
-                            setQuantity((q) => Math.max(1, q - 1));
-                            setError(null);
-                            setErrorField(null);
-                            setActionMessage(null);
-                        }}
-                    >
-                        -
-                    </button>
-                    <span className="min-w-6 text-center text-sm font-semibold">{quantity}</span>
-                    <button
-                        type="button"
-                        className="h-7 w-7 rounded-full text-lg leading-none text-gray-700 hover:bg-gray-100"
-                        onClick={() => {
-                            setQuantity((q) => Math.min(10, q + 1));
-                            setError(null);
-                            setErrorField(null);
-                            setActionMessage(null);
-                        }}
-                    >
-                        +
-                    </button>
-                        </div>
-                        {loggedIn ? (
-                            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 md:w-auto">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        if (!validate()) return;
-                                        setActionMessage(null);
-                                        router.post(paths.cartAdd(slug), payload, {
-                                            preserveScroll: true,
-                                            preserveState: true,
-                                            onSuccess: () => setActionMessage(t('added_to_cart', 'Added to cart.')),
-                                            onError: () => setActionMessage(t('add_to_cart_failed', 'Could not add to cart. Please check required fields.')),
-                                        });
-                                    }}
-                                    disabled={isActionDisabled}
-                                    className="inline-flex w-full justify-center whitespace-nowrap rounded-full border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-800 hover:border-gray-400 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-4"
-                                >
-                                    {t('add_to_cart', 'Add to Cart')}
-                                </button>
-                                {giftSendOption === 'send_as_gift' && !giftCustomizeMode ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => onGiftCustomizeModeChange?.(true)}
-                                        className="inline-flex w-full justify-center whitespace-nowrap rounded-full bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-800 sm:w-auto sm:px-4"
-                                    >
-                                        {t('customize_gift_card', 'Customize Gift Card')}
-                                    </button>
-                                ) : (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            if (!validate()) return;
-                                            setActionMessage(null);
-                                            router.post(paths.checkout(slug), payload, {
-                                                preserveScroll: true,
-                                                preserveState: true,
-                                            });
-                                        }}
-                                        disabled={isActionDisabled}
-                                        className="inline-flex w-full justify-center whitespace-nowrap rounded-full bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-4"
-                                    >
-                                        {t('checkout', 'Checkout')}
-                                    </button>
-                                )}
-                            </div>
-                        ) : (
-                            <p className="min-w-0 text-sm text-gray-600">{t('login_to_purchase', 'Log in to purchase this gift card.')}</p>
-                        )}
+            <div className="mb-5 flex w-full min-w-0 items-center justify-between gap-3">
+                <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{t('total_amount', 'Total amount')}</p>
+                    <p className="mt-0.5 text-2xl font-bold tabular-nums text-gray-900">{formatMoney(total, currencySymbol)}</p>
+                </div>
+                <div>
+                    <p className="mb-1.5 text-right text-xs font-medium text-gray-500 sm:hidden">{t('quantity', 'Quantity')}</p>
+                    <div className="inline-flex items-stretch overflow-hidden rounded-lg border border-gray-200 bg-white">
+                        <button
+                            type="button"
+                            aria-label={t('decrease_quantity', 'Decrease quantity')}
+                            className="px-3 py-1.5 text-base leading-none text-gray-600 transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-product-primary/40 active:scale-95"
+                            onClick={() => {
+                                setQuantity((q) => Math.max(1, q - 1));
+                                setError(null);
+                                setErrorField(null);
+                                setActionMessage(null);
+                            }}
+                        >
+                            -
+                        </button>
+                        <span className="flex min-w-10 items-center justify-center border-x border-gray-200 px-3 text-sm font-semibold tabular-nums">
+                            {quantity}
+                        </span>
+                        <button
+                            type="button"
+                            aria-label={t('increase_quantity', 'Increase quantity')}
+                            className="px-3 py-1.5 text-base leading-none text-gray-600 transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-product-primary/40 active:scale-95"
+                            onClick={() => {
+                                setQuantity((q) => Math.min(10, q + 1));
+                                setError(null);
+                                setErrorField(null);
+                                setActionMessage(null);
+                            }}
+                        >
+                            +
+                        </button>
                     </div>
                 </div>
+            </div>
+
+            {loggedIn ? (
+                <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row">
+                    {giftSendOption === 'send_as_gift' && !giftCustomizeMode ? (
+                        <>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!validate()) return;
+                                    setActionMessage(null);
+                                    router.post(paths.cartAdd(slug), payload, {
+                                        preserveScroll: true,
+                                        preserveState: true,
+                                        onStart: () => setPendingAction('cart'),
+                                        onFinish: () => setPendingAction(null),
+                                        onSuccess: () => setActionMessage(t('added_to_cart', 'Added to cart.')),
+                                        onError: () => setActionMessage(t('add_to_cart_failed', 'Could not add to cart. Please check required fields.')),
+                                    });
+                                }}
+                                disabled={isActionDisabled || isBusy}
+                                className="inline-flex w-full min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-product-primary bg-white py-2.5 text-sm font-medium text-product-primary transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[2.75rem]"
+                            >
+                                {pendingAction === 'cart' ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
+                                        {t('adding_to_cart', 'Adding…')}
+                                    </>
+                                ) : (
+                                    <>
+                                        <ShoppingCart className="h-4 w-4 shrink-0" aria-hidden="true" />
+                                        {t('add_to_cart', 'Add to Cart')}
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onGiftCustomizeModeChange?.(true)}
+                                className="inline-flex w-full min-w-0 flex-[1.15] items-center justify-center gap-2 rounded-lg bg-product-primary py-3 text-base font-semibold text-white shadow-md transition hover:bg-product-primary/90 sm:min-h-[3rem]"
+                            >
+                                <CreditCard className="h-5 w-5 shrink-0" aria-hidden="true" />
+                                {t('customize_gift_card', 'Customize Gift Card')}
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!validate()) return;
+                                    setActionMessage(null);
+                                    router.post(paths.cartAdd(slug), payload, {
+                                        preserveScroll: true,
+                                        preserveState: true,
+                                        onStart: () => setPendingAction('cart'),
+                                        onFinish: () => setPendingAction(null),
+                                        onSuccess: () => setActionMessage(t('added_to_cart', 'Added to cart.')),
+                                        onError: () => setActionMessage(t('add_to_cart_failed', 'Could not add to cart. Please check required fields.')),
+                                    });
+                                }}
+                                disabled={isActionDisabled || isBusy}
+                                className="inline-flex w-full min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-product-primary bg-white py-2.5 text-sm font-medium text-product-primary transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[2.75rem]"
+                            >
+                                {pendingAction === 'cart' ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
+                                        {t('adding_to_cart', 'Adding…')}
+                                    </>
+                                ) : (
+                                    <>
+                                        <ShoppingCart className="h-4 w-4 shrink-0" aria-hidden="true" />
+                                        {t('add_to_cart', 'Add to Cart')}
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!validate()) return;
+                                    setActionMessage(null);
+                                    router.post(paths.checkout(slug), payload, {
+                                        preserveScroll: true,
+                                        preserveState: true,
+                                        onStart: () => setPendingAction('checkout'),
+                                        onFinish: () => setPendingAction(null),
+                                    });
+                                }}
+                                disabled={isActionDisabled || isBusy}
+                                className="inline-flex w-full min-w-0 flex-[1.2] items-center justify-center gap-2 rounded-lg bg-product-primary py-3 text-base font-semibold text-white shadow-md transition hover:bg-product-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-product-primary/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[3rem]"
+                            >
+                                {pendingAction === 'checkout' ? (
+                                    <>
+                                        <Loader2 className="h-5 w-5 shrink-0 animate-spin" aria-hidden="true" />
+                                        {t('please_wait', 'Please wait')}…
+                                    </>
+                                ) : (
+                                    <>
+                                        <Zap className="h-5 w-5 shrink-0" aria-hidden="true" />
+                                        {t('checkout_now', t('checkout', 'Checkout'))}
+                                    </>
+                                )}
+                            </button>
+                        </>
+                    )}
+                </div>
+            ) : (
+                <p className="text-sm text-gray-600">{t('login_to_purchase', 'Log in to purchase this gift card.')}</p>
+            )}
+
+            <div className="mt-4 flex w-full items-center justify-between gap-2 text-xs text-gray-400">
+                <span className="inline-flex min-w-0 items-center gap-1">
+                    <ShieldCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span className="truncate">{t('secure_transaction', 'Secure Transaction')}</span>
+                </span>
+                <span className="inline-flex min-w-0 items-center justify-end gap-1">
+                    <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span className="truncate">{t('instant_delivery', 'Instant Delivery')}</span>
+                </span>
             </div>
             {errorField === 'quantity' && error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}
             {actionMessage ? <p className="mt-2 text-xs text-emerald-700">{actionMessage}</p> : null}

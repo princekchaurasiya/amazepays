@@ -252,4 +252,3 @@ class CheckoutReadService
         return false;
     }
 }
-

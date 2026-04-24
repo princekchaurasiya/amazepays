@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class UserBlockController extends Controller
 {
@@ -21,10 +21,10 @@ class UserBlockController extends Controller
 
             $user = User::where('mobile', $request->mobile)->first();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'User not found'
+                    'message' => 'User not found',
                 ], 404);
             }
 
@@ -53,18 +53,19 @@ class UserBlockController extends Controller
                 'user_id' => $user->id,
                 'mobile' => $user->mobile,
                 'restriction_type' => $request->restriction_type,
-                'features' => $request->restriction_type === 'feature' ? $features : null
+                'features' => $request->restriction_type === 'feature' ? $features : null,
             ]);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'User restriction applied successfully'
+                'message' => 'User restriction applied successfully',
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error applying user restriction', ['error' => $e->getMessage()]);
+
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to apply user restriction'
+                'message' => 'Failed to apply user restriction',
             ], 500);
         }
     }
@@ -79,10 +80,10 @@ class UserBlockController extends Controller
 
             $user = User::where('mobile', $request->mobile)->first();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'User not found'
+                    'message' => 'User not found',
                 ], 404);
             }
 
@@ -100,7 +101,7 @@ class UserBlockController extends Controller
             }
 
             // Clear the restriction reason if all restrictions are removed
-            if (!$user->is_blocked && $user->can_transact && !$user->restricted_features) {
+            if (! $user->is_blocked && $user->can_transact && ! $user->restricted_features) {
                 $user->restriction_reason = null;
             }
 
@@ -109,22 +110,22 @@ class UserBlockController extends Controller
             Log::info('User restriction removed', [
                 'user_id' => $user->id,
                 'mobile' => $user->mobile,
-                'restriction_type' => $request->restriction_type
+                'restriction_type' => $request->restriction_type,
             ]);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'User restriction removed successfully'
+                'message' => 'User restriction removed successfully',
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error removing user restriction', ['error' => $e->getMessage()]);
+
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to remove user restriction'
+                'message' => 'Failed to remove user restriction',
             ], 500);
         }
     }
-
 
     public function checkUserRestrictions(Request $request)
     {
@@ -132,10 +133,10 @@ class UserBlockController extends Controller
             // If mobile is provided, check specific user
             if ($request->has('mobile')) {
                 $user = User::where('mobile', $request->mobile)->first();
-                if (!$user) {
+                if (! $user) {
                     return response()->json([
                         'status' => 'error',
-                        'message' => 'User not found'
+                        'message' => 'User not found',
                     ], 404);
                 }
 
@@ -148,66 +149,68 @@ class UserBlockController extends Controller
                         'can_transact' => $user->can_transact,
                         'restricted_features' => $user->restricted_features,
                         'restriction_reason' => $user->restriction_reason,
-                        'updated_at' => $user->updated_at
-                    ]
+                        'updated_at' => $user->updated_at,
+                    ],
                 ]);
             }
             // If feature is provided, check users with that feature restriction
-            else if ($request->has('feature')) {
+            elseif ($request->has('feature')) {
                 $users = User::whereNotNull('restricted_features')
-                    ->where('restricted_features', 'like', '%' . $request->feature . '%')
+                    ->where('restricted_features', 'like', '%'.$request->feature.'%')
                     ->select('name', 'mobile', 'restricted_features', 'restriction_reason', 'updated_at')
                     ->get();
 
                 return response()->json([
                     'status' => 'success',
-                    'users' => $users
+                    'users' => $users,
                 ]);
             }
             // Otherwise, return all users with any restrictions
             else {
-                $users = User::where(function($query) {
+                $users = User::where(function ($query) {
                     $query->where('is_blocked', true)
                         ->orWhere('can_transact', false)
                         ->orWhereNotNull('restricted_features');
                 })
-                ->select('name', 'mobile', 'is_blocked', 'can_transact', 'restricted_features', 'restriction_reason', 'updated_at')
-                ->get();
+                    ->select('name', 'mobile', 'is_blocked', 'can_transact', 'restricted_features', 'restriction_reason', 'updated_at')
+                    ->get();
 
                 return response()->json([
                     'status' => 'success',
-                    'users' => $users
+                    'users' => $users,
                 ]);
             }
         } catch (Exception $e) {
             Log::error('Error in checkUserRestrictions method', ['error' => $e->getMessage()]);
+
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while checking user restrictions'
+                'message' => 'An error occurred while checking user restrictions',
             ], 500);
         }
     }
 
     public function exportBlockedUsers()
-{
-    try {
-        $users = User::where('is_blocked', true)->get(['name', 'mobile', 'restriction_reason', 'updated_at']);
-        $csvData = "Name,Mobile,Reason,Updated At\n";
+    {
+        try {
+            $users = User::where('is_blocked', true)->get(['name', 'mobile', 'restriction_reason', 'updated_at']);
+            $csvData = "Name,Mobile,Reason,Updated At\n";
 
-        foreach ($users as $user) {
-            $csvData .= "{$user->name},{$user->mobile},{$user->restriction_reason},{$user->updated_at}\n";
+            foreach ($users as $user) {
+                $csvData .= "{$user->name},{$user->mobile},{$user->restriction_reason},{$user->updated_at}\n";
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $csvData,
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error exporting blocked users', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to export blocked users',
+            ], 500);
         }
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $csvData
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Error exporting blocked users', ['error' => $e->getMessage()]);
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Failed to export blocked users'
-        ], 500);
     }
-}
 }

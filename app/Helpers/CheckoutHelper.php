@@ -7,13 +7,13 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * CheckoutHelper - Manages checkout data using cache instead of sessions
- * 
+ *
  * This approach:
  * - Reduces database load (billing data not stored until payment succeeds)
  * - Reduces server load (cache is faster than DB, no session overhead)
  * - Enables horizontal scaling (no server-side session state)
  * - Maintains security (payment amounts always validated from DB)
- * 
+ *
  * Architecture:
  * 1. Order data → Database (source of truth for amounts)
  * 2. Billing info → Cache (temporary, 1 hour TTL)
@@ -39,148 +39,151 @@ class CheckoutHelper
 
     /**
      * Store billing information in cache
-     * 
-     * @param int $orderId The order ID (unique identifier)
-     * @param array $billingData Billing information
-     * @return bool
+     *
+     * @param  int  $orderId  The order ID (unique identifier)
+     * @param  array  $billingData  Billing information
      */
     public static function storeBillingData(int $orderId, array $billingData): bool
     {
         try {
-            $cacheKey = self::BILLING_CACHE_PREFIX . $orderId;
-            
+            $cacheKey = self::BILLING_CACHE_PREFIX.$orderId;
+
             // Sanitize and validate data
             $sanitizedData = self::sanitizeBillingData($billingData);
-            
+
             // Store in cache with TTL
             Cache::put($cacheKey, $sanitizedData, self::CACHE_TTL);
-            
+
             Log::info('Billing data cached', [
                 'order_id' => $orderId,
                 'cache_key' => $cacheKey,
                 'ttl' => self::CACHE_TTL,
             ]);
-            
+
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to cache billing data', [
                 'order_id' => $orderId,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
 
     /**
      * Retrieve billing information from cache
-     * 
-     * @param int $orderId The order ID
+     *
+     * @param  int  $orderId  The order ID
      * @return array|null Billing data or null if not found/expired
      */
     public static function getBillingData(int $orderId): ?array
     {
         try {
-            $cacheKey = self::BILLING_CACHE_PREFIX . $orderId;
+            $cacheKey = self::BILLING_CACHE_PREFIX.$orderId;
             $data = Cache::get($cacheKey);
-            
+
             if ($data) {
                 Log::info('Billing data retrieved from cache', [
                     'order_id' => $orderId,
                     'cache_key' => $cacheKey,
                 ]);
             }
-            
+
             return $data;
         } catch (\Exception $e) {
             Log::error('Failed to retrieve billing data from cache', [
                 'order_id' => $orderId,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
 
     /**
      * Store checkout metadata (discount codes, applied coupons, etc.)
-     * 
-     * @param int $orderId The order ID
-     * @param array $metadata Checkout metadata
-     * @return bool
+     *
+     * @param  int  $orderId  The order ID
+     * @param  array  $metadata  Checkout metadata
      */
     public static function storeCheckoutMetadata(int $orderId, array $metadata): bool
     {
         try {
-            $cacheKey = self::CHECKOUT_CACHE_PREFIX . $orderId;
+            $cacheKey = self::CHECKOUT_CACHE_PREFIX.$orderId;
             Cache::put($cacheKey, $metadata, self::CACHE_TTL);
-            
+
             Log::info('Checkout metadata cached', [
                 'order_id' => $orderId,
                 'metadata_keys' => array_keys($metadata),
             ]);
-            
+
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to cache checkout metadata', [
                 'order_id' => $orderId,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
 
     /**
      * Retrieve checkout metadata from cache
-     * 
-     * @param int $orderId The order ID
+     *
+     * @param  int  $orderId  The order ID
      * @return array|null Metadata or null if not found/expired
      */
     public static function getCheckoutMetadata(int $orderId): ?array
     {
         try {
-            $cacheKey = self::CHECKOUT_CACHE_PREFIX . $orderId;
+            $cacheKey = self::CHECKOUT_CACHE_PREFIX.$orderId;
+
             return Cache::get($cacheKey);
         } catch (\Exception $e) {
             Log::error('Failed to retrieve checkout metadata', [
                 'order_id' => $orderId,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
 
     /**
      * Clear all cached data for an order (call after successful payment)
-     * 
-     * @param int $orderId The order ID
-     * @return bool
+     *
+     * @param  int  $orderId  The order ID
      */
     public static function clearOrderCache(int $orderId): bool
     {
         try {
-            $billingKey = self::BILLING_CACHE_PREFIX . $orderId;
-            $metadataKey = self::CHECKOUT_CACHE_PREFIX . $orderId;
-            
+            $billingKey = self::BILLING_CACHE_PREFIX.$orderId;
+            $metadataKey = self::CHECKOUT_CACHE_PREFIX.$orderId;
+
             Cache::forget($billingKey);
             Cache::forget($metadataKey);
-            
+
             Log::info('Order cache cleared', [
                 'order_id' => $orderId,
             ]);
-            
+
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to clear order cache', [
                 'order_id' => $orderId,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
 
     /**
      * Sanitize billing data to prevent XSS and ensure data integrity
-     * 
-     * @param array $data Raw billing data
+     *
+     * @param  array  $data  Raw billing data
      * @return array Sanitized data
      */
     private static function sanitizeBillingData(array $data): array
@@ -202,7 +205,7 @@ class CheckoutHelper
 
     /**
      * Get cache statistics for monitoring
-     * 
+     *
      * @return array Cache stats
      */
     public static function getCacheStats(): array

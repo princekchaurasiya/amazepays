@@ -37,4 +37,3 @@ class ReconcileProcessingOrders extends Command
         return self::SUCCESS;
     }
 }
-

@@ -45,7 +45,7 @@ class TenantController extends Controller
         $tenant = Tenant::create($validated);
         audit('tenant.created', $tenant);
 
-        return redirect()->route('admin.tenants.show', $tenant)
+        return redirect()->route('panel.tenants.show', $tenant)
             ->with('success', "Tenant {$tenant->name} created.");
     }
 

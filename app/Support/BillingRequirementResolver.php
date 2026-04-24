@@ -43,8 +43,8 @@ class BillingRequirementResolver
             ];
         }
 
-        // UPI/Unlimit + Woohoo flow requires full shipping/billing details.
-        if (in_array($payment, ['upi', 'unlimit'], true) && $provider === 'woohoo') {
+        // UPI/Unlimit/Razorpay + Woohoo flow requires full shipping/billing details.
+        if (in_array($payment, ['upi', 'unlimit', 'razorpay'], true) && $provider === 'woohoo') {
             return [
                 'billing_name',
                 'billing_email',
@@ -89,4 +89,3 @@ class BillingRequirementResolver
         ));
     }
 }
-

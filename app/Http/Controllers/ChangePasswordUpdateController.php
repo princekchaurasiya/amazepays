@@ -20,7 +20,7 @@ class ChangePasswordUpdateController extends Controller
         $user = Auth::user();
 
         // Check if the current password is correct
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             return redirect()
                 ->back()
                 ->with('error', 'Current password is incorrect.');

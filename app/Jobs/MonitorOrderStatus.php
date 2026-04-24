@@ -3,9 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\KGenOrder;
-use Exception;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -15,8 +13,11 @@ use Illuminate\Support\Facades\Log;
 class MonitorOrderStatus implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
     protected int|string $orderID;
+
     protected int $maxAttempts;
+
     protected int $pollInterval; // in seconds
 
     /**
@@ -33,8 +34,6 @@ class MonitorOrderStatus implements ShouldQueue
 
     /**
      * Execute the job.
-     *
-     * @return void
      */
     public function handle(): void
     {
@@ -47,20 +46,23 @@ class MonitorOrderStatus implements ShouldQueue
 
             if (! $order) {
                 Log::error("Order not found: {$this->orderID}");
+
                 return;
             }
 
             Log::info("Order {$this->orderID} status: {$order->status}/{$order->fulfillment_status}");
 
             // ✅ Terminal success state
-            if ($order->status === "COMPLETED" && $order->fulfillment_status === "FULFILLED") {
+            if ($order->status === 'COMPLETED' && $order->fulfillment_status === 'FULFILLED') {
                 Log::info("Order {$this->orderID} completed successfully!");
+
                 return;
             }
 
             // ❌ Terminal failure states
-            if (in_array($order->status, ["FAILED", "CANCELLED"])) {
+            if (in_array($order->status, ['FAILED', 'CANCELLED'])) {
                 Log::error("Order {$this->orderID} failed: {$order->fulfillment_status}");
+
                 return;
             }
 

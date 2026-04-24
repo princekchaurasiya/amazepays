@@ -593,16 +593,16 @@ See full column listing in [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md#33-offers--pr
 
 ## 9. KGen / EVC Domain
 
-### `k_gen_orders`
+### `kgen_voucher_orders`
 
 **Relationships:**
-- `k_gen_orders.user_id → users.id` (N:1)
+- `kgen_voucher_orders.user_id → users.id` (N:1)
 
 ### `kgen_products`
 
 Standalone table, no foreign keys. Synced from KGen API.
 
-### `evc_statuses`, `evc_card_items`, `evc_requests`
+### `evc_statuses`, `evc_card_items`, `value_design_evc_requests`
 
 Loosely coupled via `order_id` (string match, no FK constraint).
 

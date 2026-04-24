@@ -294,9 +294,9 @@ class NormalizedProduct
 
 ### Existing Implementation
 
-- **Controller:** `app/Http/Controllers/KGenOrderController.php`
-- **Commands:** `FetchKGenWalletBalance`
-- **Model:** `KGenOrder`, `KgenProduct`, `KGenWalletBalance`
+- **Controller:** `app/Http/Controllers/Voucher/KGenOrderController.php`
+- **Commands:** `FetchKGenWalletBalance` (`fetch:kgen-distributor-wallet-balance`)
+- **Model:** `KGenOrder`, `KgenProduct`, `KGenWalletBalance` (legacy models pending rename to new tables)
 - **Job:** `MonitorOrderStatus`
 
 ### Authentication
@@ -318,10 +318,10 @@ API key in request header.
 
 ### Existing Implementation
 
-- **Service:** `VDWebApiService`, `VDHomeService`
-- **Controller:** `VDWebController`, `VDPaymentController`
-- **Commands:** Store sync, wallet balance check
-- **Related tables:** `brands`, `store_details`, `evc_requests`, `evc_statuses`, `evc_card_items`
+- **Service:** `ValueDesignApiClient` (canonical), with legacy adapters `VDWebApiService`, `VDHomeService`, `ValueDesignService`
+- **Controller:** `Voucher\\ValueDesignStorefrontController`, `Voucher\\ValueDesignCheckoutController`, `Voucher\\ValueDesignEvcRequestController`
+- **Commands:** `fetch:value-design-brands`, `fetch:value-design-wallet-balance`
+- **Related tables:** `brands`, `store_details`, `value_design_evc_requests`, `evc_statuses`, `evc_card_items`
 
 ---
 
@@ -329,9 +329,9 @@ API key in request header.
 
 ### Existing Implementation
 
-- **Service:** `app/Http/Services/AthenaGiftCardService.php`
-- **Controller:** `AthenaGiftCardController`
-- **Base URL:** `https://stagedistapi.lysto.io/api/v1`
+- **Service:** `app/Services/Voucher/Distributor/Lysto/LystoApiClient.php` (canonical), `app/Http/Services/AthenaGiftCardService.php` (legacy adapter)
+- **Controller:** `app/Http/Controllers/Admin/Voucher/LystoGiftCardController.php`
+- **Base URL:** `https://stagedistapi.lysto.io/api/v1` (UAT) / `https://rewards.lysto.io/api/v1` (Prod)
 
 ### Authentication
 

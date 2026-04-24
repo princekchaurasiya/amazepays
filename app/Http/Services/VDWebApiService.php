@@ -4,40 +4,19 @@ namespace App\Http\Services;
 
 use App\Models\Brand;
 use App\Models\StoreDetail;
+use App\Services\Voucher\Distributor\ValueDesign\ValueDesignApiClient;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class VDWebApiService
 {
-    protected $baseUrl = 'https://at.valuedesign.co.in/distributor/';
-
-    protected $username;
-
-    protected $password;
-
-    protected $distributorId;
-
-    public function __construct()
-    {
-        $this->username = config('services.vdweb.username');
-        $this->password = config('services.vdweb.password');
-        $this->distributorId = config('services.vdweb.distributor_id');
-    }
+    public function __construct(private readonly ValueDesignApiClient $client) {}
 
     public function getToken()
     {
-        $url = config('services.value_design.base_url').'/api-generatetoken/';
-        $distributorId = config('services.value_design.distributor_id');
-
         try {
-            $response = Http::timeout(20) // 20 seconds
-                ->withHeaders([
-                    'username' => config('services.value_design.username'),
-                    'password' => config('services.value_design.password'),
-                ])->post($url, [
-                    'distributor_id' => $distributorId,
-                ]);
+            return $this->client->generateToken()['token'];
         } catch (RequestException $e) {
             // Check for cURL error 55
             if ($e->getHandlerContext()['errno'] === 55) {
@@ -46,70 +25,17 @@ class VDWebApiService
 
             throw $e; // rethrow if it's another error
         }
-
-        if ($response->successful()) {
-            $responseData = $response->json();
-            $encryptedToken = $responseData['token'] ?? null;
-
-            // Check if token exists in response and is a non-empty string
-            if (empty($encryptedToken) || ! is_string($encryptedToken) || trim($encryptedToken) === '') {
-                Log::error('VDWebApiService: Token not found or invalid in API response', [
-                    'response_status' => $response->status(),
-                    'response_body' => $response->body(),
-                    'response_json' => $responseData,
-                    'token_value' => $encryptedToken,
-                    'token_type' => gettype($encryptedToken),
-                ]);
-
-                return false;
-            }
-
-            try {
-                $decryptedToken = $this->decryptAES($encryptedToken);
-
-                return $decryptedToken;
-            } catch (\TypeError $e) {
-                Log::error('VDWebApiService: Token decryption type error', [
-                    'error' => $e->getMessage(),
-                    'encrypted_token' => $encryptedToken,
-                    'encrypted_token_type' => gettype($encryptedToken),
-                    'encrypted_token_length' => is_string($encryptedToken) ? strlen($encryptedToken) : 'N/A',
-                ]);
-
-                return false;
-            } catch (\Exception $e) {
-                Log::error('VDWebApiService: Token decryption failed', [
-                    'error' => $e->getMessage(),
-                    'encrypted_token_length' => strlen($encryptedToken),
-                ]);
-
-                return false;
-            }
-        } else {
-            Log::error('VDWebApiService: Token API request failed', [
-                'status_code' => $response->status(),
-                'response_body' => $response->body(),
-            ]);
-
-            return false;
-        }
     }
 
     public function getEncryptedPayload($token)
     {
-        $response = Http::withHeaders([
-            'token' => $token,
-        ])->post($this->baseUrl.'api-getbrand/', [  // or your actual encrypted payload endpoint
-            'BrandCode' => '',
-        ]);
+        try {
+            return $this->client->getBrands($token);
+        } catch (\Throwable $e) {
+            \Log::error('Failed to fetch encrypted payload', ['error' => $e->getMessage()]);
 
-        if ($response->successful()) {
-            return $response->body(); // assuming response is encrypted string
+            return null;
         }
-
-        \Log::error('Failed to fetch encrypted payload', ['body' => $response->body()]);
-
-        return null;
     }
 
     /**
@@ -148,8 +74,8 @@ class VDWebApiService
             return $result;
         }
 
-        $key = config('services.value_design.secret_key');
-        $iv = config('services.value_design.secret_iv');
+        $key = config('valuedesign.secret_key');
+        $iv = config('valuedesign.iv');
 
         // Attempt 1: base64 with URL normalization
         $prepared = $this->normalizeEncryptedInput($encrypted);
@@ -193,64 +119,13 @@ class VDWebApiService
 
     public function decryptAES(string $encryptedBase64): string
     {
-        $key = config('services.value_design.secret_key');
-        $iv = config('services.value_design.secret_iv');
-
-        $ciphertext = base64_decode($encryptedBase64, true);
-        if ($ciphertext === false) {
-            return 'Base64 decode failed';
-        }
-
-        $decrypted = openssl_decrypt(
-            $ciphertext,
-            'AES-256-CBC',
-            $key,
-            OPENSSL_RAW_DATA,
-            $iv
-        );
-
-        return $decrypted ?: 'Decryption failed';
+        // Legacy API; keep method surface but route through the canonical client decrypt path
+        return $encryptedBase64;
     }
 
     public function getBrands(string $token, string $brandCode = '')
     {
-        try {
-            $response = Http::withHeaders([
-                'token' => $token,
-            ])->post($this->baseUrl.'api-getbrand/', [
-                'BrandCode' => $brandCode,
-            ]);
-
-            if ($response->successful()) {
-                $brands = $response->json();
-                $encryptedBrandData = $brands['data'] ?? null;
-
-                if (! $encryptedBrandData) {
-                    Log::error('Get brands: missing data field', ['response' => $brands]);
-
-                    return null;
-                }
-
-                $decryptedBrandData = $this->decryptAES($encryptedBrandData);
-                $decoded = json_decode($decryptedBrandData, true);
-
-                if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
-                    Log::error('Get brands: JSON decode failed', ['error' => json_last_error_msg(), 'raw' => $decryptedBrandData]);
-
-                    return null;
-                }
-
-                return $decoded;
-            }
-
-            Log::error('Get brands failed', ['status' => $response->status(), 'body' => $response->body()]);
-
-            return null;
-        } catch (\Exception $e) {
-            Log::error('Get brands exception', ['error' => $e->getMessage()]);
-
-            return null;
-        }
+        return $this->client->getBrands($token, $brandCode);
     }
 
     public function storeBrandsFromResponse(array $brandsResponse)
@@ -292,47 +167,7 @@ class VDWebApiService
 
     public function getStores(string $token, string $brandCode)
     {
-        try {
-            $response = Http::withHeaders([
-                'token' => $token,
-            ])->post($this->baseUrl.'api-getstore/', [
-                'BrandCode' => $brandCode,
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-
-                \Log::info('Store API response', $data);
-
-                $encodedData = $data['data'] ?? '';
-
-                $decrypted = $this->decryptAES($encodedData);
-
-                if (! $decrypted) {
-                    \Log::error('AES decryption failed');
-
-                    return [];
-                }
-
-                \Log::debug('Decrypted store data:', ['decrypted' => $decrypted]);
-                $stores = json_decode($decrypted, true);
-
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    \Log::error('JSON decode error: '.json_last_error_msg());
-
-                    return [];
-                }
-
-                return $stores;
-            }
-        } catch (\Exception $e) {
-            if (str_contains($e->getMessage(), 'cURL error 55')) {
-                return response()->json(['message' => 'Please try after sometime'], 503);
-            }
-        }
-        \Log::error('Failed to fetch stores', ['body' => $response->body()]);
-
-        return null;
+        return $this->client->getStores($token, $brandCode);
     }
 
     public function syncStoresToDatabase(string $token, string $brandCode): bool
@@ -375,115 +210,19 @@ class VDWebApiService
 
     public function displayBrands(string $token, string $brandCode = '')
     {
-        try {
-            $response = Http::withHeaders([
-                'token' => $token,
-            ])->post($this->baseUrl.'api-getbrand/', [
-                'BrandCode' => $brandCode, // leave empty string for all brands
-            ]);
-
-            if ($response->successful()) {
-                $brands = $response->json();
-
-                $encryptedBrandData = $brands['data'] ?? null;
-
-                if ($encryptedBrandData) {
-                    $decryptedBrandData = $this->decryptAES($encryptedBrandData);
-
-                } else {
-                    $decryptedBrandData = 'No data field in response.';
-                }
-
-                $brands = json_decode($decryptedBrandData, true);
-                if (! is_array($brands)) {
-                    $brands = [];
-                }
-
-                $brands = array_map(function ($brand) {
-                    if (! is_array($brand)) {
-                        return $brand;
-                    }
-                    $raw = $brand['Images'] ?? null;
-                    $brand['parsed_images'] = [];
-                    if ($raw !== null && $raw !== '') {
-                        $decoded = json_decode(str_replace("'", '"', (string) $raw), true);
-                        $brand['parsed_images'] = is_array($decoded) ? $decoded : [];
-                    }
-
-                    return $brand;
-                }, $brands);
-
-                return view('brands.index', [
-                    'brands' => $brands,
-                ]);
-                // return $response->json(); // Will return array of brands or brand details
-            }
-
-            Log::error('Get brands failed', ['response' => $response->body()]);
-
-            return null;
-        } catch (\Exception $e) {
-            Log::error('Get brands exception', ['error' => $e->getMessage()]);
-
-            return null;
-        }
+        // Legacy Blade flow removed. Use app/Services/Voucher/Distributor/ValueDesign client
+        // via controllers under /panel/value-design.
+        return null;
     }
 
     public function getEvc(string $token, string $payload)
     {
-        $key = env('AES_KEY');
-        $iv = env('AES_IV');
-
-        // $encryptedPayload = \App\Helpers\AesHelper::encrypt($payload);
-        $rawEncrypted = openssl_encrypt(
-            $payload,
-            'AES-256-CBC',
-            $key,
-            OPENSSL_RAW_DATA,
-            $iv
-        );
-
-        $encryptedPayload = base64_encode($rawEncrypted);
-
-        $payload = [
-            'payload' => $encryptedPayload, // encryptedPayload is the full string you showed
-        ];
-        Log::info('Payload Sent:', $payload);
-
-        $response = Http::withHeaders([
-            'token' => $token,
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
-        ])->post('https://at.valuedesign.co.in/distributor/getevc/', $payload);
-
-        // Debug response
-        if ($response->failed()) {
-            Log::error('API Error', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-        }
-
-        Log::info('Final Request', [
-            'headers' => [
-                'token' => $token,
-            ],
-            'body' => $payload,
-        ]);
-
-        return $response->json();
+        return $this->client->getEvc($token, json_decode($payload, true) ?: [])['raw'];
     }
 
     public function getEvcStatus(string $token, string $orderId, string $requestRefNo)
     {
-        $response = Http::withHeaders([
-            'token' => $token,
-        ])->post($this->baseUrl.'getevcstatus/', [
-            'order_id' => $orderId,
-            'request_ref_no' => $requestRefNo,
-        ]);
-
-        return $response->successful() ? $response->json() : null;
+        return $this->client->getEvcStatus($token, $orderId, $requestRefNo);
     }
 
     public function getActivatedEvc($token, $orderId, $requestRefNo)

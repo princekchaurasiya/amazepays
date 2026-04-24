@@ -31,7 +31,7 @@ class ProfileController extends Controller
                 'billing_zip',
                 'billing_country',
             ];
-            $unknown = array_values(array_diff(array_keys($request->all()), $allowed));
+            $unknown = array_values(array_diff($request->keys(), $allowed));
             if ($unknown !== []) {
                 return redirect()->back()->withErrors([
                     'unexpected_fields' => 'Unexpected input fields detected: '.implode(', ', $unknown),

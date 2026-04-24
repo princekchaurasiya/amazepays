@@ -32,11 +32,11 @@ class RequireTwoFactor
                 return response()->json([
                     'error' => '2FA_REQUIRED',
                     'message' => 'Two-factor authentication must be enabled for your account.',
-                    'setup_url' => route('admin.2fa.setup'),
+                    'setup_url' => route('panel.2fa.setup'),
                 ], Response::HTTP_FORBIDDEN);
             }
 
-            return redirect()->route('admin.2fa.setup')
+            return redirect()->route('panel.2fa.setup')
                 ->with('warning', 'Please enable Two-Factor Authentication to continue.');
         }
 
@@ -49,7 +49,7 @@ class RequireTwoFactor
                 ], Response::HTTP_FORBIDDEN);
             }
 
-            return redirect()->route('admin.2fa.challenge');
+            return redirect()->route('panel.2fa.challenge');
         }
 
         return $next($request);

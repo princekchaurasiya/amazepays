@@ -16,7 +16,7 @@
                     );
                 @endphp
 
-                <form action="{{ route('checkoutPage', ['slug' => $productDetails['url']]) }}" method="POST"
+                <form action="{{ route('checkoutPage.post', ['slug' => $productDetails['url']]) }}" method="POST"
                     id="giftCardPageForm">
                     {{ csrf_field() }}
                     <div>
@@ -342,7 +342,7 @@
                     // AJAX POST request to save data to the session
                     $.ajax({
                         type: 'POST',
-                        url: '{{ route('save-gift-card-form') }}',
+                        url: '{{ route('checkout.session.gift_draft.save') }}',
                         data: formData,
                         headers: {
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

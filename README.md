@@ -32,13 +32,30 @@ In each terminal:
 cp .env.example .env
 composer install
 php artisan key:generate
-php artisan migrate
-php artisan db:seed
+php artisan migrate:fresh --seed
 npm install && npm run dev
 php artisan serve
 ```
 
 Horizon declares `ext-pcntl` / `ext-posix` (Unix-only). Composer `platform` stubs are configured for Windows development. Run queue workers on Linux/WSL/Docker in production.
+
+## Database Baseline (Phase 3)
+
+We maintain a **fresh, domain-grouped migration baseline** in `database/migrations/` and keep historical/legacy migrations in `database/migrations_archive/`.
+
+- **Reset + seed (recommended for local dev)**:
+
+```powershell
+php artisan migrate:fresh --seed
+```
+
+- **Run guard tests (schema discipline)**:
+
+```powershell
+php artisan test
+```
+
+See `[docs/DATABASE_BASELINE.md](docs/DATABASE_BASELINE.md)` for the baseline table list, cross-domain FK wiring, and cascade rules.
 
 ## Project Structure
 

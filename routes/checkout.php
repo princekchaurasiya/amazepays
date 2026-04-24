@@ -1,13 +1,13 @@
 <?php
 
 use App\Http\Controllers\BillingController;
-use App\Http\Controllers\ProductPageController;
-use App\Http\Controllers\Storefront\CheckoutController;
+use App\Http\Controllers\Storefront\CheckoutSessionController;
+use App\Http\Controllers\Storefront\StorefrontProductController;
 use App\Http\Controllers\UnlimitController;
-use App\Http\Controllers\UnlimitPaymentController;
-use App\Http\Controllers\VDPageController;
+use App\Http\Controllers\Voucher\ValueDesignCheckoutController;
 use App\Http\Controllers\WoohooOrderController;
 use App\Http\Controllers\WoohooProcessingController;
+use App\Http\Controllers\Payment\PaymentSessionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,18 +18,20 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth', 'check.transaction'])->group(function () {
-    Route::post('/update-session-data', [ProductPageController::class, 'updateSessionData'])->name('updateSessionData');
+    Route::post('/checkout/session/billing', [CheckoutSessionController::class, 'updateBillingDetails'])
+        ->name('checkout.session.billing.update');
 
-    Route::get('/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage');
-    Route::post('/checkout/{slug}', [ProductPageController::class, 'storePayNowData'])->name('checkoutPage.post');
+    Route::get('/checkout/{slug}', [StorefrontProductController::class, 'showCheckout'])->name('checkoutPage');
+    Route::post('/checkout/{slug}', [CheckoutSessionController::class, 'submitCheckout'])->name('checkoutPage.post');
 
-    Route::get('/cart', [ProductPageController::class, 'showCart'])->name('storefront.cart');
-    Route::post('/cart/remove', [ProductPageController::class, 'removeFromCart'])->name('storefront.cart.remove');
-    Route::post('/cart/clear', [ProductPageController::class, 'clearCart'])->name('storefront.cart.clear');
-    Route::post('/cart/{slug}', [ProductPageController::class, 'addToCart'])->name('storefront.cart.add');
+    Route::get('/cart', [StorefrontProductController::class, 'showCart'])->name('storefront.cart');
+    Route::post('/cart/remove', [CheckoutSessionController::class, 'removeFromCart'])->name('storefront.cart.remove');
+    Route::post('/cart/clear', [CheckoutSessionController::class, 'clearCart'])->name('storefront.cart.clear');
+    Route::post('/cart/{slug}', [CheckoutSessionController::class, 'addToCart'])->name('storefront.cart.add');
 
-    Route::post('/payment-process', [UnlimitPaymentController::class, 'store'])->name('unlimit.store');
-    Route::post('/save-gift-card-form', [CheckoutController::class, 'saveGiftCardForm'])->name('save-gift-card-form');
+    Route::post('/payment-process', [PaymentSessionController::class, 'unlimit'])->name('unlimit.store');
+    Route::post('/checkout/session/gift-draft', [CheckoutSessionController::class, 'saveGiftCheckoutDraft'])
+        ->name('checkout.session.gift_draft.save');
 
     Route::post('/store-billing-data', [BillingController::class, 'store'])->name('storeBillingData');
 
@@ -42,8 +44,9 @@ Route::middleware(['auth', 'check.transaction'])->group(function () {
     Route::post('/woohoo/processing/create-order', [WoohooProcessingController::class, 'createOrder'])->name('woohoo.processing.createOrder.post');
     Route::get('/woohoo/process', [WoohooProcessingController::class, 'createOrder'])->name('woohoo.process');
 
-    Route::post('/vd-update-session-data', [VDPageController::class, 'updateSessionData'])->name('vdupdateSessionData');
-    Route::match(['get', 'post'], '/vd-checkout', [VDPageController::class, 'storePayNowData'])->name('vdcheckoutPage');
+    Route::post('/vd/checkout/session', [ValueDesignCheckoutController::class, 'updateSession'])
+        ->name('vd.checkout.session.update');
+    Route::post('/vd-checkout', [ValueDesignCheckoutController::class, 'submit'])->name('vdcheckoutPage');
 });
 
 Route::middleware('auth')->group(function () {

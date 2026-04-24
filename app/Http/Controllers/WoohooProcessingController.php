@@ -2,29 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ApiToken;
-use App\Models\Billing;
 use App\Models\Order;
 use App\Models\OrderSummary;
-use App\Models\UnlimitPayment;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\Order\OrderNotificationService;
 use App\Services\Order\WoohooFulfillmentService;
-use Carbon\Carbon;
+use App\Services\Payment\PaymentService;
 use Exception;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class WoohooProcessingController extends Controller
 {
+    /**
+     * Maps legacy return-url statuses to consolidated payment status.
+     */
+    private const RETURN_STATUS_TO_PAYMENT_STATUS = [
+        'success' => 'captured',
+        'completed' => 'captured',
+        'approved' => 'captured',
+        'confirmed' => 'captured',
+        'paid' => 'captured',
+        'failed' => 'failed',
+        'declined' => 'failed',
+        'cancelled' => 'cancelled',
+    ];
+
     public function __construct(
         private WoohooFulfillmentService $woohooFulfillment,
         private OrderNotificationService $orderNotifications,
+        private PaymentService $payments,
     ) {}
 
     public function handleReturn(Request $request)
@@ -50,7 +61,7 @@ class WoohooProcessingController extends Controller
                 'session_merchant_order_id' => session('merchant_order_id'),
             ]);
 
-            return 'Invalid return data. Missing merchant order ID.';
+            return __('payments.invalid_return_missing_merchant_order_id');
         }
 
         // SECURITY: Normalize status (handle "Confirmed", "CONFIRMED", "confirmed", etc.)
@@ -78,7 +89,10 @@ class WoohooProcessingController extends Controller
         ]);
 
         // SECURITY: Fetch payment from DB and verify ownership if user is authenticated
-        $payment = UnlimitPayment::where('merchant_order_id', $merchantOrderId)->first();
+        $payment = Payment::query()
+            ->where('gateway', 'unlimit')
+            ->where('merchant_order_id', $merchantOrderId)
+            ->first();
 
         if (! $payment) {
             Log::error('❌ No payment found for merchant_order_id (return)', [
@@ -86,7 +100,7 @@ class WoohooProcessingController extends Controller
                 'ip_address' => $request->ip(),
             ]);
 
-            return 'Unable to verify payment. Please contact support.';
+            return __('payments.unable_verify_payment_contact_support');
         }
 
         // SECURITY: If user is authenticated, verify they own this payment
@@ -104,7 +118,7 @@ class WoohooProcessingController extends Controller
                 ]);
 
                 // Don't reveal that payment exists, just show generic error
-                return 'Unable to verify payment. Please contact support.';
+                return __('payments.unable_verify_payment_contact_support');
             }
         }
 
@@ -112,7 +126,14 @@ class WoohooProcessingController extends Controller
         try {
             DB::beginTransaction();
 
-            $payment->payment_status = $status;
+            $newPaymentStatus = self::RETURN_STATUS_TO_PAYMENT_STATUS[$status] ?? 'pending';
+            $payment->status = $newPaymentStatus;
+            if ($newPaymentStatus === 'captured' && $payment->captured_at === null) {
+                $payment->captured_at = now();
+            }
+            if ($newPaymentStatus === 'failed' && $payment->failed_at === null) {
+                $payment->failed_at = now();
+            }
             $payment->save();
 
             // Also update OrderSummary payment_status
@@ -183,7 +204,7 @@ class WoohooProcessingController extends Controller
             Log::info('✅ Payment status updated', [
                 'payment_id' => $payment->id,
                 'merchant_order_id' => $merchantOrderId,
-                'status' => $status,
+                'status' => $payment->status,
                 'raw_status' => $rawStatus,
             ]);
         } catch (Exception $e) {
@@ -194,7 +215,7 @@ class WoohooProcessingController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return 'Failed to update payment status. Please contact support.';
+            return __('payments.failed_update_payment_status_contact_support');
         }
 
         // SECURITY: Re-authenticate user if they're logged out (session might be lost after external redirect)
@@ -285,19 +306,24 @@ class WoohooProcessingController extends Controller
             // 1️⃣ Find payment by merchant_order_id (more reliable than auth()->id())
             $payment = null;
             if ($merchantOrderId) {
-                $payment = UnlimitPayment::where('merchant_order_id', $merchantOrderId)->first();
+                $payment = Payment::query()
+                    ->where('gateway', 'unlimit')
+                    ->where('merchant_order_id', $merchantOrderId)
+                    ->first();
             }
 
             // Fallback: If no merchant_order_id, try to find by user_id (if authenticated)
             if (! $payment && Auth::check()) {
-                $payment = UnlimitPayment::where('user_id', Auth::id())
-                    ->orderBy('id', 'DESC')
+                $payment = Payment::query()
+                    ->where('gateway', 'unlimit')
+                    ->where('user_id', Auth::id())
+                    ->orderByDesc('id')
                     ->first();
             }
 
             if (! $payment) {
                 return redirect()->route('my-order')
-                    ->with('error', 'No payment found. Please contact support.');
+                    ->with('error', __('payments.payment_not_found_contact_support'));
             }
 
             // Re-authenticate user if logged out
@@ -326,13 +352,13 @@ class WoohooProcessingController extends Controller
 
             // Refresh payment from database to get latest status (in case it was updated by handleReturn)
             $payment->refresh();
-            $status = strtolower(trim($payment->payment_status ?? 'pending'));
+            $status = strtolower(trim((string) ($payment->status ?? 'pending')));
 
             Log::info('Processing Woohoo order creation', [
                 'merchant_order_id' => $merchantOrderId,
                 'status' => $status,
                 'payment_id' => $payment->id,
-                'payment_status_before_refresh' => $payment->getOriginal('payment_status') ?? 'N/A',
+                'payment_status_before_refresh' => $payment->getOriginal('status') ?? 'N/A',
             ]);
 
             // SECURITY: If status is still pending, try to get status from request parameters first
@@ -351,14 +377,14 @@ class WoohooProcessingController extends Controller
                     ];
 
                     if (isset($statusMap[$rawStatus])) {
-                        $status = $statusMap[$rawStatus];
-                        $payment->payment_status = $status;
+                        $normalized = $statusMap[$rawStatus];
+                        $payment->status = self::RETURN_STATUS_TO_PAYMENT_STATUS[$normalized] ?? 'pending';
                         $payment->save();
 
                         Log::info('✅ Payment status updated from request parameter', [
                             'merchant_order_id' => $merchantOrderId,
                             'raw_status' => $rawStatus,
-                            'normalized_status' => $status,
+                            'normalized_status' => $payment->status,
                         ]);
                     }
                 }
@@ -373,13 +399,12 @@ class WoohooProcessingController extends Controller
                 $verifiedStatus = $this->verifyPaymentStatusWithGateway($merchantOrderId, $payment);
 
                 if ($verifiedStatus) {
-                    $status = $verifiedStatus;
-                    $payment->payment_status = $status;
+                    $payment->status = self::RETURN_STATUS_TO_PAYMENT_STATUS[$verifiedStatus] ?? 'pending';
                     $payment->save();
 
                     Log::info('✅ Payment status verified and updated from gateway', [
                         'merchant_order_id' => $merchantOrderId,
-                        'verified_status' => $status,
+                        'verified_status' => $payment->status,
                     ]);
                 }
             }
@@ -393,20 +418,21 @@ class WoohooProcessingController extends Controller
                 Log::error('Order not found', ['merchant_order_id' => $merchantOrderId]);
 
                 return redirect()->route('my-order')
-                    ->with('error', 'Order not found. Please contact support.');
+                    ->with('error', __('payments.order_not_found_contact_support'));
             }
 
             // 3️⃣ Check status - include all success variations
-            $successStatuses = ['completed', 'approved', 'success', 'confirmed', 'paid'];
-            if (! in_array($status, $successStatuses)) {
+            if (! in_array($payment->status, ['captured'], true)) {
                 Log::warning('⚠️ Payment status not successful', [
                     'merchant_order_id' => $merchantOrderId,
-                    'status' => $status,
+                    'status' => $payment->status,
                     'payment_id' => $payment->id,
                 ]);
 
                 return redirect()->route('my-order')
-                    ->with('error', 'Payment not successful. Status: '.ucfirst($status));
+                    ->with('error', __('payments.payment_not_successful_status', [
+                        'status' => ucfirst((string) $payment->status),
+                    ]));
             }
 
             Log::info('🔍 Checking woohoo_order_id before API call', [
@@ -414,11 +440,10 @@ class WoohooProcessingController extends Controller
             ]);
 
             // 4️⃣ Enrich order with billing details (optional, used by Woohoo fulfillment)
-            // Use billing info from payment record (UnlimitPayment has billing fields)
-            if ($payment && ($payment->billing_email || $payment->billing_tel || $payment->billing_name)) {
-                $Order->email = $payment->billing_email ?? null;
-                $Order->mobile = $payment->billing_tel ?? null;
-                $Order->billing_name = $payment->billing_name ?? null;
+            $billing = $Order->billingSnapshot;
+            if ($billing) {
+                $Order->email = $billing->email ?: ($Order->email ?? null);
+                $Order->mobile = $billing->mobile ?: ($Order->mobile ?? null);
             }
 
             Log::info('🔥 Sending Woohoo order request', [
@@ -520,7 +545,7 @@ class WoohooProcessingController extends Controller
             ]);
 
             return redirect()->route('my-order')
-                ->with('error', 'Unexpected error occurred.');
+                ->with('error', __('payments.unexpected_error_occurred'));
         }
     }
 
@@ -529,33 +554,26 @@ class WoohooProcessingController extends Controller
      */
     public function showProcessing(Request $request)
     {
-        /*$paymentReturnData = session('payment_return_data');
-
-         if (!$paymentReturnData) {
-             return redirect()->route('my-order')->with('error', 'No payment data found.');
-        }
-
-         return view('woohoo.processing-woohoo', [
-             'order_id' => $paymentReturnData['order_id'] ?? 'N/A',
-             'status' => $paymentReturnData['status'] ?? 'Processing',
-             'amount' => $paymentReturnData['amount'] ?? 0
-         ]);*/
-
         $merchantOrderId = $request->merchant_order_id;
         if (! $merchantOrderId) {
-            return redirect()->route('my-order')->with('error', 'Missing payment reference.');
+            return redirect()->route('my-order')->with('error', __('payments.missing_payment_reference'));
         }
 
-        $payment = UnlimitPayment::where('merchant_order_id', $merchantOrderId)->first();
+        $payment = Payment::query()
+            ->where('gateway', 'unlimit')
+            ->where('merchant_order_id', $merchantOrderId)
+            ->first();
 
         if (! $payment) {
-            return redirect()->route('my-order')->with('error', 'Payment record not found.');
+            return redirect()->route('my-order')->with('error', __('payments.payment_record_not_found'));
         }
+
+        $amount = $payment->amount_minor ? ((int) $payment->amount_minor) / 100 : 0;
 
         return Inertia::render('Checkout/Processing', [
             'order_id' => $payment->order_id,
-            'status' => $payment->payment_status ?? 'Processing',
-            'amount' => $payment->amount ?? 0,
+            'status' => $payment->status ?? 'Processing',
+            'amount' => $amount,
             'merchant_order_id' => $merchantOrderId ?? $payment->merchant_order_id ?? '',
             'payment_id' => $payment->id ?? 'N/A',
         ]);
@@ -567,198 +585,27 @@ class WoohooProcessingController extends Controller
      */
     private function verifyPaymentStatusWithGateway($merchantOrderId, $payment = null)
     {
-        try {
-            // Get valid token
-            $token = $this->getUnlimitToken();
-            if (! $token) {
-                Log::error('❌ Failed to get token for payment verification');
+        $result = $this->payments->queryStatus('unlimit', (string) $merchantOrderId);
 
-                return null;
-            }
-
-            // Call Unlimit API to check payment status
-            $apiBaseUrl = config('unlimit.api_base_url');
-            $paymentsEndpoint = config('unlimit.endpoints.payments');
-            $apiUrl = rtrim($apiBaseUrl, '/').$paymentsEndpoint;
-
-            $timeout = config('unlimit.timeout', 15);
-            $retryAttempts = config('unlimit.retry_attempts', 2);
-            $retryDelay = config('unlimit.retry_delay', 1000);
-
-            Log::info('🔄 Verifying payment status with Unlimit API', [
-                'api_url' => $apiUrl,
+        if (! $result->success) {
+            Log::warning('Payment status query failed', [
                 'merchant_order_id' => $merchantOrderId,
-                'timeout' => $timeout,
-                'retry_attempts' => $retryAttempts,
-            ]);
-
-            // Unlimit API may require request_id or payment_id instead of merchant_order_id
-            // Since we don't have request_id, try using payment_id if available, otherwise skip API verification
-            $requestParams = [];
-            if ($payment && isset($payment->id)) {
-                // Try using payment ID as request_id
-                $requestParams['request_id'] = (string) $payment->id;
-            } else {
-                // Fallback: use merchant_order_id (may fail if API requires request_id)
-                $requestParams['merchant_order_id'] = $merchantOrderId;
-            }
-
-            $response = Http::timeout($timeout)
-                ->retry($retryAttempts, $retryDelay, function ($exception) {
-                    return $exception instanceof ConnectionException;
-                })
-                ->withHeaders([
-                    'Authorization' => 'Bearer '.$token,
-                    'Content-Type' => 'application/json',
-                ])
-                ->get($apiUrl, $requestParams);
-
-            if ($response->successful()) {
-                $data = $response->json();
-
-                // Log the full response for debugging
-                Log::info('🔍 Unlimit API response structure', [
-                    'merchant_order_id' => $merchantOrderId,
-                    'response_keys' => array_keys($data ?? []),
-                    'has_list' => isset($data['list']),
-                    'list_count' => isset($data['list']) ? count($data['list']) : 0,
-                    'full_response' => $data,
-                ]);
-
-                // Handle array response (list of payments)
-                if (isset($data['list']) && is_array($data['list']) && count($data['list']) > 0) {
-                    $paymentData = $data['list'][0];
-                    $rawStatus = $paymentData['payment_data']['status']
-                        ?? $paymentData['status']
-                        ?? $paymentData['payment_status']
-                        ?? null;
-                } else {
-                    // Try multiple possible response structures
-                    $rawStatus = $data['payment_data']['status']
-                        ?? $data['status']
-                        ?? $data['payment_status']
-                        ?? null;
-                }
-
-                if ($rawStatus) {
-                    $status = strtolower(trim($rawStatus));
-
-                    // Normalize status
-                    $statusMap = [
-                        'confirmed' => 'success',
-                        'complete' => 'completed',
-                        'approve' => 'success',
-                        'approved' => 'success',  // Map approved to success
-                        'successful' => 'success',
-                        'paid' => 'success',
-                    ];
-
-                    if (isset($statusMap[$status])) {
-                        $status = $statusMap[$status];
-                    }
-
-                    Log::info('✅ Payment status verified from gateway', [
-                        'merchant_order_id' => $merchantOrderId,
-                        'raw_status' => $rawStatus,
-                        'normalized_status' => $status,
-                    ]);
-
-                    return $status;
-                }
-            }
-
-            Log::warning('⚠️ Could not verify payment status from gateway', [
-                'merchant_order_id' => $merchantOrderId,
-                'response_status' => $response->status(),
-            ]);
-
-            return null;
-
-        } catch (ConnectionException $e) {
-            Log::error('❌ Connection timeout/error verifying payment status', [
-                'merchant_order_id' => $merchantOrderId,
-                'error' => $e->getMessage(),
-                'timeout' => config('unlimit.timeout', 15),
-            ]);
-
-            return null;
-        } catch (Exception $e) {
-            Log::error('❌ Error verifying payment status with gateway', [
-                'merchant_order_id' => $merchantOrderId,
-                'error' => $e->getMessage(),
+                'error' => $result->error,
             ]);
 
             return null;
         }
+
+        return match ($result->status) {
+            'paid' => 'success',
+            'failed' => 'failed',
+            'cancelled' => 'cancelled',
+            default => 'pending',
+        };
     }
 
     /**
      * Get Unlimit API token (reuse from existing token or get new one)
      */
-    private function getUnlimitToken()
-    {
-        // Try to get valid token from database
-        $token = ApiToken::where('expires_at', '>', now())
-            ->orderBy('created_at', 'desc')
-            ->first();
-
-        if ($token) {
-            return $token->access_token;
-        }
-
-        // Get new token
-        try {
-            $apiBaseUrl = config('unlimit.api_base_url');
-            $authEndpoint = config('unlimit.endpoints.auth_token');
-            $authUrl = rtrim($apiBaseUrl, '/').$authEndpoint;
-            $timeout = config('unlimit.timeout', 15);
-            $retryAttempts = config('unlimit.retry_attempts', 2);
-            $retryDelay = config('unlimit.retry_delay', 1000);
-
-            Log::info('🔄 Requesting new token from Unlimit API', [
-                'api_url' => $authUrl,
-                'timeout' => $timeout,
-                'retry_attempts' => $retryAttempts,
-            ]);
-
-            $response = Http::timeout($timeout)
-                ->retry($retryAttempts, $retryDelay, function ($exception) {
-                    return $exception instanceof ConnectionException;
-                })
-                ->asForm()
-                ->withHeaders([
-                    'Authorization' => 'Basic '.base64_encode(env('UNLIMIT_CODE')),
-                ])
-                ->post($authUrl, [
-                    'grant_type' => 'password',
-                    'password' => env('UNLIMIT_SECRET_KEY'),
-                    'terminal_code' => env('UNLIMIT_PUBLIC_KEY'),
-                ]);
-
-            $data = $response->json();
-
-            if (isset($data['access_token'])) {
-                ApiToken::create([
-                    'access_token' => $data['access_token'],
-                    'expires_at' => isset($data['expires_in'])
-                        ? Carbon::now()->addSeconds($data['expires_in'])
-                        : null,
-                ]);
-
-                return $data['access_token'];
-            }
-        } catch (ConnectionException $e) {
-            Log::error('❌ Connection timeout/error getting Unlimit token', [
-                'error' => $e->getMessage(),
-                'timeout' => config('unlimit.timeout', 15),
-                'url' => $authUrl ?? 'N/A',
-            ]);
-        } catch (Exception $e) {
-            Log::error('❌ Failed to get Unlimit token for verification', [
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        return null;
-    }
+    // getUnlimitToken removed: token + status querying are handled by PaymentService/UnlimitGateway.
 }

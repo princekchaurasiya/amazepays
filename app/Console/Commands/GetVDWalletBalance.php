@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Services\VDWebApiService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Http\Services\VDWebApiService;
 
 class GetVDWalletBalance extends Command
 {
@@ -14,7 +14,7 @@ class GetVDWalletBalance extends Command
      *
      * @var string
      */
-    protected $signature = 'get:vdWalletBalance';
+    protected $signature = 'fetch:value-design-wallet-balance';
 
     /**
      * The console command description.
@@ -46,10 +46,11 @@ class GetVDWalletBalance extends Command
         try {
             $this->info('🔄 Fetching Value Design token...');
             $token = $this->vdWebApiService->getToken();
-            
-            if (!$token) {
+
+            if (! $token) {
                 $this->error('❌ Failed to get Value Design token');
                 Log::error('GetVDWalletBalance: Failed to get token');
+
                 return Command::FAILURE;
             }
 
@@ -57,41 +58,43 @@ class GetVDWalletBalance extends Command
             Log::info('GetVDWalletBalance: Token retrieved', ['token_length' => strlen($token)]);
 
             $this->info('🔄 Fetching wallet balance from Value Design API...');
-            
+
             $response = Http::withHeaders([
-                'token' => $token, 
+                'token' => $token,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])->post('http://cards.vdwebapi.com/distributor/getwalletbalance/', [
                 'distributor_id' => env('DISTRIBUTOR_ID', 'VDIDAmazepay'),
             ]);
 
-            if (!$response->successful()) {
-                $this->error('❌ Failed to fetch wallet balance. Status Code: ' . $response->status());
+            if (! $response->successful()) {
+                $this->error('❌ Failed to fetch wallet balance. Status Code: '.$response->status());
                 Log::error('GetVDWalletBalance: API request failed', [
                     'status_code' => $response->status(),
-                    'response_body' => $response->body()
+                    'response_body' => $response->body(),
                 ]);
+
                 return Command::FAILURE;
             }
 
             $data = $response->json();
-            
+
             $this->info('✅ Wallet balance retrieved successfully');
             $this->line('');
             $this->line('Wallet Balance Details:');
             $this->line(json_encode($data, JSON_PRETTY_PRINT));
-            
+
             Log::info('GetVDWalletBalance: Wallet balance retrieved', ['data' => $data]);
 
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error('❌ Exception occurred: ' . $e->getMessage());
+            $this->error('❌ Exception occurred: '.$e->getMessage());
             Log::error('GetVDWalletBalance: Exception', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return Command::FAILURE;
         }
     }

@@ -60,4 +60,3 @@ class ProfileBillingUpdateTest extends TestCase
         $response->assertSessionHasErrors('unexpected_fields');
     }
 }
-

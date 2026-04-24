@@ -50,7 +50,7 @@ class WalletFrozenFlowTest extends TestCase
         $wallet = $owner->wallet;
 
         $this->actingAs($admin)
-            ->post(route('admin.wallets.freeze', $wallet))
+            ->post(route('panel.wallets.freeze', $wallet))
             ->assertRedirect();
 
         $wallet->refresh();

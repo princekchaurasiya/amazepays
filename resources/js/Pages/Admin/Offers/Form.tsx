@@ -182,9 +182,11 @@ export default function Form({ offer, tenants, types, products, brands, categori
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         if (offer) {
-            form.transform(buildPayload).put(`/panel/offers/${offer.id}`);
+            form.transform(buildPayload);
+            form.put(`/panel/offers/${offer.id}`);
         } else {
-            form.transform(buildPayload).post('/panel/offers');
+            form.transform(buildPayload);
+            form.post('/panel/offers');
         }
     };
 

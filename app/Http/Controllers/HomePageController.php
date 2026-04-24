@@ -121,7 +121,9 @@ class HomePageController extends Controller
                 ])->toResponse($request)->setStatusCode(500);
             }
 
-            return response()->view('errors.500', [], 500);
+            return response('Something went wrong loading the homepage.', 500, [
+                'Content-Type' => 'text/plain; charset=UTF-8',
+            ]);
         }
     }
 

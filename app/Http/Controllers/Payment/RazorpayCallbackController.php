@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Payment;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Services\Payment\PaymentService;
-use Illuminate\Http\JsonResponse;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Http\Request;
 
 /**
@@ -19,15 +19,17 @@ class RazorpayCallbackController extends Controller
         private PaymentService $paymentService,
     ) {}
 
-    public function handle(Request $request): JsonResponse
+    public function handle(Request $request): ResponsePayload
     {
-        $payload = $request->has('event')
-            ? $request->only(['event', 'payload'])
-            : $request->only(['razorpay_signature', 'razorpay_payment_id', 'razorpay_order_id']);
+        // Preserve full raw payload for forensics (webhooks are not user input).
+        $payload = $request->json()->all() ?: $request->input();
 
         $result = $this->paymentService->handleGatewayCallback('razorpay', $payload);
 
-        return $this->ok('Webhook processed.', [
+        $request->attributes->set('is_webhook_ack', true);
+        $request->attributes->set('webhook_gateway', 'razorpay');
+
+        return $this->ok('payments.webhook_received', [
             'payment_status' => $result->status,
             'success' => $result->success,
         ]);

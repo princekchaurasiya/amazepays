@@ -46,6 +46,11 @@ export default function Show({ user, orders, assignableRoles, canAssignRoles }: 
         profileForm.put(`/panel/users/${user.id}`);
     };
 
+    const submitRoles = (e: React.FormEvent) => {
+        e.preventDefault();
+        rolesForm.post(`/panel/users/${user.id}/roles`);
+    };
+
     return (
         <AdminLayout>
             <Head title={`User ${user.name}`} />

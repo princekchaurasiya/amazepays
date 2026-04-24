@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ProductsImport;
-use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DocumentController extends Controller
 {
@@ -27,12 +27,12 @@ class DocumentController extends Controller
             $file = $request->file('document');
 
             // Check if file is provided
-            if (!$file) {
+            if (! $file) {
                 throw new Exception('File cannot be empty. Please select an Excel file to upload.');
             }
 
             // Perform the import
-            Excel::import(new ProductsImport(), $file);
+            Excel::import(new ProductsImport, $file);
 
             // Log successful upload
             Log::info('Data Imported successfully');
@@ -41,12 +41,12 @@ class DocumentController extends Controller
             return redirect()->back()->with('success', 'Data Imported successfully');
         } catch (Exception $e) {
             // Log the error
-            Log::error('Error during upload: ' . $e->getMessage());
+            Log::error('Error during upload: '.$e->getMessage());
 
             // Flash error message
             return redirect()
                 ->back()
-                ->with('error', 'There was an error during the upload: ' . $e->getMessage());
+                ->with('error', 'There was an error during the upload: '.$e->getMessage());
         }
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class UserIp extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'user_id',
         'ip_address',

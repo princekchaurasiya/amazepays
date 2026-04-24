@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\ResponseCode;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Models\SecurityEventLog;
@@ -11,8 +12,8 @@ use App\Services\MultiAccountDetector;
 use App\Services\OtpService;
 use App\Services\SecurityEventService;
 use App\Services\TwoFactorService;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -55,7 +56,7 @@ class AuthController extends Controller
         return $normalized;
     }
 
-    public function sendOtp(Request $request): JsonResponse
+    public function sendOtp(Request $request): ResponsePayload
     {
         $phone = $this->normalizePhone((string) $request->input('mobile', ''));
 
@@ -68,21 +69,35 @@ class AuthController extends Controller
         );
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
+            return ResponsePayload::fail(
+                ResponseCode::VALIDATION_FAILED,
+                'auth.validation_failed',
+                ['mobile' => $validator->errors()->get('mobile')],
+                422
+            );
         }
 
         $result = $this->otp->sendOtp($phone, $request->input('type', 'login'));
 
-        return response()->json($result, $result['success'] ? 200 : 422);
+        if (! ($result['success'] ?? false)) {
+            return ResponsePayload::fail(
+                ResponseCode::VALIDATION_FAILED,
+                'auth.otp_send_failed',
+                ['reason' => $result['error'] ?? ($result['message'] ?? null)],
+                422
+            );
+        }
+
+        return ResponsePayload::ok('auth.otp_sent', [
+            'expires_in' => $result['expires_in'] ?? null,
+            'resend_available' => $result['resend_available'] ?? null,
+        ]);
     }
 
     /**
      * Verify OTP: existing user → Sanctum token; new number → temp token for profile step.
      */
-    public function verifyOtp(Request $request): JsonResponse
+    public function verifyOtp(Request $request): ResponsePayload
     {
         $phone = $this->normalizePhone((string) $request->input('mobile', ''));
         $otp = (string) $request->input('otp', '');
@@ -97,10 +112,12 @@ class AuthController extends Controller
         );
 
         if ($validator->fails()) {
-            return response()->json([
-                'message' => $validator->errors()->first(),
-                'errors' => $validator->errors()->toArray(),
-            ], 422);
+            return ResponsePayload::fail(
+                ResponseCode::VALIDATION_FAILED,
+                'auth.validation_failed',
+                $validator->errors()->toArray(),
+                422
+            );
         }
 
         if (! $this->otp->verifyOtp($phone, $otp)) {
@@ -111,22 +128,29 @@ class AuthController extends Controller
 
         if ($user) {
             if ($user->is_blocked) {
-                return response()->json([
-                    'error' => 'ACCOUNT_BLOCKED',
-                    'message' => 'Your account has been restricted. Please contact support.',
-                    'contact_info' => [
-                        'email' => config('companyDefaultValues.company_email', 'support@amazepays.in'),
-                        'phone' => '+91 '.config('companyDefaultValues.company_contact_no', ''),
+                return ResponsePayload::fail(
+                    ResponseCode::FORBIDDEN,
+                    'auth.account_blocked',
+                    [
+                        'contact_info' => [
+                            'email' => config('companyDefaultValues.company_email', 'support@amazepays.in'),
+                            'phone' => '+91 '.config('companyDefaultValues.company_contact_no', ''),
+                        ],
                     ],
-                ], 403);
+                    403
+                );
             }
 
             if ($user->account_locked) {
-                return response()->json([
-                    'error' => 'ACCOUNT_LOCKED',
-                    'message' => $user->account_locked_reason ?? 'Your account has been locked.',
-                    'locked_until' => $user->account_locked_until,
-                ], 423);
+                return ResponsePayload::fail(
+                    ResponseCode::FORBIDDEN,
+                    'auth.account_locked',
+                    [
+                        'locked_until' => $user->account_locked_until,
+                        'reason' => $user->account_locked_reason,
+                    ],
+                    423
+                );
             }
 
             $deviceCheck = $this->deviceTrust->checkDevice($user, $request);
@@ -140,13 +164,19 @@ class AuthController extends Controller
             if ($user->two_factor_enabled) {
                 $pendingToken = $user->createToken('2fa-pending', ['2fa-pending'])->plainTextToken;
 
-                return response()->json([
-                    'action' => '2fa_required',
-                    'message' => 'Please complete 2FA verification.',
-                    'temp_token' => $pendingToken,
-                    'method' => 'totp',
-                    'new_device' => $deviceCheck['is_new'],
-                ], 202);
+                return new ResponsePayload(
+                    success: true,
+                    code: ResponseCode::OK,
+                    messageKey: 'auth.two_factor_required',
+                    data: [
+                        'action' => '2fa_required',
+                        'message' => __('auth.two_factor_required'),
+                        'temp_token' => $pendingToken,
+                        'method' => 'totp',
+                        'new_device' => $deviceCheck['is_new'],
+                    ],
+                    httpStatus: 202
+                );
             }
 
             $token = $user->createToken('mobile-app')->plainTextToken;
@@ -156,7 +186,7 @@ class AuthController extends Controller
                 SecurityEventLog::SEVERITY_INFO
             );
 
-            return response()->json([
+            return ResponsePayload::ok('auth.logged_in', [
                 'action' => 'logged_in',
                 'token' => $token,
                 'user' => $this->formatUser($user),
@@ -172,7 +202,7 @@ class AuthController extends Controller
             now()->addSeconds(900)
         );
 
-        return response()->json([
+        return ResponsePayload::ok('auth.needs_profile', [
             'action' => 'needs_profile',
             'temp_token' => $tempToken,
             'phone' => $phone,
@@ -182,7 +212,7 @@ class AuthController extends Controller
     /**
      * Complete registration after OTP verified for a new mobile (cache-bound temp token).
      */
-    public function completeProfile(Request $request): JsonResponse
+    public function completeProfile(Request $request): ResponsePayload
     {
         $request->validate([
             'temp_token' => 'required|string',
@@ -198,25 +228,19 @@ class AuthController extends Controller
         $payload = Cache::get(self::PROFILE_CACHE_PREFIX.$request->input('temp_token'));
 
         if (! $payload || ! isset($payload['phone'], $payload['at'])) {
-            return response()->json([
-                'message' => 'Session expired. Please verify your mobile again.',
-            ], 400);
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'auth.session_expired', httpStatus: 400);
         }
 
         if ((now()->timestamp - (int) $payload['at']) > 900) {
             Cache::forget(self::PROFILE_CACHE_PREFIX.$request->input('temp_token'));
 
-            return response()->json([
-                'message' => 'Session expired. Please verify your mobile again.',
-            ], 400);
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'auth.session_expired', httpStatus: 400);
         }
 
         $phone = $payload['phone'];
 
         if (User::where('mobile', $phone)->exists()) {
-            return response()->json([
-                'message' => 'An account already exists for this number.',
-            ], 409);
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'auth.account_exists', httpStatus: 409);
         }
 
         $validator = Validator::make($request->only(['name', 'email', 'referral_code']), [
@@ -230,10 +254,12 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed.',
-                'errors' => $validator->errors()->toArray(),
-            ], 422);
+            return ResponsePayload::fail(
+                ResponseCode::VALIDATION_FAILED,
+                'auth.validation_failed',
+                $validator->errors()->toArray(),
+                422
+            );
         }
 
         $validated = $validator->validated();
@@ -264,15 +290,14 @@ class AuthController extends Controller
             ['action' => 'registered_otp']
         );
 
-        return response()->json([
-            'message' => 'Registration successful.',
+        return ResponsePayload::created('auth.registration_successful', [
             'action' => 'registered',
             'token' => $token,
             'user' => $this->formatUser($user),
-        ], 201);
+        ]);
     }
 
-    public function verifyTwoFactor(Request $request): JsonResponse
+    public function verifyTwoFactor(Request $request): ResponsePayload
     {
         $request->validate(['code' => 'required|string']);
 
@@ -291,14 +316,13 @@ class AuthController extends Controller
         }
         $token = $user->createToken('mobile-app')->plainTextToken;
 
-        return response()->json([
-            'message' => '2FA verified.',
+        return ResponsePayload::ok('auth.two_factor_verified', [
             'token' => $token,
             'user' => $this->formatUser($user),
         ]);
     }
 
-    public function logout(Request $request): JsonResponse
+    public function logout(Request $request): ResponsePayload
     {
         $token = $request->user()?->currentAccessToken();
 
@@ -313,12 +337,12 @@ class AuthController extends Controller
             $request->session()->regenerateToken();
         }
 
-        return response()->json(['message' => 'Logged out successfully.']);
+        return ResponsePayload::ok('auth.logged_out');
     }
 
-    public function me(Request $request): JsonResponse
+    public function me(Request $request): ResponsePayload
     {
-        return response()->json(['user' => $this->formatUser($request->user())]);
+        return ResponsePayload::ok('auth.me', ['user' => $this->formatUser($request->user())]);
     }
 
     private function formatUser(User $user): array

@@ -1,180 +1,148 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, HasRoles, Notifiable;
+    use HasApiTokens;
+    use HasFactory;
+    use HasRoles;
+    use Notifiable;
+    use SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'mobile',
-        'referral_code',
-
-        'billing_zip', 'billing_address', 'billing_city', 'billing_state',
-        'billing_country', 'billing_address_two',
+        'tenant_id',
+        'display_name',
+        'account_type',
+        'status',
+        'is_super_admin',
+        'last_login_at',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
-        'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        'email_verified_at' => 'datetime',
+        'is_super_admin' => 'boolean',
+        'last_login_at' => 'datetime',
     ];
 
-    /**
-     * Relationships
-     */
-
-    // Wallet relationship
-    public function wallet()
+    public function tenant(): BelongsTo
     {
-        return $this->hasOne(Wallet::class);
+        return $this->belongsTo(Tenant::class);
     }
 
-    // Wallet transactions through wallet
-    public function walletTransactions()
+    public function profile(): HasOne
     {
-        return $this->hasManyThrough(WalletTransaction::class, Wallet::class);
+        return $this->hasOne(UserProfile::class);
     }
 
-    /** Storefront / voucher orders */
-    public function orders()
+    public function authIdentities(): HasMany
     {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(UserAuthIdentity::class);
     }
 
-    public function cart()
+    public function authSecrets(): HasMany
     {
-        return $this->hasOne(Cart::class);
+        return $this->hasMany(UserAuthSecret::class);
     }
 
-    public function cartItems()
+    public function otpCodes(): HasMany
     {
-        return $this->hasManyThrough(CartItem::class, Cart::class);
+        return $this->hasMany(UserOtpCode::class);
     }
 
-    // KGen Orders
-    public function kgenOrders()
+    public function contactChannels(): HasMany
     {
-        return $this->hasMany(KGenOrder::class);
+        return $this->hasMany(UserContactChannel::class);
     }
 
-    // CC Avenue Payments
-    public function ccAvenuePayments()
+    public function addresses(): HasMany
     {
-        return $this->hasMany(CcAvenuePayment::class);
+        return $this->hasMany(UserAddress::class);
     }
 
-    // Unlimit Payments
-    public function unlimitPayments()
+    public function trustedDevices(): HasMany
     {
-        return $this->hasMany(UnlimitPayment::class);
+        return $this->hasMany(TrustedDevice::class);
     }
 
-    // All payments (union of both payment gateways)
-    public function payments()
+    public function twoFactorSecret(): HasOne
     {
-        // This returns a collection, not a relationship
-        // Use this in controllers when you need all payments
-        return $this->ccAvenuePayments->merge($this->unlimitPayments);
+        return $this->hasOne(TwoFactorSecret::class);
     }
 
-    // OTPs
-    public function otps()
+    public function apiTokens(): HasMany
     {
-        return $this->hasMany(Otp::class);
+        return $this->hasMany(ApiToken::class);
     }
 
-    // Email verification codes
-    public function emailVerificationCodes()
-    {
-        return $this->hasMany(EmailVerificationCode::class);
-    }
-
-    // User IPs
-    public function userIps()
+    public function ips(): HasMany
     {
         return $this->hasMany(UserIp::class);
     }
 
-    public function tenants(): BelongsToMany
+    public function transactionPin(): HasOne
     {
-        return $this->belongsToMany(Tenant::class, 'tenant_users')
-            ->withPivot('role', 'is_primary')
-            ->withTimestamps();
+        return $this->hasOne(TransactionPin::class);
     }
 
-    /** @alias tenants() — used by middleware naming convention */
-    public function tenantUsers(): BelongsToMany
+    public function carts(): HasMany
     {
-        return $this->tenants();
+        return $this->hasMany(Cart::class);
     }
 
-    public function currentTenant(): ?Tenant
+    public function orders(): HasMany
     {
-        $primary = $this->tenants()->wherePivot('is_primary', true)->first();
-
-        return $primary ?? $this->tenants()->first();
+        return $this->hasMany(Order::class);
     }
 
-    public function currentTenantId(): ?int
+    public function payments(): HasMany
     {
-        return $this->currentTenant()?->id;
+        return $this->hasMany(Payment::class);
     }
 
-    public function auditLogs()
+    public function wallet(): HasOne
     {
-        return $this->hasMany(AuditLog::class);
+        return $this->hasOne(Wallet::class);
     }
 
-    /**
-     * Post-login destination: storefront (/) or admin panel (/panel) per role.
-     */
-    public function homeUrl(): string
+    public function auditLogs(): HasMany
     {
-        try {
-            if ($this->hasAnyRole(['super-admin', 'admin', 'finance', 'b2b-client', 'b2b-operator'])) {
-                return route('admin.dashboard');
+        return $this->hasMany(AuditLog::class, 'actor_user_id');
+    }
+
+    protected static function booted(): void
+    {
+        static::created(function (User $user): void {
+            // Create a default INR wallet for tenant-scoped users (skip platform super-admins).
+            if (! $user->tenant_id) {
+                return;
             }
-        } catch (RoleDoesNotExist) {
-            // During early bootstrap/tests roles can be absent; default safely to storefront.
-        }
 
-        return route('home');
-    }
-
-    protected static function booted()
-    {
-        static::created(function ($user) {
-            $user->wallet()->create();
+            Wallet::firstOrCreate(
+                ['tenant_id' => $user->tenant_id, 'user_id' => $user->id, 'currency' => 'INR'],
+                [
+                    'status' => 'active',
+                    'balance' => 0,
+                    'is_frozen' => false,
+                    'available_balance_minor' => 0,
+                    'held_balance_minor' => 0,
+                ]
+            );
         });
     }
 }

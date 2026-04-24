@@ -379,8 +379,8 @@ resources/js/Layouts/
 // routes/web.php -- Admin routes
 
 Route::middleware(['auth', 'verified', '2fa.verified', 'role:super-admin|admin|finance|b2b-manager|b2c-manager'])
-    ->prefix('admin')
-    ->name('admin.')
+    ->prefix('panel')
+    ->name('panel.')
     ->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

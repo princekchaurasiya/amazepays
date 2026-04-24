@@ -4,7 +4,7 @@ namespace App\Services\Order;
 
 use App\Http\Controllers\WoohooOrderController;
 use App\Models\Order;
-use App\Models\UnlimitPayment;
+use App\Models\Payment;
 
 /**
  * Delegates Woohoo voucher fulfillment to the legacy controller implementation
@@ -17,7 +17,7 @@ class WoohooFulfillmentService
         return app(WoohooOrderController::class);
     }
 
-    public function createWoohooOrderRequest(Order $order, UnlimitPayment $payment): mixed
+    public function createWoohooOrderRequest(Order $order, Payment $payment): mixed
     {
         return $this->controller()->createWoohooOrderRequest($order, $payment);
     }

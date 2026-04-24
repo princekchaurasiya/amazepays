@@ -294,9 +294,11 @@ export default function Shop({
                                     className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white"
                                 />
                             </div>
-                            {form.errors.order && (
-                                <p className="text-sm text-red-600 dark:text-red-400">{form.errors.order}</p>
-                            )}
+                            {(form.errors as Record<string, unknown>).order ? (
+                                <p className="text-sm text-red-600 dark:text-red-400">
+                                    {String((form.errors as Record<string, unknown>).order)}
+                                </p>
+                            ) : null}
                             <div className="flex gap-2 pt-2">
                                 <button
                                     type="button"

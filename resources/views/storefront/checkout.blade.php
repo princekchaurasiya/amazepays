@@ -809,7 +809,7 @@
 
                 let debounceTimeout;
 
-                function updateSessionData() {
+                function updateCheckoutBillingSession() {
 
                     var formData = {
                         billing_name: $('input[name="billing_name"]').val(),
@@ -827,7 +827,7 @@
 
                     // AJAX POST request to Laravel backend to update session data
                     $.ajax({
-                        url: '{{ route('updateSessionData') }}', // Replace with your Laravel route
+                        url: '{{ route('checkout.session.billing.update') }}',
                         method: 'POST',
                         data: formData,
                         headers: {
@@ -877,7 +877,7 @@
                 // Debounced function
                 function debouncedUpdateSessionData() {
                     clearTimeout(debounceTimeout);
-                    debounceTimeout = setTimeout(updateSessionData,
+                    debounceTimeout = setTimeout(updateCheckoutBillingSession,
                         600); // Adjust the delay as needed (600ms in this example)
                 }
 
@@ -910,7 +910,7 @@
                     // Just ensure billing data is stored before redirecting to payment.
 
                     // Update session data and store billing before payment
-                    updateSessionData();
+                    updateCheckoutBillingSession();
                     storeBillingInDatabase();
                     
                     // Show loading state

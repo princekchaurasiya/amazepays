@@ -15,7 +15,7 @@ class FetchFeaturedKgenProducts extends Command
      *
      * @var string
      */
-    protected $signature = 'fetch:featuredKgenProducts {--limit=8 : Number of featured products to fetch}';
+    protected $signature = 'fetch:featured-kgen-products {--limit=8 : Number of featured products to fetch}';
 
     /**
      * The console command description.

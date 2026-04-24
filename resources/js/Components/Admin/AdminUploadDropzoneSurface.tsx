@@ -3,7 +3,7 @@ import React from 'react';
 export type AdminUploadDropzoneSurfaceProps = {
     disabled: boolean;
     isDragging: boolean;
-    error?: string;
+    error?: boolean | string;
     /** Slightly shorter vertical padding */
     compact?: boolean;
     onClick: () => void;

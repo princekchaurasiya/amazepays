@@ -5,6 +5,7 @@
  *             Kept for backward compatibility with legacy __('errors.5035') style lookups.
  */
 return [
+    'technical_difficulties' => 'We are experiencing some technical difficulties. Please try again later.',
     'default' => 'Order failed. Please try again later.',
     '200' => 'OK',
     '201' => 'Order is successfully created!',

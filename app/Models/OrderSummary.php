@@ -55,11 +55,8 @@ class OrderSummary extends Model
             return null;
         }
 
-        if ($this->payment_gateway === 'cc_avenue') {
-            return CcAvenuePayment::find($this->payment_id);
-        }
-        if ($this->payment_gateway === 'unlimit') {
-            return UnlimitPayment::find($this->payment_id);
+        if (in_array($this->payment_gateway, ['cc_avenue', 'ccavenue', 'unlimit', 'razorpay'], true)) {
+            return Payment::find($this->payment_id);
         }
 
         return null;
@@ -84,12 +81,12 @@ class OrderSummary extends Model
 
     public function ccAvenuePayment()
     {
-        return $this->belongsTo(CcAvenuePayment::class, 'payment_id')->where('payment_gateway', 'cc_avenue');
+        return $this->belongsTo(Payment::class, 'payment_id')->where('payment_gateway', 'cc_avenue');
     }
 
     public function unlimitPayment()
     {
-        return $this->belongsTo(UnlimitPayment::class, 'payment_id')->where('payment_gateway', 'unlimit');
+        return $this->belongsTo(Payment::class, 'payment_id')->where('payment_gateway', 'unlimit');
     }
 
     public function scopeCompleted($query)

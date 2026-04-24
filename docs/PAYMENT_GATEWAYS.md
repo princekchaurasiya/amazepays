@@ -488,7 +488,7 @@ Implementation guidelines (aligned with `App\Services\Payment\PaymentService`):
 - Do **not** log full webhook bodies or payment return query parameters in application logs.
 - Persist outcomes on `Order` / `UnlimitPayment` (or equivalent) rows for reconciliation and support.
 
-Controllers: `App\Http\Controllers\Payment\CCAvenuCallbackController`, `RazorpayCallbackController`, `UnlimitCallbackController`; legacy HTML flows may use `CCAvenueController`, `UnlimitController`, etc., with billing fields limited to `$request->only([...])` when building gateway posts.
+Controllers: `App\Http\Controllers\Payment\CCAvenueCallbackController`, `RazorpayCallbackController`, `UnlimitCallbackController`; legacy HTML flows may use `CCAvenueController`, `UnlimitController`, etc., with billing fields limited to `$request->only([...])` when building gateway posts.
 
 ### Idempotency
 

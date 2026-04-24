@@ -49,9 +49,10 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-            ->assertJsonPath('action', 'logged_in')
-            ->assertJsonStructure(['token', 'user'])
-            ->assertJsonPath('user.id', $user->id);
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.action', 'logged_in')
+            ->assertJsonStructure(['success', 'message', 'data' => ['token', 'user']])
+            ->assertJsonPath('data.user.id', $user->id);
     }
 
     public function test_new_mobile_after_otp_verify_returns_needs_profile(): void
@@ -65,8 +66,9 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-            ->assertJsonPath('action', 'needs_profile')
-            ->assertJsonStructure(['temp_token', 'phone']);
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.action', 'needs_profile')
+            ->assertJsonStructure(['success', 'message', 'data' => ['temp_token', 'phone']]);
     }
 
     public function test_complete_profile_creates_user_and_returns_token(): void
@@ -79,7 +81,7 @@ class AuthTest extends TestCase
             'otp' => '123456',
         ]);
         $verify->assertStatus(200);
-        $temp = $verify->json('temp_token');
+        $temp = $verify->json('data.temp_token');
 
         $complete = $this->postJson('/api/v1/auth/complete-profile', [
             'temp_token' => $temp,
@@ -88,8 +90,9 @@ class AuthTest extends TestCase
         ]);
 
         $complete->assertStatus(201)
-            ->assertJsonPath('action', 'registered')
-            ->assertJsonStructure(['token', 'user']);
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.action', 'registered')
+            ->assertJsonStructure(['success', 'message', 'data' => ['token', 'user']]);
 
         $this->assertDatabaseHas('users', [
             'mobile' => $mobile,
@@ -115,7 +118,8 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertStatus(423)
-            ->assertJson(['error' => 'ACCOUNT_LOCKED']);
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error.code', 'FORBIDDEN');
     }
 
     public function test_logout_deletes_sanctum_token(): void
@@ -123,7 +127,9 @@ class AuthTest extends TestCase
         $user = User::factory()->create();
         $plain = $user->createToken('test')->plainTextToken;
 
-        $this->withToken($plain)->postJson('/api/v1/auth/logout')->assertStatus(200);
+        $this->withToken($plain)->postJson('/api/v1/auth/logout')
+            ->assertStatus(200)
+            ->assertJsonPath('success', true);
 
         $tokenId = (int) explode('|', $plain, 2)[0];
         $this->assertDatabaseMissing('personal_access_tokens', ['id' => $tokenId]);

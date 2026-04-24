@@ -470,8 +470,8 @@ Separate from user wallets, these track AmazePays's balance with each voucher pr
 |----------|-------|-------------|
 | Woohoo | Voyager settings (legacy) | API call on demand |
 | KGen | `k_gen_wallet_balances` | Artisan command (`FetchKGenWalletBalance`) |
-| Value Design | API | Artisan command (`get:vdWalletBalance`) |
-| Lysto/Athena | API | Artisan command (`get:lystoWalletBalance`) |
+| Value Design | API | Artisan command (`fetch:value-design-wallet-balance`) |
+| Lysto | API | Artisan command (`fetch:lysto-distributor-wallet-balance`) |
 
 ### Dashboard Widget
 

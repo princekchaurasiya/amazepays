@@ -19,7 +19,7 @@ class BrandsExport implements FromCollection, WithHeadings
             'max_price',
             'stock_available',
             'category',
-            'description'
+            'description',
         ])->get();
     }
 

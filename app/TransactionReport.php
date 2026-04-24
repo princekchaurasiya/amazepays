@@ -8,8 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class TransactionReport extends Model
 {
     use HasFactory;
+
     protected $table = 'transaction_reports';
+
     protected $casts = [
-    'report_type' => 'array',
-];
+        'report_type' => 'array',
+    ];
 }

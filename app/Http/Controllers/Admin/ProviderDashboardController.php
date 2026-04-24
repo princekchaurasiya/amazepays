@@ -24,37 +24,37 @@ class ProviderDashboardController extends Controller
                     'key' => 'woohoo',
                     'label' => 'Woohoo',
                     'healthy' => (bool) config('woohoo.host') && (bool) config('woohoo.bearer_token'),
-                    'href' => route('admin.woohoo.index'),
+                    'href' => route('panel.woohoo.index'),
                     'note' => null,
                 ],
                 [
                     'key' => 'vouchagram_gyftr',
                     'label' => 'Vouchagram / Gyftr',
                     'healthy' => $vouchagramConfigured || $gyftrEnvConfigured,
-                    'href' => route('admin.vouchagram.index'),
+                    'href' => route('panel.vouchagram.index'),
                     'note' => 'Same voucher network: Vouchagram is the parent platform (Send/Pull APIs, catalog sync, partner tools); Gyftr is a brand on that network. One dashboard covers both.',
                 ],
                 [
                     'key' => 'kgen',
                     'label' => 'KGen / EXLR8',
                     'healthy' => (bool) env('EXLR8_BASE_URL') && (bool) env('EXLR8_USER_ID'),
-                    'href' => route('admin.kgen.index'),
+                    'href' => route('panel.kgen.index'),
                     'note' => null,
                 ],
                 [
                     'key' => 'vd',
                     'label' => 'Value Design',
-                    'healthy' => (bool) config('services.value_design.base_url')
-                        && (bool) config('services.value_design.username')
-                        && (bool) config('services.value_design.password'),
-                    'href' => route('admin.value-design.index'),
+                    'healthy' => (bool) config('valuedesign.base_url')
+                        && (bool) config('valuedesign.username')
+                        && (bool) config('valuedesign.password'),
+                    'href' => route('panel.value-design.index'),
                     'note' => null,
                 ],
                 [
                     'key' => 'lysto',
                     'label' => 'Lysto / Athena',
-                    'healthy' => (bool) env('ATHENA_BASE_URL') || (bool) env('LYSTO_API_KEY'),
-                    'href' => url('/admin/lysto/dashboard'),
+                    'healthy' => (bool) config('lysto.base_url') && (bool) config('lysto.api_key'),
+                    'href' => route('panel.lysto.gift-cards.index'),
                     'note' => null,
                 ],
             ],

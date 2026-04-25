@@ -60,11 +60,7 @@ class FetchProductList extends Command
             Log::info('Product List Request:', [
                 'url' => $absApiUrl,
                 'method' => $requestHttpMethod,
-                'requestBody' => $requestBody,
-                'headers' => [
-                    'dateAtClient' => $dateAtClient,
-                    'signature' => $signature,
-                ],
+                'dateAtClient' => $dateAtClient,
             ]);
 
             // Send a GET request to retrieve products from the API
@@ -82,7 +78,6 @@ class FetchProductList extends Command
 
             Log::info('Product List Response:', [
                 'status_code' => $products_resp->status(),
-                'data' => json_encode($products_resp->json(), JSON_PRETTY_PRINT),
             ]);
 
             if ($products_resp->status() == 200) {

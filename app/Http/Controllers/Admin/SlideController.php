@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domains\Content\Models\ContentSection;
+use App\Domains\Content\Models\ContentSectionItem;
+use App\Domains\Media\Models\MediaAsset;
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\Slide;
-use App\Models\StorefrontBrand;
-use App\Services\Storefront\SlidePresentationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -19,30 +20,34 @@ use Inertia\Response;
 
 class SlideController extends Controller
 {
-    public function __construct(
-        private SlidePresentationService $slidePresentation,
-    ) {}
+    private const HERO_SECTION_SLUG = 'hero-banners';
+
+    private const HERO_SECTION_TYPE = 'carousel';
 
     public function index(): Response
     {
         $this->authorize('settings.view');
 
-        $slides = Slide::query()
-            ->orderByRaw('priority IS NULL ASC')
-            ->orderBy('priority', 'asc')
-            ->orderByDesc('id')
+        $tenantId = $this->resolveTenantId(request());
+        $heroSectionId = $this->ensureHeroSection($tenantId);
+
+        $slides = ContentSectionItem::query()
+            ->where('tenant_id', $tenantId)
+            ->where('content_section_id', $heroSectionId)
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->paginate(24)
-            ->through(fn (Slide $s) => [
-                'id' => $s->id,
-                'priority' => $s->priority,
-                'status' => $s->status,
-                'display_on_page' => $s->display_on_page,
-                'img_alt_tag' => $s->img_alt_tag,
-                'desktop_image' => $this->slidePresentation->absoluteStorageUrl($s->desktop_image),
-                'image_mobile' => $this->slidePresentation->absoluteStorageUrl($s->image_mobile),
-                'product_id' => $s->product_id,
-                'category_id' => $s->category_id,
-                'brand_id' => $s->brand_id,
+            ->through(fn (ContentSectionItem $i) => [
+                'id' => $i->id,
+                'priority' => $i->priority,
+                'status' => $i->is_enabled ? 1 : 0,
+                'display_on_page' => 'homepage',
+                'img_alt_tag' => data_get($i->metadata, 'alt', null),
+                'desktop_image' => $this->absoluteStorageUrl($i->webMedia?->path),
+                'image_mobile' => $this->absoluteStorageUrl($i->mobileMedia?->path),
+                'product_id' => $i->product_id,
+                'category_id' => $i->category_id,
+                'brand_id' => $i->brand_id,
             ]);
 
         return Inertia::render('Admin/Slides/Index', [
@@ -54,6 +59,9 @@ class SlideController extends Controller
     {
         $this->authorize('settings.update');
 
+        $tenantId = $this->resolveTenantId(request());
+        $this->ensureHeroSection($tenantId);
+
         return Inertia::render('Admin/Slides/Form', [
             'slide' => null,
             ...$this->formOptions(),
@@ -64,69 +72,129 @@ class SlideController extends Controller
     {
         $this->authorize('settings.update');
 
-        $data = $this->validated($request, null, true);
+        $tenantId = $this->resolveTenantId($request);
+        $heroSectionId = $this->ensureHeroSection($tenantId);
 
         $desk = $this->storeUploaded($request->file('desktop_image_file'), 'desktop');
         $mob = $this->storeUploaded($request->file('image_mobile_file'), 'mobile');
 
-        if ($desk) {
-            $data['desktop_image'] = $desk;
-        }
-        if ($mob) {
-            $data['image_mobile'] = $mob;
-        }
+        $webMediaId = $desk ? $this->createMediaAsset($tenantId, $desk, $request) : null;
+        $mobileMediaId = $mob ? $this->createMediaAsset($tenantId, $mob, $request) : null;
 
-        Slide::create($data);
+        $payload = $this->validated($request, true);
+
+        ContentSectionItem::create([
+            'tenant_id' => $tenantId,
+            'content_section_id' => $heroSectionId,
+            'sort_order' => (int) ($payload['priority'] ?? 0),
+            'is_enabled' => ((int) ($payload['status'] ?? 1)) === 1,
+            'priority' => 0,
+            'title' => $payload['big_header'] ?? null,
+            'subtitle' => $payload['small_header'] ?? null,
+            'web_media_asset_id' => $webMediaId,
+            'mobile_media_asset_id' => $mobileMediaId,
+            'cta_type' => filled($payload['cta_link'] ?? null) ? 'url' : null,
+            'cta_value' => $payload['cta_link'] ?? null,
+            'redirect_url' => $payload['cta_link'] ?? null,
+            'product_id' => $payload['product_id'] ?? null,
+            'category_id' => $payload['category_id'] ?? null,
+            'brand_id' => $payload['brand_id'] ?? null,
+            'metadata' => array_filter([
+                'alt' => $payload['img_alt_tag'] ?? null,
+                'custom_url' => $payload['custom_url'] ?? null,
+                'link_type' => $payload['link_type'] ?? null,
+            ]),
+        ]);
 
         return redirect()->route('panel.settings.hero-slides.index')->with('success', 'Slide created.');
     }
 
-    public function edit(Slide $slide): Response
+    public function edit(ContentSectionItem $slide): Response
     {
         $this->authorize('settings.update');
 
+        $tenantId = $this->resolveTenantId(request());
+        $heroSectionId = $this->ensureHeroSection($tenantId);
+        abort_if($slide->tenant_id !== $tenantId || $slide->content_section_id !== $heroSectionId, 404);
+
         return Inertia::render('Admin/Slides/Form', [
-            'slide' => array_merge($slide->toArray(), [
-                'desktop_image_url' => $this->slidePresentation->absoluteStorageUrl($slide->desktop_image),
-                'image_mobile_url' => $this->slidePresentation->absoluteStorageUrl($slide->image_mobile),
-            ]),
+            'slide' => [
+                'id' => $slide->id,
+                'priority' => $slide->sort_order,
+                'status' => $slide->is_enabled ? 1 : 0,
+                'display_on_page' => 'homepage',
+                'img_alt_tag' => data_get($slide->metadata, 'alt', ''),
+                'small_header' => $slide->subtitle,
+                'big_header' => $slide->title,
+                'cta_link' => $slide->redirect_url,
+                'slider_location' => null,
+                'product_id' => $slide->product_id,
+                'category_id' => $slide->category_id,
+                'brand_id' => $slide->brand_id,
+                'custom_url' => data_get($slide->metadata, 'custom_url', ''),
+                'link_type' => data_get($slide->metadata, 'link_type', ''),
+                'desktop_image_url' => $this->absoluteStorageUrl($slide->webMedia?->path),
+                'image_mobile_url' => $this->absoluteStorageUrl($slide->mobileMedia?->path),
+            ],
             ...$this->formOptions(),
         ]);
     }
 
-    public function update(Request $request, Slide $slide): RedirectResponse
+    public function update(Request $request, ContentSectionItem $slide): RedirectResponse
     {
         $this->authorize('settings.update');
 
-        $data = $this->validated($request, $slide, false);
+        $tenantId = $this->resolveTenantId($request);
+        $heroSectionId = $this->ensureHeroSection($tenantId);
+        abort_if($slide->tenant_id !== $tenantId || $slide->content_section_id !== $heroSectionId, 404);
+
+        $payload = $this->validated($request, false);
 
         if ($request->hasFile('desktop_image_file')) {
-            $this->deletePublicPath($slide->desktop_image);
             $path = $this->storeUploaded($request->file('desktop_image_file'), 'desktop');
             if ($path) {
-                $data['desktop_image'] = $path;
+                $this->replaceMedia($tenantId, $slide, $slide->web_media_asset_id, $path, $request, 'web_media_asset_id');
             }
         }
 
         if ($request->hasFile('image_mobile_file')) {
-            $this->deletePublicPath($slide->image_mobile);
             $path = $this->storeUploaded($request->file('image_mobile_file'), 'mobile');
             if ($path) {
-                $data['image_mobile'] = $path;
+                $this->replaceMedia($tenantId, $slide, $slide->mobile_media_asset_id, $path, $request, 'mobile_media_asset_id');
             }
         }
 
-        $slide->update($data);
+        $slide->update([
+            'sort_order' => (int) ($payload['priority'] ?? $slide->sort_order),
+            'is_enabled' => ((int) ($payload['status'] ?? ($slide->is_enabled ? 1 : 0))) === 1,
+            'title' => $payload['big_header'] ?? null,
+            'subtitle' => $payload['small_header'] ?? null,
+            'redirect_url' => $payload['cta_link'] ?? null,
+            'cta_type' => filled($payload['cta_link'] ?? null) ? 'url' : null,
+            'cta_value' => $payload['cta_link'] ?? null,
+            'product_id' => $payload['product_id'] ?? null,
+            'category_id' => $payload['category_id'] ?? null,
+            'brand_id' => $payload['brand_id'] ?? null,
+            'metadata' => array_filter([
+                'alt' => $payload['img_alt_tag'] ?? null,
+                'custom_url' => $payload['custom_url'] ?? null,
+                'link_type' => $payload['link_type'] ?? null,
+            ]),
+        ]);
 
         return back()->with('success', 'Slide updated.');
     }
 
-    public function destroy(Slide $slide): RedirectResponse
+    public function destroy(ContentSectionItem $slide): RedirectResponse
     {
         $this->authorize('settings.update');
 
-        $this->deletePublicPath($slide->desktop_image);
-        $this->deletePublicPath($slide->image_mobile);
+        $tenantId = $this->resolveTenantId(request());
+        $heroSectionId = $this->ensureHeroSection($tenantId);
+        abort_if($slide->tenant_id !== $tenantId || $slide->content_section_id !== $heroSectionId, 404);
+
+        $this->deleteMedia($slide->web_media_asset_id);
+        $this->deleteMedia($slide->mobile_media_asset_id);
         $slide->delete();
 
         return redirect()->route('panel.settings.hero-slides.index')->with('success', 'Slide removed.');
@@ -140,14 +208,14 @@ class SlideController extends Controller
         return [
             'products' => Product::visible()->select('id', 'name', 'sku')->orderBy('name')->limit(500)->get(),
             'categories' => Category::query()->select('id', 'name')->orderBy('name')->get(),
-            'brands' => StorefrontBrand::query()->select('id', 'name')->orderBy('name')->get(),
+            'brands' => Brand::query()->select('id', 'name')->orderBy('name')->get(),
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function validated(Request $request, ?Slide $slide, bool $isCreate): array
+    private function validated(Request $request, bool $isCreate): array
     {
         $request->validate([
             'desktop_image_file' => 'nullable|image|max:6144',
@@ -163,7 +231,7 @@ class SlideController extends Controller
             'display_on_page' => 'nullable|string|max:64',
             'product_id' => 'nullable|integer|exists:products,id',
             'category_id' => 'nullable|integer|exists:categories,id',
-            'brand_id' => 'nullable|integer|exists:storefront_brands,id',
+            'brand_id' => 'nullable|integer|exists:brands,id',
             'custom_url' => 'nullable|string|max:2048',
             'link_type' => 'nullable|string|max:64',
         ]);
@@ -204,10 +272,105 @@ class SlideController extends Controller
         return $path ?: null;
     }
 
-    private function deletePublicPath(?string $path): void
+    private function absoluteStorageUrl(?string $path): ?string
     {
-        if ($path && Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
+        if ($path === null || $path === '') {
+            return null;
         }
+
+        return url(Storage::url($path));
+    }
+
+    private function createMediaAsset(int $tenantId, string $path, Request $request): int
+    {
+        $row = MediaAsset::create([
+            'tenant_id' => $tenantId,
+            'path' => $path,
+            'disk' => 'public',
+            'created_by' => $request->user()?->id,
+        ]);
+
+        return (int) $row->id;
+    }
+
+    private function replaceMedia(int $tenantId, ContentSectionItem $item, ?int $existingId, string $newPath, Request $request, string $targetColumn): void
+    {
+        if ($existingId) {
+            $existing = MediaAsset::query()->where('tenant_id', $tenantId)->where('id', $existingId)->first();
+            if ($existing) {
+                if ($existing->path && Storage::disk('public')->exists($existing->path)) {
+                    Storage::disk('public')->delete($existing->path);
+                }
+                $existing->update(['path' => $newPath]);
+
+                return;
+            }
+        }
+
+        $newId = $this->createMediaAsset($tenantId, $newPath, $request);
+        $item->update([$targetColumn => $newId]);
+    }
+
+    private function deleteMedia(?int $mediaId): void
+    {
+        if (! $mediaId) {
+            return;
+        }
+
+        $asset = MediaAsset::find($mediaId);
+        if (! $asset) {
+            return;
+        }
+
+        if ($asset->path && Storage::disk('public')->exists($asset->path)) {
+            Storage::disk('public')->delete($asset->path);
+        }
+
+        $asset->delete();
+    }
+
+    private function ensureHeroSection(int $tenantId): int
+    {
+        $existing = ContentSection::query()
+            ->where('tenant_id', $tenantId)
+            ->where('surface', 'storefront_home')
+            ->where('slug', self::HERO_SECTION_SLUG)
+            ->value('id');
+
+        if ($existing) {
+            return (int) $existing;
+        }
+
+        $row = ContentSection::create([
+            'tenant_id' => $tenantId,
+            'surface' => 'storefront_home',
+            'slug' => self::HERO_SECTION_SLUG,
+            'type' => self::HERO_SECTION_TYPE,
+            'status' => 'active',
+            'is_enabled' => true,
+            'sort_order' => 0,
+            'platform' => 'both',
+            'title' => null,
+            'subtitle' => null,
+            'metadata' => null,
+            'created_by' => request()->user()?->id,
+        ]);
+
+        return (int) $row->id;
+    }
+
+    private function resolveTenantId(Request $request): int
+    {
+        $tenant = $request->attributes->get('tenant');
+        if ($tenant && method_exists($tenant, 'getKey')) {
+            return (int) $tenant->getKey();
+        }
+
+        $id = app()->bound('current_tenant_id') ? app('current_tenant_id') : null;
+        if (is_int($id) && $id > 0) {
+            return $id;
+        }
+
+        return 1;
     }
 }

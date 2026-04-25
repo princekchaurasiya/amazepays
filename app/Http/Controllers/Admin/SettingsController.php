@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domains\Content\Models\ContentSection;
 use App\Http\Controllers\Controller;
-use App\Models\HomepageSection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -115,30 +116,41 @@ class SettingsController extends Controller
             ];
         }
 
-        $sections = HomepageSection::query()
-            ->ordered()
+        $tenantId = $this->resolveTenantId($request = request());
+
+        $sections = ContentSection::query()
+            ->where('tenant_id', $tenantId)
+            ->where('surface', 'storefront_home')
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->get()
-            ->map(fn (HomepageSection $s) => [
+            ->map(fn (ContentSection $s) => [
                 'id' => $s->id,
-                'section_name' => $s->section_name,
-                'section_type' => $s->section_type,
+                'section_name' => $s->slug,
+                'section_type' => $s->type,
                 'title' => $s->title,
-                'content' => $s->content,
-                'status' => (bool) $s->status,
+                'content' => (string) data_get($s->metadata, 'custom_html', ''),
+                'status' => (bool) $s->is_enabled,
                 'sort_order' => (int) $s->sort_order,
-                'config' => $s->config ?? [],
+                'config' => $s->metadata ?? [],
             ])
             ->values()
             ->all();
 
-        $homepageSectionTypes = collect(HomepageSection::SECTION_TYPES)
+        $homepageSectionTypes = collect([
+            'banner_single',
+            'banner_dual',
+            'banner_square',
+            'carousel',
+            'voucher_slider',
+            'grid_2',
+            'grid_3',
+            'featured_products',
+            'custom',
+        ])
             ->map(fn (string $t) => [
                 'value' => $t,
                 'label' => match ($t) {
-                    'hot_deals' => 'Hot deals (products with a hot deal rank)',
-                    'other_deals' => 'Other deals',
-                    'kgen' => 'KGen Technology (API product grid)',
-                    'custom_html' => 'Custom HTML',
                     default => str_replace('_', ' ', ucwords($t, '_')),
                 },
             ])
@@ -208,8 +220,8 @@ class SettingsController extends Controller
         $this->authorize('settings.update');
 
         $validated = $request->validate([
-            'section_name' => ['required', 'string', 'max:64', 'regex:/^[a-z0-9_-]+$/', 'unique:homepage_sections,section_name'],
-            'section_type' => ['required', 'string', Rule::in(HomepageSection::SECTION_TYPES)],
+            'section_name' => ['required', 'string', 'max:191', 'regex:/^[a-z0-9_-]+$/'],
+            'section_type' => ['required', 'string', 'max:64'],
             'title' => ['nullable', 'string', 'max:255'],
             'content' => ['nullable', 'string', 'max:65000'],
             'status' => ['sometimes', 'boolean'],
@@ -218,34 +230,42 @@ class SettingsController extends Controller
             'config.priority_product_count' => ['nullable', 'integer', 'min:1', 'max:500'],
         ]);
 
-        $maxSort = HomepageSection::queryMaxSortOrder();
+        $tenantId = $this->resolveTenantId($request);
 
-        $attributes = [
-            'section_name' => $validated['section_name'],
-            'section_type' => $validated['section_type'],
-            'title' => $validated['title'] ?? null,
-            'content' => $validated['content'] ?? null,
-            'status' => $validated['status'] ?? true,
-            'config' => $this->normalizeSectionConfig($validated['section_type'], $validated['config'] ?? [], null),
-        ];
-        if (HomepageSection::hasSortOrderColumn()) {
-            $attributes['sort_order'] = $validated['sort_order'] ?? ($maxSort + 1);
+        $metadata = $this->normalizeSectionMetadata($validated['section_type'], $validated['config'] ?? [], null);
+        if (! empty($validated['content'])) {
+            $metadata['custom_html'] = (string) $validated['content'];
         }
 
-        $section = HomepageSection::create($attributes);
+        $section = ContentSection::create([
+            'tenant_id' => $tenantId,
+            'surface' => 'storefront_home',
+            'slug' => $validated['section_name'],
+            'type' => $validated['section_type'],
+            'status' => 'active',
+            'is_enabled' => $validated['status'] ?? true,
+            'sort_order' => $validated['sort_order'] ?? 0,
+            'platform' => 'both',
+            'title' => $validated['title'] ?? null,
+            'subtitle' => null,
+            'background_color' => null,
+            'text_color' => null,
+            'metadata' => $metadata ?: null,
+            'created_by' => $request->user()?->id,
+        ]);
 
         audit('homepage_section.created', $section, [], $section->toArray());
 
         return back()->with('success', 'Homepage section created.');
     }
 
-    public function updateSection(Request $request, HomepageSection $section)
+    public function updateSection(Request $request, ContentSection $section)
     {
         $this->authorize('settings.update');
 
         $validated = $request->validate([
-            'section_name' => ['required', 'string', 'max:64', 'regex:/^[a-z0-9_-]+$/', Rule::unique('homepage_sections', 'section_name')->ignore($section->id)],
-            'section_type' => ['required', 'string', Rule::in(HomepageSection::SECTION_TYPES)],
+            'section_name' => ['required', 'string', 'max:191', 'regex:/^[a-z0-9_-]+$/', Rule::unique('content_sections', 'slug')->where(fn ($q) => $q->where('tenant_id', $section->tenant_id)->where('surface', $section->surface))->ignore($section->id)],
+            'section_type' => ['required', 'string', 'max:64'],
             'title' => ['nullable', 'string', 'max:255'],
             'content' => ['nullable', 'string', 'max:65000'],
             'status' => ['sometimes', 'boolean'],
@@ -254,32 +274,30 @@ class SettingsController extends Controller
             'config.priority_product_count' => ['nullable', 'integer', 'min:1', 'max:500'],
         ]);
 
-        $old = $section->only(['section_name', 'section_type', 'title', 'content', 'status', 'sort_order', 'config']);
+        $old = $section->only(['slug', 'type', 'title', 'is_enabled', 'sort_order', 'metadata']);
 
-        $update = [
-            'section_name' => $validated['section_name'],
-            'section_type' => $validated['section_type'],
-            'title' => $validated['title'] ?? null,
-            'content' => $validated['content'] ?? null,
-            'status' => array_key_exists('status', $validated) ? (bool) $validated['status'] : $section->status,
-            'config' => $this->normalizeSectionConfig(
-                $validated['section_type'],
-                $validated['config'] ?? [],
-                $section->config ?? null
-            ),
-        ];
-        if (HomepageSection::hasSortOrderColumn()) {
-            $update['sort_order'] = $validated['sort_order'] ?? $section->sort_order;
+        $metadata = $this->normalizeSectionMetadata($validated['section_type'], $validated['config'] ?? [], $section->metadata ?? null);
+        if (! empty($validated['content'])) {
+            $metadata['custom_html'] = (string) $validated['content'];
+        } else {
+            unset($metadata['custom_html']);
         }
 
-        $section->update($update);
+        $section->update([
+            'slug' => $validated['section_name'],
+            'type' => $validated['section_type'],
+            'title' => $validated['title'] ?? null,
+            'is_enabled' => array_key_exists('status', $validated) ? (bool) $validated['status'] : $section->is_enabled,
+            'sort_order' => $validated['sort_order'] ?? $section->sort_order,
+            'metadata' => $metadata ?: null,
+        ]);
 
         audit('homepage_section.updated', $section, $old, $section->fresh()->toArray());
 
         return back()->with('success', 'Homepage section updated.');
     }
 
-    public function destroySection(HomepageSection $section)
+    public function destroySection(ContentSection $section)
     {
         $this->authorize('settings.update');
 
@@ -297,15 +315,12 @@ class SettingsController extends Controller
 
         $validated = $request->validate([
             'ids' => ['required', 'array', 'min:1'],
-            'ids.*' => ['integer', 'exists:homepage_sections,id'],
+            'ids.*' => ['integer', 'exists:content_sections,id'],
         ]);
 
-        if (! HomepageSection::hasSortOrderColumn()) {
-            return back()->with('warning', 'Add the sort_order column (run migrations) to enable section reordering.');
-        }
-
+        $tenantId = $this->resolveTenantId($request);
         foreach ($validated['ids'] as $index => $id) {
-            HomepageSection::where('id', $id)->update(['sort_order' => $index + 1]);
+            ContentSection::where('tenant_id', $tenantId)->where('id', $id)->update(['sort_order' => $index + 1]);
         }
 
         audit('homepage_section.reordered', null, [], ['ids' => $validated['ids']]);
@@ -316,18 +331,42 @@ class SettingsController extends Controller
     /**
      * @param  array<string, mixed>  $config
      * @param  array<string, mixed>|null  $previous
-     * @return array<string, mixed>|null
+     * @return array<string, mixed>
      */
-    private function normalizeSectionConfig(string $sectionType, array $config, ?array $previous): ?array
+    private function normalizeSectionMetadata(string $sectionType, array $config, ?array $previous): array
     {
-        if ($sectionType === 'hot_deals') {
-            $fallback = (int) data_get($previous, 'priority_product_count', 10);
-            $n = (int) ($config['priority_product_count'] ?? $fallback);
+        $meta = is_array($previous) ? $previous : [];
 
-            return ['priority_product_count' => max(1, min(500, $n))];
+        if ($sectionType === 'featured_products') {
+            $fallback = (int) data_get($meta, 'priority_product_count', 10);
+            $n = (int) ($config['priority_product_count'] ?? $fallback);
+            $meta['priority_product_count'] = max(1, min(500, $n));
+        } else {
+            unset($meta['priority_product_count']);
         }
 
-        return null;
+        return $meta;
+    }
+
+    private function resolveTenantId(Request $request): int
+    {
+        $tenant = $request->attributes->get('tenant');
+        if ($tenant && method_exists($tenant, 'getKey')) {
+            return (int) $tenant->getKey();
+        }
+
+        $id = app()->bound('current_tenant_id') ? app('current_tenant_id') : null;
+        if (is_int($id) && $id > 0) {
+            return $id;
+        }
+
+        if (! Schema::hasTable('tenants')) {
+            return 1;
+        }
+
+        $fallback = (int) (DB::table('tenants')->orderBy('id')->value('id') ?? 1);
+
+        return $fallback > 0 ? $fallback : 1;
     }
 
     private function envDefaultForKey(string $key, mixed $fallback): string|int|float

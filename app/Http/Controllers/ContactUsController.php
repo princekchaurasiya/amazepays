@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ContactUs;
+use App\Mail\NewLeadInquiryMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
@@ -51,14 +52,14 @@ class ContactUsController extends Controller
             $recipientEmail = env('CONTACT_US_ADMIN_EMAIL');
             $itAdminEmail = env('CONTACT_US_IT_ADMIN_EMAIL');
 
-            Mail::send('email.new_lead_inquiry', [
-                'leadDetails' => $leadDetails,
-            ], function ($message) use ($recipientEmail, $itAdminEmail) {
-                $message->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
-                    ->to($recipientEmail)
-                    ->cc($itAdminEmail)
-                    ->subject('New Lead Inquiry for Amazepay');
-            });
+            $mailable = (new NewLeadInquiryMail($leadDetails))
+                ->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'));
+
+            $mailer = Mail::to($recipientEmail);
+            if (! empty($itAdminEmail)) {
+                $mailer->cc($itAdminEmail);
+            }
+            $mailer->send($mailable);
 
             return redirect()->back()->with('success', 'Contact information saved successfully!');
         } catch (ValidationException $e) {

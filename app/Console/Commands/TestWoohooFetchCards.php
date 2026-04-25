@@ -108,7 +108,7 @@ class TestWoohooFetchCards extends Command
 
             $this->newLine();
             $this->info("Response Status: {$statusCode}");
-            $this->info('Response Body: '.json_encode($responseData, JSON_PRETTY_PRINT));
+            $this->info('Response Body: [redacted]');
 
             // Validate response
             if ($statusCode === 200 && isset($responseData['cards']) && is_array($responseData['cards'])) {
@@ -126,7 +126,7 @@ class TestWoohooFetchCards extends Command
                             'success' => true,
                             'data' => $responseData,
                             'card_count' => $cardCount,
-                            'cards' => $responseData['cards'],
+                            'cards' => [],
                         ];
                     } else {
                         return [

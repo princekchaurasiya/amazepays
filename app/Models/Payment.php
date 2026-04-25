@@ -71,4 +71,30 @@ class Payment extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Whether this payment is settled enough to trigger voucher fulfilment (Woohoo / etc.).
+     */
+    public function isSuccessfulForFulfillment(): bool
+    {
+        return in_array($this->status, ['captured', 'authorized'], true);
+    }
+
+    /**
+     * Prefer exact merchant_order_id match, then any latest Unlimit row for the order.
+     */
+    public static function findUnlimitForOrder(Order $order, string $merchantOrderId): ?self
+    {
+        $exact = static::query()
+            ->where('gateway', 'unlimit')
+            ->where('order_id', $order->id)
+            ->where('merchant_order_id', $merchantOrderId)
+            ->first();
+
+        return $exact ?? static::query()
+            ->where('gateway', 'unlimit')
+            ->where('order_id', $order->id)
+            ->orderByDesc('id')
+            ->first();
+    }
 }

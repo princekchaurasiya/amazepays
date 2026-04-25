@@ -2,7 +2,11 @@
 
 return [
     'initiated' => 'Payment initiated.',
+    'session_retrieved' => 'Payment session retrieved.',
+    'status_retrieved' => 'Payment status retrieved.',
+    'refund_initiated' => 'Refund initiated.',
     'verified' => 'Payment verified.',
+    'missing_transaction_id' => 'Missing transaction id.',
     'missing_signature' => 'Missing signature.',
     'invalid_signature' => 'Invalid signature.',
     'signature_unavailable' => 'Signature verification unavailable.',

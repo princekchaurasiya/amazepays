@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Offer;
 use App\Models\Product;
-use App\Models\StorefrontBrand;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,7 +43,7 @@ class OfferController extends Controller
             'offer' => null,
             'tenants' => Tenant::active()->pluck('name', 'id'),
             'products' => Product::visible()->select('id', 'name', 'sku')->orderBy('name')->limit(500)->get(),
-            'brands' => StorefrontBrand::query()->select('id', 'name')->orderBy('name')->get(),
+            'brands' => Brand::query()->select('id', 'name')->orderBy('name')->get(),
             'categories' => Category::query()->select('id', 'name')->orderBy('name')->get(),
         ]);
     }
@@ -70,7 +70,7 @@ class OfferController extends Controller
             'offer' => $offer,
             'tenants' => Tenant::active()->pluck('name', 'id'),
             'products' => Product::visible()->select('id', 'name', 'sku')->orderBy('name')->limit(500)->get(),
-            'brands' => StorefrontBrand::query()->select('id', 'name')->orderBy('name')->get(),
+            'brands' => Brand::query()->select('id', 'name')->orderBy('name')->get(),
             'categories' => Category::query()->select('id', 'name')->orderBy('name')->get(),
         ]);
     }
@@ -133,7 +133,7 @@ class OfferController extends Controller
             'applicable_category_ids' => 'nullable|array',
             'applicable_category_ids.*' => 'integer|exists:categories,id',
             'applicable_brand_ids' => 'nullable|array',
-            'applicable_brand_ids.*' => 'integer|exists:storefront_brands,id',
+            'applicable_brand_ids.*' => 'integer|exists:brands,id',
             'description' => 'nullable|string',
         ]);
     }

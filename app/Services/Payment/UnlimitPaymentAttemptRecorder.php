@@ -2,16 +2,14 @@
 
 namespace App\Services\Payment;
 
+use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentEvent;
 
 final class UnlimitPaymentAttemptRecorder
 {
     /**
-     * Record/update a Unlimit payment attempt.
-     *
-     * This is intentionally minimal and legacy-table-friendly. Phase 3 will replace this
-     * with the consolidated payments table.
+     * Record/update a Unlimit payment attempt on the consolidated {@see Payment} table.
      *
      * @param  array<string, mixed>  $raw
      * @param  array<string, mixed>  $extraAttributes
@@ -26,11 +24,11 @@ final class UnlimitPaymentAttemptRecorder
         string $paymentMethod = 'bankcard',
         array $extraAttributes = [],
     ): Payment {
-        $order = \App\Models\Order::query()->whereKey((int) $orderId)->first();
+        $order = Order::query()->whereKey((int) $orderId)->first();
         if (! $order) {
             // Some legacy flows (VD/KGen) still initiate payments without a row in the `orders` table.
             // The Phase 3 consolidated `payments` table requires an Order FK, so we skip persistence.
-            return new Payment();
+            return new Payment;
         }
 
         $payment = Payment::query()
@@ -41,7 +39,7 @@ final class UnlimitPaymentAttemptRecorder
         $amountMinor = (int) round($amount * 100);
         $status = ($extraAttributes['payment_status'] ?? null) === 'paid' ? 'captured' : 'initiated';
 
-        $payment ??= new Payment();
+        $payment ??= new Payment;
         $payment->fill([
             'tenant_id' => (int) $order->tenant_id,
             'order_id' => (int) $order->id,

@@ -6,6 +6,7 @@ use App\Enums\ResponseCode;
 use App\Models\Billing;
 use App\Models\Order;
 use App\Models\OrderSummary;
+use App\Models\Payment;
 use App\Services\Order\WoohooApiService;
 use App\Services\Order\WoohooLegacyNotificationService;
 use App\Services\Order\WoohooLegacyOrderSyncService;
@@ -36,7 +37,7 @@ class WoohooOrderController extends Controller
             'payment_status_param' => $payment->payment_status ?? ($payment->status ?? null),
         ]);
 
-        // Accept both legacy UnlimitPayment and consolidated Payment objects.
+        // Consolidated Payment model (status) or legacy attribute shapes.
         $rawPaymentStatus = (string) ($payment->payment_status ?? $payment->status ?? 'pending');
         $resolvedStatus = strtolower(trim($rawPaymentStatus));
         if (in_array($resolvedStatus, ['captured', 'paid'], true)) {
@@ -220,14 +221,12 @@ class WoohooOrderController extends Controller
             }
 
             /**************************************
-             * 3. Fetch Unlimit payment record
+             * 3. Fetch Unlimit payment record (consolidated payments table)
              **************************************/
-            $paymentRecord = UnlimitPayment::where('merchant_order_id', $merchantOrderId)
-                ->orWhere('order_id', $order->id) // Fallback: find by order_id
-                ->first();
+            $paymentRecord = Payment::findUnlimitForOrder($order, (string) $merchantOrderId);
 
             if (! $paymentRecord) {
-                Log::error('UnlimitPayment not found', [
+                Log::error('Unlimit payment row not found', [
                     'merchant_order_id' => $merchantOrderId,
                     'order_id' => $order->id,
                 ]);
@@ -236,18 +235,19 @@ class WoohooOrderController extends Controller
                     ->with('error', __('payments.admin_payment_record_not_found_for_order'));
             }
 
-            // NOTE: Unlimit returns "success" in lowercase – check both.
-            $paymentStatus = strtolower($paymentRecord->payment_status ?? '');
-            if (! in_array($paymentStatus, ['success', 'completed', 'paid', 'approved', 'confirmed'])) {
+            // Gateway callbacks may use "success"; consolidated schema uses captured / authorized.
+            $paymentStatus = strtolower((string) ($paymentRecord->payment_status ?? $paymentRecord->status ?? ''));
+            if (! $paymentRecord->isSuccessfulForFulfillment()
+                && ! in_array($paymentStatus, ['success', 'completed', 'paid', 'approved', 'confirmed'], true)) {
                 Log::warning('Payment status not successful', [
-                    'payment_status' => $paymentRecord->payment_status,
+                    'payment_status' => $paymentRecord->status,
                     'merchant_order_id' => $merchantOrderId,
                     'order_id' => $order->id,
                 ]);
 
                 return redirect()->route('panel.orders.index')
                     ->with('error', __('payments.admin_payment_status_not_successful_current', [
-                        'status' => $paymentRecord->payment_status ?? 'Unknown',
+                        'status' => $paymentRecord->status ?? 'Unknown',
                     ]));
             }
 
@@ -318,7 +318,7 @@ class WoohooOrderController extends Controller
                     // Also update OrderSummary.order_status to maintain consistency
                     $orderSummary = OrderSummary::where('order_id', $order->id)->first();
                     if ($orderSummary) {
-                        $orderSummary->order_status = 'COMPLETE';
+                        $orderSummary->fulfilment_status = 'COMPLETE';
                         $orderSummary->save();
 
                         Log::info('✅ OrderSummary status updated to COMPLETE (resend-order)', [
@@ -376,7 +376,7 @@ class WoohooOrderController extends Controller
                     // Also update OrderSummary.order_status to maintain consistency
                     $orderSummary = OrderSummary::where('order_id', $order->id)->first();
                     if ($orderSummary) {
-                        $orderSummary->order_status = 'FAILED';
+                        $orderSummary->fulfilment_status = 'FAILED';
                         $orderSummary->save();
                     }
 
@@ -412,7 +412,7 @@ class WoohooOrderController extends Controller
                 // Also update OrderSummary.order_status to maintain consistency
                 $orderSummary = OrderSummary::where('order_id', $order->id)->first();
                 if ($orderSummary) {
-                    $orderSummary->order_status = 'FAILED';
+                    $orderSummary->fulfilment_status = 'FAILED';
                     $orderSummary->save();
                 }
 
@@ -597,7 +597,7 @@ class WoohooOrderController extends Controller
             // CRITICAL: Also update OrderSummary.order_status to maintain consistency
             $orderSummary = OrderSummary::where('order_id', $Order->id)->first();
             if ($orderSummary) {
-                $orderSummary->order_status = 'COMPLETE';
+                $orderSummary->fulfilment_status = 'COMPLETE';
                 $orderSummary->save();
             }
 

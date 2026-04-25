@@ -15,6 +15,10 @@ use Illuminate\Support\Str;
  */
 class VouchagramOrderFulfillmentService
 {
+    public function __construct(
+        private WoohooGiftCardPersister $giftCardPersister,
+    ) {}
+
     public function fulfillIfApplicable(Order $order): void
     {
         $product = Product::find($order->product_id);
@@ -24,13 +28,13 @@ class VouchagramOrderFulfillmentService
 
         try {
             if ($product->source_provider === 'vouchagram_pull') {
-                $this->applyResult($order, VoucherProviderFactory::make('vouchagram_pull')->placeOrder($this->buildPullPayload($order, $product)));
+                $this->applyResult($order, VoucherProviderFactory::make('vouchagram_pull')->placeOrder($this->buildPullPayload($order, $product)), 'vouchagram_pull');
             } elseif ($product->source_provider === 'vouchagram_send') {
-                $this->applyResult($order, VoucherProviderFactory::make('vouchagram_send')->placeOrder($this->buildSendPayload($order, $product)));
+                $this->applyResult($order, VoucherProviderFactory::make('vouchagram_send')->placeOrder($this->buildSendPayload($order, $product)), 'vouchagram_send');
             } elseif ($order->tenant_id) {
-                $this->applyResult($order, VoucherProviderFactory::make('vouchagram_pull')->placeOrder($this->buildPullPayload($order, $product)));
+                $this->applyResult($order, VoucherProviderFactory::make('vouchagram_pull')->placeOrder($this->buildPullPayload($order, $product)), 'vouchagram_pull');
             } else {
-                $this->applyResult($order, VoucherProviderFactory::make('vouchagram_send')->placeOrder($this->buildSendPayload($order, $product)));
+                $this->applyResult($order, VoucherProviderFactory::make('vouchagram_send')->placeOrder($this->buildSendPayload($order, $product)), 'vouchagram_send');
             }
         } catch (\Throwable $e) {
             Log::error('Vouchagram fulfillment failed', [
@@ -102,7 +106,7 @@ class VouchagramOrderFulfillmentService
         return Str::limit($base, 50, '');
     }
 
-    private function applyResult(Order $order, VoucherOrderResult $result): void
+    private function applyResult(Order $order, VoucherOrderResult $result, string $vouchagramProviderKey): void
     {
         $raw = $result->raw;
         $ref = is_array($raw) ? ($raw['reference_num'] ?? $raw['external_order_id'] ?? null) : null;
@@ -139,5 +143,9 @@ class VouchagramOrderFulfillmentService
         }
 
         $order->update($payload);
+
+        if ($result->success && $order->tenant_id) {
+            $this->giftCardPersister->persistFromVoucherOrderResult($order->fresh(), $result, $vouchagramProviderKey);
+        }
     }
 }

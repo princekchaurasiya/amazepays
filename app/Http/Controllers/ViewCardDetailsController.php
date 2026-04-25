@@ -6,6 +6,7 @@ use App\Helpers\ApiSignatureHelper;
 use App\Helpers\ProductImageHelper;
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\Order\WoohooGiftCardPersister;
 use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
@@ -25,37 +26,14 @@ class ViewCardDetailsController extends Controller
                 return redirect()->back()->with('error', 'Invalid order ID');
             }
 
-            // Get order with product details
-            $orderData = Order::with('product')
+            // Get order with line items + catalog product for imagery; prefer normalized gift_cards for card data.
+            $orderData = Order::query()
+                ->with(['giftCards', 'items.product'])
                 ->where('woohoo_order_id', $orderId)
                 ->where('user_id', auth()->id()) // Ensure user can only view their own orders
                 ->firstOrFail();
 
-            // Try to decrypt card data from database
-            $cardsData = null;
-            $cardsArray = [];
-
-            if (! empty($orderData->cards)) {
-                try {
-                    // Try to decrypt encrypted cards
-                    $cardsData = json_decode(decrypt($orderData->cards, env('ENCRYPTION_KEY')), true);
-                    if (is_array($cardsData)) {
-                        $cardsArray = $cardsData;
-                    }
-                } catch (\Exception $e) {
-                    // Decryption failed - might be plain JSON or invalid encryption
-                    Log::warning('Card decryption failed, trying plain JSON: '.$e->getMessage());
-                    try {
-                        // Try to parse as plain JSON
-                        $cardsData = json_decode($orderData->cards, true);
-                        if (is_array($cardsData)) {
-                            $cardsArray = $cardsData;
-                        }
-                    } catch (\Exception $e2) {
-                        Log::warning('Plain JSON parse also failed: '.$e2->getMessage());
-                    }
-                }
-            }
+            $cardsArray = app(WoohooGiftCardPersister::class)->displayCardsForOrder($orderData);
 
             // If cards are still empty, fetch from Woohoo API
             // First check order status using refno, then fetch cards if COMPLETE
@@ -79,10 +57,9 @@ class ViewCardDetailsController extends Controller
                             if (! empty($fetchedCards)) {
                                 $cardsArray = $fetchedCards;
 
-                                // Save fetched cards to database (encrypted)
+                                // Persist fetched cards to normalized gift_cards.
                                 try {
-                                    $orderData->cards = encrypt(json_encode($cardsArray), env('ENCRYPTION_KEY'));
-                                    $orderData->save();
+                                    app(WoohooGiftCardPersister::class)->syncWoohooCards($orderData->fresh(), $cardsArray);
                                     Log::info('✅ Cards fetched from Woohoo API and saved to database', [
                                         'order_id' => $orderData->id,
                                     ]);
@@ -124,10 +101,11 @@ class ViewCardDetailsController extends Controller
                 return redirect()->back()->with('error', 'Card details are not available. Please contact support.');
             }
 
-            // Get product image using ProductImageHelper
+            // Get product image using ProductImageHelper (Phase 3: product via first order line).
             $productImage = null;
-            if ($orderData->product) {
-                $productImage = ProductImageHelper::getProductImage($orderData->product);
+            $lineProduct = $orderData->items->first()?->product;
+            if ($lineProduct instanceof Product) {
+                $productImage = ProductImageHelper::getProductImage($lineProduct);
             }
 
             return Inertia::render('Storefront/OrderDetail', [

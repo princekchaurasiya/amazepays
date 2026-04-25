@@ -31,7 +31,7 @@ class FetchCategoryData extends Command
             $bearerToken = config('woohoo.bearer_token');
             $signature = ApiSignatureHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
             $dateAtClient = Carbon\Carbon::now()->toIso8601String();
-            Log::info('Category Request:', ['url' => $absApiUrl, 'method' => $requestHttpMethod, 'data' => ['dateAtClient' => $dateAtClient, 'signature' => $signature]]);
+            Log::info('Category Request:', ['url' => $absApiUrl, 'method' => $requestHttpMethod]);
 
             // Use same headers as other Woohoo API calls to avoid CDN blocking
             $category_resp = Http::acceptJson()
@@ -43,7 +43,7 @@ class FetchCategoryData extends Command
                     'User-Agent' => 'Amazepays/1.0 (+https://amazepays.in)',
                 ])
                 ->get($absApiUrl);
-            Log::info('Category Response:', ['status_code' => $category_resp->status(), 'data' => $category_resp->json()]);
+            Log::info('Category Response:', ['status_code' => $category_resp->status()]);
             if ($category_resp->status() == 200) {
                 $category_resp = $category_resp->json($key = null);
                 $data = ['id' => $category_resp['id'], 'name' => $category_resp['name'], 'url' => $category_resp['url'], 'description' => $category_resp['description'], 'images' => json_encode($category_resp['images']), 'subcategoriesCount' => $category_resp['subcategoriesCount'], 'subcategories' => json_encode($category_resp['subcategories'])];
@@ -54,8 +54,8 @@ class FetchCategoryData extends Command
 
                 return json_encode(['status' => 200, 'data' => 'Stored Successfully']);
             } else {
-                Log::error('Something went wrong while fetching the category.', ['error' => $category_resp->body()]);
-                $this->info($category_resp->body());
+                Log::error('Something went wrong while fetching the category.', ['status_code' => $category_resp->status()]);
+                $this->info('Category fetch failed. See logs for status_code.');
 
                 return json_encode(['status' => 400, 'data' => 'Something went wrong']);
             }

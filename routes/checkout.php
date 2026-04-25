@@ -7,7 +7,6 @@ use App\Http\Controllers\UnlimitController;
 use App\Http\Controllers\Voucher\ValueDesignCheckoutController;
 use App\Http\Controllers\WoohooOrderController;
 use App\Http\Controllers\WoohooProcessingController;
-use App\Http\Controllers\Payment\PaymentSessionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,7 +28,10 @@ Route::middleware(['auth', 'check.transaction'])->group(function () {
     Route::post('/cart/clear', [CheckoutSessionController::class, 'clearCart'])->name('storefront.cart.clear');
     Route::post('/cart/{slug}', [CheckoutSessionController::class, 'addToCart'])->name('storefront.cart.add');
 
-    Route::post('/payment-process', [PaymentSessionController::class, 'unlimit'])->name('unlimit.store');
+    // Legacy alias (Phase 4): preserve endpoint for one release; redirect to canonical route.
+    Route::post('/payment-process', function () {
+        return redirect()->route('payment.unlimit', [], 308);
+    })->name('unlimit.store');
     Route::post('/checkout/session/gift-draft', [CheckoutSessionController::class, 'saveGiftCheckoutDraft'])
         ->name('checkout.session.gift_draft.save');
 

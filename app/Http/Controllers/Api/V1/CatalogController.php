@@ -100,7 +100,7 @@ class CatalogController extends Controller
     /** List storefront navigation categories. */
     public function categories(): ResponsePayload
     {
-        $categories = Category::orderBy('order')->get(['id', 'name', 'slug', 'thumbnail', 'accent_color']);
+        $categories = Category::orderBy('display_order')->get(['id', 'name', 'slug', 'thumbnail', 'accent_color']);
 
         return $this->ok('Categories retrieved.', ['categories' => $categories->toArray()]);
     }

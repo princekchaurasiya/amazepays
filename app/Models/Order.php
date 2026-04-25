@@ -31,6 +31,23 @@ class Order extends Model
         'grand_total_minor',
         'currency',
         'placed_at',
+        'refno',
+        'merchant_order_id',
+        'woohoo_order_id',
+        'order_status',
+        'invoice_number',
+        'product_name',
+        'sku',
+        'quantity',
+        'denomination',
+        'price',
+        'amount_payable_after_discount',
+        'grand_payable_amount',
+        'cards',
+        'order_cancel',
+        'order_payment',
+        'additional_txn_fields',
+        'woohoo_currency_snapshot',
     ];
 
     protected $casts = [
@@ -39,6 +56,15 @@ class Order extends Model
         'tax_total_minor' => 'integer',
         'grand_total_minor' => 'integer',
         'placed_at' => 'datetime',
+        'quantity' => 'integer',
+        'denomination' => 'decimal:4',
+        'price' => 'decimal:4',
+        'amount_payable_after_discount' => 'decimal:4',
+        'grand_payable_amount' => 'decimal:4',
+        'order_cancel' => 'array',
+        'order_payment' => 'array',
+        'additional_txn_fields' => 'array',
+        'woohoo_currency_snapshot' => 'array',
     ];
 
     public function tenant(): BelongsTo
@@ -111,6 +137,16 @@ class Order extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function providerOrders(): HasMany
+    {
+        return $this->hasMany(ProviderOrder::class);
+    }
+
+    public function giftCards(): HasMany
+    {
+        return $this->hasMany(GiftCard::class);
     }
 
     public function offerUsages(): HasMany

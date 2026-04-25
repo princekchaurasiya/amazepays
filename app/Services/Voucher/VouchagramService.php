@@ -206,7 +206,7 @@ class VouchagramService
             ->post($url, ['payload' => $payload]);
 
         if (! $response->successful()) {
-            Log::warning('Vouchagram API error', ['url' => $url, 'body' => $response->body()]);
+            Log::warning('Vouchagram API error', ['url' => $url, 'status_code' => $response->status()]);
 
             throw new RuntimeException('Vouchagram HTTP '.$response->status().': '.$response->body());
         }

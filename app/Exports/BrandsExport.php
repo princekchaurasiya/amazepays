@@ -10,31 +10,33 @@ class BrandsExport implements FromCollection, WithHeadings
 {
     public function collection()
     {
-        return Brand::select([
-            'brand_code',
-            'brand_name',
-            'brand_type',
-            'discount',
-            'min_price',
-            'max_price',
-            'stock_available',
-            'category',
-            'description',
-        ])->get();
+        return Brand::query()
+            ->select([
+                'id',
+                'name',
+                'slug',
+                'source_provider',
+                'source_brand_id',
+                'status',
+                'is_featured',
+                'display_order',
+            ])
+            ->orderBy('display_order')
+            ->orderBy('id')
+            ->get();
     }
 
     public function headings(): array
     {
         return [
-            'Brand Code',
-            'Brand Name',
-            'Brand Type',
-            'Discount',
-            'Min Price',
-            'Max Price',
-            'Stock Available',
-            'Category',
-            'Description',
+            'ID',
+            'Name',
+            'Slug',
+            'Source Provider',
+            'Source Brand ID',
+            'Status',
+            'Is Featured',
+            'Display Order',
         ];
     }
 }

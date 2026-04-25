@@ -15,7 +15,7 @@ export default function ProvidersIndex({
     order_stats,
 }: {
     providers: Provider[];
-    order_stats: { storefront_orders: number; kgen_orders: number };
+    order_stats: { storefront_orders: number; kgen_provider_orders: number };
 }) {
     return (
         <AdminLayout>
@@ -55,7 +55,7 @@ export default function ProvidersIndex({
                     <h3 className="font-semibold text-gray-900 dark:text-gray-100">Order volume</h3>
                     <ul className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                         <li>Storefront orders: {order_stats.storefront_orders}</li>
-                        <li>KGen orders: {order_stats.kgen_orders}</li>
+                        <li>KGen provider orders: {order_stats.kgen_provider_orders}</li>
                     </ul>
                 </div>
             </div>

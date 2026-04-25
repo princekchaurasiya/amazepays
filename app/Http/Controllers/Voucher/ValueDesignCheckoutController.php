@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Voucher;
 
 use App\Http\Controllers\Controller;
-use App\Models\Brand;
 use App\Models\Order;
 use App\Models\OrderSummary;
 use App\Models\Payment;
@@ -88,34 +87,13 @@ final class ValueDesignCheckoutController extends Controller
         $discountPercentage = 0;
 
         if ($request->vd_brand_code) {
-            $brand = Brand::where('brand_code', $request->vd_brand_code)->first();
-
-            if (! $brand) {
-                $product = Product::where('name', 'like', '%'.$request->vd_brand_code.'%')
-                    ->orWhere('sku', $request->vd_brand_code)
-                    ->first();
-            }
+            // Legacy VD brand-code flows are unified onto the product catalog.
+            $product = Product::where('name', 'like', '%'.$request->vd_brand_code.'%')
+                ->orWhere('sku', $request->vd_brand_code)
+                ->first();
         }
 
-        if ($brand) {
-            $minPrice = $brand->min_price ?? 0;
-            $maxPrice = $brand->max_price ?? 999999;
-
-            if ($request->denomination < $minPrice || $request->denomination > $maxPrice) {
-                Log::warning('VD Denomination out of range', [
-                    'denomination' => $request->denomination,
-                    'min_price' => $minPrice,
-                    'max_price' => $maxPrice,
-                    'brand_code' => $request->vd_brand_code,
-                ]);
-
-                return back()->withErrors([
-                    'denomination' => "The denomination must be between ₹{$minPrice} and ₹{$maxPrice}.",
-                ])->withInput();
-            }
-
-            $discountPercentage = (float) ($brand->discount ?? 0);
-        } elseif (isset($product) && $product) {
+        if (isset($product) && $product) {
             $product->price = json_decode($product->price);
             $priceData = (array) $product->price;
             $priceType = $priceData['type'] ?? 'RANGE';
@@ -210,10 +188,10 @@ final class ValueDesignCheckoutController extends Controller
         $orderSummary = new OrderSummary;
         $orderSummary->order_id = $order->id;
         $orderSummary->payment_id = $payment?->id;
-        $orderSummary->payment_gateway = 'unlimit';
+        $orderSummary->primary_gateway = 'unlimit';
         $orderSummary->product_name = $order->product_name;
         $orderSummary->payment_status = $payment?->status ?? 'initiated';
-        $orderSummary->order_status = $order->order_status;
+        $orderSummary->fulfilment_status = $order->order_status;
         $orderSummary->save();
 
         // Legacy controllers removed in later steps; render the same page for now.
@@ -248,4 +226,3 @@ final class ValueDesignCheckoutController extends Controller
         return response()->json(['message' => __('responses.OK')]);
     }
 }
-

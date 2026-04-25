@@ -14,7 +14,7 @@ class StorefrontCategoryController extends Controller
     public function show(string $slug)
     {
         $category = Category::where('slug', $slug)->first();
-        $allCategories = Category::orderBy('order')->get();
+        $allCategories = Category::orderBy('display_order')->get();
 
         if (! $category) {
             Log::warning('Category not found:', ['slug' => $slug]);

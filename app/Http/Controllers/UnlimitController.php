@@ -217,7 +217,7 @@ class UnlimitController extends Controller
 
                 $orderSummary = OrderSummary::where('order_id', $order->id)->first();
                 if ($orderSummary) {
-                    $orderSummary->order_status = 'PENDING';
+                    $orderSummary->fulfilment_status = 'PENDING';
                     $orderSummary->save();
                 }
             }

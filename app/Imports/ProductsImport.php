@@ -2,7 +2,6 @@
 
 namespace App\Imports;
 
-use App\Models\KgenProduct;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -29,21 +28,7 @@ class ProductsImport implements ToModel, WithHeadingRow
             return null;
         }
 
-        // If not found in Product, try KgenProduct using ProductID
-        $kgenproduct = KgenProduct::where('ProductID', $row['sku'])->first();
-
-        if ($kgenproduct) {
-            $kgenproduct->update([
-                'discount_percentage' => $row['discount_from_amazepay'],
-            ]);
-
-            Log::info("KgenProduct ({$row['sku']}) discount updated successfully.");
-
-            return null;
-        }
-
-        // Log if not found in either
-        Log::warning("Product with SKU {$row['sku']} not found in Product or KgenProduct.");
+        Log::warning("Product with SKU {$row['sku']} not found in Product.");
 
         return null;
     }

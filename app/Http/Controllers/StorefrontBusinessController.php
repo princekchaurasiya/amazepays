@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\StorefrontBrand;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,8 +15,8 @@ class StorefrontBusinessController extends Controller
 {
     public function show(): Response
     {
-        $categories = Category::query()->orderBy('order')->get();
-        $brands = StorefrontBrand::query()->orderBy('order')->get();
+        $categories = Category::query()->orderBy('display_order')->get();
+        $brands = Brand::query()->orderBy('display_order')->get();
 
         $brandMaxDiscounts = Product::query()
             ->forStorefrontCatalog()

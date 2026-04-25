@@ -6,10 +6,13 @@ use App\Data\BillingData;
 use App\Data\OrderData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\PlaceOrderRequest;
+use App\Http\Requests\Order\RefundOrderRequest;
 use App\Http\Traits\ApiResponse;
+use App\Models\GiftCard;
 use App\Models\Order;
 use App\Models\SecurityEventLog;
 use App\Services\Order\OrderCreationService;
+use App\Services\Order\WoohooGiftCardPersister;
 use App\Services\Payment\PaymentService;
 use App\Services\SecurityEventService;
 use App\Support\Http\ResponsePayload;
@@ -29,6 +32,7 @@ class OrderController extends Controller
         private OrderCreationService $orderService,
         private SecurityEventService $securityEvents,
         private PaymentService $paymentService,
+        private WoohooGiftCardPersister $giftCardPersister,
     ) {}
 
     /** List authenticated user's orders with pagination. */
@@ -48,7 +52,11 @@ class OrderController extends Controller
             return $this->notFound();
         }
 
-        return $this->ok('Order retrieved.', ['order' => $order->toArray()]);
+        $order->loadMissing(['giftCards']);
+        $orderPayload = $order->toArray();
+        $orderPayload['gift_cards'] = $this->giftCardPersister->apiSummariesForOrder($order);
+
+        return $this->ok('orders.retrieved', ['order' => $orderPayload]);
     }
 
     /**
@@ -64,7 +72,7 @@ class OrderController extends Controller
         $done = strtolower((string) ($order->status ?? '')) === 'completed'
             || strtoupper((string) ($order->order_status ?? '')) === 'COMPLETE';
         if (! $done) {
-            return $this->error('ORDER_NOT_COMPLETED', 'This order has not been completed yet.', 422);
+            return $this->error('ORDER_NOT_COMPLETED', 'orders.not_completed', 422);
         }
 
         $protection = config('security.voucher_protection', []);
@@ -77,7 +85,7 @@ class OrderController extends Controller
                 ['order_id' => $order->id, 'user_id' => $request->user()->id]
             );
 
-            return $this->error('VPN_NOT_ALLOWED', 'Voucher codes cannot be accessed from VPN connections.', 403);
+            return $this->error('VPN_NOT_ALLOWED', 'orders.voucher_vpn_blocked', 403);
         }
 
         $viewCacheKey = "voucher_views:{$request->user()->id}";
@@ -85,14 +93,36 @@ class OrderController extends Controller
         $maxViews = $protection['max_views_per_hour'] ?? 20;
 
         if ($views >= $maxViews) {
-            return $this->error('RATE_LIMIT', 'Too many voucher code views. Please try again later.', 429);
+            return $this->error('RATE_LIMIT', 'orders.voucher_rate_limited', 429);
         }
 
         \Cache::put($viewCacheKey, $views + 1, 3600);
         $order->increment('code_view_count');
         $order->update(['last_code_viewed_at' => now()]);
 
-        return $this->ok('Voucher code retrieved.', [
+        $order->loadMissing(['giftCards']);
+        $fromCard = $order->giftCards()
+            ->orderBy('id')
+            ->get()
+            ->first(static function (GiftCard $gc): bool {
+                $n = $gc->card_number_encrypted;
+                $p = $gc->card_pin_encrypted;
+
+                return ($n !== null && $n !== '') || ($p !== null && $p !== '');
+            });
+
+        if ($fromCard !== null) {
+            return $this->ok('orders.voucher_retrieved', [
+                'voucher_code' => (string) ($fromCard->card_number_encrypted ?? ''),
+                'pin' => (string) ($fromCard->card_pin_encrypted ?? ''),
+                'expiry_date' => $fromCard->valid_until?->format('Y-m-d'),
+                'product_name' => $order->product_name,
+                'gift_card_id' => $fromCard->id,
+                'viewed_at' => now()->toISOString(),
+            ]);
+        }
+
+        return $this->ok('orders.voucher_retrieved', [
             'voucher_code' => $order->voucher_code,
             'pin' => $order->voucher_pin,
             'expiry_date' => $order->expiry_date,
@@ -144,6 +174,42 @@ class OrderController extends Controller
             ];
         }
 
-        return $this->created('Order placed successfully.', $payload);
+        return $this->created('orders.placed', $payload);
+    }
+
+    public function refund(RefundOrderRequest $request, Order $order): ResponsePayload
+    {
+        if ($order->user_id !== $request->user()->id) {
+            return $this->notFound();
+        }
+
+        $validated = $request->validated();
+        $gateway = (string) $validated['gateway'];
+        $reason = (string) ($validated['reason'] ?? 'refund_requested');
+
+        $amountMinor = $validated['amount_minor'] ?? null;
+        if ($amountMinor === null) {
+            $amountMinor = $order->grand_total_minor
+                ?? (is_numeric($order->grand_total ?? null) ? (int) round(((float) $order->grand_total) * 100) : null)
+                ?? 0;
+        }
+
+        $amount = ((int) $amountMinor) / 100;
+
+        $result = $this->paymentService->refund(
+            $order,
+            $amount,
+            $reason,
+            $gateway,
+            isset($validated['transaction_id']) ? (string) $validated['transaction_id'] : null
+        );
+
+        return $this->ok('payments.refund_initiated', [
+            'success' => $result->success,
+            'refund_id' => $result->refundId,
+            'status' => $result->status,
+            'error' => $result->error,
+            'raw' => $result->raw,
+        ]);
     }
 }

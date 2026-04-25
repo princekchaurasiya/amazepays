@@ -149,7 +149,12 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->setStatusCode(403);
             }
 
-            return response()->view('errors.403', [], 403);
+            return Inertia::render('Error', [
+                'status' => 403,
+                'message' => 'You do not have permission to perform this action.',
+            ])
+                ->toResponse($request)
+                ->setStatusCode(403);
         });
 
         $exceptions->render(function (AuthorizationException $e, $request) use ($jsonError) {
@@ -167,7 +172,12 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->setStatusCode(403);
             }
 
-            return response()->view('errors.403', ['message' => $msg], 403);
+            return Inertia::render('Error', [
+                'status' => 403,
+                'message' => $msg,
+            ])
+                ->toResponse($request)
+                ->setStatusCode(403);
         });
 
         $exceptions->render(function (ModelNotFoundException $e, $request) use ($jsonError) {

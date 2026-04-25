@@ -20,7 +20,7 @@ class CategoryController extends Controller
 
         $categories = Category::query()
             ->withCount('products')
-            ->orderBy('order')
+            ->orderBy('display_order')
             ->orderBy('name')
             ->get();
 

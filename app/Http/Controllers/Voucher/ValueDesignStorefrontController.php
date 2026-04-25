@@ -63,7 +63,7 @@ final class ValueDesignStorefrontController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Value Design API connection successful',
-                    'token' => substr($token, 0, 10).'...',
+                    'token' => '[redacted]',
                 ]);
             }
 

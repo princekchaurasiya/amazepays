@@ -25,7 +25,6 @@ class MyOrderController extends Controller
                 'orders.woohoo_order_id',
                 'orders.refno',
                 'orders.order_status',
-                'orders.cards',
                 'orders.denomination',
                 'orders.quantity',
                 'orders.discounted_amount_value',

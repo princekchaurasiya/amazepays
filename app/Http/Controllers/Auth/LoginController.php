@@ -103,7 +103,7 @@ class LoginController extends Controller
                 ]);
             }
 
-            Log::warning('Login failed - wrong password', ['identifier' => $identifier]);
+            Log::warning('Login failed - wrong password');
 
             return response()->json([
                 'status' => 400,

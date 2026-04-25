@@ -3,6 +3,7 @@
 namespace App\Services\Order;
 
 use App\Models\Order;
+use App\Mail\AdminOrderFailureMail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -34,14 +35,30 @@ final class WoohooLegacyNotificationService
         }
 
         try {
-            $pdf = Pdf::loadView('layouts.invoice', $prepareMailDetails);
+            $htmlInvoice = app(InvoiceHtmlRenderer::class)->render($prepareMailDetails);
+            $pdf = Pdf::loadHTML($htmlInvoice);
 
-            Mail::send(['html' => 'layouts.mail'], compact('prepareMailDetails', 'pdf'), function ($message) use ($prepareMailDetails, $pdf) {
-                $message->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
-                    ->to($prepareMailDetails['billing_email'], $prepareMailDetails['billing_name'])
-                    ->subject(config('companyDefaultValues.default_subject'))
-                    ->attachData($pdf->output(), 'invoice.pdf');
-            });
+            $subject = (string) config('companyDefaultValues.default_subject');
+            $html = '<p>Thank you for your purchase. Your invoice is attached.</p>';
+
+            Mail::to($prepareMailDetails['billing_email'], $prepareMailDetails['billing_name'])
+                ->send(
+                    (new class($subject, $html, $pdf) extends \Illuminate\Mail\Mailable {
+                        public function __construct(
+                            private readonly string $subjectLine,
+                            private readonly string $htmlBody,
+                            private readonly \Barryvdh\DomPDF\PDF $pdf,
+                        ) {}
+
+                        public function build()
+                        {
+                            return $this->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
+                                ->subject($this->subjectLine)
+                                ->html($this->htmlBody)
+                                ->attachData($this->pdf->output(), 'invoice.pdf');
+                        }
+                    })
+                );
         } catch (\Throwable $e) {
             Log::error('Failed to send transaction mail', [
                 'error_message' => $e->getMessage(),
@@ -70,11 +87,25 @@ final class WoohooLegacyNotificationService
         }
 
         try {
-            Mail::send(['html' => 'layouts.giftmail'], compact('prepareMailDetails', 'cardsArray'), function ($message) use ($prepareMailDetails) {
-                $message->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
-                    ->to($prepareMailDetails['billing_email'], $prepareMailDetails['billing_name'])
-                    ->subject(config('companyDefaultValues.gift_subject'));
-            });
+            $subject = (string) config('companyDefaultValues.gift_subject');
+            $html = '<p>You received a gift card. Please view the card details in your AmazePays account.</p>';
+
+            Mail::to($prepareMailDetails['billing_email'], $prepareMailDetails['billing_name'])
+                ->send(
+                    (new class($subject, $html) extends \Illuminate\Mail\Mailable {
+                        public function __construct(
+                            private readonly string $subjectLine,
+                            private readonly string $htmlBody,
+                        ) {}
+
+                        public function build()
+                        {
+                            return $this->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
+                                ->subject($this->subjectLine)
+                                ->html($this->htmlBody);
+                        }
+                    })
+                );
         } catch (\Throwable $e) {
             Log::error('Failed to send gift mail', [
                 'error_message' => $e->getMessage(),
@@ -182,14 +213,14 @@ final class WoohooLegacyNotificationService
         }
 
         try {
-            Mail::send('email.order-failure', [
-                'orderDetails' => $order,
-            ], function ($message) use ($orderFailureAdminEmail, $orderFailureITAdminEmail) {
-                $message->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'))
-                    ->to($orderFailureAdminEmail)
-                    ->cc($orderFailureITAdminEmail)
-                    ->subject('Order Failure Notification');
-            });
+            $mailable = (new AdminOrderFailureMail($order))
+                ->from(config('companyDefaultValues.sendMailFrom'), config('companyDefaultValues.company_name'));
+
+            $mailer = Mail::to($orderFailureAdminEmail);
+            if (! empty($orderFailureITAdminEmail)) {
+                $mailer->cc($orderFailureITAdminEmail);
+            }
+            $mailer->send($mailable);
         } catch (\Throwable $e) {
             Log::error('Failed to send order failure email', [
                 'order_id' => $order->id,

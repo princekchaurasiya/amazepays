@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\KGenOrder;
 use App\Models\Order;
+use App\Models\ProviderOrder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,9 +37,9 @@ class ProviderDashboardController extends Controller
                 [
                     'key' => 'kgen',
                     'label' => 'KGen / EXLR8',
-                    'healthy' => (bool) env('EXLR8_BASE_URL') && (bool) env('EXLR8_USER_ID'),
-                    'href' => route('panel.kgen.index'),
-                    'note' => null,
+                    'healthy' => (bool) config('kgen.api_url') && (bool) config('kgen.api_key'),
+                    'href' => route('panel.providers.index'),
+                    'note' => 'Legacy KGen storefront and wallet UIs are retired. Fulfillment uses ProviderOrder + GiftCard when orders specify provider kgen.',
                 ],
                 [
                     'key' => 'vd',
@@ -60,7 +60,7 @@ class ProviderDashboardController extends Controller
             ],
             'order_stats' => [
                 'storefront_orders' => Order::query()->count(),
-                'kgen_orders' => KGenOrder::query()->count(),
+                'kgen_provider_orders' => ProviderOrder::query()->where('provider', 'kgen')->count(),
             ],
         ]);
     }

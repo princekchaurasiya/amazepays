@@ -20,6 +20,8 @@ class OrderFulfillmentOrchestrator
 {
     public function __construct(
         private VouchagramOrderFulfillmentService $vouchagramFulfillment,
+        private ProviderOrderRecorder $providerOrderRecorder,
+        private WoohooGiftCardPersister $giftCardPersister,
     ) {}
 
     public function fulfillPaidOrder(Order $order): void
@@ -182,12 +184,36 @@ class OrderFulfillmentOrchestrator
         }
 
         $order->update($payload);
+
+        if ($result->success && in_array($result->status, ['fulfilled', 'confirmed'], true)) {
+            $this->giftCardPersister->persistFromVoucherOrderResult($order->fresh(), $result, $providerName);
+        }
+
+        if ($providerName === 'woohoo' && $result->providerOrderId) {
+            $rowStatus = 'processing';
+            if ($result->success && in_array($result->status, ['fulfilled', 'confirmed'], true)) {
+                $rowStatus = 'succeeded';
+            } elseif (! $result->success) {
+                $rowStatus = 'failed';
+            }
+            $this->providerOrderRecorder->recordWoohooProviderId(
+                $order->fresh(),
+                $result->providerOrderId,
+                $rowStatus,
+            );
+        }
     }
 
     private function resolveProviderOrderId(Order $order, string $providerName): ?string
     {
         if ($providerName === 'woohoo') {
-            return $order->woohoo_order_id ?: null;
+            $fromRow = $order->providerOrders()
+                ->where('provider', 'woohoo')
+                ->whereNotNull('provider_order_id')
+                ->orderByDesc('id')
+                ->value('provider_order_id');
+
+            return $fromRow ? (string) $fromRow : ($order->woohoo_order_id ?: null);
         }
 
         if (str_starts_with($providerName, 'vouchagram')) {

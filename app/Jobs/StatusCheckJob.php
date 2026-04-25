@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Helpers\ApiSignatureHelper;
 use App\Models\Order;
+use App\Services\Order\WoohooGiftCardPersister;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -128,9 +129,10 @@ class StatusCheckJob implements ShouldQueue
         if ($response->status() == 200) {
             $responseData = $response->json();
             if (isset($responseData['cards'])) {
-                $encryptedCards = encrypt(json_encode($responseData['cards']));
-                // Update by Woohoo order id as that maps to remote order
-                Order::where('woohoo_order_id', $orderId)->update(['cards' => $encryptedCards]);
+                $order = Order::where('woohoo_order_id', $orderId)->first();
+                if ($order) {
+                    app(WoohooGiftCardPersister::class)->syncWoohooCards($order->fresh(), (array) $responseData['cards']);
+                }
             }
         }
     }

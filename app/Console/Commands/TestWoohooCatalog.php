@@ -92,8 +92,8 @@ class TestWoohooCatalog extends Command
         // Debug output
         $this->info('Checking credentials...');
         $this->info('Woohoo URL: '.($woohooUrl ?: 'NOT SET'));
-        $this->info('Client Secret: '.($clientSecret ? substr($clientSecret, 0, 10).'...' : 'NOT SET'));
-        $this->info('Bearer Token: '.($bearerToken ? substr($bearerToken, 0, 20).'...' : 'NOT SET'));
+        $this->info('Client Secret: '.($clientSecret ? '[redacted]' : 'NOT SET'));
+        $this->info('Bearer Token: '.($bearerToken ? '[redacted]' : 'NOT SET'));
 
         if (! $woohooUrl || ! $clientSecret || ! $bearerToken) {
             $this->warn('Missing credentials. Checking database settings...');
@@ -103,11 +103,7 @@ class TestWoohooCatalog extends Command
             } else {
                 $this->info('Found '.$settings->count().' API settings in database:');
                 foreach ($settings as $s) {
-                    $val = $s->value;
-                    if (strlen($val) > 30) {
-                        $val = substr($val, 0, 30).'...';
-                    }
-                    $this->line("  - {$s->key}: {$val}");
+                    $this->line("  - {$s->key}: [redacted]");
                 }
             }
 

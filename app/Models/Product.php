@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Facades\Schema;
 
 class Product extends Model
@@ -130,9 +129,10 @@ class Product extends Model
         return $this->belongsTo(SyncedCategory::class, 'synced_category_id');
     }
 
-    public function orders(): HasMany
+    public function orders(): BelongsToMany
     {
-        return $this->hasMany(Order::class, 'sku', 'sku');
+        return $this->belongsToMany(Order::class, 'order_items', 'product_id', 'order_id')
+            ->withTimestamps();
     }
 
     public function cartItems(): HasMany
@@ -140,14 +140,9 @@ class Product extends Model
         return $this->hasMany(CartItem::class, 'product_id');
     }
 
-    public function orderSummaries(): HasManyThrough
-    {
-        return $this->hasManyThrough(OrderSummary::class, Order::class, 'sku', 'order_id', 'sku', 'id');
-    }
-
     public function brand(): BelongsTo
     {
-        return $this->belongsTo(StorefrontBrand::class, 'brand_id');
+        return $this->belongsTo(Brand::class, 'brand_id');
     }
 
     public function productMedia(): HasMany

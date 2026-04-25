@@ -5,14 +5,10 @@ use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\Voucher\LystoGiftCardController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\ContactUsController;
-use App\Http\Controllers\Voucher\KGenCatalogController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ErrorController;
-use App\Http\Controllers\Voucher\ValueDesignEvcRequestController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\InvoiceController;
-use App\Http\Controllers\Admin\KGenDistributorWalletController;
-use App\Http\Controllers\Voucher\KGenOrderController;
 use App\Http\Controllers\MyOrderController;
 use App\Http\Controllers\PaymentStatusController;
 use App\Http\Controllers\ProductSlugController;
@@ -97,26 +93,11 @@ Route::post('/save-contact', [ContactUsController::class, 'saveContact'])->name(
 // ── Public Catalog APIs ─────────────────────────────────────────────
 Route::get('/api/vd-brands/home', [ValueDesignStorefrontController::class, 'brandsForHome'])->name('vd.brands.home');
 
-// ── KGen Routes ─────────────────────────────────────────────────────
-// All KGen URLs are grouped under a consistent prefix and naming scheme.
-Route::prefix('kgen')->name('kgen.')->group(function () {
-    Route::get('/products', [KGenCatalogController::class, 'showproducts'])->name('products');
-    Route::get('/products/{productID}', [KGenCatalogController::class, 'getproductsbyID'])->name('products.show');
-    Route::get('/place-order', [KGenOrderController::class, 'showForm'])->name('order.form');
-    Route::post('/place-order', [KGenOrderController::class, 'placeOrder'])->name('order.submit');
-    Route::get('/order/{order}/assets', [KGenOrderController::class, 'showAssets'])->name('order.assets');
-    Route::get('/order/{order}/download', [KGenOrderController::class, 'downloadAsset'])->name('order.download');
-    Route::get('/order/{orderID}/monitor', [KGenOrderController::class, 'monitorOrder'])->name('order.monitor');
-    Route::get('/order/success/{orderId}', [KGenOrderController::class, 'showSuccess'])->name('order.success');
-    Route::get('/order/failed/{orderId}', [KGenOrderController::class, 'showFailed'])->name('order.failed');
-    Route::get('/evc-request/create', [ValueDesignEvcRequestController::class, 'create'])->name('evc.request.create');
-    Route::post('/evc-request', [ValueDesignEvcRequestController::class, 'store'])->name('evc.request.store');
-
-    Route::middleware('auth')->group(function () {
-        Route::get('/orders', [KGenOrderController::class, 'listOrders'])->name('orders.list');
-        Route::get('/orders/data', [KGenOrderController::class, 'getOrders'])->name('orders.get');
-    });
-});
+// ── Legacy KGen / public EVC form (retired) ───────────────────────────
+// Old storefront used /kgen/* and stored rows in legacy tables. Phase 3 uses
+// ProviderOrder + GiftCard; admin Value Design tools live under /panel/value-design.
+Route::redirect('/kgen', '/', 301);
+Route::redirect('/kgen/{any}', '/', 301)->where('any', '.*');
 
 // ── Admin-Only Routes (legacy admin.user middleware) ─────────────────
 // NOTE: Provider dashboards and tools are now under /panel (routes/admin.php).

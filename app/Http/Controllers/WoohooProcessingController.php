@@ -170,7 +170,7 @@ class WoohooProcessingController extends Controller
 
                     // CRITICAL: Also update OrderSummary.order_status to maintain consistency
                     if ($orderSummary) {
-                        $orderSummary->order_status = 'PENDING';
+                        $orderSummary->fulfilment_status = 'PENDING';
                         $orderSummary->save();
                     }
 
@@ -188,7 +188,7 @@ class WoohooProcessingController extends Controller
 
                     // CRITICAL: Also update OrderSummary.order_status to maintain consistency
                     if ($orderSummary) {
-                        $orderSummary->order_status = 'FAILED';
+                        $orderSummary->fulfilment_status = 'FAILED';
                         $orderSummary->save();
                     }
 
@@ -478,7 +478,7 @@ class WoohooProcessingController extends Controller
                     // CRITICAL: Also update OrderSummary.order_status to maintain consistency
                     $orderSummary = OrderSummary::where('order_id', $Order->id)->first();
                     if ($orderSummary) {
-                        $orderSummary->order_status = 'COMPLETE';
+                        $orderSummary->fulfilment_status = 'COMPLETE';
                         $orderSummary->save();
 
                         Log::info('✅ OrderSummary status updated to COMPLETE', [
@@ -503,7 +503,7 @@ class WoohooProcessingController extends Controller
                     // CRITICAL: Also update OrderSummary.order_status to maintain consistency
                     $orderSummary = OrderSummary::where('order_id', $Order->id)->first();
                     if ($orderSummary) {
-                        $orderSummary->order_status = 'FAILED';
+                        $orderSummary->fulfilment_status = 'FAILED';
                         $orderSummary->save();
 
                         Log::info('✅ OrderSummary status updated to FAILED', [

@@ -26,13 +26,9 @@ class ProductCategoryController extends Controller
         $signature = ApiSignatureHelper::generateSignature($requestBody, $requestHttpMethod, $absApiUrl, $clientSecret);
         $dateAtClient = Carbon::now()->toIso8601String();
 
-        // Logging variables
-        Log::info('Request Variables:', [
-            'absApiUrl' => $absApiUrl,
-            'clientSecret' => $clientSecret,
-            'bearerToken' => $bearerToken,
-            'signature' => $signature,
-            'dateAtClient' => $dateAtClient,
+        Log::info('Woohoo themes category request prepared', [
+            'url' => $absApiUrl,
+            'has_bearer_token' => ! empty($bearerToken),
         ]);
 
         try {
@@ -51,13 +47,9 @@ class ProductCategoryController extends Controller
                 'url' => $absApiUrl,
             ]);
 
-            Log::info('Product Response:', [
+            Log::info('Woohoo themes category response', [
                 'status_code' => $statusCode,
-                'data' => json_encode($responseData, JSON_PRETTY_PRINT),
             ]);
-
-            // Inspect variables using dd()
-            dd($absApiUrl, $clientSecret, $bearerToken, $signature, $dateAtClient, $statusCode, $responseData);
 
             return response()->json($responseData, $statusCode);
         } catch (\Exception $e) {

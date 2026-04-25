@@ -20,33 +20,34 @@ final class WoohooLegacyOrderSyncService
     public function __construct(
         private WoohooApiService $woohooApi,
         private WoohooLegacyNotificationService $legacyNotifications,
+        private ProviderOrderRecorder $providerOrderRecorder,
+        private WoohooGiftCardPersister $giftCardPersister,
     ) {}
 
     public function handleSuccessFullOrder(mixed $orderCreatedResponse): void
     {
-        Log::info(777);
-        Log::info('This is card response data: '.json_encode($orderCreatedResponse));
-        Log::info('About to sync order from Woohoo response');
+        Log::info('Woohoo order response received; starting sync');
 
         $orderId = $this->syncOrderFromWoohooResponse($orderCreatedResponse);
 
-        Log::info('Order synced from Woohoo successfully, orderId = '.$orderId);
+        Log::info('Woohoo order synced successfully', ['order_id' => $orderId]);
 
         $order = DB::table('orders')
-            ->join('unlimit_payment', function ($join) {
-                $join->on('unlimit_payment.order_id', '=', 'orders.id');
+            ->join('payments', function ($join) {
+                $join->on('payments.order_id', '=', 'orders.id')
+                    ->where('payments.gateway', 'unlimit');
             })
+            ->join('order_items', 'order_items.order_id', '=', 'orders.id')
             ->join('products', function ($join) {
-                $join->on(DB::raw('products.sku COLLATE utf8mb4_unicode_ci'), '=', DB::raw('
-                CASE
-                    WHEN orders.sku IS NOT NULL
-                        THEN orders.sku COLLATE utf8mb4_unicode_ci
-                    ELSE unlimit_payment.sku COLLATE utf8mb4_unicode_ci
-                END
-            '));
+                $join->on(
+                    DB::raw('products.sku COLLATE utf8mb4_unicode_ci'),
+                    '=',
+                    DB::raw('order_items.sku_snapshot COLLATE utf8mb4_unicode_ci'),
+                )->whereColumn('products.tenant_id', 'orders.tenant_id');
             })
             ->where('orders.id', $orderId)
-            ->select('orders.*', 'unlimit_payment.*', 'products.*')
+            ->orderBy('order_items.id')
+            ->select('orders.*', 'payments.*', 'products.*')
             ->first();
 
         $orderData = $order ? json_decode(json_encode($order), true) : [];
@@ -103,13 +104,8 @@ final class WoohooLegacyOrderSyncService
         $invoiceDate = date('d-m-Y');
 
         $cardsArray = [];
-        try {
-            if (! empty($orderData['cards'])) {
-                $cardsArray = json_decode(decrypt((string) $orderData['cards'], env('ENCRYPTION_KEY')), true) ?: [];
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Card decrypt failed; will attempt to fetch cards', ['error' => $e->getMessage()]);
-            $cardsArray = [];
+        if ($Order) {
+            $cardsArray = $this->giftCardPersister->displayCardsForOrder($Order->fresh(['giftCards']));
         }
 
         if (empty($cardsArray)) {
@@ -140,9 +136,10 @@ final class WoohooLegacyOrderSyncService
                         }
 
                         if (! empty($cardsArray)) {
-                            Order::where('id', $orderId)->update([
-                                'cards' => encrypt(json_encode($cardsArray), env('ENCRYPTION_KEY')),
-                            ]);
+                            $persistOrder = Order::query()->find($orderId);
+                            if ($persistOrder) {
+                                $this->giftCardPersister->syncWoohooCards($persistOrder->fresh(), $cardsArray);
+                            }
                         }
                     }
                 }
@@ -153,6 +150,8 @@ final class WoohooLegacyOrderSyncService
                 ]);
             }
         }
+
+        // cards now live in normalized gift_cards; legacy orders.cards blob is retired.
 
         Order::where('id', $orderId)->update(['invoice_number' => $invoiceNumber]);
 
@@ -242,8 +241,7 @@ final class WoohooLegacyOrderSyncService
         $orderId = session('checkout_order_id');
         $refno = session('checkout_refno');
 
-        Log::info('Reference number', ['ref_no' => $refno, 'order_id' => $orderId]);
-        Log::info('Cache order data', ['order_data' => $orderCreatedResponse]);
+        Log::info('Woohoo sync: reference number present', ['order_id' => $orderId, 'has_refno' => ! empty($refno)]);
 
         $isSuccessful = false;
 
@@ -275,17 +273,24 @@ final class WoohooLegacyOrderSyncService
         $order->update([
             'woohoo_order_id' => $orderCreatedResponse['orderId'] ?? null,
             'order_status' => $normalizedStatus,
-            'cards' => encrypt(json_encode($orderCreatedResponse['cards'] ?? []), env('ENCRYPTION_KEY')),
-            'order_cancel' => json_encode($orderCreatedResponse['cancel'] ?? []),
-            'order_payment' => isset($orderCreatedResponse['payments']) ? json_encode($orderCreatedResponse['payments']) : null,
-            'currency' => json_encode($orderCreatedResponse['currency'] ?? []),
-            'additionalTxnFields' => isset($orderCreatedResponse['additionalTxnFields']) ? json_encode($orderCreatedResponse['additionalTxnFields']) : null,
+            'order_cancel' => $orderCreatedResponse['cancel'] ?? [],
+            'order_payment' => $orderCreatedResponse['payments'] ?? null,
+            'woohoo_currency_snapshot' => $orderCreatedResponse['currency'] ?? null,
+            'additional_txn_fields' => $orderCreatedResponse['additionalTxnFields'] ?? null,
         ]);
 
         $existingOrderSummary = OrderSummary::where('order_id', $order->id)->first();
         if ($existingOrderSummary) {
-            $existingOrderSummary->order_status = $normalizedStatus;
+            $existingOrderSummary->fulfilment_status = $normalizedStatus;
             $existingOrderSummary->save();
+        }
+
+        $order->refresh();
+        $this->providerOrderRecorder->recordWoohooFromApiResponse($order, $orderCreatedResponse);
+
+        $cardsRaw = $orderCreatedResponse['cards'] ?? [];
+        if (is_array($cardsRaw) && $cardsRaw !== []) {
+            $this->giftCardPersister->syncWoohooCards($order->fresh(), $cardsRaw);
         }
 
         return $order->id;

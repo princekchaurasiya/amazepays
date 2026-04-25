@@ -59,7 +59,7 @@ function sectionPayload(row: SectionRow, overrides: Partial<SectionRow> = {}) {
         status: merged.status,
         sort_order: merged.sort_order,
     };
-    if (merged.section_type === 'hot_deals') {
+    if (merged.section_type === 'featured_products') {
         const n = Number(merged.config?.priority_product_count ?? 10);
         base.config = { priority_product_count: Number.isFinite(n) && n > 0 ? n : 10 };
     }
@@ -88,7 +88,7 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
 
     const sectionForm = useForm({
         section_name: '',
-        section_type: 'custom_html',
+        section_type: 'custom',
         title: '',
         content: '',
         status: true,
@@ -111,7 +111,7 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
         setSectionErrors({});
         sectionForm.setData({
             section_name: '',
-            section_type: 'custom_html',
+            section_type: 'custom',
             title: '',
             content: '',
             status: true,
@@ -158,7 +158,7 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
             status: d.status,
             sort_order: d.sort_order,
         };
-        if (d.section_type === 'hot_deals') {
+        if (d.section_type === 'featured_products') {
             payload.config = { priority_product_count: d.priority_product_count };
         }
 
@@ -250,10 +250,9 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
                                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Homepage sections</h2>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                     Turn blocks on or off and set their order on the storefront home page. The{' '}
-                                    <strong className="font-medium">banner</strong> row only shows or hides the hero
-                                    area — upload <strong className="font-medium">desktop and mobile images</strong> under{' '}
-                                    <strong className="font-medium">Hero carousel</strong> below. Use{' '}
-                                    <strong className="font-medium">Custom HTML</strong> for extra content blocks.
+                                    <strong className="font-medium">carousel</strong> section controls the hero area —
+                                    manage items and images under <strong className="font-medium">Hero carousel</strong> below.
+                                    Use <strong className="font-medium">Custom</strong> for a text/HTML block.
                                 </p>
                             </div>
                         </div>
@@ -344,7 +343,7 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
                                             </td>
                                             <td className="px-3 py-2 text-gray-700 dark:text-gray-300 max-w-[200px] truncate">
                                                 {row.title || '—'}
-                                                {row.section_type === 'hot_deals' && (
+                                                {row.section_type === 'featured_products' && (
                                                     <span className="block text-xs text-gray-500 mt-0.5">
                                                         Limit: {String(row.config?.priority_product_count ?? 10)} products
                                                     </span>
@@ -376,7 +375,7 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
                                             <td className="px-3 py-2 text-right">
                                                 {canEditSections ? (
                                                     <div className="inline-flex flex-wrap items-center gap-1 justify-end">
-                                                        {row.section_type === 'banner' && (
+                                                        {row.section_type === 'carousel' && (
                                                             <Link
                                                                 href="/panel/settings/hero-slides"
                                                                 className="mr-1 px-2 py-1 rounded-md text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
@@ -580,7 +579,7 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
                                     placeholder="Shown above the section on the storefront"
                                 />
                             </div>
-                            {sectionForm.data.section_type === 'hot_deals' && (
+                            {sectionForm.data.section_type === 'featured_products' && (
                                 <div>
                                     <label className={labelCls}>Priority products to show</label>
                                     <input
@@ -595,7 +594,7 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
                                     />
                                 </div>
                             )}
-                            {sectionForm.data.section_type === 'custom_html' && (
+                            {sectionForm.data.section_type === 'custom' && (
                                 <div>
                                     <label className={labelCls}>HTML content</label>
                                     <textarea

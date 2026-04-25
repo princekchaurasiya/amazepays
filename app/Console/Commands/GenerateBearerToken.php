@@ -51,31 +51,11 @@ class GenerateBearerToken extends Command
                 'password' => $password,
             ];
 
-            Log::info('Authorization Code Request:', [
-                'url' => $absApiUrl,
-                'data' => $requestData,
-                'data_types' => [
-                    'clientId' => gettype($clientId),
-                    'username' => gettype($username),
-                    'password' => gettype($password),
-                ],
-            ]);
-
             // Try JSON format with same headers as other Woohoo API calls
             // Use send() method to have more control over the request
             $requestBody = json_encode($requestData);
 
-            Log::info('Authorization Code Request Details:', [
-                'url' => $absApiUrl,
-                'method' => 'POST',
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Accept' => '*/*',
-                    'User-Agent' => 'Amazepays/1.0 (+https://amazepays.in)',
-                ],
-                'body' => $requestBody,
-                'body_data' => $requestData,
-            ]);
+            Log::info('Woohoo auth-code request', ['url' => $absApiUrl]);
 
             $authorizationCodeResp = Http::acceptJson()
                 ->withHeaders([
@@ -85,10 +65,7 @@ class GenerateBearerToken extends Command
                 ])
                 ->send('POST', $absApiUrl, ['body' => $requestBody]);
 
-            Log::info('Authorization Code Response:', [
-                'status_code' => $authorizationCodeResp->status(),
-                'data' => $authorizationCodeResp->json(),
-            ]);
+            Log::info('Woohoo auth-code response', ['status_code' => $authorizationCodeResp->status()]);
 
             // Log::info('Authorization Code Request:', [
             //     'url' => $absApiUrl,
@@ -99,12 +76,7 @@ class GenerateBearerToken extends Command
             if ($authorizationCodeResp->successful()) {
                 $authorizationCode = $authorizationCodeResp->json();
 
-                Log::info($authorizationCode);
-
                 $tokenUrl = 'https://'.$woohooUrl.'/oauth2/token';
-
-                // Log URL construction for verification (matching old format)
-                Log::info($tokenUrl);
 
                 Log::info('🔍 Verifying Token URL:', [
                     'constructed_token_url' => $tokenUrl,
@@ -118,10 +90,7 @@ class GenerateBearerToken extends Command
                     'authorizationCode' => $authorizationCode['authorizationCode'],
                 ];
 
-                Log::info('Token Request Data:', [
-                    'url' => $tokenUrl,
-                    'data' => $tokenRequestData,
-                ]);
+                Log::info('Woohoo token request', ['url' => $tokenUrl]);
 
                 // Try JSON format with same headers as other Woohoo API calls
                 $tokenRequestBody = json_encode($tokenRequestData);
@@ -134,11 +103,7 @@ class GenerateBearerToken extends Command
                     ])
                     ->send('POST', $tokenUrl, ['body' => $tokenRequestBody]);
 
-                Log::info('Token Request:', [
-                    'url' => $tokenUrl,
-                    'data' => $tokenResp->json(),
-                    'status_code' => $tokenResp->status(),
-                ]);
+                Log::info('Woohoo token response', ['status_code' => $tokenResp->status()]);
 
                 if ($tokenResp->successful()) {
                     $token = $tokenResp->json()['token'];
@@ -163,7 +128,7 @@ class GenerateBearerToken extends Command
                     Log::info('GenerateBearerToken command ran successfully at:', ['update_time' => $updateTime]);
 
                     $this->info('Bearer Token generated and stored successfully.');
-                    $this->info('Bearer Token: '.$token);
+                    $this->info('Bearer Token: [redacted]');
                 } else {
                     $statusCode = $tokenResp->status();
                     $responseBody = $tokenResp->body();
@@ -171,8 +136,6 @@ class GenerateBearerToken extends Command
 
                     Log::error('Failed to generate Bearer Token.', [
                         'status_code' => $statusCode,
-                        'response_body' => $responseBody,
-                        'response_data' => $responseData,
                         'url' => $tokenUrl,
                     ]);
 
@@ -193,8 +156,6 @@ class GenerateBearerToken extends Command
 
                 Log::error('Authorization code verification failed.', [
                     'status_code' => $statusCode,
-                    'response_body' => $responseBody,
-                    'response_data' => $responseData,
                     'url' => $absApiUrl,
                 ]);
 

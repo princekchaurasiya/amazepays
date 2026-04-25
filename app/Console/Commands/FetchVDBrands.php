@@ -5,8 +5,11 @@ namespace App\Console\Commands;
 use App\Http\Services\VDWebApiService;
 use App\Models\Brand;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class FetchVDBrands extends Command
 {
@@ -103,23 +106,27 @@ class FetchVDBrands extends Command
             $storedCount = 0;
             $updatedCount = 0;
 
+            $tenantId = 1;
+            if (Schema::hasTable('tenants')) {
+                $tenantId = (int) (DB::table('tenants')->orderBy('id')->value('id') ?? 1);
+            }
+
             foreach ($brandsArray as $brandData) {
+                $sourceBrandId = (string) ($brandData['BrandCode'] ?? '');
+                $brandName = (string) ($brandData['BrandName'] ?? '');
+                if ($sourceBrandId === '' || $brandName === '') {
+                    continue;
+                }
+
                 $brand = Brand::updateOrCreate(
-                    ['brand_code' => $brandData['BrandCode']],
+                    ['source_provider' => 'value_design', 'source_brand_id' => $sourceBrandId],
                     [
-                        'brand_name' => $brandData['BrandName'] ?? null,
-                        'brand_type' => $brandData['Brandtype'] ?? null,
-                        'discount' => $brandData['Discount'] ?? null,
-                        'min_price' => $brandData['minPrice'] ?? null,
-                        'max_price' => $brandData['maxPrice'] ?? null,
-                        'denomination_list' => $brandData['DenominationList'] ?? null,
-                        'stock_available' => ! empty($brandData['StockAvailable']) ? (int) $brandData['StockAvailable'] : 0,
-                        'category' => $brandData['Category'] ?? null,
-                        'description' => $brandData['Description'] ?? null,
-                        'images' => json_decode($brandData['Images'], true) ?: null,
-                        'tnc' => $brandData['TnC'] ?? null,
-                        'important_instruction' => $brandData['ImportantInstruction'] ?? null,
-                        'redeem_steps' => $brandData['RedeemSteps'] ?? null,
+                        'tenant_id' => $tenantId,
+                        'name' => $brandName,
+                        'slug' => Str::slug($brandName) ?: Str::slug($sourceBrandId),
+                        'status' => 'active',
+                        'is_featured' => false,
+                        'display_order' => 0,
                     ]
                 );
 

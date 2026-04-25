@@ -2,9 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\SecurityEventLog;
-use App\Models\StorefrontBrand;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -52,8 +52,8 @@ class HandleInertiaRequests extends Middleware
             'ziggy' => fn () => [
                 'location' => $request->url(),
             ],
-            'storefrontCategories' => fn () => Category::query()->orderBy('order')->get(),
-            'storefrontBrandsNav' => fn () => StorefrontBrand::query()->orderBy('order')->limit(24)->get(),
+            'storefrontCategories' => fn () => Category::query()->orderBy('display_order')->get(),
+            'storefrontBrandsNav' => fn () => Brand::query()->orderBy('display_order')->limit(24)->get(),
             'company' => fn () => [
                 'official_name' => config('companyDefaultValues.company_official_name'),
                 'address' => config('companyDefaultValues.company_address'),
@@ -71,6 +71,7 @@ class HandleInertiaRequests extends Middleware
             'i18n' => fn () => [
                 'storefront' => [
                     'product' => __('storefront.product'),
+                    'order_detail' => __('storefront.order_detail'),
                 ],
                 'checkout' => __('checkout'),
                 'auth_ui' => __('auth_ui'),

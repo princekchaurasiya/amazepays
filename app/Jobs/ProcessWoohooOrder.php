@@ -115,16 +115,11 @@ class ProcessWoohooOrder implements ShouldQueue
                 Log::warning('JWT timing decode failed (job)');
             }
 
-            // Log masked request details
             Log::info('Woohoo Create Order - Request', [
                 'url' => $absApiUrl,
                 'method' => 'POST',
-                'headers' => [
-                    'Authorization' => 'Bearer '.(is_string($bearerToken) && strlen($bearerToken) > 8 ? substr($bearerToken, 0, 4).str_repeat('*', strlen($bearerToken) - 8).substr($bearerToken, -4) : '****'),
-                    'signature' => is_string($signature) && strlen($signature) > 10 ? substr($signature, 0, 6).str_repeat('*', strlen($signature) - 10).substr($signature, -4) : '****',
-                    'dateAtClient' => $dateAtClient,
-                ],
-                'body' => $requestBodyData,
+                'order_id' => $order->id,
+                'refno' => $refno,
             ]);
 
             // Send exact JSON body that was signed
@@ -144,7 +139,7 @@ class ProcessWoohooOrder implements ShouldQueue
             $parsedBody = json_decode($rawBody, true);
             Log::info('Woohoo Create Order - Response', [
                 'status_code' => $response->status(),
-                'body' => $parsedBody !== null ? $parsedBody : ['raw' => (is_string($rawBody) ? mb_substr($rawBody, 0, 2000) : $rawBody)],
+                'order_id' => $order->id,
             ]);
 
             if ($response->successful() && isset($responseData['status'])) {

@@ -312,7 +312,7 @@ class CCAvenueController extends Controller
     protected function storeCcAvenueData(Order $order, $ccAvenueCollectedDataArray)
     {
 
-        // Payment record handling removed - CcAvenuePayment model does not exist
+        // Payment persistence deferred: use consolidated {@see \App\Models\Payment} (gateway ccavenue) when this path is re-enabled.
         Log::info('Payment processing for order_id: '.$order->id);
 
         return;

@@ -14,7 +14,8 @@ class Category extends Model
     use HasFactory;
 
     protected $fillable = [
-        'parent_id', 'name', 'slug', 'order', 'thumbnail', 'accent_color',
+        'tenant_id', 'parent_id', 'name', 'slug', 'description', 'icon_url', 'banner_url',
+        'depth', 'display_order', 'status', 'is_featured',
         'meta_title', 'meta_description', 'meta_keywords', 'og_image', 'canonical_url',
     ];
 
@@ -23,15 +24,11 @@ class Category extends Model
         parent::boot();
 
         static::creating(function (Category $category) {
-            Log::info('Creating category: ', ['name' => $category->name]);
             $category->slug = Str::slug($category->name);
-            Log::info('Generated slug: ', ['slug' => $category->slug]);
         });
 
         static::updating(function (Category $category) {
-            Log::info('Updating category: ', ['name' => $category->name]);
             $category->slug = Str::slug($category->name);
-            Log::info('Updated slug: ', ['slug' => $category->slug]);
         });
     }
 

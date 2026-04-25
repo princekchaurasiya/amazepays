@@ -3,7 +3,8 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CatalogController;
 use App\Http\Controllers\Api\V1\CheckoutSessionController;
-use App\Http\Controllers\Api\V1\HomeController;
+use App\Http\Controllers\Api\V1\CustomerController;
+use App\Http\Controllers\Api\V1\HomepageController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\PaymentSessionController;
 use App\Http\Controllers\Api\V1\TransactionPinController;
@@ -45,7 +46,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     | Public Catalog (B2C — browsing allowed without login)
     |--------------------------------------------------------------------------
     */
-    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    // Canonical homepage document for web + React Native clients.
+    Route::get('/homepage', [HomepageController::class, 'show'])->name('homepage')->middleware('tenant');
+
+    // Legacy endpoint: keep path, but serve the same document (breaking change allowed).
+    Route::get('/home', [HomepageController::class, 'show'])->name('home')->middleware('tenant');
 
     Route::prefix('catalog')->name('catalog.')->group(function () {
         Route::get('/', [CatalogController::class, 'index'])->name('index');
@@ -72,6 +77,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::get('/auth/me', [AuthController::class, 'me'])->name('auth.me');
 
+        // Customers
+        Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+
         // Checkout sessions (draft order creation)
         Route::prefix('checkout')->name('checkout.')->group(function () {
             Route::post('/sessions', [CheckoutSessionController::class, 'create'])->name('sessions.create')
@@ -82,6 +90,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::prefix('payments')->name('payments.')->group(function () {
             Route::post('/sessions', [PaymentSessionController::class, 'create'])->name('sessions.create')
                 ->middleware('idempotency:api.v1.payments.sessions.create');
+            Route::get('/sessions/{payment}', [PaymentSessionController::class, 'show'])->name('sessions.show');
+            Route::post('/sessions/{payment}/verify', [PaymentSessionController::class, 'verify'])->name('sessions.verify')
+                ->middleware('idempotency:api.v1.payments.sessions.verify');
         });
 
         // Wallet
@@ -97,6 +108,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::prefix('orders')->name('orders.')->group(function () {
             Route::get('/', [OrderController::class, 'index'])->name('index');
             Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+            Route::post('/{order}/refund', [OrderController::class, 'refund'])->name('refund')
+                ->middleware('idempotency:api.v1.orders.refund');
             Route::post('/', [OrderController::class, 'placeOrder'])->name('store')
                 ->middleware(['idempotency:api.v1.orders.store', 'purchase.limits', 'vpn.check']);
             Route::get('/{order}/voucher-code', [OrderController::class, 'getVoucherCode'])->name('voucher')

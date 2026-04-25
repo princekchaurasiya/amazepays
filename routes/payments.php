@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\WoohooProcessingController;
-use App\Http\Controllers\Payment\PaymentSessionController;
 use App\Http\Controllers\Payment\MockRazorpayController;
+use App\Http\Controllers\Payment\PaymentSessionController;
+use App\Http\Controllers\WoohooProcessingController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -65,14 +65,15 @@ Route::middleware(['auth', 'throttle:payments'])->group(function () {
     Route::post('/payment/upi', [PaymentSessionController::class, 'upi'])
         ->middleware('idempotency:web.payment.upi')
         ->name('payment.upi');
-    Route::post('/payment/netbnk', [PaymentSessionController::class, 'netbanking'])
-        ->middleware('idempotency:web.payment.netbnk')
-        ->name('payment.netbnk');
+    // Canonical: netbank (netbnk was a legacy typo)
+    Route::post('/payment/netbank', [PaymentSessionController::class, 'netbanking'])
+        ->middleware('idempotency:web.payment.netbank')
+        ->name('payment.netbank');
 
-    // Legacy typo alias: keep for one release with a redirect.
-    Route::post('/payment/netbank', function () {
-        return redirect()->route('payment.netbnk', [], 301);
-    })->name('payment.netbank.legacy');
+    // Legacy typo alias: preserve POST method.
+    Route::post('/payment/netbnk', function () {
+        return redirect()->route('payment.netbank', [], 308);
+    })->name('payment.netbnk.legacy');
     Route::post('/payment/unlimit', [PaymentSessionController::class, 'unlimit'])
         ->middleware('idempotency:web.payment.unlimit')
         ->name('payment.unlimit');

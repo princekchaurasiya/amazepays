@@ -99,4 +99,9 @@ class Tenant extends Model
     {
         return $this->hasMany(ProviderConnection::class);
     }
+
+    public function isSuspended(): bool
+    {
+        return (string) $this->status === 'suspended';
+    }
 }

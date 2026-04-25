@@ -5,8 +5,8 @@ use App\Http\Controllers\Admin\B2bPortalController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GiftThemeController;
-use App\Http\Controllers\Admin\KGenAdminController;
-use App\Http\Controllers\Admin\KGenDistributorWalletController;
+use App\Http\Controllers\Admin\HomepageBuilderController;
+use App\Http\Controllers\Admin\MediaAssetController;
 use App\Http\Controllers\Admin\OfferController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
@@ -26,7 +26,6 @@ use App\Http\Controllers\Admin\WoohooAdminController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Voucher\ValueDesignStorefrontController;
 use App\Http\Controllers\StoreController;
-use App\Models\Slide;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -130,15 +129,6 @@ Route::prefix('panel')->name('panel.')->middleware(['auth', 'two.factor'])->grou
         Route::patch('/{theme}/toggle', [GiftThemeController::class, 'toggle'])->name('toggle')
             ->middleware('permission:settings.update');
         Route::delete('/{theme}', [GiftThemeController::class, 'destroy'])->name('destroy')
-            ->middleware('permission:settings.update');
-    });
-
-    // Legacy /panel/slides URLs → Settings → Hero carousel
-    Route::prefix('slides')->middleware('permission:settings.view')->group(function () {
-        Route::get('/', fn () => redirect()->route('admin.settings.hero-slides.index'));
-        Route::get('/create', fn () => redirect()->route('admin.settings.hero-slides.create'))
-            ->middleware('permission:settings.update');
-        Route::get('/{slide}/edit', fn (Slide $slide) => redirect()->route('admin.settings.hero-slides.edit', $slide))
             ->middleware('permission:settings.update');
     });
 
@@ -317,10 +307,32 @@ Route::prefix('panel')->name('panel.')->middleware(['auth', 'two.factor'])->grou
         });
     });
 
+    // Homepage Builder (drag/drop sections + publish versions)
+    Route::prefix('homepage-builder')->name('homepage-builder.')->middleware('permission:settings.view')->group(function () {
+        Route::get('/', [HomepageBuilderController::class, 'index'])->name('index');
+        Route::post('/sections', [HomepageBuilderController::class, 'store'])->name('sections.store')
+            ->middleware('permission:settings.update');
+        Route::put('/sections/{section}', [HomepageBuilderController::class, 'update'])->name('sections.update')
+            ->middleware('permission:settings.update');
+        Route::delete('/sections/{section}', [HomepageBuilderController::class, 'destroy'])->name('sections.destroy')
+            ->middleware('permission:settings.update');
+        Route::post('/sections/reorder', [HomepageBuilderController::class, 'reorder'])->name('sections.reorder')
+            ->middleware('permission:settings.update');
+        Route::post('/publish', [HomepageBuilderController::class, 'publish'])->name('publish')
+            ->middleware('permission:settings.update');
+    });
+
+    // Media Library
+    Route::prefix('media')->name('media.')->middleware('permission:settings.view')->group(function () {
+        Route::get('/', [MediaAssetController::class, 'index'])->name('index');
+        Route::post('/', [MediaAssetController::class, 'store'])->name('store')
+            ->middleware('permission:settings.update');
+        Route::delete('/{asset}', [MediaAssetController::class, 'destroy'])->name('destroy')
+            ->middleware('permission:settings.update');
+    });
+
     // Voucher provider dashboards
     Route::get('/providers', [ProviderDashboardController::class, 'index'])->name('providers.index')
-        ->middleware('permission:providers.view');
-    Route::get('/kgen', [KGenAdminController::class, 'index'])->name('kgen.index')
         ->middleware('permission:providers.view');
     Route::get('/value-design', [ValueDesignAdminController::class, 'index'])->name('value-design.index')
         ->middleware('permission:providers.view');
@@ -344,13 +356,6 @@ Route::prefix('panel')->name('panel.')->middleware(['auth', 'two.factor'])->grou
         Route::post('/stores/fetch', [StoreController::class, 'fetchStoresForBrand'])->name('stores.fetch');
         Route::post('/stores/sync', [StoreController::class, 'syncAndShow'])->name('stores.sync');
         Route::get('/stores/export', [StoreController::class, 'exportStores'])->name('stores.export');
-    });
-
-    Route::prefix('kgen')->name('kgen.')->middleware('permission:providers.view')->group(function () {
-        Route::get('/wallet', [KGenDistributorWalletController::class, 'wallet'])->name('wallet');
-        Route::get('/wallet/export-csv', [KGenDistributorWalletController::class, 'exportCsv'])->name('wallet.exportCsv');
-        Route::get('/wallet/latest-balance', [KGenDistributorWalletController::class, 'latest'])->name('wallet.latest');
-        Route::get('/transactions', [KGenDistributorWalletController::class, 'index'])->name('transactions.index');
     });
 
     Route::prefix('lysto')->name('lysto.')->middleware('permission:providers.view')->group(function () {

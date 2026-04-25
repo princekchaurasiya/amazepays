@@ -4,10 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\ApiToken;
 use App\Models\Billing;
-use App\Models\CcAvenuePayment;
 use App\Models\Order;
 use App\Models\OrderSummary;
-use App\Models\UnlimitPayment;
 use App\Models\Payment;
 use App\Models\PaymentEvent;
 use App\Models\Refund;
@@ -61,8 +59,9 @@ class CleanupTestPaymentData extends Command
 
         $tableData = [
             ['Order Summary', $stats['order_summary']],
-            ['Unlimit Payments', $stats['unlimit_payment']],
-            ['CC Avenue Payments', $stats['cc_avenue_payment']],
+            ['Payments', $stats['payments']],
+            ['Payment events', $stats['payment_events']],
+            ['Refunds', $stats['refunds']],
             ['Billings', $stats['billings']],
             ['Orders', $stats['orders']],
         ];
@@ -106,10 +105,11 @@ class CleanupTestPaymentData extends Command
 
             $deletedTable = [
                 ['Order Summary', $deleted['order_summary']],
-                ['Unlimit Payments', $deleted['unlimit_payment']],
-                ['CC Avenue Payments', $deleted['cc_avenue_payment']],
+                ['Payment events', $deleted['payment_events']],
+                ['Refunds', $deleted['refunds']],
+                ['Payments', $deleted['payments']],
                 ['Billings', $deleted['billings']],
-                ['QS Orders', $deleted['orders']],
+                ['Orders', $deleted['orders']],
             ];
 
             if ($includeTokens) {
@@ -156,8 +156,6 @@ class CleanupTestPaymentData extends Command
 
         $stats = [
             'order_summary' => 0,
-            'unlimit_payment' => 0,
-            'cc_avenue_payment' => 0,
             'billings' => 0,
             'payments' => 0,
             'payment_events' => 0,
@@ -169,20 +167,14 @@ class CleanupTestPaymentData extends Command
 
         if ($orderIds || ! $userId) {
             $orderSummaryQuery = OrderSummary::query();
-            $unlimitQuery = UnlimitPayment::query();
-            $ccAvenueQuery = CcAvenuePayment::query();
             $billingQuery = Billing::query();
             $orderQuery = Order::query();
 
             if ($orderIds) {
                 $orderSummaryQuery->whereIn('order_id', $orderIds);
-                $unlimitQuery->whereIn('order_id', $orderIds);
-                $ccAvenueQuery->whereIn('order_id', $orderIds);
                 $billingQuery->whereIn('order_id', $orderIds);
                 $orderQuery->whereIn('id', $orderIds);
             } elseif ($userId) {
-                $unlimitQuery->where('user_id', $userId);
-                $ccAvenueQuery->where('user_id', $userId);
                 $orderQuery->where('user_id', $userId);
                 $orderIds = $orderQuery->pluck('id')->toArray();
                 $orderSummaryQuery->whereIn('order_id', $orderIds);
@@ -190,8 +182,6 @@ class CleanupTestPaymentData extends Command
             }
 
             $stats['order_summary'] = $orderSummaryQuery->count();
-            $stats['unlimit_payment'] = $unlimitQuery->count();
-            $stats['cc_avenue_payment'] = $ccAvenueQuery->count();
             $stats['billings'] = $billingQuery->count();
             $stats['payments'] = Payment::query()->when($orderIds, fn ($q) => $q->whereIn('order_id', $orderIds))->when($userId, fn ($q) => $q->where('user_id', $userId))->count();
             $paymentIds = Payment::query()->when($orderIds, fn ($q) => $q->whereIn('order_id', $orderIds))->when($userId, fn ($q) => $q->where('user_id', $userId))->pluck('id')->toArray();
@@ -210,7 +200,8 @@ class CleanupTestPaymentData extends Command
             $stats['api_tokens'] = 0;
         }
 
-        $stats['total'] = array_sum($stats) - $stats['total']; // Recalculate total
+        $stats['total'] = $stats['order_summary'] + $stats['billings'] + $stats['payments']
+            + $stats['payment_events'] + $stats['refunds'] + $stats['orders'] + $stats['api_tokens'];
 
         return $stats;
     }
@@ -222,8 +213,6 @@ class CleanupTestPaymentData extends Command
     {
         $deleted = [
             'order_summary' => 0,
-            'unlimit_payment' => 0,
-            'cc_avenue_payment' => 0,
             'billings' => 0,
             'payments' => 0,
             'payment_events' => 0,
@@ -248,32 +237,14 @@ class CleanupTestPaymentData extends Command
             $deleted['order_summary'] = OrderSummary::query()->delete();
         }
 
-        // 2. Delete Unlimit Payments
-        if ($orderIds) {
-            $deleted['unlimit_payment'] = UnlimitPayment::whereIn('order_id', $orderIds)->delete();
-        } elseif ($userId) {
-            $deleted['unlimit_payment'] = UnlimitPayment::where('user_id', $userId)->delete();
-        } else {
-            $deleted['unlimit_payment'] = UnlimitPayment::query()->delete();
-        }
-
-        // 3. Delete CC Avenue Payments
-        if ($orderIds) {
-            $deleted['cc_avenue_payment'] = CcAvenuePayment::whereIn('order_id', $orderIds)->delete();
-        } elseif ($userId) {
-            $deleted['cc_avenue_payment'] = CcAvenuePayment::where('user_id', $userId)->delete();
-        } else {
-            $deleted['cc_avenue_payment'] = CcAvenuePayment::query()->delete();
-        }
-
-        // 4. Delete Billings
+        // 2. Delete Billings
         if ($orderIds) {
             $deleted['billings'] = Billing::whereIn('order_id', $orderIds)->delete();
         } else {
             $deleted['billings'] = Billing::query()->delete();
         }
 
-        // 5. Delete consolidated payment events/refunds then payments (FK order)
+        // 3. Delete consolidated payment events/refunds then payments (FK order)
         $paymentIds = $orderIds
             ? Payment::query()->whereIn('order_id', $orderIds)->pluck('id')->toArray()
             : ($userId ? Payment::query()->where('user_id', $userId)->pluck('id')->toArray() : Payment::query()->pluck('id')->toArray());
@@ -291,7 +262,7 @@ class CleanupTestPaymentData extends Command
             $deleted['payments'] = Payment::query()->delete();
         }
 
-        // 6. Delete orders (parent table)
+        // 4. Delete orders (parent table)
         if ($orderIds) {
             $deleted['orders'] = Order::whereIn('id', $orderIds)->delete();
         } elseif ($userId) {
@@ -300,7 +271,7 @@ class CleanupTestPaymentData extends Command
             $deleted['orders'] = Order::query()->delete();
         }
 
-        // 7. Delete API Tokens (only expired ones, and only if requested)
+        // 5. Delete API Tokens (only expired ones, and only if requested)
         if ($includeTokens) {
             $deleted['api_tokens'] = ApiToken::where(function ($query) {
                 $query->where('expires_at', '<', now())

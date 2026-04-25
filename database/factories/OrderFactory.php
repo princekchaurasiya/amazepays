@@ -19,7 +19,7 @@ class OrderFactory extends Factory
             'user_id' => User::factory(),
             'order_number' => 'ORD-'.$this->faker->unique()->numerify('########'),
             'channel' => 'storefront',
-            'status' => 'initiated',
+            'status' => 'created',
             'subtotal_minor' => 10_000,
             'discount_total_minor' => 0,
             'tax_total_minor' => 0,

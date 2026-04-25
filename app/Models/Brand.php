@@ -4,31 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Brand extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
-        'brand_code',
-        'brand_name',
-        'brand_type',
-        'discount',
-        'min_price',
-        'max_price',
-        'denomination_list',
-        'stock_available',
-        'category',
-        'description',
-        'images',
-        'tnc',
-        'important_instruction',
-        'redeem_steps',
+        'tenant_id',
+        'name',
+        'slug',
+        'source_provider',
+        'source_brand_id',
+        'logo_url',
+        'hero_image_url',
+        'status',
+        'is_featured',
+        'display_order',
     ];
 
     protected $casts = [
-        'images' => 'array',
-        'important_instruction' => 'array',
-        'redeem_steps' => 'array',
+        'is_featured' => 'boolean',
+        'display_order' => 'integer',
     ];
 }

@@ -23,7 +23,7 @@ class OrderNotificationService
         try {
             $user = $order->user;
             $email = $order->receiver_email ?? $user->email;
-            Mail::to($email)->send(new OrderConfirmationMail($order));
+            Mail::to($email)->queue(new OrderConfirmationMail($order));
 
             Log::info('Order confirmation sent', ['order_id' => $order->id, 'email' => $email]);
         } catch (\Throwable $e) {
@@ -43,7 +43,7 @@ class OrderNotificationService
             $recipientEmail = $order->gift_option === 'send_as_gift'
                 ? $order->receiver_email
                 : $order->user->email;
-            Mail::to($recipientEmail)->send(new VoucherDeliveryMail($order, $voucherCodes));
+            Mail::to($recipientEmail)->queue(new VoucherDeliveryMail($order, $voucherCodes));
 
             Log::info('Voucher delivery sent', ['order_id' => $order->id]);
         } catch (\Throwable $e) {
@@ -60,7 +60,7 @@ class OrderNotificationService
     public function sendOrderFailure(Order $order, string $reason): void
     {
         try {
-            Mail::to($order->user->email)->send(new OrderFailedMail($order, $reason));
+            Mail::to($order->user->email)->queue(new OrderFailedMail($order, $reason));
         } catch (\Throwable $e) {
             Log::error('Failed to send order failure notification', [
                 'order_id' => $order->id,

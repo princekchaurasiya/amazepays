@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentEvent;
 use App\Models\User;
+use App\Jobs\FulfillPaidOrderJob;
 use App\Services\Order\OrderCreationService;
 use App\Services\Order\OrderFulfillmentOrchestrator;
 use Illuminate\Support\Facades\Log;
@@ -197,7 +198,7 @@ class PaymentService
                 'order_status' => $order->order_status ?: 'PENDING',
             ]);
             $order->refresh();
-            $this->fulfillmentOrchestrator->fulfillPaidOrder($order);
+            FulfillPaidOrderJob::dispatch($order->id)->onQueue('fulfillment');
         } elseif (in_array($result->status, ['failed', 'cancelled'], true)) {
             $order->update([
                 'status' => $result->status,

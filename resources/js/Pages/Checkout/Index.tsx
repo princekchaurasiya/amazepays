@@ -13,27 +13,26 @@ type Order = {
     denomination?: number | null;
 };
 type BillingSnapshot = Record<string, string>;
+type MethodKey = 'ccavenue' | 'razorpay' | 'unlimit';
 
 export default function CheckoutIndex({
     product,
     order,
     slug,
     billingSnapshot,
-    billingReady,
-    billingMissingFields,
-    billingRequiredFields,
-    billingRequiredFieldLabels,
-    billingRequirementContext,
+    billingReadyByMethod,
+    billingMissingFieldsByMethod,
+    billingRequiredFieldsByMethod,
+    billingRequiredFieldLabelsByMethod,
 }: {
     product: Product;
     order: Order;
     slug: string;
     billingSnapshot?: BillingSnapshot;
-    billingReady?: boolean;
-    billingMissingFields?: string[];
-    billingRequiredFields?: string[];
-    billingRequiredFieldLabels?: Record<string, string>;
-    billingRequirementContext?: { payment_method?: string; provider?: string };
+    billingReadyByMethod?: Record<MethodKey, boolean>;
+    billingMissingFieldsByMethod?: Record<MethodKey, string[]>;
+    billingRequiredFieldsByMethod?: Record<MethodKey, string[]>;
+    billingRequiredFieldLabelsByMethod?: Record<MethodKey, Record<string, string>>;
 }) {
     const page = usePage<{ i18n?: { checkout?: Record<string, string> } }>();
     const appEnv = (page.props as any)?.app?.env as string | undefined;
@@ -43,17 +42,13 @@ export default function CheckoutIndex({
     const name = String(product.name ?? 'Gift card');
     const img = product.display_image_url as string | undefined;
     const orderId = order.id;
-    const ready = Boolean(billingReady);
-    const missing = billingMissingFields ?? [];
-    const required = billingRequiredFields ?? [];
-    const fieldLabels = billingRequiredFieldLabels ?? {};
-    const provider = (billingRequirementContext?.provider ?? 'provider').toUpperCase();
-    const paymentMethod = (billingRequirementContext?.payment_method ?? 'razorpay').toUpperCase();
+    const readyBy = billingReadyByMethod ?? { ccavenue: false, razorpay: false, unlimit: false };
+    const missingBy = billingMissingFieldsByMethod ?? { ccavenue: [], razorpay: [], unlimit: [] };
+    const requiredBy = billingRequiredFieldsByMethod ?? { ccavenue: [], razorpay: [], unlimit: [] };
+    const labelsBy = billingRequiredFieldLabelsByMethod ?? { ccavenue: {}, razorpay: {}, unlimit: {} };
     const payableAmount = Number(order.amount_payable_after_discount ?? order.grand_payable_amount ?? 0);
     const quantity = Math.max(1, Number(order.quantity ?? 1));
     const denomination = order.denomination;
-    const missingLabels = missing.map((field) => fieldLabels[field] || field);
-    const requiredLabels = required.map((field) => fieldLabels[field] || field);
     const snap = billingSnapshot ?? {};
     const contactName = snap.billing_name || '—';
     const phone = snap.billing_tel || '—';
@@ -66,6 +61,34 @@ export default function CheckoutIndex({
         denomination != null && Number.isFinite(denomination)
             ? `₹${Math.round(denomination).toLocaleString('en-IN')} × ${quantity}`
             : `${t('qty_label', 'Qty')}: ${quantity}`;
+
+    const methodUi: Array<{
+        key: MethodKey;
+        label: string;
+        description: string;
+        action: string;
+        allowMock?: boolean;
+    }> = [
+        {
+            key: 'ccavenue',
+            label: 'CCAvenue',
+            description: 'Card / Netbanking / UPI (gateway)',
+            action: paths.paymentCcavenue,
+        },
+        {
+            key: 'razorpay',
+            label: 'Razorpay',
+            description: 'Fast card + UPI checkout',
+            action: paths.paymentRazorpay,
+            allowMock: allowMock,
+        },
+        {
+            key: 'unlimit',
+            label: 'Unlimit',
+            description: 'Card / UPI / Netbanking (gateway)',
+            action: paths.paymentUnlimit,
+        },
+    ];
 
     return (
         <CheckoutLayout>
@@ -102,7 +125,7 @@ export default function CheckoutIndex({
                         </span>
                         <div className="min-w-0">
                             <p className="text-xs font-semibold text-product-accent">{t('step_payment', 'Payment')}</p>
-                            <p className="truncate text-sm font-bold text-gray-900">{t('step_payment_active', 'Pay with Razorpay')}</p>
+                            <p className="truncate text-sm font-bold text-gray-900">{t('step_payment_active', 'Choose a gateway')}</p>
                         </div>
                     </div>
                     <div className="h-px min-w-4 flex-1 bg-gray-200 sm:max-w-12" role="presentation" />
@@ -149,46 +172,91 @@ export default function CheckoutIndex({
 
                         <section className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm md:p-6">
                             <h2 className="text-lg font-bold text-product-primary">{t('payment', 'Payment')}</h2>
-                            <p className="mt-1 text-sm text-gray-600">{t('razorpay_only', 'All payments are processed securely through Razorpay.')}</p>
+                            <p className="mt-1 text-sm text-gray-600">{t('gateway_pick', 'Choose a payment gateway to continue.')}</p>
 
                             <div className="mt-6">
-                                {orderId && ready ? (
-                                    <div className="space-y-3">
-                                        <form action={paths.paymentRazorpay} method="post" className="space-y-4">
-                                        <input type="hidden" name="_token" value={document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content} />
-                                        <button
-                                            type="submit"
-                                            className="flex w-full items-center justify-center gap-2 rounded-full bg-product-primary px-6 py-3.5 text-base font-semibold text-white shadow-md transition hover:bg-product-primary/90"
-                                        >
-                                            {t('pay_now_arrow', 'Pay now')}
-                                            <span aria-hidden="true">→</span>
-                                        </button>
-                                        </form>
+                                {orderId ? (
+                                    <div className="space-y-4">
+                                        {methodUi.map((m) => {
+                                            const ready = Boolean(readyBy[m.key]);
+                                            const missing = missingBy[m.key] ?? [];
+                                            const labels = labelsBy[m.key] ?? {};
+                                            const missingLabels = missing.map((f) => labels[f] || f);
 
-                                        {allowMock ? (
-                                            <form action={paths.paymentMockRazorpay} method="post">
-                                                <input
-                                                    type="hidden"
-                                                    name="_token"
-                                                    value={document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content}
-                                                />
-                                                <button
-                                                    type="submit"
-                                                    className="flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                                                >
-                                                    {t('mock_pay', 'Use Mock Razorpay (local only)')}
-                                                </button>
-                                            </form>
-                                        ) : null}
+                                            return (
+                                                <div key={m.key} className="rounded-2xl border border-gray-200 p-4">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div>
+                                                            <p className="text-sm font-semibold text-gray-900">{m.label}</p>
+                                                            <p className="mt-0.5 text-xs text-gray-600">{m.description}</p>
+                                                        </div>
+                                                        <span
+                                                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                                                ready ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
+                                                            }`}
+                                                        >
+                                                            {ready ? 'Ready' : 'Profile needed'}
+                                                        </span>
+                                                    </div>
+
+                                                    {!ready && missingLabels.length > 0 ? (
+                                                        <p className="mt-2 text-xs text-amber-900">
+                                                            Missing: {missingLabels.join(', ')}
+                                                        </p>
+                                                    ) : null}
+
+                                                    <div className="mt-3 space-y-2">
+                                                        <form action={m.action} method="post">
+                                                            <input
+                                                                type="hidden"
+                                                                name="_token"
+                                                                value={document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content}
+                                                            />
+                                                            <button
+                                                                type="submit"
+                                                                disabled={!ready}
+                                                                className={`flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold shadow-sm transition ${
+                                                                    ready
+                                                                        ? 'bg-product-primary text-white hover:bg-product-primary/90'
+                                                                        : 'cursor-not-allowed bg-gray-100 text-gray-400'
+                                                                }`}
+                                                            >
+                                                                {ready ? `Pay with ${m.label}` : `Update profile to use ${m.label}`}
+                                                            </button>
+                                                        </form>
+
+                                                        {m.key === 'razorpay' && m.allowMock ? (
+                                                            <form action={paths.paymentMockRazorpay} method="post">
+                                                                <input
+                                                                    type="hidden"
+                                                                    name="_token"
+                                                                    value={document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content}
+                                                                />
+                                                                <button
+                                                                    type="submit"
+                                                                    className="flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                                                                >
+                                                                    {t('mock_pay', 'Use Mock Razorpay (local only)')}
+                                                                </button>
+                                                            </form>
+                                                        ) : null}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+
+                                        <Link href={paths.profile} className="inline-flex text-sm font-semibold text-amber-900 underline">
+                                            {t('update_profile', 'Update profile')}
+                                        </Link>
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-amber-800">{t('billing_unavailable_help', 'Please update your profile billing details to continue.')}</p>
+                                    <p className="text-sm text-amber-800">{t('checkout_missing_order', 'Checkout session not found. Please start again.')}</p>
                                 )}
                             </div>
 
                             <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-gray-500">
                                 <Lock className="h-3.5 w-3.5 text-gray-400" aria-hidden="true" />
-                                {t('razorpay_footer', 'Payments are securely processed via Razorpay.')}
+                                {t('gateway_footer', 'Payments are securely processed by the selected gateway.')}
                             </p>
                             <div className="mt-4 flex justify-center gap-4 opacity-40">
                                 <CreditCard className="h-6 w-6" aria-hidden="true" />
@@ -197,21 +265,6 @@ export default function CheckoutIndex({
                             </div>
                         </section>
 
-                        {!ready ? (
-                            <div className="rounded-2xl border border-amber-200 bg-amber-50/90 p-4 text-amber-950">
-                                <p className="text-sm font-semibold">{t('billing_unavailable', 'Billing details required before payment')}</p>
-                                <p className="mt-1 text-xs">
-                                    {t('billing_required_for_context', 'Required for :payment via :provider')
-                                        .replace(':payment', paymentMethod)
-                                        .replace(':provider', provider)}
-                                </p>
-                                {requiredLabels.length > 0 ? <p className="mt-1 text-xs">{requiredLabels.join(', ')}</p> : null}
-                                {missingLabels.length > 0 ? <p className="mt-1 text-xs font-semibold">Missing: {missingLabels.join(', ')}</p> : null}
-                                <Link href={paths.profile} className="mt-2 inline-flex text-sm font-semibold text-amber-900 underline">
-                                    {t('update_profile', 'Update profile')}
-                                </Link>
-                            </div>
-                        ) : null}
                     </div>
 
                     {/* Order summary — right */}

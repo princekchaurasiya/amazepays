@@ -103,28 +103,43 @@ final class StorefrontProductController extends Controller
         $cachedBilling = $order->id
             ? CheckoutHelper::getBillingData((int) $order->id)
             : null;
-        $requiredBillingFields = $this->billingRequirements->requiredFields('razorpay', (string) ($product->source_provider ?? ''));
-        $billingSnapshot = $this->checkoutReadService->buildBillingSnapshot(
-            $order->id ? $order : null,
-            $cachedBilling,
-            Auth::user(),
-            $requiredBillingFields
-        );
+        $provider = (string) ($product->source_provider ?? '');
+
+        $requiredBillingFieldsByMethod = [
+            'ccavenue' => $this->billingRequirements->requiredFields('ccavenue', $provider),
+            'razorpay' => $this->billingRequirements->requiredFields('razorpay', $provider),
+            'unlimit' => $this->billingRequirements->requiredFields('unlimit', $provider),
+        ];
+
+        $billingSnapshots = collect($requiredBillingFieldsByMethod)
+            ->map(fn (array $required) => $this->checkoutReadService->buildBillingSnapshot(
+                $order->id ? $order : null,
+                $cachedBilling,
+                Auth::user(),
+                $required
+            ))
+            ->all();
 
         return Inertia::render('Checkout/Index', [
             'product' => $product,
             'checkoutData' => $checkoutData,
             'order' => $this->checkoutOrderPayloadFactory->make($order),
             'cachedBilling' => $cachedBilling,
-            'billingSnapshot' => $billingSnapshot['snapshot'],
-            'billingReady' => $billingSnapshot['ready'],
-            'billingMissingFields' => $billingSnapshot['missing'],
-            'billingRequiredFields' => $requiredBillingFields,
-            'billingRequiredFieldLabels' => $this->billingRequirements->labels($requiredBillingFields),
-            'billingRequirementContext' => [
-                'payment_method' => 'razorpay',
-                'provider' => (string) ($product->source_provider ?? 'unknown'),
+            'billingSnapshot' => $billingSnapshots['razorpay']['snapshot'] ?? [],
+            'billingRequiredFieldsByMethod' => $requiredBillingFieldsByMethod,
+            'billingMissingFieldsByMethod' => [
+                'ccavenue' => $billingSnapshots['ccavenue']['missing'] ?? [],
+                'razorpay' => $billingSnapshots['razorpay']['missing'] ?? [],
+                'unlimit' => $billingSnapshots['unlimit']['missing'] ?? [],
             ],
+            'billingReadyByMethod' => [
+                'ccavenue' => (bool) ($billingSnapshots['ccavenue']['ready'] ?? false),
+                'razorpay' => (bool) ($billingSnapshots['razorpay']['ready'] ?? false),
+                'unlimit' => (bool) ($billingSnapshots['unlimit']['ready'] ?? false),
+            ],
+            'billingRequiredFieldLabelsByMethod' => collect($requiredBillingFieldsByMethod)
+                ->map(fn (array $required) => $this->billingRequirements->labels($required))
+                ->all(),
             'slug' => $slug,
         ]);
     }

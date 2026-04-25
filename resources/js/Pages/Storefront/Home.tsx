@@ -24,8 +24,6 @@ type Cat = { id: number; name: string; slug: string; thumbnail?: string | null; 
 type Brand = { id: number; name: string; slug: string; logo?: string | null };
 type Product = Record<string, unknown>;
 
-type KgenProduct = Record<string, unknown>;
-
 function thumbUrl(t: string | null | undefined) {
     if (!t || t === 'null') return null;
     if (t.startsWith('http')) return t;
@@ -39,10 +37,7 @@ export default function Home({
     brands = [],
     hotDealProducts = [],
     otherDealProducts = [],
-    kgenProducts = [],
     brandMaxDiscounts = {},
-    kgenSectionTitle = 'KGen Technology',
-    showKgenSection = false,
 }: {
     slides?: Slide[];
     homeSettings?: HomeSettings;
@@ -50,10 +45,7 @@ export default function Home({
     brands?: Brand[];
     hotDealProducts?: Product[];
     otherDealProducts?: Product[];
-    kgenProducts?: KgenProduct[];
     brandMaxDiscounts?: Record<string, number | string>;
-    kgenSectionTitle?: string;
-    showKgenSection?: boolean;
 }) {
     const hs = homeSettings ?? {};
     const emptySetup = (!categories?.length && !hotDealProducts?.length && !otherDealProducts?.length);
@@ -168,38 +160,6 @@ export default function Home({
                     </section>
                 )}
 
-                {showKgenSection && kgenProducts.length > 0 && (
-                    <section className="mb-12">
-                        <h2 className="mb-6 text-center text-xl font-bold text-gray-900">{kgenSectionTitle}</h2>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            {kgenProducts.map((kp, idx) => {
-                                const name = String(kp.productDisplayName ?? kp.productName ?? 'Product');
-                                const att = (kp.attachments as string[] | undefined)?.[0];
-                                const img = att ?? 'https://via.placeholder.com/300x200';
-                                const disc = Number(kp.discount_percentage ?? 0);
-                                return (
-                                    <div key={idx} className="relative overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-                                        {disc > 0 && (
-                                            <span className="absolute left-2 top-2 z-10 rounded bg-red-600 px-2 py-0.5 text-xs text-white">
-                                                {disc}% Off
-                                            </span>
-                                        )}
-                                        <img src={img} alt="" className="h-44 w-full object-cover" />
-                                        <div className="p-3">
-                                            <p className="font-semibold text-gray-900">{name}</p>
-                                            <Link
-                                                href={paths.kgenPlaceOrder}
-                                                className="mt-2 inline-block text-sm font-medium text-brand-600 hover:underline"
-                                            >
-                                                View options
-                                            </Link>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </section>
-                )}
             </div>
         </StorefrontLayout>
     );

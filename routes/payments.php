@@ -3,6 +3,7 @@
 use App\Http\Controllers\Payment\MockRazorpayController;
 use App\Http\Controllers\Payment\PaymentSessionController;
 use App\Http\Controllers\WoohooProcessingController;
+use App\Http\Controllers\CCAvenueController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -62,6 +63,9 @@ Route::get('/order-failure', function () {
 })->name('order.failure');
 
 Route::middleware(['auth', 'throttle:payments'])->group(function () {
+    Route::post('/payment/ccavenue', [CCAvenueController::class, 'processPayment'])
+        ->middleware('idempotency:web.payment.ccavenue')
+        ->name('payment.ccavenue');
     Route::post('/payment/upi', [PaymentSessionController::class, 'upi'])
         ->middleware('idempotency:web.payment.upi')
         ->name('payment.upi');

@@ -29,6 +29,7 @@ Route::middleware(['auth', 'check.transaction'])->group(function () {
     Route::post('/cart/{slug}', [CheckoutSessionController::class, 'addToCart'])->name('storefront.cart.add');
 
     // Legacy alias (Phase 4): preserve endpoint for one release; redirect to canonical route.
+    // POST redirect must preserve method, so use 308 (not 301).
     Route::post('/payment-process', function () {
         return redirect()->route('payment.unlimit', [], 308);
     })->name('unlimit.store');

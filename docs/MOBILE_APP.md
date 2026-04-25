@@ -168,7 +168,7 @@ Root Navigator
 
 | Element | Source | Refresh |
 |---------|--------|---------|
-| Hero banners | `GET /api/v1/home` → `data.slides` (each slide: `image_mobile`, `desktop_image`, optional links) | Pull-to-refresh / TanStack refetch |
+| Hero banners | `GET /api/v1/homepage` → `data.slides` (each slide: `image_mobile`, `desktop_image`, optional links) | Pull-to-refresh / TanStack refetch |
 | Categories row | `GET /api/v1/catalog/categories` | Cached ~15 min |
 | Product list | `GET /api/v1/catalog` (pagination; filters: `search`, `category_id`, `brand_id`) | Cached ~5 min |
 | Active offers | (when exposed) offer validate endpoints — see API docs | — |

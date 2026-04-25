@@ -376,7 +376,7 @@ X-RateLimit-Reset: 1712506000
 **List Products**
 
 ```
-GET /api/v1/products?category_id=5&brand_id=3&search=amazon&page=1&per_page=20
+GET /api/v1/catalog?category_id=5&brand_id=3&search=amazon&page=1&per_page=20
 ```
 
 Response:
@@ -410,21 +410,20 @@ Response:
 **Product Detail**
 
 ```
-GET /api/v1/products/{id}
+GET /api/v1/catalog/{product}
 ```
 
 ### 6.2 Categories
 
 ```
-GET /api/v1/categories
-GET /api/v1/categories/{id}/products
+GET /api/v1/catalog/categories
+GET /api/v1/catalog?category_id={id}
 ```
 
 ### 6.3 Brands
 
 ```
-GET /api/v1/brands
-GET /api/v1/brands/{id}/products
+GET /api/v1/catalog?brand_id={id}
 ```
 
 ### 6.4 Orders
@@ -575,7 +574,7 @@ POST /api/v1/profile/update-email
 ### 6.8 Home (hero carousel)
 
 ```
-GET /api/v1/home
+GET /api/v1/homepage
 ```
 
 Public. Returns the standard success envelope with **`data.slides`**: an array of homepage hero slides (same source as the web storefront carousel). Active slides are those with `status = 1` and `display_on_page = homepage` (see `SlidePresentationService`).

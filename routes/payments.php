@@ -107,4 +107,27 @@ Route::middleware('throttle:payments')->group(function () {
         ->name('upi.return');
 });
 
-// Legacy VD/KGen payment endpoints removed as part of voucher-distributor rename.
+// -----------------------------------------------------------------------------
+// Legacy VD/KGen payment endpoints (Phase 4)
+// -----------------------------------------------------------------------------
+// These endpoints were part of the pre-Phase-3 voucher flows and are now retired.
+// For one release, keep them as redirects so old bookmarks / integrations don't
+// hard-fail immediately. They will be removed in Phase 6/PR 7.
+//
+// Redirects must preserve POST semantics for one release → use 308.
+Route::middleware('throttle:payments')->group(function () {
+    // Old ValueDesign payment initiation (retired)
+    Route::match(['GET', 'POST'], '/vd-payment', fn () => redirect('/', 308))->name('legacy.vd-payment.redirect');
+
+    // Old KGen payment flow (retired)
+    Route::match(['GET', 'POST'], '/kgen-payment/initiate', fn () => redirect('/', 308))->name('legacy.kgen-payment.initiate.redirect');
+    Route::match(['GET', 'POST'], '/kgen-payment/success/{any?}', fn () => redirect('/', 308))
+        ->where('any', '.*')
+        ->name('legacy.kgen-payment.success.redirect');
+    Route::match(['GET', 'POST'], '/kgen-payment/failed/{any?}', fn () => redirect('/', 308))
+        ->where('any', '.*')
+        ->name('legacy.kgen-payment.failed.redirect');
+    Route::match(['GET', 'POST'], '/kgen-payment/{any}', fn () => redirect('/', 308))
+        ->where('any', '.*')
+        ->name('legacy.kgen-payment.catchall.redirect');
+});

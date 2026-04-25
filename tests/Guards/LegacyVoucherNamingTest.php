@@ -24,10 +24,11 @@ final class LegacyVoucherNamingTest extends TestCase
     public function test_legacy_provider_routes_are_gone(): void
     {
         // Old public payment endpoints
-        $this->get('/vd-payment')->assertStatus(404);
-        $this->get('/kgen-payment/initiate')->assertStatus(404);
-        $this->get('/kgen-payment/success/1')->assertStatus(404);
-        $this->get('/kgen-payment/failed/1')->assertStatus(404);
+        // Phase 4: temporarily keep these as redirects for one release.
+        $this->get('/vd-payment')->assertStatus(308);
+        $this->get('/kgen-payment/initiate')->assertStatus(308);
+        $this->get('/kgen-payment/success/1')->assertStatus(308);
+        $this->get('/kgen-payment/failed/1')->assertStatus(308);
 
         // Old admin endpoints
         $this->get('/admin/lysto/giftcards')->assertStatus(404);

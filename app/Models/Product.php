@@ -233,13 +233,38 @@ class Product extends Model
 
     public function scopeVisible($query)
     {
-        return $query->where('show_product', true);
+        // Phase-3 schema uses status/published_at instead of legacy show_product.
+        if (Schema::hasColumn($this->getTable(), 'show_product')) {
+            return $query->where('show_product', true);
+        }
+
+        if (Schema::hasColumn($this->getTable(), 'status')) {
+            $query->where('status', 'active');
+        }
+
+        if (Schema::hasColumn($this->getTable(), 'published_at')) {
+            $query->whereNotNull('published_at');
+        }
+
+        return $query;
     }
 
     /** Products assigned to the homepage hot-deals slot (nullable rank; lower = earlier). */
     public function scopeHotDealRank($query)
     {
-        return $query->whereNotNull('hot_deal_rank')->orderBy('hot_deal_rank');
+        if (Schema::hasColumn($this->getTable(), 'hot_deal_rank')) {
+            return $query->whereNotNull('hot_deal_rank')->orderBy('hot_deal_rank');
+        }
+
+        // Phase-3 schema: fallback to featured products, then display order.
+        if (Schema::hasColumn($this->getTable(), 'is_featured')) {
+            $query->orderByDesc('is_featured');
+        }
+        if (Schema::hasColumn($this->getTable(), 'display_order')) {
+            $query->orderBy('display_order');
+        }
+
+        return $query->orderByDesc('id');
     }
 
     public function scopeDisplayOrder($query)
@@ -288,9 +313,23 @@ class Product extends Model
     /** B2C storefront listings: visible, B2C-eligible, and not pull-only provider rows. */
     public function scopeForStorefrontCatalog($query)
     {
-        return $query->where('show_product', true)
-            ->whereIn('catalog_audience', [self::CATALOG_AUDIENCE_B2C, self::CATALOG_AUDIENCE_BOTH])
-            ->whereNotIn('source_provider', self::STOREFRONT_EXCLUDED_SOURCE_PROVIDERS);
+        $query->visible();
+
+        // Legacy schema: catalog_audience = b2c/b2b/both
+        if (Schema::hasColumn($this->getTable(), 'catalog_audience')) {
+            $query->whereIn('catalog_audience', [self::CATALOG_AUDIENCE_B2C, self::CATALOG_AUDIENCE_BOTH]);
+        } else {
+            // Phase-3 schema: is_b2b_only / is_b2c_only flags
+            if (Schema::hasColumn($this->getTable(), 'is_b2b_only')) {
+                $query->where('is_b2b_only', false);
+            }
+        }
+
+        if (Schema::hasColumn($this->getTable(), 'source_provider')) {
+            $query->whereNotIn('source_provider', self::STOREFRONT_EXCLUDED_SOURCE_PROVIDERS);
+        }
+
+        return $query;
     }
 
     /** B2B panel shop / price list: tenant-assigned products with Business or Both catalog audience. */
@@ -326,12 +365,29 @@ class Product extends Model
 
     public function isListedOnConsumerStorefront(): bool
     {
-        if (! $this->show_product) {
-            return false;
+        // Legacy visibility flag.
+        if (Schema::hasColumn($this->getTable(), 'show_product')) {
+            if (! (bool) $this->getAttribute('show_product')) {
+                return false;
+            }
+        } else {
+            // Phase-3: require status=active + published_at set.
+            if (Schema::hasColumn($this->getTable(), 'status') && (string) $this->getAttribute('status') !== 'active') {
+                return false;
+            }
+            if (Schema::hasColumn($this->getTable(), 'published_at') && $this->getAttribute('published_at') === null) {
+                return false;
+            }
         }
 
-        if (! in_array((string) ($this->catalog_audience ?? self::CATALOG_AUDIENCE_BOTH), [self::CATALOG_AUDIENCE_B2C, self::CATALOG_AUDIENCE_BOTH], true)) {
-            return false;
+        if (Schema::hasColumn($this->getTable(), 'catalog_audience')) {
+            if (! in_array((string) ($this->catalog_audience ?? self::CATALOG_AUDIENCE_BOTH), [self::CATALOG_AUDIENCE_B2C, self::CATALOG_AUDIENCE_BOTH], true)) {
+                return false;
+            }
+        } elseif (Schema::hasColumn($this->getTable(), 'is_b2b_only')) {
+            if ((bool) $this->getAttribute('is_b2b_only') === true) {
+                return false;
+            }
         }
 
         return ! $this->isExcludedFromConsumerStorefront();

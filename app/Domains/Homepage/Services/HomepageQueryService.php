@@ -23,7 +23,8 @@ class HomepageQueryService
 
         $cacheKey = "homepage:document:v1:tenant:{$tenantId}:surface:{$surface}:platform:{$platform}";
 
-        return Cache::tags(['tenant', (string) $tenantId, 'homepage'])->remember($cacheKey, now()->addMinutes(5), function () use ($tenantId, $platform, $surface) {
+        $cacheTtl = now()->addMinutes(5);
+        $compute = function () use ($tenantId, $platform, $surface) {
             $now = now();
 
             $sections = ContentSection::query()
@@ -78,7 +79,14 @@ class HomepageQueryService
                     'published_at' => null,
                 ],
             ];
-        });
+        };
+
+        // Some cache stores (e.g. file) don't support tags.
+        try {
+            return Cache::tags(['tenant', (string) $tenantId, 'homepage'])->remember($cacheKey, $cacheTtl, $compute);
+        } catch (\BadMethodCallException|\InvalidArgumentException $e) {
+            return Cache::remember($cacheKey, $cacheTtl, $compute);
+        }
     }
 
     /**

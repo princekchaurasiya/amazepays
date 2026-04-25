@@ -51,14 +51,14 @@ class CatalogController extends Controller
             $query->where('selling_price', '<=', $request->max_price);
         }
 
-        $sortBy = $request->input('sort_by', 'hot_deal_rank');
+        $sortBy = $request->input('sort_by', 'display_order');
         if ($sortBy === 'priority') {
-            $sortBy = 'hot_deal_rank';
+            $sortBy = 'display_order';
         }
 
-        $allowedSort = ['hot_deal_rank', 'display_order', 'selling_price', 'product_name', 'id', 'created_at', 'updated_at'];
+        $allowedSort = ['display_order', 'selling_price', 'product_name', 'id', 'created_at', 'updated_at'];
         if (! in_array($sortBy, $allowedSort, true)) {
-            $sortBy = 'hot_deal_rank';
+            $sortBy = 'display_order';
         }
 
         $sortOrder = strtolower((string) $request->input('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';

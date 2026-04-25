@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 
 class HomePageController extends Controller
@@ -37,27 +38,30 @@ class HomePageController extends Controller
             $categories = Category::orderBy('display_order')->get();
             $brands = Brand::orderBy('display_order')->get();
 
-            $allProducts = Product::query()
-                ->forStorefrontCatalog()
-                ->orderByRaw('IFNULL(hot_deal_rank, 999999) ASC')
-                ->orderByRaw('IFNULL(display_order, 999999) ASC')
-                ->get();
+            $productsQuery = Product::query()->forStorefrontCatalog();
+
+            // Phase-3 schema: no hot_deal_rank. Prefer featured products, then display order.
+            if (Schema::hasColumn('products', 'is_featured')) {
+                $productsQuery->orderByDesc('is_featured');
+            }
+            if (Schema::hasColumn('products', 'display_order')) {
+                $productsQuery->orderBy('display_order');
+            }
+            $productsQuery->orderByDesc('id');
+
+            $allProducts = $productsQuery->get();
 
             $document = $this->homepageQuery->homepageDocument($tenantId, 'web', 'storefront_home');
 
             $hotDealProductLimit = 10;
 
-            // Hot deals: non-null `hot_deal_rank` (ordering); capped by homepage section `priority_product_count`.
-            $hotDealProducts = $allProducts->filter(function ($product) {
-                return ! is_null($product->hot_deal_rank);
-            })->take($hotDealProductLimit);
+            // Hot deals (Phase-3): featured products.
+            $hotDealProducts = $allProducts
+                ->filter(fn ($product) => (bool) ($product->is_featured ?? false))
+                ->take($hotDealProductLimit);
 
-            // Other deals: `hot_deal_rank` null; list order uses `display_order` among this set.
-            $otherDealProducts = $allProducts->filter(function ($product) {
-                return is_null($product->hot_deal_rank);
-            })->sortBy(function ($product) {
-                return $product->display_order ?? 999999;
-            });
+            // Other deals: everything else (already ordered by display_order / id).
+            $otherDealProducts = $allProducts->filter(fn ($product) => ! (bool) ($product->is_featured ?? false));
 
             $slidesPayload = collect($document['hero_banners'] ?? [])
                 ->map(function (array $item, int $idx): array {

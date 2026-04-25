@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,12 +26,17 @@ class StorefrontBusinessController extends Controller
             ->groupBy('brand_id')
             ->pluck('max_discount', 'brand_id');
 
-        $featuredProducts = Product::query()
-            ->forStorefrontCatalog()
-            ->orderByRaw('IFNULL(hot_deal_rank, 999999) ASC')
-            ->orderByRaw('IFNULL(display_order, 999999) ASC')
-            ->limit(12)
-            ->get();
+        $featuredQuery = Product::query()->forStorefrontCatalog();
+
+        if (Schema::hasColumn('products', 'is_featured')) {
+            $featuredQuery->orderByDesc('is_featured');
+        }
+        if (Schema::hasColumn('products', 'display_order')) {
+            $featuredQuery->orderBy('display_order');
+        }
+        $featuredQuery->orderByDesc('id');
+
+        $featuredProducts = $featuredQuery->limit(12)->get();
 
         $savingsDisplay = config('storefront.business_savings_display', 'Rs. 500');
 

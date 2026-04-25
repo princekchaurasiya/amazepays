@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\CustomerController;
 use App\Http\Controllers\Api\V1\HomepageController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\PaymentSessionController;
+use App\Http\Controllers\Api\V1\ProductPricingController;
 use App\Http\Controllers\Api\V1\TransactionPinController;
 use App\Http\Controllers\Api\V1\WalletController;
 use App\Http\Controllers\Payment\PaymentCallbackController;
@@ -57,6 +58,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('/categories', [CatalogController::class, 'categories'])->name('categories');
         Route::get('/{product}', [CatalogController::class, 'show'])->name('show');
     });
+
+    // Pricing envelope (Phase 5): used by web + mobile to render a single PriceBreakdown component.
+    Route::get('/products/{sku}/pricing', [ProductPricingController::class, 'show'])->name('products.pricing');
 
     /*
     |--------------------------------------------------------------------------

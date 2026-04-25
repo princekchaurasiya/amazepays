@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ValueDesignAdminController;
+use App\Http\Controllers\Admin\Payments\PaymentSessionController as AdminPaymentSessionController;
 use App\Http\Controllers\Admin\Voucher\LystoGiftCardController;
 use App\Http\Controllers\Admin\VouchagramController;
 use App\Http\Controllers\Admin\WalletController;
@@ -334,6 +335,31 @@ Route::prefix('panel')->name('panel.')->middleware(['auth', 'two.factor'])->grou
     // Voucher provider dashboards
     Route::get('/providers', [ProviderDashboardController::class, 'index'])->name('providers.index')
         ->middleware('permission:providers.view');
+    Route::prefix('payments')->name('payments.')->middleware('permission:dashboard.view')->group(function () {
+        Route::get('/sessions/{payment}', [AdminPaymentSessionController::class, 'show'])->name('sessions.show');
+    });
+
+    Route::prefix('promotions')->name('promotions.')->middleware('permission:offers.view')->group(function () {
+        Route::get('/campaigns', fn () => Inertia::render('Admin/Promotions/Campaigns'))->name('campaigns');
+        Route::get('/product-discounts', fn () => Inertia::render('Admin/Promotions/ProductDiscounts'))->name('product-discounts');
+        Route::get('/cart-offers', fn () => Inertia::render('Admin/Promotions/CartOffers'))->name('cart-offers');
+        Route::get('/bank-offers', fn () => Inertia::render('Admin/Promotions/BankOffers'))->name('bank-offers');
+        Route::get('/rewards-catalog', fn () => Inertia::render('Admin/Promotions/RewardsCatalog'))->name('rewards-catalog');
+    });
+
+    Route::prefix('pricing')->name('pricing.')->middleware('permission:products.view')->group(function () {
+        Route::get('/preview', fn () => Inertia::render('Admin/Pricing/Preview'))->name('preview');
+    });
+
+    Route::prefix('integrations')->name('integrations.')->middleware('permission:providers.view')->group(function () {
+        Route::get('/providers', fn () => Inertia::render('Admin/Integrations/Providers/Index'))->name('providers.index');
+        Route::get('/payment-gateways', fn () => Inertia::render('Admin/Integrations/PaymentGateways/Index'))->name('payment-gateways.index');
+        Route::prefix('woohoo')->name('woohoo.')->group(function () {
+            Route::get('/show', fn () => Inertia::render('Admin/Integrations/Woohoo/Show'))->name('show');
+            Route::get('/sync-runs', fn () => Inertia::render('Admin/Integrations/Woohoo/SyncRuns'))->name('sync-runs');
+            Route::get('/catalog-preview', fn () => Inertia::render('Admin/Integrations/Woohoo/CatalogPreview'))->name('catalog-preview');
+        });
+    });
     Route::get('/value-design', [ValueDesignAdminController::class, 'index'])->name('value-design.index')
         ->middleware('permission:providers.view');
     Route::get('/lysto', fn () => redirect()->route('panel.lysto.gift-cards.index'))->name('lysto.index')

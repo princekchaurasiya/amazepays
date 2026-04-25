@@ -9,6 +9,7 @@ use App\Http\Middleware\CheckUserTransactionStatus;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\EnsureIdempotencyKey;
 use App\Http\Middleware\ForceHttps;
+use App\Http\Middleware\ApplyUrlRedirects;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\TrimStrings;
@@ -68,6 +69,7 @@ class Kernel extends HttpKernel
             // \Illuminate\Session\Middleware\AuthenticateSession::class,
             ShareErrorsFromSession::class,
             VerifyCsrfToken::class,
+            ApplyUrlRedirects::class,
             SubstituteBindings::class,
         ],
 

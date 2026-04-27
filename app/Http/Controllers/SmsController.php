@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\BlockedMobile;
-use App\Models\Otp;
 use App\Models\User;
+use App\Models\UserOtpCode;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -17,7 +17,7 @@ class SmsController extends Controller
     public function loginWithOtp(Request $request)
     {
         $destination = $request->input('destination');
-        $user = User::where('mobile', $destination)->first();
+        $user = User::query()->whereMobile((string) $destination)->first();
 
         if (! $user) {
             return response()->json(['status' => 'error', 'message' => 'The provided mobile number does not match any registered user. Please register first and then login.']);
@@ -44,7 +44,7 @@ class SmsController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Mobile number is required.']);
         }
 
-        $user = User::where('mobile', $destination)->first();
+        $user = User::query()->whereMobile((string) $destination)->first();
 
         if ($user) {
             return response()->json(['status' => 'error', 'message' => 'User Already Exists. Please try to log in.']);
@@ -64,7 +64,7 @@ class SmsController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Mobile number is required to send OTP.']);
         }
 
-        $user = User::where('mobile', $destination)->first();
+        $user = User::query()->whereMobile((string) $destination)->first();
 
         if (! $user) {
             return response()->json(['status' => 'error', 'message' => 'Mobile number not registered. Please sign up.']);
@@ -118,7 +118,20 @@ class SmsController extends Controller
             ], 403);
         }
 
-        $latestOtpEntry = Otp::where('mobile_number', $destination)->latest()->first();
+        $purpose = strtolower((string) $request->input('otp_type', 'login'));
+        $purpose = match ($purpose) {
+            'signup', 'register' => 'signup',
+            'password_reset', 'forgot', 'forget', 'reset' => 'password_reset',
+            'transaction' => 'transaction',
+            default => 'login',
+        };
+
+        $latestOtpEntry = UserOtpCode::query()
+            ->where('channel', 'sms')
+            ->where('purpose', $purpose)
+            ->where('identifier', $destination)
+            ->latest('id')
+            ->first();
 
         if ($latestOtpEntry) {
             $expirationTime = Carbon::parse($latestOtpEntry->created_at)->addMinutes(1);
@@ -145,19 +158,21 @@ class SmsController extends Controller
         if (! $expiresAt instanceof Carbon) {
             $expiresAt = now()->addMinutes(5);
         }
-        $userId = User::where('mobile', $destination)->value('id');
+        $userId = User::query()->whereMobile((string) $destination)->value('id');
 
-        $otpData = [
+        UserOtpCode::query()->create([
             'user_id' => $userId,
-            'mobile_number' => $destination,
-            'otp' => Hash::make($otp),
-            'type' => $request->input('otp_type', 'login'),
-            'is_used' => false,
+            'identity_id' => null,
+            'channel' => 'sms',
+            'purpose' => $purpose,
+            'identifier' => $destination,
+            'code_hash' => Hash::make($otp),
+            'attempts' => 0,
+            'max_attempts' => (int) config('sms.otp.max_attempts', 5),
             'expires_at' => $expiresAt,
-            'ip_address' => $request->ip(),
-        ];
-
-        Otp::create($otpData);
+            'consumed_at' => null,
+            'request_ip' => $request->ip(),
+        ]);
 
         if (app()->environment('local') && config('app.debug')) {
             Log::info('[TEST MODE] OTP generated (no SMS sent), use 123456 to verify', [

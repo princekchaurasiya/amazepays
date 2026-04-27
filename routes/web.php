@@ -42,7 +42,6 @@ Route::redirect('/admin', '/panel', 301);
 // ── Homepage & Catalog ──────────────────────────────────────────────
 Route::get('/', [HomePageController::class, 'homePage'])->name('home');
 Route::get('/product/{slug}', [ProductSlugController::class, 'getProductBySlug'])->name('get-product-by-slug');
-Route::get('/view-all-product', [HomePageController::class, 'viewAllProduct'])->name('view-all-product');
 
 // Throttled: suggest is the highest-risk scraping target on any storefront.
 Route::get('/search/suggest', [SearchController::class, 'suggest'])

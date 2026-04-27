@@ -13,6 +13,15 @@ type OrderRow = {
     display_image?: string | null;
 };
 
+function statusUi(raw?: string): { label: string; tone: 'green' | 'red' | 'gray' } {
+    const st = String(raw || '').toLowerCase();
+    if (['fulfilled', 'complete', 'completed', 'paid', 'success'].includes(st)) return { label: 'Fulfilled', tone: 'green' };
+    if (['failed', 'failure'].includes(st)) return { label: 'Failed', tone: 'red' };
+    if (['cancelled', 'canceled'].includes(st)) return { label: 'Cancelled', tone: 'red' };
+    if (st === 'processing') return { label: 'Processing', tone: 'gray' };
+    return { label: raw ? String(raw) : '—', tone: 'gray' };
+}
+
 export default function Orders({ orders = [] }: { orders: OrderRow[] }) {
     return (
         <StorefrontLayout>
@@ -39,11 +48,29 @@ export default function Orders({ orders = [] }: { orders: OrderRow[] }) {
                                 <div className="min-w-0 flex-1">
                                     <p className="font-semibold text-gray-900">{o.product_name}</p>
                                     <p className="text-sm text-gray-600">{o.brand_name}</p>
-                                    <p className="text-xs text-gray-500">Status: {o.order_status}</p>
+                                    {(() => {
+                                        const s = statusUi(o.order_status);
+                                        const cls =
+                                            s.tone === 'green'
+                                                ? 'bg-emerald-100 text-emerald-800'
+                                                : s.tone === 'red'
+                                                  ? 'bg-rose-100 text-rose-800'
+                                                  : 'bg-gray-100 text-gray-700';
+                                        return (
+                                            <span className={`mt-2 inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${cls}`}>
+                                                {s.label}
+                                            </span>
+                                        );
+                                    })()}
                                     {o.view_card_url ? (
-                                        <Link href={o.view_card_url} className="mt-2 inline-block text-sm font-medium text-brand-600 hover:underline">
-                                            View card
-                                        </Link>
+                                        <div className="mt-3">
+                                            <Link
+                                                href={o.view_card_url}
+                                                className="inline-flex items-center justify-center rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
+                                            >
+                                                View card details
+                                            </Link>
+                                        </div>
                                     ) : null}
                                 </div>
                                 <div className="text-right text-sm font-medium text-gray-900">

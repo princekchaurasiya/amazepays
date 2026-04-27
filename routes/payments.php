@@ -4,8 +4,10 @@ use App\Http\Controllers\Payment\MockRazorpayController;
 use App\Http\Controllers\Payment\PaymentSessionController;
 use App\Http\Controllers\WoohooProcessingController;
 use App\Http\Controllers\CCAvenueController;
+use App\Models\Order;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +22,24 @@ Route::middleware('throttle:payments')->group(function () {
 });
 
 Route::get('/payment/success', function () {
+    // If we have an order context, go through the processing page only when the order
+    // is not yet in a terminal state. Otherwise render the success page (avoid loops).
+    $orderId = (int) request()->query('order_id', session('checkout_order_id', 0));
+    if ($orderId > 0 && Auth::check()) {
+        $order = Order::query()
+            ->whereKey($orderId)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if ($order) {
+            $st = strtolower((string) ($order->status ?? ''));
+            $terminal = in_array($st, ['fulfilled', 'failed', 'cancelled', 'refunded'], true);
+            if (! $terminal) {
+                return redirect()->route('payment.processing', ['order_id' => $orderId]);
+            }
+        }
+    }
+
     // Cast and validate 'amount' — it comes from the query string and must never
     // be passed raw to the view (reflected XSS / spoofing vector).
     $raw = request()->query('amount');
@@ -42,6 +62,67 @@ Route::get('/payment/failed', function () {
         'amount' => $amount,
     ]);
 })->name('payment.failed');
+
+Route::get('/payment/cancelled', function () {
+    $raw = request()->query('amount');
+    $amount = is_numeric($raw) ? number_format((float) $raw, 2) : null;
+
+    return Inertia::render('Checkout/Status', [
+        'status' => 'failure',
+        'msg' => session('warning') ?: 'Payment cancelled',
+        'amount' => $amount,
+    ]);
+})->name('payment.cancelled');
+
+Route::get('/payment/disconnected', function () {
+    $raw = request()->query('amount');
+    $amount = is_numeric($raw) ? number_format((float) $raw, 2) : null;
+
+    return Inertia::render('Checkout/Status', [
+        'status' => 'failure',
+        'msg' => session('warning') ?: 'Payment disconnected',
+        'amount' => $amount,
+    ]);
+})->name('payment.disconnected');
+
+Route::get('/payment/processing', function () {
+    $orderId = (int) request()->query('order_id', session('checkout_order_id', 0));
+    if ($orderId <= 0 || ! Auth::check()) {
+        return redirect()->route('my-order');
+    }
+
+    $order = Order::query()
+        ->whereKey($orderId)
+        ->where('user_id', Auth::id())
+        ->first();
+
+    if (! $order) {
+        session()->forget('checkout_order_id');
+        return redirect()->route('my-order');
+    }
+
+    $status = strtolower((string) ($order->status ?? 'processing'));
+    $amount = $order->grand_total_minor !== null ? ((int) $order->grand_total_minor) / 100 : 0;
+
+    // If order already reached a terminal status, do not show a spinner page.
+    if (in_array($status, ['completed', 'complete', 'fulfilled'], true)) {
+        return redirect()->route('payment.success', ['amount' => $amount]);
+    }
+    if ($status === 'failed') {
+        return redirect()->route('payment.failed', ['amount' => $amount]);
+    }
+    if (in_array($status, ['cancelled', 'canceled'], true)) {
+        return redirect()->route('payment.cancelled', ['amount' => $amount]);
+    }
+
+    return Inertia::render('Checkout/Processing', [
+        'order_id' => $order->id,
+        'status' => $status,
+        'amount' => $amount,
+        'merchant_order_id' => (string) ($order->order_number ?? ''),
+        'payment_id' => null,
+    ]);
+})->middleware(['web', 'auth'])->name('payment.processing');
 
 Route::get('/payment/processed', function () {
     $raw = request()->query('amount');

@@ -7,6 +7,7 @@ namespace App\Services\Order;
 use App\Models\Order;
 use App\Models\ProviderOrder;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Persists upstream voucher provider attempts on {@see ProviderOrder} (Phase 3 baseline).
@@ -78,7 +79,8 @@ final class ProviderOrderRecorder
         ]);
         $row->save();
 
-        if ($wooOrderId !== null && $wooOrderId !== '') {
+        // Phase-3 schema may not have legacy `orders.woohoo_order_id`.
+        if ($wooOrderId !== null && $wooOrderId !== '' && Schema::hasColumn('orders', 'woohoo_order_id')) {
             $order->woohoo_order_id = $wooOrderId;
             $order->saveQuietly();
         }

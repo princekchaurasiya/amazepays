@@ -3,6 +3,7 @@
 namespace App\Services\Order;
 
 use App\Helpers\ApiSignatureHelper;
+use App\Services\Providers\WoohooBearerTokenStore;
 use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
@@ -31,9 +32,10 @@ final class WoohooApiService
 
         $absApiUrl = 'https://'.config('woohoo.host').'/rest/v3/orders';
         $clientSecret = (string) config('woohoo.client_secret');
-        $bearerToken = (string) config('woohoo.bearer_token');
+        $bearerToken = (string) (config('woohoo.bearer_token') ?: app(WoohooBearerTokenStore::class)->get() ?: '');
         $signature = ApiSignatureHelper::generateSignature($requestBody, 'post', $absApiUrl, $clientSecret);
         $dateAtClient = Carbon::now()->toIso8601String();
+        $refno = (string) ($createOrderPayload['refno'] ?? '');
 
         try {
             $createOrderResponse = Http::acceptJson()
@@ -77,6 +79,45 @@ final class WoohooApiService
             $responseData = [];
         }
 
+        // Woohoo can return "Duplicate reference number provided" when the same refno is retried.
+        // In that case, treat it as idempotent: fetch status by refno and return that result.
+        if ($statusCode === 400 && (int) ($responseData['code'] ?? 0) === 5313 && $refno !== '') {
+            try {
+                $status = $this->getStatusByReferenceNumberLightweight($refno);
+                $st = strtoupper((string) ($status['status'] ?? ''));
+
+                if ($st === 'COMPLETE') {
+                    return [
+                        'success' => true,
+                        'status' => 'COMPLETE',
+                        'data' => $status,
+                        'idempotent' => true,
+                    ];
+                }
+
+                if ($st === 'PROCESSING' || $st === 'PENDING') {
+                    return [
+                        'success' => true,
+                        'status' => 'PROCESSING',
+                        'data' => $status,
+                        'idempotent' => true,
+                    ];
+                }
+
+                return [
+                    'success' => false,
+                    'status_code' => 409,
+                    'message' => 'Duplicate reference number. Unable to confirm status.',
+                    'data' => $status,
+                ];
+            } catch (\Throwable $e) {
+                Log::warning('Woohoo duplicate refno status check failed', [
+                    'refno' => $refno,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         if ($createOrderResponse->successful() && ($responseData['status'] ?? null) === 'COMPLETE') {
             return [
                 'success' => true,
@@ -103,7 +144,7 @@ final class WoohooApiService
         $requestHttpMethod = 'GET';
         $absApiUrl = 'https://'.config('woohoo.host').'/rest/v3/order/'.$refno.'/status';
         $clientSecret = (string) config('woohoo.client_secret');
-        $bearerToken = (string) config('woohoo.bearer_token');
+        $bearerToken = (string) (config('woohoo.bearer_token') ?: app(WoohooBearerTokenStore::class)->get() ?: '');
         $signature = ApiSignatureHelper::generateSignature('', $requestHttpMethod, $absApiUrl, $clientSecret);
         $dateAtClient = Carbon::now()->toIso8601String();
 
@@ -207,7 +248,7 @@ final class WoohooApiService
             $requestHttpMethod = 'GET';
             $absApiUrl = 'https://'.config('woohoo.host').'/rest/v3/order/'.$refno.'/status';
             $clientSecret = (string) config('woohoo.client_secret');
-            $bearerToken = (string) config('woohoo.bearer_token');
+            $bearerToken = (string) (config('woohoo.bearer_token') ?: app(WoohooBearerTokenStore::class)->get() ?: '');
             $signature = ApiSignatureHelper::generateSignature('', $requestHttpMethod, $absApiUrl, $clientSecret);
             $dateAtClient = Carbon::now()->toIso8601String();
 
@@ -269,7 +310,7 @@ final class WoohooApiService
         }
 
         $clientSecret = (string) config('woohoo.client_secret');
-        $bearerToken = (string) config('woohoo.bearer_token');
+        $bearerToken = (string) (config('woohoo.bearer_token') ?: app(WoohooBearerTokenStore::class)->get() ?: '');
         $apiUrl = 'https://'.config('woohoo.host');
         $absApiUrl = "$apiUrl/rest/v3/order/{$orderId}/cards";
         $dateAtClient = Carbon::now()->toIso8601String();

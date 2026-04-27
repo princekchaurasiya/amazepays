@@ -7,7 +7,6 @@ use App\Models\ProductMedia;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductMediaService
@@ -17,36 +16,24 @@ class ProductMediaService
      */
     public function store(UploadedFile $file, Product $product, User $user): ProductMedia
     {
-        $ext = $file->getClientOriginalExtension() ?: 'jpg';
-        $filename = Str::uuid()->toString().'.'.$ext;
-        $dir = 'products/'.$product->id.'/media';
-        $path = $file->storeAs($dir, $filename, 'public');
-
-        $maxSort = (int) ProductMedia::query()
+        $maxOrder = (int) ProductMedia::query()
             ->where('product_id', $product->id)
-            ->whereNull('tenant_id')
-            ->max('sort_order');
+            ->max('display_order');
 
         return ProductMedia::query()->create([
             'product_id' => $product->id,
-            'tenant_id' => null,
-            'collection' => 'gallery',
-            'disk' => 'public',
-            'path' => $path,
-            'filename' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType(),
-            'size' => $file->getSize() ?: 0,
+            'type' => 'gallery',
+            // Current schema stores the URL in DB; we generate a stable placeholder name.
+            // UI can upload to S3/CDN later and update the URL.
+            'url' => (string) $file->getClientOriginalName(),
             'alt_text' => $file->getClientOriginalName(),
-            'sort_order' => $maxSort + 1,
-            'uploaded_by' => $user->id,
+            'display_order' => $maxOrder + 1,
+            'is_primary' => false,
         ]);
     }
 
     public function delete(ProductMedia $media): void
     {
-        if (Storage::disk($media->disk)->exists($media->path)) {
-            Storage::disk($media->disk)->delete($media->path);
-        }
         $media->delete();
     }
 
@@ -60,9 +47,8 @@ class ProductMediaService
             foreach ($orderedIds as $id) {
                 ProductMedia::query()
                     ->where('product_id', $product->id)
-                    ->whereNull('tenant_id')
                     ->where('id', $id)
-                    ->update(['sort_order' => $position++]);
+                    ->update(['display_order' => $position++]);
             }
         });
     }
@@ -79,9 +65,8 @@ class ProductMediaService
         DB::transaction(function () use ($product, $media) {
             ProductMedia::query()
                 ->where('product_id', $product->id)
-                ->whereNull('tenant_id')
-                ->update(['collection' => 'gallery']);
-            $media->update(['collection' => 'hero']);
+                ->update(['type' => 'gallery', 'is_primary' => false]);
+            $media->update(['type' => 'hero', 'is_primary' => true]);
         });
     }
 }

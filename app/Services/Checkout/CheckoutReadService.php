@@ -8,6 +8,7 @@ use App\Models\GiftCardTheme;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\UserAddress;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -37,16 +38,18 @@ class CheckoutReadService
             $cached = CheckoutHelper::getBillingData((int) $order->id);
         }
 
+        $addr = $this->resolveDefaultBillingAddress($user);
+
         $snapshot = [
             'billing_name' => trim((string) ($cached['billing_name'] ?? $user?->name ?? '')),
             'billing_email' => trim((string) ($cached['billing_email'] ?? $user?->email ?? '')),
             'billing_tel' => trim((string) ($cached['billing_tel'] ?? $user?->mobile ?? '')),
-            'billing_zip' => trim((string) ($cached['billing_zip'] ?? $user?->billing_zip ?? '')),
-            'billing_address' => trim((string) ($cached['billing_address'] ?? $user?->billing_address ?? '')),
-            'billing_address_two' => trim((string) ($cached['billing_address_two'] ?? $user?->billing_address_two ?? '')),
-            'billing_city' => trim((string) ($cached['billing_city'] ?? $user?->billing_city ?? '')),
-            'billing_state' => trim((string) ($cached['billing_state'] ?? $user?->billing_state ?? '')),
-            'billing_country' => trim((string) ($cached['billing_country'] ?? $user?->billing_country ?? 'IN')),
+            'billing_zip' => trim((string) ($cached['billing_zip'] ?? $addr?->postal_code ?? '')),
+            'billing_address' => trim((string) ($cached['billing_address'] ?? $addr?->line1 ?? '')),
+            'billing_address_two' => trim((string) ($cached['billing_address_two'] ?? $addr?->line2 ?? '')),
+            'billing_city' => trim((string) ($cached['billing_city'] ?? $addr?->city ?? '')),
+            'billing_state' => trim((string) ($cached['billing_state'] ?? $addr?->state ?? '')),
+            'billing_country' => trim((string) ($cached['billing_country'] ?? $addr?->country ?? 'IN')),
             'billing_gst_number' => trim((string) ($cached['billing_gst_number'] ?? '')),
         ];
 
@@ -250,5 +253,21 @@ class CheckoutReadService
         }
 
         return false;
+    }
+
+    private function resolveDefaultBillingAddress(?User $user): ?UserAddress
+    {
+        if (! $user) {
+            return null;
+        }
+
+        return $user->addresses()
+            ->where('is_default_billing', true)
+            ->orderByDesc('id')
+            ->first()
+            ?: $user->addresses()
+                ->whereIn('type', ['billing', 'both'])
+                ->orderByDesc('id')
+                ->first();
     }
 }

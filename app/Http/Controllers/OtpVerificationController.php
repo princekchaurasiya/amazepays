@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Otp;
 use App\Models\User;
+use App\Models\UserOtpCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -23,7 +23,7 @@ class OtpVerificationController extends Controller
             Log::info('OTP verification result', $verificationResult);
 
             if ($verificationResult['status'] === 'success') {
-                $user = User::where('mobile', $mobileNumber)->first();
+                $user = User::query()->whereMobile($mobileNumber)->first();
 
                 if ($user) {
                     if ($user->is_blocked) {
@@ -111,16 +111,23 @@ class OtpVerificationController extends Controller
         try {
             if (app()->environment('local') && config('app.debug') && $otp === '123456') {
                 Log::info('[TEST MODE] OTP bypass with fixed 123456', ['mobile' => $mobileNumber]);
-                Otp::where('mobile_number', $mobileNumber)->where('is_used', false)->update([
-                    'is_used' => true,
-                    'verified_at' => now(),
+                UserOtpCode::query()
+                    ->where('channel', 'sms')
+                    ->where('purpose', 'login')
+                    ->where('identifier', $mobileNumber)
+                    ->whereNull('consumed_at')
+                    ->update([
+                        'consumed_at' => now(),
                 ]);
 
                 return ['status' => 'success', 'message' => 'OTP verified (test mode)'];
             }
 
-            $latestOtpEntry = Otp::where('mobile_number', $mobileNumber)
-                ->where('is_used', false)
+            $latestOtpEntry = UserOtpCode::query()
+                ->where('channel', 'sms')
+                ->where('purpose', 'login')
+                ->where('identifier', $mobileNumber)
+                ->whereNull('consumed_at')
                 ->where('expires_at', '>', now())
                 ->latest('id')
                 ->first();
@@ -134,12 +141,12 @@ class OtpVerificationController extends Controller
             $maxAttempts = config('sms.otp.max_attempts', 5);
             if ($latestOtpEntry->attempts >= $maxAttempts) {
                 Log::warning('OTP max attempts exceeded', ['mobile' => $mobileNumber]);
-                $latestOtpEntry->update(['is_used' => true]);
+                $latestOtpEntry->update(['consumed_at' => now()]);
 
                 return ['status' => 'error', 'message' => 'Invalid OTP'];
             }
 
-            if (! Hash::check($otp, $latestOtpEntry->otp)) {
+            if (! Hash::check($otp, $latestOtpEntry->code_hash)) {
                 $latestOtpEntry->increment('attempts');
                 Log::error('Invalid OTP entered', ['mobile' => $mobileNumber]);
 
@@ -147,8 +154,7 @@ class OtpVerificationController extends Controller
             }
 
             $latestOtpEntry->update([
-                'is_used' => true,
-                'verified_at' => now(),
+                'consumed_at' => now(),
             ]);
 
             Log::info('OTP successfully verified', ['mobile' => $mobileNumber]);

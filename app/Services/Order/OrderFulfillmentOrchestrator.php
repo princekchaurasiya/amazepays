@@ -5,9 +5,11 @@ namespace App\Services\Order;
 use App\Contracts\VoucherOrderResult;
 use App\Models\Order;
 use App\Models\Product;
+use App\Services\Order\OrderNotificationService;
 use App\Services\Voucher\VoucherProviderFactory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
@@ -22,6 +24,7 @@ class OrderFulfillmentOrchestrator
         private VouchagramOrderFulfillmentService $vouchagramFulfillment,
         private ProviderOrderRecorder $providerOrderRecorder,
         private WoohooGiftCardPersister $giftCardPersister,
+        private OrderNotificationService $notifications,
     ) {}
 
     public function fulfillPaidOrder(Order $order): void
@@ -32,13 +35,14 @@ class OrderFulfillmentOrchestrator
             return;
         }
 
-        $product = Product::find($order->product_id);
+        $orderItem = $order->items()->orderBy('id')->first();
+        $productId = $order->product_id ?? $orderItem?->product_id;
+        $product = $productId ? Product::find($productId) : null;
         if (! $product) {
-            $order->update([
+            $order->update($this->schemaSafeOrderUpdate([
                 'status' => 'failed',
-                'order_status' => 'FAILED',
                 'remarks' => trim((string) ($order->remarks ?? '').' | PRODUCT_NOT_FOUND'),
-            ]);
+            ]));
 
             return;
         }
@@ -61,11 +65,10 @@ class OrderFulfillmentOrchestrator
                 'error' => $e->getMessage(),
             ]);
 
-            $order->update([
+            $order->update($this->schemaSafeOrderUpdate([
                 'status' => 'failed',
-                'order_status' => 'FAILED',
                 'remarks' => trim((string) ($order->remarks ?? '').' | FULFILLMENT_ERROR'),
-            ]);
+            ]));
         }
     }
 
@@ -75,8 +78,8 @@ class OrderFulfillmentOrchestrator
     public function reconcileOrderStatus(Order $order): bool
     {
         $order->refresh();
-        $legacy = strtoupper((string) ($order->order_status ?? ''));
-        if (in_array($legacy, ['COMPLETE', 'FAILED', 'CANCELLED'], true)) {
+        $status = strtolower((string) ($order->status ?? ''));
+        if (in_array($status, ['fulfilled', 'failed', 'cancelled', 'refunded'], true)) {
             return false;
         }
 
@@ -112,14 +115,13 @@ class OrderFulfillmentOrchestrator
     private function isFulfillableState(Order $order): bool
     {
         $status = strtolower((string) ($order->status ?? ''));
-        $legacy = strtoupper((string) ($order->order_status ?? ''));
 
         // prevent duplicate provider placement on repeated callbacks
-        if (in_array($legacy, ['PROCESSING', 'COMPLETE', 'FAILED', 'CANCELLED'], true)) {
+        if (in_array($status, ['processing', 'fulfilled', 'failed', 'cancelled', 'refunded'], true)) {
             return false;
         }
 
-        return $status === 'paid' || $legacy === 'PAID';
+        return $status === 'paid';
     }
 
     /**
@@ -127,33 +129,56 @@ class OrderFulfillmentOrchestrator
      */
     private function buildProviderPayload(Order $order, Product $product): array
     {
+        $firstItem = $order->items()->orderBy('id')->first();
+        $quantity = (int) max(1, (int) (($firstItem?->quantity ?? 1)));
+        $denomination = $firstItem && $firstItem->unit_amount_minor !== null
+            ? ((int) $firstItem->unit_amount_minor) / 100
+            : (float) ($order->grand_total_minor ? ((int) $order->grand_total_minor) / 100 : 0);
+
+        $billing = $order->billingSnapshot()->first();
+        $customerName = (string) ($billing?->full_name ?: 'Customer');
+        $customerEmail = (string) ($billing?->email ?: '');
+        $customerPhone = (string) ($billing?->phone ?: '');
+
+        if ($customerEmail === '' || ! filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+            throw new \RuntimeException('Missing/invalid billing email. Please update your profile and retry checkout.');
+        }
+        if ($customerPhone === '') {
+            throw new \RuntimeException('Missing billing phone. Please update your profile and retry checkout.');
+        }
+
         return [
             'order_id' => (string) ($order->order_number ?? $order->id),
             'external_order_id' => Str::limit((string) ($order->order_number ?? 'AP-'.$order->id), 50, ''),
             'sku' => (string) $product->sku,
-            'quantity' => (int) max(1, (int) $order->quantity),
-            'price' => (float) ($order->denomination ?? $order->unit_price ?? 0),
-            'denomination' => (float) ($order->denomination ?? $order->unit_price ?? 0),
+            'quantity' => $quantity,
+            'price' => $denomination,
+            'denomination' => $denomination,
             'currency' => (string) ($order->currency ?: 'INR'),
-            'customer_name' => (string) ($order->receiver_name ?: $order->billing_name ?: 'Customer'),
-            'customer_email' => (string) ($order->receiver_email ?: $order->billing_email ?: ''),
-            'customer_phone' => (string) ($order->receiver_mobile ?: $order->billing_tel ?: ''),
+            'customer_name' => $customerName,
+            'customer_email' => $customerEmail,
+            'customer_phone' => $customerPhone,
         ];
     }
 
     private function applyProviderResult(Order $order, VoucherOrderResult $result, string $providerName): void
     {
-        $payload = [
-            'remarks' => $result->error
+        $payload = [];
+        if (Schema::hasColumn('orders', 'remarks')) {
+            $payload['remarks'] = $result->error
                 ? trim((string) ($order->remarks ?? '').' | '.$result->error)
-                : $order->remarks,
-        ];
+                : $order->remarks;
+        }
 
         if ($result->providerOrderId) {
             if ($providerName === 'woohoo') {
-                $payload['woohoo_order_id'] = $result->providerOrderId;
+                if (Schema::hasColumn('orders', 'woohoo_order_id')) {
+                    $payload['woohoo_order_id'] = $result->providerOrderId;
+                }
             } elseif (str_starts_with($providerName, 'vouchagram')) {
-                $payload['vouchagram_reference_num'] = $result->providerOrderId;
+                if (Schema::hasColumn('orders', 'vouchagram_reference_num')) {
+                    $payload['vouchagram_reference_num'] = $result->providerOrderId;
+                }
             }
         }
 
@@ -161,11 +186,15 @@ class OrderFulfillmentOrchestrator
             $codes = $result->voucherCodes ?? [];
             $first = $codes[0] ?? [];
 
-            $payload['voucher_code'] = $result->voucherCode ?? (is_array($first) ? ($first['code'] ?? null) : null);
-            $payload['voucher_pin'] = $result->pin ?? (is_array($first) ? ($first['pin'] ?? null) : null);
+            if (Schema::hasColumn('orders', 'voucher_code')) {
+                $payload['voucher_code'] = $result->voucherCode ?? (is_array($first) ? ($first['code'] ?? null) : null);
+            }
+            if (Schema::hasColumn('orders', 'voucher_pin')) {
+                $payload['voucher_pin'] = $result->pin ?? (is_array($first) ? ($first['pin'] ?? null) : null);
+            }
 
             $expRaw = $result->expiryDate ?? (is_array($first) ? ($first['expiry'] ?? null) : null);
-            if ($expRaw) {
+            if ($expRaw && Schema::hasColumn('orders', 'expiry_date')) {
                 try {
                     $payload['expiry_date'] = Carbon::parse($expRaw);
                 } catch (\Throwable) {
@@ -173,20 +202,46 @@ class OrderFulfillmentOrchestrator
                 }
             }
 
-            $payload['status'] = 'completed';
-            $payload['order_status'] = 'COMPLETE';
+            // Phase-3 `orders.status` enum uses `fulfilled` (not `completed`).
+            $payload['status'] = 'fulfilled';
         } elseif ($result->success && in_array($result->status, ['pending', 'processing'], true)) {
             $payload['status'] = 'processing';
-            $payload['order_status'] = 'PROCESSING';
         } else {
             $payload['status'] = 'failed';
-            $payload['order_status'] = 'FAILED';
         }
 
-        $order->update($payload);
+        $order->update($this->schemaSafeOrderUpdate($payload));
 
         if ($result->success && in_array($result->status, ['fulfilled', 'confirmed'], true)) {
-            $this->giftCardPersister->persistFromVoucherOrderResult($order->fresh(), $result, $providerName);
+            // Persist instruments.
+            if ($providerName === 'woohoo') {
+                $codes = $result->voucherCodes ?? [];
+                if (is_array($codes) && $codes !== []) {
+                    $cards = [];
+                    foreach ($codes as $c) {
+                        if (! is_array($c)) {
+                            continue;
+                        }
+                        $cards[] = [
+                            'cardNumber' => $c['code'] ?? null,
+                            'cardPin' => $c['pin'] ?? null,
+                            'validity' => $c['expiry'] ?? null,
+                        ];
+                    }
+                    if ($cards !== []) {
+                        $this->giftCardPersister->syncWoohooCards($order->fresh(), $cards);
+                    }
+                }
+            } else {
+                $this->giftCardPersister->persistFromVoucherOrderResult($order->fresh(), $result, $providerName);
+            }
+        }
+
+        // Send notifications once fulfilled.
+        if ($result->success && in_array($result->status, ['fulfilled', 'confirmed'], true)) {
+            $fresh = $order->fresh(['user', 'giftCards']);
+            $this->notifications->sendOrderConfirmation($fresh);
+            $this->notifications->sendVoucherDelivery($fresh, $this->giftCardPersister->displayCardsForOrder($fresh));
         }
 
         if ($providerName === 'woohoo' && $result->providerOrderId) {
@@ -223,5 +278,21 @@ class OrderFulfillmentOrchestrator
         }
 
         return $order->order_number ?: null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function schemaSafeOrderUpdate(array $payload): array
+    {
+        $out = [];
+        foreach ($payload as $key => $value) {
+            if ($key === 'status' || Schema::hasColumn('orders', $key)) {
+                $out[$key] = $value;
+            }
+        }
+
+        return $out;
     }
 }

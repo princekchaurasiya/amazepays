@@ -10,13 +10,37 @@
         echo \Illuminate\Support\Facades\Vite::withEntryPoints([
             'resources/css/app.css',
             'resources/js/app.tsx',
-        ]);
+        ])->toHtml();
     ?>
 
-    <?php echo \Inertia\Inertia::head(); ?>
+    <?php
+        // Inertia head + app root rendering (without Blade directives).
+        // Mirrors inertia-laravel's @inertiaHead and @inertia directives.
+        if (! isset($__inertiaSsrDispatched)) {
+            $__inertiaSsrDispatched = true;
+            $__inertiaSsrResponse = app(\Inertia\Ssr\Gateway::class)->dispatch($page);
+        }
+
+        if ($__inertiaSsrResponse) {
+            echo $__inertiaSsrResponse->head;
+        }
+    ?>
 </head>
 <body class="h-full font-sans antialiased">
-    <?php echo \Inertia\Inertia::app(); ?>
+    <?php
+        if ($__inertiaSsrResponse) {
+            echo $__inertiaSsrResponse->body;
+        } elseif (config('inertia.use_script_element_for_initial_page')) {
+            ?>
+            <script data-page="app" type="application/json"><?php echo json_encode($page, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
+            <div id="app"></div>
+            <?php
+        } else {
+            ?>
+            <div id="app" data-page="<?php echo htmlspecialchars(json_encode($page, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8'); ?>"></div>
+            <?php
+        }
+    ?>
 </body>
 </html>
 

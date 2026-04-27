@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 import CategoryGlyph from '@/Components/Storefront/CategoryGlyph';
 import { getCategoryIconDef } from '@/lib/categoryIcons';
+import { categoryAccentColor } from '@/lib/categoryAccent';
 import { paths } from '@/lib/paths';
 
 export type StorefrontCategory = {
@@ -97,7 +98,10 @@ export default function CategoryNav({
 
     const renderCategoryVisual = (cat: StorefrontCategory) => {
         const thumb = thumbnailUrl(cat.thumbnail);
-        const accent = cat.accent_color ?? null;
+        const accent =
+            typeof cat.accent_color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(cat.accent_color.trim())
+                ? cat.accent_color.trim()
+                : categoryAccentColor(cat.name);
         if (thumb) {
             return <img src={thumb} alt="" className="h-full w-full object-cover" />;
         }

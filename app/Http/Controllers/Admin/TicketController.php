@@ -35,9 +35,9 @@ class TicketController extends Controller
                 $q->where('ticket_number', 'like', "%{$s}%")
                     ->orWhere('subject', 'like', "%{$s}%")
                     ->orWhereHas('user', function ($u) use ($s) {
-                        $u->where('mobile', 'like', "%{$s}%")
-                            ->orWhere('email', 'like', "%{$s}%")
-                            ->orWhere('name', 'like', "%{$s}%");
+                        $u->whereMobileLike((string) $s)
+                            ->orWhereEmailLike((string) $s)
+                            ->orWhere('display_name', 'like', "%{$s}%");
                     });
             });
         }
@@ -120,7 +120,13 @@ class TicketController extends Controller
         return Inertia::render('Admin/Tickets/Show', [
             'ticket' => $ticket->load(['user', 'order', 'assignedTo', 'resolvedBy', 'messages.user']),
             'staff' => User::whereHas('roles', fn ($q) => $q->whereIn('name', ['super-admin', 'admin', 'finance']))
-                ->get(['id', 'name', 'email']),
+                ->with('authIdentities')
+                ->get(['id', 'display_name'])
+                ->map(fn (User $u) => [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                ]),
         ]);
     }
 
@@ -198,9 +204,9 @@ class TicketController extends Controller
         }
 
         $user = User::query()
-            ->where('mobile', 'like', "%{$q}%")
-            ->orWhere('email', 'like', "%{$q}%")
-            ->orWhere('name', 'like', "%{$q}%")
+            ->whereMobileLike((string) $q)
+            ->orWhereEmailLike((string) $q)
+            ->orWhere('display_name', 'like', "%{$q}%")
             ->first();
 
         if (! $user) {

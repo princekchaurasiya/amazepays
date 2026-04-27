@@ -19,7 +19,7 @@ class UserBlockController extends Controller
                 'reason' => 'required|string|max:255',
             ]);
 
-            $user = User::where('mobile', $request->mobile)->first();
+            $user = User::query()->whereMobile((string) $request->mobile)->first();
 
             if (! $user) {
                 return response()->json([
@@ -78,7 +78,7 @@ class UserBlockController extends Controller
                 'restriction_type' => 'required|in:login,transaction,feature',
             ]);
 
-            $user = User::where('mobile', $request->mobile)->first();
+            $user = User::query()->whereMobile((string) $request->mobile)->first();
 
             if (! $user) {
                 return response()->json([
@@ -132,7 +132,7 @@ class UserBlockController extends Controller
         try {
             // If mobile is provided, check specific user
             if ($request->has('mobile')) {
-                $user = User::where('mobile', $request->mobile)->first();
+                $user = User::query()->whereMobile((string) $request->mobile)->first();
                 if (! $user) {
                     return response()->json([
                         'status' => 'error',
@@ -157,8 +157,14 @@ class UserBlockController extends Controller
             elseif ($request->has('feature')) {
                 $users = User::whereNotNull('restricted_features')
                     ->where('restricted_features', 'like', '%'.$request->feature.'%')
-                    ->select('name', 'mobile', 'restricted_features', 'restriction_reason', 'updated_at')
-                    ->get();
+                    ->get(['id', 'display_name', 'restricted_features', 'restriction_reason', 'updated_at'])
+                    ->map(fn (User $u) => [
+                        'name' => $u->name,
+                        'mobile' => $u->mobile,
+                        'restricted_features' => $u->restricted_features,
+                        'restriction_reason' => $u->restriction_reason,
+                        'updated_at' => $u->updated_at,
+                    ]);
 
                 return response()->json([
                     'status' => 'success',
@@ -172,8 +178,16 @@ class UserBlockController extends Controller
                         ->orWhere('can_transact', false)
                         ->orWhereNotNull('restricted_features');
                 })
-                    ->select('name', 'mobile', 'is_blocked', 'can_transact', 'restricted_features', 'restriction_reason', 'updated_at')
-                    ->get();
+                    ->get(['id', 'display_name', 'is_blocked', 'can_transact', 'restricted_features', 'restriction_reason', 'updated_at'])
+                    ->map(fn (User $u) => [
+                        'name' => $u->name,
+                        'mobile' => $u->mobile,
+                        'is_blocked' => $u->is_blocked,
+                        'can_transact' => $u->can_transact,
+                        'restricted_features' => $u->restricted_features,
+                        'restriction_reason' => $u->restriction_reason,
+                        'updated_at' => $u->updated_at,
+                    ]);
 
                 return response()->json([
                     'status' => 'success',
@@ -193,7 +207,7 @@ class UserBlockController extends Controller
     public function exportBlockedUsers()
     {
         try {
-            $users = User::where('is_blocked', true)->get(['name', 'mobile', 'restriction_reason', 'updated_at']);
+            $users = User::where('is_blocked', true)->get(['id', 'display_name', 'restriction_reason', 'updated_at']);
             $csvData = "Name,Mobile,Reason,Updated At\n";
 
             foreach ($users as $user) {

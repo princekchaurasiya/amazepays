@@ -62,7 +62,15 @@ final class PaymentSessionController extends Controller
         $this->rejectUnexpectedFields($request, ['order_id']);
 
         $order = $this->resolveOrderForUser($request);
-        $init = $this->payments->initiate($order, 'razorpay', $request->user());
+        try {
+            $init = $this->payments->initiate($order, 'razorpay', $request->user());
+        } catch (\InvalidArgumentException $e) {
+            if (str_contains($e->getMessage(), 'awaiting payment')) {
+                session()->forget('checkout_order_id');
+                return redirect()->back()->with('error', __('payments.checkout_session_expired'));
+            }
+            throw $e;
+        }
 
         return $this->redirectToGateway($init->success, $init->redirectUrl, $request);
     }
@@ -87,7 +95,9 @@ final class PaymentSessionController extends Controller
             return redirect()->route('payment.failed')->with('error', __('payments.payment_failed'));
         }
 
-        return redirect()->route('payment.success')->with('success', __('payments.payment_completed_successfully'));
+        return redirect()->route('payment.processing', [
+            'order_id' => (int) session('checkout_order_id', 0),
+        ]);
     }
 
     private function redirectToGateway(bool $success, ?string $redirectUrl, Request $request): RedirectResponse

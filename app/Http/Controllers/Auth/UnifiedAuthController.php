@@ -84,7 +84,7 @@ class UnifiedAuthController extends Controller
             ], 403);
         }
 
-        $user = User::where('mobile', $phone)->first();
+        $user = User::query()->whereMobile($phone)->first();
 
         if ($user) {
             if ($user->is_blocked) {
@@ -141,7 +141,7 @@ class UnifiedAuthController extends Controller
             ], 400);
         }
 
-        if (User::where('mobile', $phone)->exists()) {
+        if (User::query()->whereMobile($phone)->exists()) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'An account already exists for this number.',
@@ -165,7 +165,8 @@ class UnifiedAuthController extends Controller
 
         $validator = Validator::make($request->only(['name', 'email', 'referral_code']), [
             'name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s]+$/'],
-            'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
+            // Phase-3: email lives in user_auth_identities; validate format only here.
+            'email' => ['nullable', 'email', 'max:255'],
             'referral_code' => ['nullable', 'string', 'max:64'],
         ], [
             'name.regex' => 'Name should only contain letters and spaces.',
@@ -182,13 +183,37 @@ class UnifiedAuthController extends Controller
 
         $validated = $validator->validated();
 
+        // NOTE: Registration flow needs full Phase-3 identity creation.
+        // For now, create a minimal user principal and identities so mobile login works.
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'] ?? null,
-            'mobile' => $phone,
-            'password' => null,
-            'referral_code' => $validated['referral_code'] ?? null,
+            'tenant_id' => null,
+            'display_name' => $validated['name'],
+            'account_type' => 'customer',
+            'status' => 'active',
+            'is_super_admin' => false,
         ]);
+
+        $user->authIdentities()->firstOrCreate(
+            ['provider' => 'mobile', 'identifier' => $phone],
+            [
+                'display_identifier' => $phone,
+                'is_primary' => true,
+                'is_verified' => true,
+                'verified_at' => now(),
+            ]
+        );
+
+        if (! empty($validated['email'])) {
+            $user->authIdentities()->firstOrCreate(
+                ['provider' => 'email', 'identifier' => (string) $validated['email']],
+                [
+                    'display_identifier' => (string) $validated['email'],
+                    'is_primary' => false,
+                    'is_verified' => true,
+                    'verified_at' => now(),
+                ]
+            );
+        }
 
         $request->session()->forget([self::SESSION_PHONE, self::SESSION_AT]);
         Auth::login($user);

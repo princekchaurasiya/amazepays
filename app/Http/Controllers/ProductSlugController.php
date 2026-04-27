@@ -17,7 +17,14 @@ class ProductSlugController extends Controller
     public function getProductBySlug(Request $request)
     {
         try {
-            $product = Product::where('url', $request->slug)->first();
+            $slug = trim((string) $request->slug);
+            $q = Product::query();
+            if (Schema::hasColumn('products', 'url')) {
+                $q->where('url', $slug)->orWhere('slug', $slug);
+            } else {
+                $q->where('slug', $slug);
+            }
+            $product = $q->first();
             // dd($product);
 
             if (! $product) {
@@ -39,12 +46,12 @@ class ProductSlugController extends Controller
             $productDetails = $product->toArray();
 
             // Override with accessor values to ensure JSON fields are decoded
-            $productDetails['price'] = $product->price;
+            $productDetails['price'] = $product->resolveStorefrontPrice();
             $productDetails['images'] = $product->images;
             $productDetails['currency'] = $product->currency;
             $productDetails['display_image_url'] = $product->display_image_url;
             $productDetails['card_theme'] = $product->resolveCardTheme();
-            $productDetails['default_card_value'] = $this->resolveDefaultCardValue($product->price);
+            $productDetails['default_card_value'] = $this->resolveDefaultCardValue($productDetails['price']);
 
             $content = app(ProductContentService::class);
 
@@ -63,15 +70,15 @@ class ProductSlugController extends Controller
                 : ContentFormatter::extractHowToRedeem($decodedHowToUse);
 
             $giftThemes = collect();
-            if (Schema::hasTable('gift_card_themes')) {
-                $hasGallery = Schema::hasColumn('gift_card_themes', 'gallery_images');
-                $hasThumbPath = Schema::hasColumn('gift_card_themes', 'thumbnail_path');
-                $hasPreviewPath = Schema::hasColumn('gift_card_themes', 'preview_image_path');
-                $hasThumbUrl = Schema::hasColumn('gift_card_themes', 'thumbnail_url');
-                $hasImageUrl = Schema::hasColumn('gift_card_themes', 'image_url');
+            if (Schema::hasTable('gift_themes')) {
+                $hasGallery = Schema::hasColumn('gift_themes', 'gallery_images');
+                $hasThumbPath = Schema::hasColumn('gift_themes', 'thumbnail_path');
+                $hasPreviewPath = Schema::hasColumn('gift_themes', 'preview_image_path');
+                $hasThumbUrl = Schema::hasColumn('gift_themes', 'thumbnail_url');
+                $hasImageUrl = Schema::hasColumn('gift_themes', 'image_url');
                 $giftThemes = GiftCardTheme::query()
                     ->active()
-                    ->orderBy('sort_order')
+                    ->orderBy('display_order')
                     ->orderBy('id')
                     ->get()
                     ->map(static function (GiftCardTheme $theme) use ($hasGallery, $hasThumbPath, $hasPreviewPath, $hasThumbUrl, $hasImageUrl): array {
@@ -166,4 +173,6 @@ class ProductSlugController extends Controller
 
         return (int) round($min > 0 ? $min : 0);
     }
+
+    // Pricing resolution moved to Product::resolveStorefrontPrice()
 }

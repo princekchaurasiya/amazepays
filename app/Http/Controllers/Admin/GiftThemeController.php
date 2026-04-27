@@ -18,14 +18,14 @@ class GiftThemeController extends Controller
 {
     public function index(): Response
     {
-        $hasGalleryColumn = Schema::hasTable('gift_card_themes') && Schema::hasColumn('gift_card_themes', 'gallery_images');
-        $hasThumbPath = Schema::hasTable('gift_card_themes') && Schema::hasColumn('gift_card_themes', 'thumbnail_path');
-        $hasPreviewPath = Schema::hasTable('gift_card_themes') && Schema::hasColumn('gift_card_themes', 'preview_image_path');
-        $hasThumbUrl = Schema::hasTable('gift_card_themes') && Schema::hasColumn('gift_card_themes', 'thumbnail_url');
-        $hasImageUrl = Schema::hasTable('gift_card_themes') && Schema::hasColumn('gift_card_themes', 'image_url');
+        $hasGalleryColumn = Schema::hasTable('gift_themes') && Schema::hasColumn('gift_themes', 'gallery_images');
+        $hasThumbPath = Schema::hasTable('gift_themes') && Schema::hasColumn('gift_themes', 'thumbnail_path');
+        $hasPreviewPath = Schema::hasTable('gift_themes') && Schema::hasColumn('gift_themes', 'preview_image_path');
+        $hasThumbUrl = Schema::hasTable('gift_themes') && Schema::hasColumn('gift_themes', 'thumbnail_url');
+        $hasImageUrl = Schema::hasTable('gift_themes') && Schema::hasColumn('gift_themes', 'image_url');
 
         $themes = GiftCardTheme::query()
-            ->orderBy('sort_order')
+            ->orderBy('display_order')
             ->orderBy('id')
             ->paginate(50)
             ->through(function (GiftCardTheme $theme) use ($hasGalleryColumn, $hasThumbPath, $hasPreviewPath, $hasThumbUrl, $hasImageUrl): array {
@@ -64,7 +64,7 @@ class GiftThemeController extends Controller
                     'gallery_urls' => $galleryUrls,
                     'gallery_paths' => $galleryPaths,
                     'is_active' => (bool) $theme->is_active,
-                    'sort_order' => (int) $theme->sort_order,
+                    'sort_order' => (int) ($theme->getAttribute('display_order') ?? 0),
                 ];
             });
 
@@ -120,7 +120,7 @@ class GiftThemeController extends Controller
                 'string',
                 'max:120',
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
-                Rule::unique('gift_card_themes', 'slug')->ignore($theme?->id),
+                Rule::unique('gift_themes', 'slug')->ignore($theme?->id),
             ],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active' => ['nullable', 'boolean'],
@@ -140,11 +140,11 @@ class GiftThemeController extends Controller
         $folder = 'gift-themes';
         $uploadedGalleryFiles = $this->extractGalleryUploads($request);
         $hasUploadedGalleryFiles = count($uploadedGalleryFiles) > 0;
-        $hasGalleryColumn = Schema::hasTable('gift_card_themes') && Schema::hasColumn('gift_card_themes', 'gallery_images');
-        $hasThumbPath = Schema::hasTable('gift_card_themes') && Schema::hasColumn('gift_card_themes', 'thumbnail_path');
-        $hasPreviewPath = Schema::hasTable('gift_card_themes') && Schema::hasColumn('gift_card_themes', 'preview_image_path');
-        $hasThumbUrl = Schema::hasTable('gift_card_themes') && Schema::hasColumn('gift_card_themes', 'thumbnail_url');
-        $hasImageUrl = Schema::hasTable('gift_card_themes') && Schema::hasColumn('gift_card_themes', 'image_url');
+        $hasGalleryColumn = Schema::hasTable('gift_themes') && Schema::hasColumn('gift_themes', 'gallery_images');
+        $hasThumbPath = Schema::hasTable('gift_themes') && Schema::hasColumn('gift_themes', 'thumbnail_path');
+        $hasPreviewPath = Schema::hasTable('gift_themes') && Schema::hasColumn('gift_themes', 'preview_image_path');
+        $hasThumbUrl = Schema::hasTable('gift_themes') && Schema::hasColumn('gift_themes', 'thumbnail_url');
+        $hasImageUrl = Schema::hasTable('gift_themes') && Schema::hasColumn('gift_themes', 'image_url');
 
         if ($hasGalleryColumn && $theme) {
             $existingPaths = array_values(array_filter((array) $theme->getAttribute('gallery_images'), static fn ($v): bool => is_string($v) && $v !== ''));
@@ -236,7 +236,7 @@ class GiftThemeController extends Controller
 
     private function deleteThemeMedia(GiftCardTheme $theme): void
     {
-        if (Schema::hasTable('gift_card_themes') && Schema::hasColumn('gift_card_themes', 'gallery_images')) {
+        if (Schema::hasTable('gift_themes') && Schema::hasColumn('gift_themes', 'gallery_images')) {
             $this->deleteManyPublicPaths((array) $theme->getAttribute('gallery_images'));
         }
     }

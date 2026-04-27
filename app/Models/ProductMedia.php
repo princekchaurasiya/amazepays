@@ -12,21 +12,16 @@ class ProductMedia extends Model
 
     protected $fillable = [
         'product_id',
-        'tenant_id',
-        'collection',
-        'disk',
-        'path',
-        'filename',
-        'mime_type',
-        'size',
+        'type',
+        'url',
         'alt_text',
-        'sort_order',
-        'uploaded_by',
+        'display_order',
+        'is_primary',
     ];
 
     protected $casts = [
-        'sort_order' => 'integer',
-        'size' => 'integer',
+        'display_order' => 'integer',
+        'is_primary' => 'boolean',
     ];
 
     public function product(): BelongsTo
@@ -34,21 +29,5 @@ class ProductMedia extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
-    public function uploader(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'uploaded_by');
-    }
-
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class, 'tenant_id');
-    }
-
-    /**
-     * Public URL for storefront / API (admin uploads on public disk).
-     */
-    public function url(): string
-    {
-        return Storage::disk($this->disk)->url($this->path);
-    }
+    // `url` is stored as a full URL in the DB (see migration).
 }

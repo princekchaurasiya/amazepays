@@ -19,12 +19,15 @@ class StorefrontBusinessController extends Controller
         $categories = Category::query()->orderBy('display_order')->get();
         $brands = Brand::query()->orderBy('display_order')->get();
 
-        $brandMaxDiscounts = Product::query()
-            ->forStorefrontCatalog()
-            ->whereNotNull('brand_id')
-            ->selectRaw('brand_id, MAX(COALESCE(discount_percentage, 0)) as max_discount')
-            ->groupBy('brand_id')
-            ->pluck('max_discount', 'brand_id');
+        $brandMaxDiscounts = collect();
+        if (Schema::hasColumn('products', 'discount_percentage')) {
+            $brandMaxDiscounts = Product::query()
+                ->forStorefrontCatalog()
+                ->whereNotNull('brand_id')
+                ->selectRaw('brand_id, MAX(COALESCE(discount_percentage, 0)) as max_discount')
+                ->groupBy('brand_id')
+                ->pluck('max_discount', 'brand_id');
+        }
 
         $featuredQuery = Product::query()->forStorefrontCatalog();
 

@@ -50,7 +50,16 @@ final class MockRazorpayController extends Controller
 
         abort_if(! $order, 403);
 
-        $init = $this->payments->initiate($order, 'mock_razorpay', $request->user());
+        try {
+            $init = $this->payments->initiate($order, 'mock_razorpay', $request->user());
+        } catch (\InvalidArgumentException $e) {
+            // If a user previously cancelled/failed/paid the draft, force restart.
+            if (str_contains($e->getMessage(), 'awaiting payment')) {
+                session()->forget('checkout_order_id');
+                return redirect()->back()->with('error', __('payments.checkout_session_expired'));
+            }
+            throw $e;
+        }
         if (! $init->success || ! $init->redirectUrl) {
             return redirect()->back()->with('error', __('payments.payment_initiation_failed_try_again'));
         }
@@ -62,15 +71,37 @@ final class MockRazorpayController extends Controller
     {
         abort_unless(app()->environment(['local', 'testing']), 404);
 
-        $payload = array_merge($request->only(['amount', 'currency', 'token', 'status', 'razorpay_payment_id', 'razorpay_order_id', 'razorpay_signature']), [
+        // Accept mock-specific fields from the local simulator page.
+        $payload = array_merge($request->only([
+            'amount',
+            'currency',
+            'token',
+            'status',
+            'razorpay_payment_id',
+            'razorpay_order_id',
+            'razorpay_signature',
+            'mock_status',
+            'mock_payment_id',
+            'reason',
+        ]), [
             'merchant_order_id' => $merchantOrderId,
         ]);
 
         $result = $this->payments->handleGatewayCallback('mock_razorpay', $payload);
 
-        return redirect()->route($result->success ? 'payment.success' : 'payment.failed', [
-            'amount' => $request->input('amount'),
-        ]);
+        // Always go to processing-first UX; the processing page can redirect when terminal.
+        $order = Order::query()->where('order_number', $merchantOrderId)->first();
+        if ($order && (int) $order->user_id === (int) Auth::id()) {
+            session(['checkout_order_id' => $order->id]);
+        }
+        $route = $result->status === 'cancelled'
+            ? 'payment.cancelled'
+            : ($result->status === 'failed' ? 'payment.failed' : 'payment.processing');
+
+        return redirect()->route($route, $route === 'payment.processing'
+            ? ['order_id' => (int) session('checkout_order_id', 0)]
+            : ['amount' => $request->input('amount')]
+        );
     }
 }
 

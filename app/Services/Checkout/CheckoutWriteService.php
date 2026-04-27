@@ -3,9 +3,11 @@
 namespace App\Services\Checkout;
 
 use App\Models\Order;
+use App\Models\OrderBillingSnapshot;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 
@@ -76,7 +78,7 @@ class CheckoutWriteService
 
             $orderNumber = 'AMZ'.now()->format('YmdHis').Str::upper(Str::random(6));
 
-            $order = Order::query()->create([
+            $orderAttrs = [
                 'tenant_id' => 1,
                 'user_id' => $userId,
                 'order_number' => $orderNumber,
@@ -87,7 +89,32 @@ class CheckoutWriteService
                 'tax_total_minor' => 0,
                 'grand_total_minor' => $grandTotalMinor,
                 'currency' => 'INR',
-            ]);
+            ];
+
+            // Schema-safe fields (older DBs may not have these columns).
+            foreach ([
+                'product_id' => (int) $productLocked->id,
+                'sku' => (string) ($productLocked->sku ?? ''),
+                'quantity' => $quantity,
+                'denomination' => $denomination,
+                'gift_send_option' => (string) ($validated['gift_send_option'] ?? 'buy_for_self'),
+                'receiver_name' => $validated['receiver_name'] ?? null,
+                'receiver_email' => $validated['receiver_email'] ?? null,
+                'receiver_mobile' => $validated['receiver_mobile'] ?? null,
+                'receiver_msg' => $validated['receiver_msg'] ?? null,
+                'delivery_mode' => (string) ($validated['delivery_mode'] ?? 'both'),
+                'gift_theme_id' => $validated['gift_theme_id'] ?? null,
+                'gift_message_title' => $validated['gift_message_title'] ?? null,
+                'sender_first_name' => $validated['sender_first_name'] ?? null,
+                'gift_delivery_option' => $validated['gift_delivery_option'] ?? null,
+                'gift_delivery_at' => $validated['gift_delivery_at'] ?? null,
+            ] as $col => $val) {
+                if (Schema::hasColumn('orders', $col)) {
+                    $orderAttrs[$col] = $val;
+                }
+            }
+
+            $order = Order::query()->create($orderAttrs);
 
             OrderItem::query()->create([
                 'order_id' => (int) $order->id,
@@ -104,6 +131,25 @@ class CheckoutWriteService
                 'currency' => 'INR',
                 'fulfilment_status' => 'pending',
             ]);
+
+            // Phase-3 schema: persist immutable billing snapshot (required for downstream providers like Woohoo).
+            if (Schema::hasTable('order_billing_snapshots')) {
+                OrderBillingSnapshot::query()->updateOrCreate(
+                    ['order_id' => (int) $order->id],
+                    [
+                        'full_name' => (string) ($validated['billing_name'] ?? 'Customer'),
+                        'email' => (string) ($validated['billing_email'] ?? ''),
+                        'phone' => (string) ($validated['billing_tel'] ?? ''),
+                        'line1' => (string) ($validated['billing_address'] ?? '-'),
+                        'line2' => $validated['billing_address_two'] ?? null,
+                        'city' => (string) ($validated['billing_city'] ?? '-'),
+                        'state' => (string) ($validated['billing_state'] ?? '-'),
+                        'postal_code' => (string) ($validated['billing_zip'] ?? '000000'),
+                        'country' => (string) ($validated['billing_country'] ?? 'IN'),
+                        'gst_number' => $validated['billing_gst_number'] ?? null,
+                    ]
+                );
+            }
 
             return $order;
         });
@@ -166,13 +212,37 @@ class CheckoutWriteService
                 ->first();
 
             if ($order) {
-                $order->fill([
+                $update = [
                     'subtotal_minor' => $subtotalMinor,
                     'discount_total_minor' => $discountMinor,
                     'tax_total_minor' => 0,
                     'grand_total_minor' => $grandTotalMinor,
                     'currency' => 'INR',
-                ]);
+                ];
+
+                foreach ([
+                    'product_id' => (int) $productLocked->id,
+                    'sku' => (string) ($productLocked->sku ?? ''),
+                    'quantity' => $quantity,
+                    'denomination' => $denomination,
+                    'gift_send_option' => (string) ($validated['gift_send_option'] ?? 'buy_for_self'),
+                    'receiver_name' => $validated['receiver_name'] ?? null,
+                    'receiver_email' => $validated['receiver_email'] ?? null,
+                    'receiver_mobile' => $validated['receiver_mobile'] ?? null,
+                    'receiver_msg' => $validated['receiver_msg'] ?? null,
+                    'delivery_mode' => (string) ($validated['delivery_mode'] ?? 'both'),
+                    'gift_theme_id' => $validated['gift_theme_id'] ?? null,
+                    'gift_message_title' => $validated['gift_message_title'] ?? null,
+                    'sender_first_name' => $validated['sender_first_name'] ?? null,
+                    'gift_delivery_option' => $validated['gift_delivery_option'] ?? null,
+                    'gift_delivery_at' => $validated['gift_delivery_at'] ?? null,
+                ] as $col => $val) {
+                    if (Schema::hasColumn('orders', $col)) {
+                        $update[$col] = $val;
+                    }
+                }
+
+                $order->fill($update);
                 $order->save();
 
                 // Replace order items (single-item checkout draft).
@@ -192,6 +262,24 @@ class CheckoutWriteService
                     'fulfilment_status' => 'pending',
                 ]);
 
+                if (Schema::hasTable('order_billing_snapshots')) {
+                    OrderBillingSnapshot::query()->updateOrCreate(
+                        ['order_id' => (int) $order->id],
+                        [
+                            'full_name' => (string) ($validated['billing_name'] ?? 'Customer'),
+                            'email' => (string) ($validated['billing_email'] ?? ''),
+                            'phone' => (string) ($validated['billing_tel'] ?? ''),
+                            'line1' => (string) ($validated['billing_address'] ?? '-'),
+                            'line2' => $validated['billing_address_two'] ?? null,
+                            'city' => (string) ($validated['billing_city'] ?? '-'),
+                            'state' => (string) ($validated['billing_state'] ?? '-'),
+                            'postal_code' => (string) ($validated['billing_zip'] ?? '000000'),
+                            'country' => (string) ($validated['billing_country'] ?? 'IN'),
+                            'gst_number' => $validated['billing_gst_number'] ?? null,
+                        ]
+                    );
+                }
+
                 return $order;
             }
 
@@ -201,22 +289,27 @@ class CheckoutWriteService
 
     private function assertDenominationValidForProduct(Product $product, float $denomination): void
     {
-        $priceData = (array) $product->price;
+        $priceData = $product->resolveStorefrontPrice();
         $priceType = strtoupper((string) ($priceData['type'] ?? 'RANGE'));
 
         if ($priceType === 'SLAB') {
-            $denominations = array_map(static fn ($value): string => (string) $value, (array) ($priceData['denominations'] ?? []));
-            if (! in_array((string) $denomination, $denominations, true)) {
+            $denominations = array_map('floatval', (array) ($priceData['denominations'] ?? []));
+            if (! in_array((float) $denomination, $denominations, true)) {
                 throw ValidationException::withMessages([
-                    'denomination' => 'Invalid denomination value. Allowed values are: '.implode(', ', $denominations),
+                    'denomination' => 'Invalid denomination value. Allowed values are: '.implode(', ', array_map(fn ($d) => '₹'.(float) $d, $denominations)),
                 ]);
             }
 
             return;
         }
 
-        $minPrice = isset($priceData['min']) ? (float) $priceData['min'] : (float) ($product->minPrice ?? 0);
-        $maxPrice = isset($priceData['max']) ? (float) $priceData['max'] : (float) ($product->maxPrice ?? 0);
+        $minPrice = isset($priceData['min']) ? (float) $priceData['min'] : 0.0;
+        $maxPrice = isset($priceData['max']) ? (float) $priceData['max'] : 0.0;
+        if ($minPrice <= 0 || $maxPrice <= 0 || $maxPrice < $minPrice) {
+            throw ValidationException::withMessages([
+                'denomination' => 'Price range not configured for this product.',
+            ]);
+        }
         if ($denomination < $minPrice || $denomination > $maxPrice) {
             throw ValidationException::withMessages([
                 'denomination' => "The denomination must be between ₹{$minPrice} and ₹{$maxPrice}.",

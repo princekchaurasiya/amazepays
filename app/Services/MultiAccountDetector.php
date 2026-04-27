@@ -43,7 +43,7 @@ class MultiAccountDetector
 
         // Check 3: Same mobile number used to request OTP for multiple accounts
         if ($user->mobile) {
-            $sameMobile = User::where('mobile', $user->mobile)
+            $sameMobile = User::query()->whereMobile((string) $user->mobile)
                 ->where('id', '!=', $user->id)
                 ->exists();
 

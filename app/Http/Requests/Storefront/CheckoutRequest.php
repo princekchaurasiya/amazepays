@@ -26,7 +26,7 @@ class CheckoutRequest extends FormRequest
             'receiver_email' => 'nullable|required_if:gift_send_option,send_as_gift|email|max:255',
             'receiver_mobile' => 'nullable|required_if:gift_send_option,send_as_gift|digits:10',
             'receiver_msg' => 'nullable|required_if:gift_send_option,send_as_gift|string|max:500',
-            'gift_theme_id' => 'nullable|required_if:gift_send_option,send_as_gift|integer|exists:gift_card_themes,id',
+            'gift_theme_id' => 'nullable|required_if:gift_send_option,send_as_gift|integer|exists:gift_themes,id',
             'gift_message_title' => 'nullable|required_if:gift_send_option,send_as_gift|string|max:120',
             'sender_first_name' => 'nullable|required_if:gift_send_option,send_as_gift|string|max:120',
             'gift_delivery_option' => 'nullable|required_if:gift_send_option,send_as_gift|string|in:send_now,send_later',

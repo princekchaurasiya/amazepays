@@ -198,7 +198,7 @@ class ProductPageController extends Controller
             return;
         }
 
-        if (! Schema::hasTable('gift_card_themes')) {
+        if (! Schema::hasTable('gift_themes')) {
             throw ValidationException::withMessages([
                 'gift_theme_id' => __('payments.gift_theme_invalid'),
             ]);

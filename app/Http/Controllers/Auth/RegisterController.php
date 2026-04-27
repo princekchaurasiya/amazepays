@@ -7,10 +7,13 @@ use App\Http\Controllers\OtpVerificationController;
 use App\Mail\SendVerificationCode;
 use App\Models\EmailVerificationCode;
 use App\Models\User;
+use App\Models\UserAuthIdentity;
+use App\Models\UserAuthSecret;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
@@ -25,16 +28,15 @@ class RegisterController extends Controller
         try {
             $validator = Validator::make($request->only(['name', 'mobile', 'email', 'password', 'password_confirmation', 'otp']), [
                 'name' => ['required', 'regex:/^[a-zA-Z\s]+$/'],
-                'mobile' => ['required', 'regex:/^(?:(?:\+|0{0,2})91)?[789]\d{9}$/', 'unique:users,mobile'],
-                'email' => 'required|email|unique:users,email',
+                // Phase-3: mobile/email are stored in user_auth_identities (not users table)
+                'mobile' => ['required', 'regex:/^(?:(?:\+|0{0,2})91)?[789]\d{9}$/'],
+                'email' => 'required|email|max:255',
                 'password' => 'required|confirmed|min:8|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).+$/',
                 'otp' => ['required', 'string'],
             ], [
                 'name.regex' => 'Name should only contain letters and spaces',
                 'mobile.regex' => 'Invalid mobile number',
-                'mobile.unique' => 'Mobile number already exists',
                 'email.email' => 'Invalid email address',
-                'email.unique' => 'Email already exists',
                 'password.confirmed' => 'Password confirmation does not match',
                 'password.min' => 'Password must be at least 8 characters long,at least 1 lowercase,1 uppercase,1 number and 1 special character',
             ]);
@@ -54,13 +56,44 @@ class RegisterController extends Controller
                 return response()->json(['status' => 400, 'errors' => ['registerOTP' => [$otpVerificationResponse['message']]]]);
             }
 
-            User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => bcrypt($validated['password']),
-                'role_id' => 2,
-                'mobile' => $validated['mobile'],
+            $user = User::create([
+                'tenant_id' => null,
+                'display_name' => (string) $validated['name'],
+                'account_type' => 'customer',
+                'status' => 'active',
+                'is_super_admin' => false,
             ]);
+
+            $emailIdentity = UserAuthIdentity::firstOrCreate(
+                ['provider' => 'email', 'identifier' => (string) $validated['email']],
+                [
+                    'user_id' => $user->id,
+                    'display_identifier' => (string) $validated['email'],
+                    'is_primary' => true,
+                    'is_verified' => true,
+                    'verified_at' => now(),
+                ]
+            );
+
+            UserAuthIdentity::firstOrCreate(
+                ['provider' => 'mobile', 'identifier' => (string) $validated['mobile']],
+                [
+                    'user_id' => $user->id,
+                    'display_identifier' => (string) $validated['mobile'],
+                    'is_primary' => false,
+                    'is_verified' => true,
+                    'verified_at' => now(),
+                ]
+            );
+
+            UserAuthSecret::firstOrCreate(
+                ['identity_id' => $emailIdentity->id],
+                [
+                    'user_id' => $user->id,
+                    'password_hash' => Hash::make((string) $validated['password']),
+                    'failed_attempts' => 0,
+                ]
+            );
 
             $code = rand(100000, 999999);
 
@@ -72,17 +105,11 @@ class RegisterController extends Controller
 
             Mail::to($validated['email'])->send(new SendVerificationCode($code));
 
-            if (Auth::attempt(['email' => $validated['email'], 'password' => $validated['password']])) {
-                $data = [
-                    'status' => 200,
-                    'msg' => 'Login successful. Welcome back!',
-                ];
-            } else {
-                $data = [
-                    'status' => 400,
-                    'msg' => 'Login failed. Please check your email and password and try again.',
-                ];
-            }
+            Auth::login($user);
+            $data = [
+                'status' => 200,
+                'msg' => 'Registration successful.',
+            ];
 
             return response()->json($data);
         } catch (Exception $e) {

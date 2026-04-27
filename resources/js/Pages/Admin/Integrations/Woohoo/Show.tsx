@@ -16,8 +16,8 @@ export default function WoohooShow() {
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                         Use the existing Woohoo admin page until this integration workspace is wired.
                     </p>
-                    <Link href="/panel/woohoo-admin" className="mt-3 inline-block text-sm font-semibold text-brand-600 hover:underline">
-                        Open existing Woohoo admin
+                    <Link href="/panel/woohoo" className="mt-3 inline-block text-sm font-semibold text-brand-600 hover:underline">
+                        Open Woohoo admin
                     </Link>
                 </div>
             </div>

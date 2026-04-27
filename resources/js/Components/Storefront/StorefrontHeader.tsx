@@ -61,7 +61,7 @@ export default function StorefrontHeader({ onOpenAuth, searchQuery = '' }: Props
                                 searchDropdownRef.current?.consumeKeyDown(e);
                             }}
                             placeholder="Brand or category name"
-                            className="w-full rounded-full border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 shadow-sm transition focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                            className="w-full rounded-full border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-500 shadow-sm transition focus:border-product-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-product-primary/20"
                             autoComplete="off"
                         />
                         <SearchDropdown
@@ -108,7 +108,7 @@ export default function StorefrontHeader({ onOpenAuth, searchQuery = '' }: Props
                         <button
                             type="button"
                             onClick={() => (onOpenAuth ? onOpenAuth() : router.visit(paths.login))}
-                            className="inline-flex items-center rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-800"
+                            className="inline-flex items-center rounded-full bg-product-accent px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
                         >
                             Log in / Sign up
                         </button>

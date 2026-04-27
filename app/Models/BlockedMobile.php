@@ -10,15 +10,15 @@ use Illuminate\Support\Facades\DB;
 class BlockedMobile extends Model
 {
     protected $fillable = [
-        'mobile', 'reason', 'blocked_at', 'expires_at',
-        'auto_blocked', 'blocked_by', 'block_count', 'permanent',
+        'tenant_id',
+        'blocked_by_user_id',
+        'mobile',
+        'reason',
+        'expires_at',
     ];
 
     protected $casts = [
-        'blocked_at' => 'datetime',
         'expires_at' => 'datetime',
-        'auto_blocked' => 'boolean',
-        'permanent' => 'boolean',
     ];
 
     public static function normalize(string $raw): string
@@ -52,7 +52,8 @@ class BlockedMobile extends Model
             return false;
         }
 
-        if ($record->permanent) {
+        // Phase-3: expires_at NULL means permanent block.
+        if ($record->expires_at === null) {
             Cache::put("blocked_mobile:{$normalized}", true, 3600);
 
             return true;
@@ -76,19 +77,9 @@ class BlockedMobile extends Model
             ['mobile' => $normalized],
             [
                 'reason' => $reason,
-                'blocked_at' => now(),
                 'expires_at' => now()->addSeconds($durationSeconds),
-                'auto_blocked' => $auto,
-                'block_count' => DB::raw('block_count + 1'),
             ]
         );
-
-        $record->refresh();
-
-        $permanentAfter = config('security.threat_detection.permanent_block_after', 3);
-        if ($record->block_count >= $permanentAfter) {
-            $record->update(['permanent' => true, 'expires_at' => null]);
-        }
 
         Cache::put("blocked_mobile:{$normalized}", true, $durationSeconds);
 
@@ -105,17 +96,14 @@ class BlockedMobile extends Model
 
     public function blockedByUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'blocked_by');
+        return $this->belongsTo(User::class, 'blocked_by_user_id');
     }
 
     public function scopeActive($query)
     {
         return $query->where(function ($q) {
-            $q->where('permanent', true)
-                ->orWhere(function ($q2) {
-                    $q2->whereNull('expires_at')
-                        ->orWhere('expires_at', '>', now());
-                });
+            $q->whereNull('expires_at')
+                ->orWhere('expires_at', '>', now());
         });
     }
 }

@@ -5,7 +5,7 @@ import StorefrontHeader from '@/Components/Storefront/StorefrontHeader';
 
 export default function CheckoutLayout({ children }: PropsWithChildren) {
     return (
-        <div className="min-h-screen bg-violet-50/40">
+        <div className="min-h-screen bg-gray-50">
             <FlashToast />
             <StorefrontHeader />
             <CategoryNav />

@@ -24,6 +24,7 @@ export default function CheckoutIndex({
     billingMissingFieldsByMethod,
     billingRequiredFieldsByMethod,
     billingRequiredFieldLabelsByMethod,
+    enabledPaymentMethods,
 }: {
     product: Product;
     order: Order;
@@ -33,6 +34,7 @@ export default function CheckoutIndex({
     billingMissingFieldsByMethod?: Record<MethodKey, string[]>;
     billingRequiredFieldsByMethod?: Record<MethodKey, string[]>;
     billingRequiredFieldLabelsByMethod?: Record<MethodKey, Record<string, string>>;
+    enabledPaymentMethods?: MethodKey[];
 }) {
     const page = usePage<{ i18n?: { checkout?: Record<string, string> } }>();
     const appEnv = (page.props as any)?.app?.env as string | undefined;
@@ -70,25 +72,24 @@ export default function CheckoutIndex({
         allowMock?: boolean;
     }> = [
         {
-            key: 'ccavenue',
-            label: 'CCAvenue',
-            description: 'Card / Netbanking / UPI (gateway)',
-            action: paths.paymentCcavenue,
-        },
-        {
             key: 'razorpay',
             label: 'Razorpay',
             description: 'Fast card + UPI checkout',
             action: paths.paymentRazorpay,
             allowMock: allowMock,
         },
-        {
-            key: 'unlimit',
-            label: 'Unlimit',
-            description: 'Card / UPI / Netbanking (gateway)',
-            action: paths.paymentUnlimit,
-        },
     ];
+
+    const methodCatalog: Record<MethodKey, (typeof methodUi)[number]> = {
+        ccavenue: { key: 'ccavenue', label: 'CCAvenue', description: 'Card / Netbanking / UPI (gateway)', action: paths.paymentCcavenue },
+        razorpay: { key: 'razorpay', label: 'Razorpay', description: 'Fast card + UPI checkout', action: paths.paymentRazorpay, allowMock: allowMock },
+        unlimit: { key: 'unlimit', label: 'Unlimit', description: 'Card / UPI / Netbanking (gateway)', action: paths.paymentUnlimit },
+    };
+
+    const enabled = (enabledPaymentMethods && enabledPaymentMethods.length > 0 ? enabledPaymentMethods : (['razorpay'] as MethodKey[])).filter(
+        (m) => Boolean(methodCatalog[m]),
+    );
+    const methodsToRender = enabled.map((m) => methodCatalog[m]);
 
     return (
         <CheckoutLayout>
@@ -177,7 +178,7 @@ export default function CheckoutIndex({
                             <div className="mt-6">
                                 {orderId ? (
                                     <div className="space-y-4">
-                                        {methodUi.map((m) => {
+                                        {methodsToRender.map((m) => {
                                             const ready = Boolean(readyBy[m.key]);
                                             const missing = missingBy[m.key] ?? [];
                                             const labels = labelsBy[m.key] ?? {};

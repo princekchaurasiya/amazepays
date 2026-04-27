@@ -11,17 +11,19 @@ class SyncedCategory extends Model
     protected $table = 'synced_categories';
 
     protected $fillable = [
+        'tenant_id',
+        'local_category_id',
+        'provider',
+        'external_id',
+        'external_parent_id',
         'name',
-        'url',
-        'description',
-        'images',
-        'subcategoriesCount',
-        'subcategories',
+        'raw_payload',
+        'synced_at',
     ];
 
     protected $casts = [
-        'images' => 'array',
-        'subcategoriesCount' => 'integer',
+        'raw_payload' => 'array',
+        'synced_at' => 'datetime',
     ];
 
     public function products(): HasMany

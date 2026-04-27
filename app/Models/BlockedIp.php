@@ -5,19 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class BlockedIp extends Model
 {
     protected $fillable = [
-        'ip_address', 'reason', 'blocked_at', 'expires_at',
-        'auto_blocked', 'blocked_by', 'block_count', 'permanent',
+        'tenant_id',
+        'blocked_by_user_id',
+        'ip_address',
+        'cidr',
+        'reason',
+        'scope',
+        'expires_at',
     ];
 
     protected $casts = [
-        'blocked_at' => 'datetime',
         'expires_at' => 'datetime',
-        'auto_blocked' => 'boolean',
-        'permanent' => 'boolean',
     ];
 
     public static function isBlocked(string $ip): bool
@@ -33,8 +36,8 @@ class BlockedIp extends Model
             return false;
         }
 
-        // Permanent block
-        if ($record->permanent) {
+        // Permanent block (Phase-3): expires_at NULL
+        if ($record->expires_at === null) {
             Cache::put("blocked_ip:{$ip}", true, 3600);
 
             return true;
@@ -56,18 +59,9 @@ class BlockedIp extends Model
             ['ip_address' => $ip],
             [
                 'reason' => $reason,
-                'blocked_at' => now(),
                 'expires_at' => now()->addSeconds($durationSeconds),
-                'auto_blocked' => $auto,
-                'block_count' => \DB::raw('block_count + 1'),
             ]
         );
-
-        // Check if should be made permanent
-        $permanentAfter = config('security.threat_detection.permanent_block_after', 3);
-        if ($record->block_count >= $permanentAfter) {
-            $record->update(['permanent' => true, 'expires_at' => null]);
-        }
 
         // Cache the block
         Cache::put("blocked_ip:{$ip}", true, $durationSeconds);
@@ -84,26 +78,19 @@ class BlockedIp extends Model
 
     public function blockedByUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'blocked_by');
+        return $this->belongsTo(User::class, 'blocked_by_user_id');
     }
 
     public function isExpired(): bool
     {
-        if ($this->permanent) {
-            return false;
-        }
-
-        return $this->expires_at && $this->expires_at->isPast();
+        return $this->expires_at !== null && $this->expires_at->isPast();
     }
 
     public function scopeActive($query)
     {
         return $query->where(function ($q) {
-            $q->where('permanent', true)
-                ->orWhere(function ($q2) {
-                    $q2->whereNull('expires_at')
-                        ->orWhere('expires_at', '>', now());
-                });
+            $q->whereNull('expires_at')
+                ->orWhere('expires_at', '>', now());
         });
     }
 }

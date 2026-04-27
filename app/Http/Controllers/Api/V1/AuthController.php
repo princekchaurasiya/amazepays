@@ -124,7 +124,7 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['otp' => 'Invalid or expired OTP.']);
         }
 
-        $user = User::where('mobile', $phone)->first();
+        $user = User::query()->whereMobile($phone)->first();
 
         if ($user) {
             if ($user->is_blocked) {
@@ -239,18 +239,18 @@ class AuthController extends Controller
 
         $phone = $payload['phone'];
 
-        if (User::where('mobile', $phone)->exists()) {
+        if (User::query()->whereMobile((string) $phone)->exists()) {
             return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'auth.account_exists', httpStatus: 409);
         }
 
         $validator = Validator::make($request->only(['name', 'email', 'referral_code']), [
             'name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s]+$/'],
-            'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
+            // Phase-3: email uniqueness is enforced in user_auth_identities
+            'email' => ['nullable', 'email', 'max:255'],
             'referral_code' => ['nullable', 'string', 'max:64'],
         ], [
             'name.regex' => 'Name should only contain letters and spaces.',
             'email.email' => 'Please enter a valid email address.',
-            'email.unique' => 'This email is already registered.',
         ]);
 
         if ($validator->fails()) {
@@ -265,12 +265,34 @@ class AuthController extends Controller
         $validated = $validator->validated();
 
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'] ?? null,
-            'mobile' => $phone,
-            'password' => null,
-            'referral_code' => $validated['referral_code'] ?? null,
+            'tenant_id' => null,
+            'display_name' => $validated['name'],
+            'account_type' => 'customer',
+            'status' => 'active',
+            'is_super_admin' => false,
         ]);
+
+        $user->authIdentities()->firstOrCreate(
+            ['provider' => 'mobile', 'identifier' => (string) $phone],
+            [
+                'display_identifier' => (string) $phone,
+                'is_primary' => true,
+                'is_verified' => true,
+                'verified_at' => now(),
+            ]
+        );
+
+        if (! empty($validated['email'])) {
+            $user->authIdentities()->firstOrCreate(
+                ['provider' => 'email', 'identifier' => (string) $validated['email']],
+                [
+                    'display_identifier' => (string) $validated['email'],
+                    'is_primary' => false,
+                    'is_verified' => true,
+                    'verified_at' => now(),
+                ]
+            );
+        }
 
         $user->assignRole('b2c-user');
 

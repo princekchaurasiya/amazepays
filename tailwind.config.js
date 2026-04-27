@@ -38,7 +38,7 @@ export default {
                 product: {
                     canvas: '#f9fafb',
                     navy: '#0d1117',
-                    primary: '#1D2C8C',
+                    primary: '#0B0B8F',
                     accent: '#FF6A00',
                 },
             },

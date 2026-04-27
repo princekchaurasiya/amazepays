@@ -4,7 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\SyncedCategory;
+use App\Models\Tenant;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class CategorySeeder extends Seeder
 {
@@ -14,39 +17,67 @@ class CategorySeeder extends Seeder
 
         $this->command->info('Seeding storefront navigation categories (≥20, with accent colors for tiles)...');
 
-        /** @var list<array{name: string, order: int, accent_color: string}> $defaults */
+        $tenantId = (int) (Tenant::query()->min('id') ?? 1);
+
+        /** @var list<array{name: string, display_order: int}> $defaults */
         $defaults = [
-            ['name' => 'New Brands', 'order' => 1, 'accent_color' => '#f97316'],
-            ['name' => 'Food', 'order' => 2, 'accent_color' => '#ef4444'],
-            ['name' => 'Grocery', 'order' => 3, 'accent_color' => '#84cc16'],
-            ['name' => 'One Stop Shop', 'order' => 4, 'accent_color' => '#8b5cf6'],
-            ['name' => 'Hot Deals', 'order' => 5, 'accent_color' => '#dc2626'],
-            ['name' => 'Travel', 'order' => 6, 'accent_color' => '#0ea5e9'],
-            ['name' => 'Hotels', 'order' => 7, 'accent_color' => '#6366f1'],
-            ['name' => 'Fashion', 'order' => 8, 'accent_color' => '#ec4899'],
-            ['name' => 'Beauty', 'order' => 9, 'accent_color' => '#d946ef'],
-            ['name' => 'Gaming', 'order' => 10, 'accent_color' => '#22c55e'],
-            ['name' => 'Watches', 'order' => 11, 'accent_color' => '#78716b'],
-            ['name' => 'Electronics', 'order' => 12, 'accent_color' => '#3b82f6'],
-            ['name' => 'Entertainment', 'order' => 13, 'accent_color' => '#a855f7'],
-            ['name' => 'Health & Wellness', 'order' => 14, 'accent_color' => '#14b8a6'],
-            ['name' => 'Jewellery', 'order' => 15, 'accent_color' => '#ca8a04'],
-            ['name' => 'Kids', 'order' => 16, 'accent_color' => '#fb923c'],
-            ['name' => 'Home & Living', 'order' => 17, 'accent_color' => '#64748b'],
-            ['name' => 'Fitness', 'order' => 18, 'accent_color' => '#10b981'],
-            ['name' => 'E-commerce', 'order' => 19, 'accent_color' => '#06b6d4'],
-            ['name' => 'Dining', 'order' => 20, 'accent_color' => '#f43f5e'],
-            ['name' => 'Books & Learning', 'order' => 21, 'accent_color' => '#0f7669'],
-            ['name' => 'Auto & Fuel', 'order' => 22, 'accent_color' => '#475569'],
+            ['name' => 'New Brands', 'display_order' => 1],
+            ['name' => 'Food', 'display_order' => 2],
+            ['name' => 'Grocery', 'display_order' => 3],
+            ['name' => 'One Stop Shop', 'display_order' => 4],
+            ['name' => 'Hot Deals', 'display_order' => 5],
+            ['name' => 'Travel', 'display_order' => 6],
+            ['name' => 'Hotels', 'display_order' => 7],
+            ['name' => 'Fashion', 'display_order' => 8],
+            ['name' => 'Beauty', 'display_order' => 9],
+            ['name' => 'Gaming', 'display_order' => 10],
+            ['name' => 'Watches', 'display_order' => 11],
+            ['name' => 'Electronics', 'display_order' => 12],
+            ['name' => 'Entertainment', 'display_order' => 13],
+            ['name' => 'Health & Wellness', 'display_order' => 14],
+            ['name' => 'Jewellery', 'display_order' => 15],
+            ['name' => 'Kids', 'display_order' => 16],
+            ['name' => 'Home & Living', 'display_order' => 17],
+            ['name' => 'Fitness', 'display_order' => 18],
+            ['name' => 'E-commerce', 'display_order' => 19],
+            ['name' => 'Dining', 'display_order' => 20],
+            ['name' => 'Books & Learning', 'display_order' => 21],
+            ['name' => 'Auto & Fuel', 'display_order' => 22],
+        ];
+
+        $hasAccent = Schema::hasColumn('categories', 'accent_color');
+        $palette = [
+            '#0ea5e9',
+            '#22c55e',
+            '#f97316',
+            '#ef4444',
+            '#a855f7',
+            '#14b8a6',
+            '#3b82f6',
+            '#ec4899',
+            '#84cc16',
+            '#f59e0b',
         ];
 
         foreach ($defaults as $row) {
+            $data = [
+                'name' => $row['name'],
+                'display_order' => $row['display_order'],
+                'status' => 'active',
+                'is_featured' => false,
+            ];
+
+            if ($hasAccent) {
+                $hash = crc32(mb_strtolower($row['name']));
+                $data['accent_color'] = $palette[$hash % count($palette)];
+            }
+
             Category::updateOrCreate(
-                ['name' => $row['name']],
                 [
-                    'order' => $row['order'],
-                    'accent_color' => $row['accent_color'],
-                ]
+                    'tenant_id' => $tenantId,
+                    'slug' => Str::slug($row['name']),
+                ],
+                $data
             );
         }
 
@@ -60,15 +91,21 @@ class CategorySeeder extends Seeder
     {
         $this->command->info('Seeding synced category sandbox row...');
 
-        $category = SyncedCategory::firstOrNew(['id' => 121]);
+        $tenantId = (int) (\App\Models\Tenant::query()->min('id') ?? 1);
+
+        $category = SyncedCategory::firstOrNew([
+            'provider' => 'sandbox',
+            'external_id' => 'api-sandbox-b2b',
+        ]);
+
+        $category->tenant_id = $tenantId;
+        $category->external_parent_id = null;
+        $category->local_category_id = null;
         $category->name = 'API SANDBOX B2B';
-        $category->url = '/api-sandbox-b2b';
-        $category->description = null;
-        $category->images = json_encode(['image' => null, 'thumbnail' => null]);
-        $category->subcategoriesCount = 0;
-        $category->subcategories = '[]';
+        $category->raw_payload = ['name' => 'API SANDBOX B2B'];
+        $category->synced_at = now();
         $category->save();
 
-        $this->command->info('Synced category seeded: ID 121, API SANDBOX B2B');
+        $this->command->info('Synced category seeded: sandbox/api-sandbox-b2b');
     }
 }

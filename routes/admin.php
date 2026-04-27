@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GiftThemeController;
 use App\Http\Controllers\Admin\HomepageBuilderController;
+use App\Http\Controllers\Admin\HomepageBuilderItemsController;
 use App\Http\Controllers\Admin\MediaAssetController;
 use App\Http\Controllers\Admin\OfferController;
 use App\Http\Controllers\Admin\OrderController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ValueDesignAdminController;
+use App\Http\Controllers\Admin\WoohooController;
 use App\Http\Controllers\Admin\Payments\PaymentSessionController as AdminPaymentSessionController;
 use App\Http\Controllers\Admin\Voucher\LystoGiftCardController;
 use App\Http\Controllers\Admin\VouchagramController;
@@ -317,6 +319,27 @@ Route::prefix('panel')->name('panel.')->middleware(['auth', 'two.factor'])->grou
             ->middleware('permission:settings.update');
         Route::delete('/sections/{section}', [HomepageBuilderController::class, 'destroy'])->name('sections.destroy')
             ->middleware('permission:settings.update');
+        Route::post('/sections/{section}/bulk-add-woohoo-products', [HomepageBuilderController::class, 'bulkAddWoohooProducts'])
+            ->name('sections.bulk-add-woohoo-products')
+            ->middleware('permission:settings.update');
+        Route::get('/sections/{section}/items', [HomepageBuilderItemsController::class, 'index'])
+            ->name('sections.items.index')
+            ->middleware('permission:settings.view');
+        Route::post('/sections/{section}/items', [HomepageBuilderItemsController::class, 'store'])
+            ->name('sections.items.store')
+            ->middleware('permission:settings.update');
+        Route::post('/sections/{section}/items/bulk', [HomepageBuilderItemsController::class, 'bulkStore'])
+            ->name('sections.items.bulk')
+            ->middleware('permission:settings.update');
+        Route::post('/sections/{section}/items/reorder', [HomepageBuilderItemsController::class, 'reorder'])
+            ->name('sections.items.reorder')
+            ->middleware('permission:settings.update');
+        Route::put('/items/{item}', [HomepageBuilderItemsController::class, 'update'])
+            ->name('items.update')
+            ->middleware('permission:settings.update');
+        Route::delete('/items/{item}', [HomepageBuilderItemsController::class, 'destroy'])
+            ->name('items.destroy')
+            ->middleware('permission:settings.update');
         Route::post('/sections/reorder', [HomepageBuilderController::class, 'reorder'])->name('sections.reorder')
             ->middleware('permission:settings.update');
         Route::post('/publish', [HomepageBuilderController::class, 'publish'])->name('publish')
@@ -391,7 +414,22 @@ Route::prefix('panel')->name('panel.')->middleware(['auth', 'two.factor'])->grou
         Route::get('/wallet', [LystoGiftCardController::class, 'getWalletBalance'])->name('wallet');
         Route::post('/gift-cards/purchase', [LystoGiftCardController::class, 'purchase'])->name('gift-cards.purchase');
     });
-    Route::get('/woohoo-admin', [WoohooAdminController::class, 'index'])->name('woohoo.index')
+
+    // Woohoo (catalog + order tools)
+    Route::prefix('woohoo')->name('woohoo.')->middleware('permission:providers.view')->group(function () {
+        Route::get('/', [WoohooAdminController::class, 'index'])->name('index');
+        Route::post('/get-token', [WoohooController::class, 'getToken'])->name('get-token');
+        Route::post('/fetch-categories', [WoohooController::class, 'fetchCategories'])->name('fetch-categories');
+        Route::post('/fetch-products', [WoohooController::class, 'fetchProducts'])->name('fetch-products');
+        Route::post('/fetch-product-details', [WoohooController::class, 'fetchProductDetails'])->name('fetch-product-details');
+        Route::post('/sync-sku', [WoohooController::class, 'syncSku'])->name('sync-sku');
+        Route::post('/sync-category', [WoohooController::class, 'syncCategory'])->name('sync-category');
+        Route::post('/sync-all-product-details', [WoohooController::class, 'syncAllProductDetails'])->name('sync-all-product-details');
+        Route::post('/test-order', [WoohooController::class, 'testOrder'])->name('test-order');
+    });
+
+    // Legacy alias (Phase 4+): old page URL
+    Route::get('/woohoo-admin', fn () => redirect()->route('panel.woohoo.index'))->name('woohoo.legacy')
         ->middleware('permission:providers.view');
 
     // Vouchagram (Send + Pull API tools & catalog sync)

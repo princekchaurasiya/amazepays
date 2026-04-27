@@ -30,6 +30,12 @@ final class EnsureIdempotencyKey
         $userId = Auth::check() ? (int) Auth::id() : null;
         $hash = hash('sha256', $method.'|'.$request->path().'|'.$request->getContent());
 
+        // Strict scopes should only be used for machine/API flows that expect 409 conflicts.
+        // Web flows (checkout button double-click / browser retry / 302 chains) should not hard-fail UX.
+        $isStrictScope = str_starts_with($scope, 'api.v1.payments.')
+            || str_starts_with($scope, 'api.v1.orders.')
+            || str_starts_with($scope, 'api.v1.wallet.');
+
         try {
             $row = IdempotencyKey::query()->where('scope', $scope)->where('idempotency_key', $key)->first();
             if ($row) {
@@ -45,6 +51,12 @@ final class EnsureIdempotencyKey
                         ],
                         409
                     )->toResponse($request);
+                }
+
+                // Best-practice for non-critical scopes: ignore replay of same request key
+                // instead of hard-failing the UI with 409 (users double-click / browsers retry).
+                if (! $isStrictScope) {
+                    return $next($request);
                 }
 
                 return ResponsePayload::fail(

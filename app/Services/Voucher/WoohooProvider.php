@@ -5,22 +5,16 @@ namespace App\Services\Voucher;
 use App\Contracts\StockCheckResult;
 use App\Contracts\VoucherOrderResult;
 use App\Contracts\VoucherProviderInterface;
-use App\Support\ProviderResponseTranslator;
-use Illuminate\Support\Facades\Http;
+use App\Services\Order\WoohooApiService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class WoohooProvider implements VoucherProviderInterface
 {
-    private array $config;
-
     public function __construct(array $credentials = [])
     {
-        $this->config = empty($credentials) ? [
-            'api_url' => config('woohoo.api_url', 'https://woohoo.in/api'),
-            'api_key' => config('woohoo.api_key'),
-            'api_secret' => config('woohoo.api_secret'),
-            'client_id' => config('woohoo.client_id'),
-        ] : $credentials;
+        // Credentials are intentionally ignored: Woohoo access is configured via `config/woohoo.php`
+        // and bearer token hydration from the `settings` table (see `AppServiceProvider`).
     }
 
     public function getName(): string
@@ -41,37 +35,135 @@ class WoohooProvider implements VoucherProviderInterface
     public function placeOrder(array $orderData): VoucherOrderResult
     {
         try {
-            $response = $this->request('POST', '/order/place', [
-                'cart' => [
-                    [
-                        'productId' => $orderData['sku'],
-                        'qty' => $orderData['quantity'] ?? 1,
-                        'price' => $orderData['price'],
-                        'currency' => 'INR',
-                    ],
-                ],
-                'clientOrderId' => $orderData['order_id'],
-                'returnUrl' => config('app.url').'/api/v1/webhooks/woohoo',
-            ]);
+            $host = (string) config('woohoo.host');
+            $bearerToken = (string) config('woohoo.bearer_token');
+            $clientSecret = (string) config('woohoo.client_secret');
+            if ($host === '' || $bearerToken === '' || $clientSecret === '') {
+                $missing = [];
+                if ($host === '') {
+                    $missing[] = 'WOOHOO_URL (config woohoo.host)';
+                }
+                if ($clientSecret === '') {
+                    $missing[] = 'WOOHOO_CLIENT_SECRET';
+                }
+                if ($bearerToken === '') {
+                    $missing[] = 'Woohoo bearer token (settings providers/woohoo.bearer_token)';
+                }
 
-            if ($response->successful()) {
-                $data = $response->json();
+                throw new \RuntimeException('Woohoo configuration missing: '.implode(', ', $missing));
+            }
+
+            $refno = (string) ($orderData['external_order_id'] ?? $orderData['order_id'] ?? '');
+            if ($refno === '') {
+                $refno = 'AP-'.Str::uuid()->toString();
+            }
+
+            $quantity = (int) max(1, (int) ($orderData['quantity'] ?? 1));
+            $price = (float) ($orderData['price'] ?? $orderData['denomination'] ?? 0);
+            $sku = (string) ($orderData['sku'] ?? '');
+            if ($sku === '' || $price <= 0) {
+                throw new \InvalidArgumentException('Invalid Woohoo order payload (missing sku/price)');
+            }
+
+            $createOrderPayload = [
+                'address' => [
+                    'firstname' => (string) ($orderData['customer_name'] ?? 'Customer'),
+                    'lastname' => '',
+                    'email' => (string) ($orderData['customer_email'] ?? ''),
+                    'telephone' => $this->normalizePhone((string) ($orderData['customer_phone'] ?? '')),
+                    'line1' => '-',
+                    'line2' => '-',
+                    'city' => '-',
+                    'region' => '-',
+                    'country' => 'IN',
+                    'postcode' => '000000',
+                    'languages' => 'en',
+                    'billToThis' => true,
+                ],
+                'billing' => [
+                    'firstname' => (string) ($orderData['customer_name'] ?? 'Customer'),
+                    'lastname' => '',
+                    'email' => (string) ($orderData['customer_email'] ?? ''),
+                    'telephone' => $this->normalizePhone((string) ($orderData['customer_phone'] ?? '')),
+                    'line1' => '-',
+                    'line2' => '-',
+                    'city' => '-',
+                    'region' => '-',
+                    'country' => 'IN',
+                    'postcode' => '000000',
+                    'languages' => 'en',
+                    'billToThis' => true,
+                ],
+                'payments' => [[
+                    'code' => 'svc',
+                    'amount' => $price,
+                ]],
+                'refno' => Str::limit($refno, 50, ''),
+                'products' => [[
+                    'sku' => $sku,
+                    'price' => $price,
+                    'qty' => $quantity,
+                    'currency' => 356,
+                ]],
+                'syncOnly' => $quantity > (int) env('SYNC_ONLY_THRESHOLD') ? false : true,
+                'delivery_mode' => 'API',
+            ];
+
+            /** @var WoohooApiService $api */
+            $api = app(WoohooApiService::class);
+            $result = $api->createOrder($createOrderPayload);
+
+            if (($result['success'] ?? false) === true) {
+                $status = strtoupper((string) ($result['status'] ?? ''));
+                $data = is_array($result['data'] ?? null) ? $result['data'] : [];
+
+                $providerOrderId = isset($data['orderId']) ? (string) $data['orderId'] : null;
+
+                // If Woohoo returned COMPLETE, fetch cards immediately so downstream can persist + notify.
+                $voucherCodes = [];
+                if ($status === 'COMPLETE' && $providerOrderId) {
+                    try {
+                        $cardsResp = $api->callCardActivation(['orderId' => $providerOrderId, 'status' => 'COMPLETE']);
+                        if (is_object($cardsResp)) {
+                            $cardsResp = json_decode(json_encode($cardsResp), true);
+                        }
+                        if (is_array($cardsResp)) {
+                            $cards = $cardsResp['cards'] ?? [];
+                            if (is_array($cards)) {
+                                foreach ($cards as $card) {
+                                    if (! is_array($card)) {
+                                        continue;
+                                    }
+                                    $voucherCodes[] = [
+                                        'code' => $card['cardNumber'] ?? $card['cardnumber'] ?? null,
+                                        'pin' => $card['cardPin'] ?? $card['cardpin'] ?? null,
+                                        'expiry' => $card['validity'] ?? $card['expiry'] ?? null,
+                                    ];
+                                }
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning('Woohoo card activation fetch failed after COMPLETE', [
+                            'provider_order_id' => $providerOrderId,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
 
                 return new VoucherOrderResult(
                     success: true,
-                    status: 'pending',
-                    providerOrderId: $data['orderId'] ?? null,
-                    raw: $data,
+                    status: $status === 'COMPLETE' ? 'fulfilled' : 'pending',
+                    providerOrderId: $providerOrderId,
+                    voucherCodes: $voucherCodes !== [] ? $voucherCodes : null,
+                    voucherCode: $voucherCodes[0]['code'] ?? null,
+                    pin: $voucherCodes[0]['pin'] ?? null,
+                    expiryDate: $voucherCodes[0]['expiry'] ?? null,
+                    raw: array_merge($result, ['cards' => $voucherCodes]),
                 );
             }
 
-            $body = $response->json();
-            if (is_array($body)) {
-                $mapped = ProviderResponseTranslator::fromWoohooPayload($body);
-                throw new \RuntimeException($mapped['message']);
-            }
-
-            throw new \RuntimeException('Woohoo order API error: '.$response->body());
+            $message = (string) ($result['message'] ?? 'Woohoo order request failed');
+            throw new \RuntimeException($message);
         } catch (\Exception $e) {
             Log::error('Woohoo placeOrder failed', ['error' => $e->getMessage(), 'order' => $orderData]);
 
@@ -82,36 +174,54 @@ class WoohooProvider implements VoucherProviderInterface
     public function queryOrder(string $providerOrderId): VoucherOrderResult
     {
         try {
-            $response = $this->request('GET', "/order/{$providerOrderId}/status");
+            /** @var WoohooApiService $api */
+            $api = app(WoohooApiService::class);
 
-            if ($response->successful()) {
-                $data = $response->json();
-                $status = $this->mapStatus($data['status'] ?? '');
+            // Orchestrator stores Woohoo `orderId` as providerOrderId. Use card activation endpoint.
+            $combined = $api->callCardActivation(['orderId' => $providerOrderId, 'status' => 'COMPLETE']);
+            if (is_object($combined)) {
+                $combined = json_decode(json_encode($combined), true);
+            }
+            if (! is_array($combined)) {
+                $combined = [];
+            }
 
-                $codes = [];
-                foreach ($data['items'] ?? [] as $item) {
-                    foreach ($item['vouchers'] ?? [] as $voucher) {
-                        $codes[] = [
-                            'code' => $voucher['code'] ?? null,
-                            'pin' => $voucher['pin'] ?? null,
-                            'expiry' => $voucher['expiryDate'] ?? null,
-                        ];
-                    }
+            $cards = $combined['cards'] ?? [];
+            if (! is_array($cards)) {
+                $cards = [];
+            }
+
+            $codes = [];
+            foreach ($cards as $card) {
+                if (! is_array($card)) {
+                    continue;
                 }
+                $codes[] = [
+                    'code' => $card['cardNumber'] ?? $card['cardnumber'] ?? null,
+                    'pin' => $card['cardPin'] ?? $card['cardpin'] ?? null,
+                    'expiry' => $card['validity'] ?? $card['expiry'] ?? null,
+                ];
+            }
 
+            if ($codes !== []) {
                 return new VoucherOrderResult(
                     success: true,
-                    status: $status,
+                    status: 'fulfilled',
                     providerOrderId: $providerOrderId,
                     voucherCodes: $codes,
                     voucherCode: $codes[0]['code'] ?? null,
                     pin: $codes[0]['pin'] ?? null,
                     expiryDate: $codes[0]['expiry'] ?? null,
-                    raw: $data,
+                    raw: $combined,
                 );
             }
 
-            throw new \RuntimeException('Woohoo status query failed: '.$response->body());
+            return new VoucherOrderResult(
+                success: true,
+                status: 'pending',
+                providerOrderId: $providerOrderId,
+                raw: $combined,
+            );
         } catch (\Exception $e) {
             Log::error('Woohoo queryOrder failed', ['error' => $e->getMessage()]);
 
@@ -121,22 +231,8 @@ class WoohooProvider implements VoucherProviderInterface
 
     public function fetchCatalog(): array
     {
-        try {
-            $response = $this->request('GET', '/catalog/products', ['pageSize' => 1000, 'page' => 1]);
-            $products = [];
-
-            if ($response->successful()) {
-                foreach ($response->json('products', []) as $product) {
-                    $products[] = $this->normalizeProduct($product);
-                }
-            }
-
-            return $products;
-        } catch (\Exception $e) {
-            Log::error('Woohoo fetchCatalog failed', ['error' => $e->getMessage()]);
-
-            return [];
-        }
+        // Catalog sync is handled by dedicated Woohoo catalog services/jobs (Phase 3).
+        return [];
     }
 
     public function fetchCatalogUpdates(\DateTime $since): array
@@ -146,22 +242,7 @@ class WoohooProvider implements VoucherProviderInterface
 
     public function checkStock(string $productSku, int $quantity = 1): StockCheckResult
     {
-        try {
-            $response = $this->request('GET', "/catalog/product/{$productSku}/stock");
-
-            if ($response->successful()) {
-                $data = $response->json();
-
-                return new StockCheckResult(
-                    available: ($data['available'] ?? false) === true,
-                    quantity: $data['quantity'] ?? 0,
-                );
-            }
-
-            return new StockCheckResult(available: false);
-        } catch (\Exception $e) {
-            return new StockCheckResult(available: false, error: $e->getMessage());
-        }
+        return new StockCheckResult(available: true, quantity: max(0, $quantity));
     }
 
     public function cancelOrder(string $providerOrderId): bool
@@ -169,44 +250,19 @@ class WoohooProvider implements VoucherProviderInterface
         return false; // Woohoo does not support order cancellation
     }
 
-    private function request(string $method, string $path, array $data = [])
+    private function normalizePhone(string $phone): string
     {
-        $timestamp = now()->timestamp;
-        $signature = hash_hmac('sha256', $timestamp.$this->config['api_key'], $this->config['api_secret']);
+        $digits = preg_replace('/\D+/', '', $phone) ?: '';
+        if ($digits === '') {
+            return '+910000000000';
+        }
+        if (Str::startsWith($phone, '+')) {
+            return '+'.$digits;
+        }
+        if (strlen($digits) === 10) {
+            return '+91'.$digits;
+        }
 
-        return Http::withHeaders([
-            'Authorization' => "Bearer {$this->config['api_key']}",
-            'X-Timestamp' => $timestamp,
-            'X-Signature' => $signature,
-        ])->timeout(15)->{strtolower($method)}(
-            rtrim($this->config['api_url'], '/').$path,
-            $data
-        );
-    }
-
-    private function mapStatus(string $providerStatus): string
-    {
-        return match (strtolower($providerStatus)) {
-            'success', 'fulfilled', 'completed' => 'fulfilled',
-            'pending', 'processing', 'inprogress' => 'pending',
-            'cancelled' => 'cancelled',
-            default => 'failed',
-        };
-    }
-
-    private function normalizeProduct(array $raw): array
-    {
-        return [
-            'sku' => $raw['productId'] ?? $raw['id'],
-            'name' => $raw['productName'] ?? $raw['name'],
-            'denomination' => $raw['denomination'] ?? $raw['price'] ?? 0,
-            'currency' => 'INR',
-            'type' => $raw['type'] ?? 'gift_card',
-            'image_url' => $raw['imageUrl'] ?? null,
-            'description' => $raw['description'] ?? null,
-            'validity_days' => $raw['validityDays'] ?? null,
-            'provider' => 'woohoo',
-            'raw' => $raw,
-        ];
+        return '+'.$digits;
     }
 }

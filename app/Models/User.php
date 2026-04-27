@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -38,6 +39,9 @@ class User extends Authenticatable
     protected $casts = [
         'is_super_admin' => 'boolean',
         'last_login_at' => 'datetime',
+        'is_blocked' => 'boolean',
+        'can_transact' => 'boolean',
+        'restricted_features' => 'array',
     ];
 
     public function tenant(): BelongsTo
@@ -53,6 +57,74 @@ class User extends Authenticatable
     public function authIdentities(): HasMany
     {
         return $this->hasMany(UserAuthIdentity::class);
+    }
+
+    /**
+     * Phase-3: users table does not store mobile/email. These live in `user_auth_identities`.
+     */
+    public function scopeWhereMobile(Builder $query, string $mobile): Builder
+    {
+        return $query->whereHas('authIdentities', function (Builder $q) use ($mobile) {
+            $q->where('provider', 'mobile')->where('identifier', $mobile);
+        });
+    }
+
+    public function scopeWhereMobileLike(Builder $query, string $fragment): Builder
+    {
+        return $query->whereHas('authIdentities', function (Builder $q) use ($fragment) {
+            $q->where('provider', 'mobile')->where('identifier', 'like', "%{$fragment}%");
+        });
+    }
+
+    public function scopeWhereEmail(Builder $query, string $email): Builder
+    {
+        return $query->whereHas('authIdentities', function (Builder $q) use ($email) {
+            $q->where('provider', 'email')->where('identifier', $email);
+        });
+    }
+
+    public function scopeWhereEmailLike(Builder $query, string $fragment): Builder
+    {
+        return $query->whereHas('authIdentities', function (Builder $q) use ($fragment) {
+            $q->where('provider', 'email')->where('identifier', 'like', "%{$fragment}%");
+        });
+    }
+
+    public function getMobileAttribute(): ?string
+    {
+        return $this->authIdentities()
+            ->where('provider', 'mobile')
+            ->orderByDesc('is_primary')
+            ->value('identifier');
+    }
+
+    public function getEmailAttribute(): ?string
+    {
+        return $this->authIdentities()
+            ->where('provider', 'email')
+            ->orderByDesc('is_primary')
+            ->value('identifier');
+    }
+
+    public function getNameAttribute(): ?string
+    {
+        return $this->display_name;
+    }
+
+    /**
+     * Legacy helper used across controllers/middleware for post-login redirects.
+     */
+    public function homeUrl(): string
+    {
+        if ($this->hasAnyRole(['super-admin', 'admin', 'finance'])) {
+            return '/panel';
+        }
+
+        if ($this->hasAnyRole(['b2b-client', 'b2b-operator'])) {
+            return '/panel/b2b';
+        }
+
+        return '/';
     }
 
     public function authSecrets(): HasMany
@@ -103,6 +175,15 @@ class User extends Authenticatable
     public function carts(): HasMany
     {
         return $this->hasMany(Cart::class);
+    }
+
+    /**
+     * Legacy singular cart accessor.
+     * Phase-3 supports multiple carts; we treat the latest open cart as "the cart".
+     */
+    public function cart(): HasOne
+    {
+        return $this->hasOne(Cart::class)->latestOfMany();
     }
 
     public function orders(): HasMany

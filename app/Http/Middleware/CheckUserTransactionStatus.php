@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class CheckUserTransactionStatus
 {
@@ -16,10 +17,22 @@ class CheckUserTransactionStatus
      */
     public function handle(Request $request, Closure $next)
     {
+        // Local/testing: allow mock gateway flows even for restricted accounts.
+        // This keeps production enforcement intact while letting developers understand the flow end-to-end.
+        if (app()->environment(['local', 'testing'])) {
+            $name = (string) optional($request->route())->getName();
+            if (str_starts_with($name, 'payment.mock_razorpay') || str_starts_with($name, 'mock.razorpay.')) {
+                return $next($request);
+            }
+        }
+
         if (Auth::check()) {
             $user = Auth::user();
 
-            if ($user->is_blocked || ! $user->can_transact) {
+            $isBlocked = Schema::hasColumn('users', 'is_blocked') ? (bool) ($user->is_blocked ?? false) : false;
+            $canTransact = Schema::hasColumn('users', 'can_transact') ? (bool) ($user->can_transact ?? true) : true;
+
+            if ($isBlocked || ! $canTransact) {
                 Log::warning('Blocked user attempted transaction:', [
                     'user_id' => $user->id,
                     'mobile' => $user->mobile,

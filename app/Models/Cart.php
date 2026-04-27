@@ -8,12 +8,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Cart extends Model
 {
     use HasFactory;
-    use SoftDeletes;
 
     protected $table = 'carts';
 
@@ -23,17 +21,21 @@ class Cart extends Model
         'session_token',
         'status',
         'currency',
-        'cached_subtotal_minor',
-        'cached_discount_total_minor',
-        'cached_tax_total_minor',
-        'cached_grand_total_minor',
+        'subtotal_minor',
+        'discount_total_minor',
+        'tax_total_minor',
+        'grand_total_minor',
+        'last_activity_at',
+        'expires_at',
     ];
 
     protected $casts = [
-        'cached_subtotal_minor' => 'integer',
-        'cached_discount_total_minor' => 'integer',
-        'cached_tax_total_minor' => 'integer',
-        'cached_grand_total_minor' => 'integer',
+        'subtotal_minor' => 'integer',
+        'discount_total_minor' => 'integer',
+        'tax_total_minor' => 'integer',
+        'grand_total_minor' => 'integer',
+        'last_activity_at' => 'datetime',
+        'expires_at' => 'datetime',
     ];
 
     public function tenant(): BelongsTo

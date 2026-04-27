@@ -338,9 +338,9 @@ class ProductController extends Controller
         $productPayload['display_name'] = $product->display_name;
         $uploadedMedia = $product->productMedia->map(fn (ProductMedia $m) => [
             'id' => $m->id,
-            'url' => $m->url(),
-            'collection' => $m->collection,
-            'sort_order' => $m->sort_order,
+            'url' => $m->url,
+            'collection' => $m->type,
+            'sort_order' => $m->display_order,
             'alt_text' => $m->alt_text,
             'source' => 'upload',
         ])->values()->all();

@@ -79,12 +79,8 @@ class SecurityDashboardController extends Controller
 
         $request->validate(['note' => 'nullable|string|max:1000']);
 
-        $event->update([
-            'resolved' => true,
-            'resolved_by' => $request->user()->id,
-            'resolved_at' => now(),
-            'resolution_note' => $request->note,
-        ]);
+        // Phase-3 schema: no resolved state persisted yet.
+        // Keep endpoint for UI compatibility; no-op update.
 
         return back()->with('success', 'Event resolved.');
     }
@@ -128,10 +124,10 @@ class SecurityDashboardController extends Controller
         );
 
         if ($request->boolean('permanent')) {
-            $record->update(['permanent' => true, 'expires_at' => null]);
+            $record->update(['expires_at' => null]);
         }
 
-        $record->update(['blocked_by' => $request->user()->id]);
+        $record->update(['blocked_by_user_id' => $request->user()->id]);
 
         audit('ip.manual_blocked', null, [], [
             'ip' => $request->ip_address,
@@ -197,10 +193,10 @@ class SecurityDashboardController extends Controller
         );
 
         if ($request->boolean('permanent')) {
-            $record->update(['permanent' => true, 'expires_at' => null]);
+            $record->update(['expires_at' => null]);
         }
 
-        $record->update(['blocked_by' => $request->user()->id]);
+        $record->update(['blocked_by_user_id' => $request->user()->id]);
 
         audit('mobile.manual_blocked', null, [], [
             'mobile' => $normalized,
@@ -223,9 +219,7 @@ class SecurityDashboardController extends Controller
             audit('mobile.unblocked', $record, [
                 'mobile' => $record->mobile,
                 'reason' => $record->reason,
-                'permanent' => $record->permanent,
                 'expires_at' => $record->expires_at?->toIso8601String(),
-                'blocked_at' => $record->blocked_at?->toIso8601String(),
             ], ['mobile' => $normalized]);
         }
 

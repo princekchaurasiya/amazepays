@@ -62,7 +62,7 @@ class PasswordResetController extends Controller
                 return response()->json(['status' => 400, 'errors' => ['registerOTP' => [$otpVerificationResponse['message']]]]);
             }
 
-            $user = User::where('mobile', $validated['mobile'])->first();
+            $user = User::query()->whereMobile((string) $validated['mobile'])->first();
 
             if (! $user) {
                 return response()->json([

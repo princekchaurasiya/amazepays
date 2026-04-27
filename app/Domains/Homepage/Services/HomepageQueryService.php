@@ -7,6 +7,8 @@ use App\Domains\Homepage\Cache\HomepageCacheInvalidator;
 use App\Models\Category;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class HomepageQueryService
 {
@@ -27,11 +29,29 @@ class HomepageQueryService
         $compute = function () use ($tenantId, $platform, $surface) {
             $now = now();
 
-            $sections = ContentSection::query()
+            $latest = null;
+            $publishedSectionIds = [];
+            if (Schema::hasTable('homepage_layout_versions')) {
+                $latest = DB::table('homepage_layout_versions')
+                    ->where('tenant_id', $tenantId)
+                    ->orderByDesc('version')
+                    ->first(['version', 'published_at', 'layout_snapshot']);
+
+                if ($latest && isset($latest->layout_snapshot)) {
+                    $snap = json_decode((string) $latest->layout_snapshot, true);
+                    $ids = is_array($snap) ? ($snap['section_ids'] ?? []) : [];
+                    if (is_array($ids)) {
+                        $publishedSectionIds = array_values(array_filter(array_map('intval', $ids), fn ($v) => $v > 0));
+                    }
+                }
+            }
+
+            $sectionsQuery = ContentSection::query()
                 ->where('tenant_id', $tenantId)
                 ->where('surface', $surface)
                 ->where('status', 'active')
                 ->where('is_enabled', true)
+                ->when($publishedSectionIds !== [], fn ($q) => $q->whereIn('id', $publishedSectionIds))
                 ->where(function ($q) use ($now) {
                     $q->whereNull('start_at')->orWhere('start_at', '<=', $now);
                 })
@@ -56,6 +76,13 @@ class HomepageQueryService
                 ->orderBy('id')
                 ->get();
 
+            // If a published order exists, preserve that exact order.
+            $sections = $sectionsQuery;
+            if ($publishedSectionIds !== []) {
+                $order = array_flip($publishedSectionIds);
+                $sections = $sectionsQuery->sortBy(fn (ContentSection $s) => $order[$s->id] ?? 999999)->values();
+            }
+
             $categories = Category::query()
                 ->where('tenant_id', $tenantId)
                 ->where('status', 'active')
@@ -75,8 +102,8 @@ class HomepageQueryService
                     'display_order' => $c->display_order,
                 ])->values()->all(),
                 'versioning' => [
-                    'version' => 1,
-                    'published_at' => null,
+                    'version' => (int) ($latest->version ?? 0),
+                    'published_at' => $latest?->published_at,
                 ],
             ];
         };
@@ -148,6 +175,10 @@ class HomepageQueryService
             'cta_value' => $item->cta_value,
             'deeplink' => $item->deeplink,
             'redirect_url' => $item->redirect_url,
+            // Optional structured links
+            'product_id' => $item->product_id,
+            'category_id' => $item->category_id,
+            'brand_id' => $item->brand_id,
             'metadata' => $item->metadata ?? (object) [],
         ];
     }

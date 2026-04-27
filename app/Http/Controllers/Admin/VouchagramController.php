@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProviderConnection;
+use App\Models\ProviderSyncRun;
 use App\Models\VouchagramCatalogSnapshot;
 use App\Models\VouchagramCatalogSnapshotItem;
 use App\Services\Catalog\CatalogSyncService;
@@ -15,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -30,10 +33,82 @@ class VouchagramController extends Controller
     {
         $this->authorize('providers.view');
 
+        $tenantId = 1;
+        $connection = ProviderConnection::query()->firstOrCreate(
+            ['tenant_id' => $tenantId, 'provider' => 'vouchagram', 'environment' => 'sandbox'],
+            [
+                'label' => 'Vouchagram',
+                'is_active' => true,
+                'connected_at' => now(),
+                'public_config' => [
+                    'send_configured' => $this->isSendConfigured(),
+                    'pull_configured' => $this->isPullConfigured(),
+                ],
+            ]
+        );
+
+        $pendingQueue = (int) ProviderSyncRun::query()
+            ->where('connection_id', $connection->id)
+            ->whereIn('status', ['queued', 'running'])
+            ->count();
+        $failedJobs = (int) ProviderSyncRun::query()
+            ->where('connection_id', $connection->id)
+            ->where('status', 'failed')
+            ->count();
+        $lastSyncAt = ProviderSyncRun::query()
+            ->where('connection_id', $connection->id)
+            ->whereNotNull('completed_at')
+            ->orderByDesc('completed_at')
+            ->value('completed_at');
+
+        $syncRuns = ProviderSyncRun::query()
+            ->where('connection_id', $connection->id)
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get([
+                'id',
+                'job_type',
+                'status',
+                'records_fetched',
+                'records_created',
+                'records_updated',
+                'records_failed',
+                'last_error_message',
+                'started_at',
+                'completed_at',
+                'created_at',
+            ])
+            ->map(fn (ProviderSyncRun $r) => [
+                'id' => $r->id,
+                'job_type' => (string) $r->job_type,
+                'status' => (string) $r->status,
+                'records_fetched' => (int) $r->records_fetched,
+                'records_created' => (int) $r->records_created,
+                'records_updated' => (int) $r->records_updated,
+                'records_failed' => (int) $r->records_failed,
+                'last_error_message' => $r->last_error_message ? substr((string) $r->last_error_message, 0, 200) : null,
+                'started_at' => optional($r->started_at)->toIso8601String(),
+                'completed_at' => optional($r->completed_at)->toIso8601String(),
+                'created_at' => optional($r->created_at)->toIso8601String(),
+            ])
+            ->values()
+            ->all();
+
+        $productsImported = (int) Product::query()
+            ->whereIn('source_provider', ['vouchagram', 'vouchagram_send', 'vouchagram_pull'])
+            ->count();
+
         return Inertia::render('Admin/Vouchagram/Index', [
             'sendConfigured' => $this->isSendConfigured(),
             'pullConfigured' => $this->isPullConfigured(),
             'canSyncCatalog' => Gate::allows('providers.sync'),
+            'kpis' => [
+                'productsImported' => $productsImported,
+                'pendingQueue' => $pendingQueue,
+                'failedJobs' => $failedJobs,
+            ],
+            'lastSyncAt' => $lastSyncAt ? optional($lastSyncAt)->toIso8601String() : null,
+            'syncRuns' => $syncRuns,
         ]);
     }
 
@@ -47,6 +122,20 @@ class VouchagramController extends Controller
 
         try {
             $mode = $validated['mode'] === 'pull' ? VouchagramService::MODE_PULL : VouchagramService::MODE_SEND;
+
+            if ($mode === VouchagramService::MODE_SEND && ! $this->isSendConfigured()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vouchagram SEND is not configured. Set VOUCHAGRAM_SEND_USERNAME/PASSWORD/KEY/IV in .env.',
+                ], 422);
+            }
+            if ($mode === VouchagramService::MODE_PULL && ! $this->isPullConfigured()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vouchagram PULL is not configured. Set VOUCHAGRAM_PULL_USERNAME/PASSWORD/KEY/IV in .env.',
+                ], 422);
+            }
+
             $brands = $this->vouchagram->getBrands($mode, $validated['brand_code'] ?? null);
             $safe = $this->dedupeSanitizedBrandsByProductCode(
                 $this->sanitizeBrandsForAdminResponse($brands)
@@ -91,7 +180,22 @@ class VouchagramController extends Controller
                 'snapshot_fetched_at' => $snapshot->fetched_at->toIso8601String(),
             ]);
         } catch (\Throwable $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            $msg = $e->getMessage();
+
+            // If the upstream provider returned an HTTP status, preserve it.
+            $status = 422;
+            if (preg_match('/\bHTTP\s+(\d{3})\b/', $msg, $m)) {
+                $status = (int) $m[1];
+            }
+
+            Log::error('Vouchagram fetchBrands failed', [
+                'mode' => $validated['mode'] ?? null,
+                'brand_code' => $validated['brand_code'] ?? null,
+                'status' => $status,
+                'error' => $msg,
+            ]);
+
+            return response()->json(['success' => false, 'message' => $msg], $status);
         }
     }
 
@@ -375,6 +479,20 @@ class VouchagramController extends Controller
             'mode' => 'required|string|in:send,pull',
         ]);
 
+        $tenantId = 1;
+        $connection = ProviderConnection::query()->firstOrCreate(
+            ['tenant_id' => $tenantId, 'provider' => 'vouchagram', 'environment' => 'sandbox'],
+            ['label' => 'Vouchagram', 'is_active' => true, 'connected_at' => now()]
+        );
+        // Use job_type to distinguish send vs pull (provider_connections enum doesn't allow two separate vouchagram connections).
+        $jobType = $validated['mode'] === 'pull' ? 'category_sync' : 'catalog_sync';
+        $run = ProviderSyncRun::query()->create([
+            'connection_id' => $connection->id,
+            'job_type' => $jobType,
+            'status' => 'running',
+            'started_at' => now(),
+        ]);
+
         try {
             $provider = $validated['mode'] === 'pull' ? 'vouchagram_pull' : 'vouchagram_send';
             $options = $validated['mode'] === 'pull' ? ['default_show_product' => false] : [];
@@ -382,8 +500,22 @@ class VouchagramController extends Controller
             $stats = $this->catalogSync->syncProvider($provider, $options);
             $this->ensureProductUrls();
 
+            $run->update([
+                'status' => 'succeeded',
+                'records_created' => (int) ($stats['created'] ?? 0),
+                'records_updated' => (int) ($stats['updated'] ?? 0),
+                'records_failed' => 0,
+                'completed_at' => now(),
+            ]);
+
             return response()->json(['success' => true, 'stats' => $stats, 'mode' => $validated['mode']]);
         } catch (\Throwable $e) {
+            $run->update([
+                'status' => 'failed',
+                'records_failed' => 1,
+                'last_error_message' => substr($e->getMessage(), 0, 1000),
+                'completed_at' => now(),
+            ]);
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
     }
@@ -399,11 +531,31 @@ class VouchagramController extends Controller
             'snapshot_id' => 'required|integer|exists:vouchagram_catalog_snapshots,id',
         ]);
 
+        $tenantId = 1;
+        $connection = ProviderConnection::query()->firstOrCreate(
+            ['tenant_id' => $tenantId, 'provider' => 'vouchagram', 'environment' => 'sandbox'],
+            ['label' => 'Vouchagram', 'is_active' => true, 'connected_at' => now()]
+        );
+        $run = ProviderSyncRun::query()->create([
+            'connection_id' => $connection->id,
+            'job_type' => 'catalog_sync',
+            'status' => 'running',
+            'started_at' => now(),
+        ]);
+
         try {
             $stats = $this->catalogSync->syncProviderFromSnapshot((int) $validated['snapshot_id']);
             $this->ensureProductUrls();
 
             $snapshot = VouchagramCatalogSnapshot::query()->find((int) $validated['snapshot_id']);
+
+            $run->update([
+                'status' => 'succeeded',
+                'records_created' => (int) ($stats['created'] ?? 0),
+                'records_updated' => (int) ($stats['updated'] ?? 0),
+                'records_failed' => 0,
+                'completed_at' => now(),
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -412,6 +564,12 @@ class VouchagramController extends Controller
                 'mode' => $snapshot?->mode,
             ]);
         } catch (\Throwable $e) {
+            $run->update([
+                'status' => 'failed',
+                'records_failed' => 1,
+                'last_error_message' => substr($e->getMessage(), 0, 1000),
+                'completed_at' => now(),
+            ]);
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
     }

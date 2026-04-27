@@ -16,19 +16,23 @@ class UserOtpCode extends Model
 
     protected $fillable = [
         'user_id',
+        'identity_id',
+        'channel',
         'purpose',
         'identifier',
         'code_hash',
         'attempts',
+        'max_attempts',
         'expires_at',
-        'verified_at',
-        'ip_address',
+        'consumed_at',
+        'request_ip',
     ];
 
     protected $casts = [
         'attempts' => 'integer',
+        'max_attempts' => 'integer',
         'expires_at' => 'datetime',
-        'verified_at' => 'datetime',
+        'consumed_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

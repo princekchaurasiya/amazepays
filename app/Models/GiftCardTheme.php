@@ -13,20 +13,25 @@ class GiftCardTheme extends Model
 {
     use HasFactory;
 
+    protected $table = 'gift_themes';
+
     protected $fillable = [
+        'tenant_id',
         'name',
         'slug',
-        'gallery_images',
         'is_active',
-        'sort_order',
-        'metadata',
+        'display_order',
+        'preview_image_url',
+        'email_template_path',
+        'active_from',
+        'active_until',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'sort_order' => 'integer',
-        'metadata' => 'array',
-        'gallery_images' => 'array',
+        'display_order' => 'integer',
+        'active_from' => 'date',
+        'active_until' => 'date',
     ];
 
     public function scopeActive(Builder $query): Builder

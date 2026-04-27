@@ -1,7 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Head } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Gift, RefreshCw, Send, Download, Search, Store, Database, Activity, Copy, Check, Archive } from 'lucide-react';
+import StatCard from '@/Components/Admin/StatCard';
+import Badge from '@/Components/UI/Badge';
+import Button from '@/Components/UI/Button';
+import { Card, CardBody, CardHeader } from '@/Components/UI/Card';
 
 /** Sanitized row from GET /panel/vouchagram/fetch-brands */
 export type VouchagramBrandRow = {
@@ -23,6 +27,21 @@ type Props = {
     sendConfigured: boolean;
     pullConfigured: boolean;
     canSyncCatalog?: boolean;
+    kpis: { productsImported: number; pendingQueue: number; failedJobs: number };
+    lastSyncAt: string | null;
+    syncRuns: Array<{
+        id: number;
+        job_type: string;
+        status: string;
+        records_fetched: number;
+        records_created: number;
+        records_updated: number;
+        records_failed: number;
+        last_error_message: string | null;
+        started_at: string | null;
+        completed_at: string | null;
+        created_at: string | null;
+    }>;
 };
 
 function csrf(): string {
@@ -324,7 +343,7 @@ function ArraySections({ data }: { data: JsonObject }) {
     );
 }
 
-export default function VouchagramIndex({ sendConfigured, pullConfigured, canSyncCatalog = false }: Props) {
+export default function VouchagramIndex({ sendConfigured, pullConfigured, canSyncCatalog = false, kpis, lastSyncAt, syncRuns }: Props) {
     const [active, setActive] = useState<(typeof tabs)[number]['id']>('dashboard');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -464,6 +483,16 @@ export default function VouchagramIndex({ sendConfigured, pullConfigured, canSyn
             cancelled = true;
         };
     }, [active, savedListFilterMode]);
+
+    const runs = useMemo(() => syncRuns ?? [], [syncRuns]);
+    const badgeForRunStatus = (status: string) => {
+        const key = String(status || '').toLowerCase();
+        if (key === 'succeeded') return <Badge tone="success">Succeeded</Badge>;
+        if (key === 'running') return <Badge tone="brand">Running</Badge>;
+        if (key === 'queued') return <Badge tone="warning">Queued</Badge>;
+        if (key === 'failed') return <Badge tone="danger">Failed</Badge>;
+        return <Badge tone="neutral">{status || 'Unknown'}</Badge>;
+    };
 
     const loadSavedListPage = async (page: number) => {
         if (active !== 'saved') {
@@ -726,19 +755,43 @@ export default function VouchagramIndex({ sendConfigured, pullConfigured, canSyn
 
     return (
         <AdminLayout>
-            <Head title="Vouchagram" />
+            <Head title="Vouchagram Sync Center" />
             <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                    <Gift className="h-8 w-8 text-indigo-600" />
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vouchagram API</h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Parent platform for the Gyftr voucher network — Send (B2C) and Pull (B2B) tools and catalog sync
-                        </p>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-product-primary dark:bg-blue-900/25 dark:text-blue-100">
+                            <Gift className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Vouchagram / Gyftr</p>
+                            <h1 className="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">Partner Sync Center</h1>
+                            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                Send (B2C) + Pull (B2B) tools, catalog snapshots, and product imports.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                        {lastSyncAt ? (
+                            <Badge tone="neutral">Last sync: {new Date(lastSyncAt).toLocaleString()}</Badge>
+                        ) : (
+                            <Badge tone="neutral">Last sync: —</Badge>
+                        )}
                     </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 pb-2">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+                    <StatCard label="Products imported" value={kpis.productsImported} icon={Database} color="accent" />
+                    <StatCard label="Pending queue" value={kpis.pendingQueue} icon={Activity} color="warning" />
+                    <StatCard label="Failed jobs" value={kpis.failedJobs} icon={RefreshCw} color="danger" />
+                    <StatCard
+                        label="Credentials"
+                        value={`${sendConfigured ? 'Send' : '—'} / ${pullConfigured ? 'Pull' : '—'}`}
+                        icon={Search}
+                        color="brand"
+                    />
+                </div>
+
+                <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-2 dark:border-gray-800">
                     {tabs.map((t) => {
                         const Icon = t.icon;
                         return (
@@ -746,11 +799,12 @@ export default function VouchagramIndex({ sendConfigured, pullConfigured, canSyn
                                 key={t.id}
                                 type="button"
                                 onClick={() => setActive(t.id)}
-                                className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                                className={[
+                                    'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition',
                                     active === t.id
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200'
-                                }`}
+                                        ? 'bg-product-primary text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200',
+                                ].join(' ')}
                             >
                                 <Icon className="h-4 w-4" />
                                 {t.label}
@@ -760,33 +814,102 @@ export default function VouchagramIndex({ sendConfigured, pullConfigured, canSyn
                 </div>
 
                 {error && (
-                    <div className="rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-200">
+                    <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-900/20 dark:text-red-200">
                         {error}
                     </div>
                 )}
 
                 {active === 'dashboard' && (
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                            <h3 className="font-semibold text-gray-900 dark:text-white">Send Voucher (B2C)</h3>
-                            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                Credentials: {sendConfigured ? (
-                                    <span className="text-green-600">configured</span>
+                    <div className="grid gap-6 lg:grid-cols-2">
+                        <Card>
+                            <CardHeader className="flex items-start justify-between gap-4">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Send (B2C)</p>
+                                    <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">Voucher send tools</p>
+                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                                        Used for public-store vouchers and customer deliveries.
+                                    </p>
+                                </div>
+                                {sendConfigured ? <Badge tone="success">Configured</Badge> : <Badge tone="warning">Needs setup</Badge>}
+                            </CardHeader>
+                            <CardBody>
+                                {!sendConfigured ? (
+                                    <p className="text-sm text-amber-900">Missing env keys: set `VOUCHAGRAM_SEND_*` in `.env`.</p>
                                 ) : (
-                                    <span className="text-amber-600">missing — set VOUCHAGRAM_SEND_* in .env</span>
+                                    <p className="text-sm text-gray-700 dark:text-gray-200">Ready to use.</p>
                                 )}
-                            </p>
-                        </div>
-                        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                            <h3 className="font-semibold text-gray-900 dark:text-white">Pull Voucher (B2B)</h3>
-                            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                Credentials: {pullConfigured ? (
-                                    <span className="text-green-600">configured</span>
+                            </CardBody>
+                        </Card>
+                        <Card>
+                            <CardHeader className="flex items-start justify-between gap-4">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Pull (B2B)</p>
+                                    <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">Voucher pull tools</p>
+                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                                        Used for business/admin catalogs and B2B workflows.
+                                    </p>
+                                </div>
+                                {pullConfigured ? <Badge tone="success">Configured</Badge> : <Badge tone="warning">Needs setup</Badge>}
+                            </CardHeader>
+                            <CardBody>
+                                {!pullConfigured ? (
+                                    <p className="text-sm text-amber-900">Missing env keys: set `VOUCHAGRAM_PULL_*` in `.env`.</p>
                                 ) : (
-                                    <span className="text-amber-600">missing — set VOUCHAGRAM_PULL_* in .env</span>
+                                    <p className="text-sm text-gray-700 dark:text-gray-200">Ready to use.</p>
                                 )}
-                            </p>
-                        </div>
+                            </CardBody>
+                        </Card>
+
+                        <Card className="lg:col-span-2">
+                            <CardHeader className="flex items-start justify-between gap-4">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Recent sync runs</p>
+                                    <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">Run history</p>
+                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                                        Catalog imports are recorded here for audit and debugging.
+                                    </p>
+                                </div>
+                                <Badge tone="neutral">{runs.length} recent</Badge>
+                            </CardHeader>
+                            <CardBody>
+                                {runs.length === 0 ? (
+                                    <p className="text-sm text-gray-600">No runs yet.</p>
+                                ) : (
+                                    <div className="overflow-auto rounded-2xl border border-gray-200 dark:border-gray-800">
+                                        <table className="w-full text-left text-sm">
+                                            <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-950">
+                                                <tr>
+                                                    <th className="px-4 py-3">Run</th>
+                                                    <th className="px-4 py-3">Type</th>
+                                                    <th className="px-4 py-3">Status</th>
+                                                    <th className="px-4 py-3">Counts</th>
+                                                    <th className="px-4 py-3">Completed</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                                                {runs.map((r) => (
+                                                    <tr key={r.id} className="bg-white dark:bg-gray-900/50">
+                                                        <td className="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100">#{r.id}</td>
+                                                        <td className="px-4 py-3 text-xs text-gray-600">{r.job_type}</td>
+                                                        <td className="px-4 py-3">{badgeForRunStatus(r.status)}</td>
+                                                        <td className="px-4 py-3 text-xs text-gray-700 dark:text-gray-200">
+                                                            C:{r.records_created} U:{r.records_updated}{' '}
+                                                            {r.records_failed ? <span className="text-red-600">X:{r.records_failed}</span> : null}
+                                                            {r.last_error_message ? (
+                                                                <p className="mt-1 line-clamp-1 text-red-600">{r.last_error_message}</p>
+                                                            ) : null}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-xs text-gray-600">
+                                                            {r.completed_at ? new Date(r.completed_at).toLocaleString() : '—'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </CardBody>
+                        </Card>
                     </div>
                 )}
 

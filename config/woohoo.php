@@ -11,7 +11,9 @@ return [
 
     'client_id' => env('WOOHOO_CLIENT_ID', ''),
     'client_secret' => env('WOOHOO_CLIENT_SECRET', ''),
-    'bearer_token' => env('WOOHOO_BEARER_TOKEN', ''),
+    // Single source of truth: `settings` table (encrypted with WOOHOO_TOKEN_ENCRYPTION_KEY).
+    // This key is hydrated into config at runtime by `AppServiceProvider`.
+    'bearer_token' => '',
     'username' => env('WOOHOO_USERNAME', ''),
     'password' => env('WOOHOO_PASSWORD', ''),
 ];

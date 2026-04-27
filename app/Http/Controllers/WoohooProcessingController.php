@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 
 class WoohooProcessingController extends Controller
@@ -157,24 +158,18 @@ class WoohooProcessingController extends Controller
             }
 
             // Update Order status: Standardized flow - PENDING -> COMPLETE or FAILED
-            // After payment success, keep as PENDING until Woohoo order is created
             if (in_array($status, ['success', 'completed', 'approved', 'confirmed'])) {
                 $Order = Order::where('id', $payment->order_id)->first();
-                if ($Order && ! in_array($Order->order_status, ['COMPLETE', 'FAILED'])) {
+                if ($Order) {
                     $Order->status = 'paid';
-                    // Keep as PENDING (will be updated to COMPLETE after successful Woohoo order creation)
-                    if (! in_array($Order->order_status, ['PENDING', 'COMPLETE', 'FAILED'])) {
-                        $Order->order_status = 'PENDING';
-                    }
                     $Order->save();
 
-                    // CRITICAL: Also update OrderSummary.order_status to maintain consistency
-                    if ($orderSummary) {
+                    if ($orderSummary && Schema::hasColumn('order_summaries', 'fulfilment_status')) {
                         $orderSummary->fulfilment_status = 'PENDING';
                         $orderSummary->save();
                     }
 
-                    Log::info('✅ Order status updated to PENDING (payment successful, awaiting Woohoo order creation)', [
+                    Log::info('✅ Order status updated to paid (awaiting fulfillment)', [
                         'order_id' => $Order->id,
                     ]);
                 }
@@ -182,17 +177,15 @@ class WoohooProcessingController extends Controller
                 // Payment failed - set order to FAILED
                 $Order = Order::where('id', $payment->order_id)->first();
                 if ($Order) {
-                    $Order->status = 'failed';
-                    $Order->order_status = 'FAILED';
+                    $Order->status = $status === 'cancelled' ? 'cancelled' : 'failed';
                     $Order->save();
 
-                    // CRITICAL: Also update OrderSummary.order_status to maintain consistency
-                    if ($orderSummary) {
-                        $orderSummary->fulfilment_status = 'FAILED';
+                    if ($orderSummary && Schema::hasColumn('order_summaries', 'fulfilment_status')) {
+                        $orderSummary->fulfilment_status = $status === 'cancelled' ? 'CANCELLED' : 'FAILED';
                         $orderSummary->save();
                     }
 
-                    Log::info('❌ Order status updated to FAILED (payment failed)', [
+                    Log::info('❌ Order status updated (payment not captured)', [
                         'order_id' => $Order->id,
                         'payment_status' => $status,
                     ]);
@@ -472,12 +465,12 @@ class WoohooProcessingController extends Controller
 
                     // Woohoo order created successfully - update to COMPLETE
                     $Order->refresh(); // Reload to get latest data from handleSuccessFullOrder
-                    $Order->order_status = 'COMPLETE';
+                    $Order->status = 'completed';
                     $Order->save();
 
-                    // CRITICAL: Also update OrderSummary.order_status to maintain consistency
+                    // Optional legacy mirror
                     $orderSummary = OrderSummary::where('order_id', $Order->id)->first();
-                    if ($orderSummary) {
+                    if ($orderSummary && Schema::hasColumn('order_summaries', 'fulfilment_status')) {
                         $orderSummary->fulfilment_status = 'COMPLETE';
                         $orderSummary->save();
 
@@ -497,12 +490,11 @@ class WoohooProcessingController extends Controller
                     ]);
                 } else {
                     // Woohoo order creation failed - update to FAILED
-                    $Order->order_status = 'FAILED';
+                    $Order->status = 'failed';
                     $Order->save();
 
-                    // CRITICAL: Also update OrderSummary.order_status to maintain consistency
                     $orderSummary = OrderSummary::where('order_id', $Order->id)->first();
-                    if ($orderSummary) {
+                    if ($orderSummary && Schema::hasColumn('order_summaries', 'fulfilment_status')) {
                         $orderSummary->fulfilment_status = 'FAILED';
                         $orderSummary->save();
 
@@ -535,7 +527,7 @@ class WoohooProcessingController extends Controller
             }
 
             return Inertia::render('Checkout/Woohoo/Response', [
-                'order' => $Order->only(['id', 'refno', 'woohoo_order_id', 'order_status', 'grand_payable_amount', 'product_name']),
+                'order' => $Order->only(['id', 'refno', 'woohoo_order_id', 'status', 'grand_payable_amount', 'product_name']),
                 'woohoo' => $result,
                 'isSuccess' => $isSuccess,
             ]);

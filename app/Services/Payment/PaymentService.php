@@ -15,6 +15,7 @@ use App\Jobs\FulfillPaidOrderJob;
 use App\Services\Order\OrderCreationService;
 use App\Services\Order\OrderFulfillmentOrchestrator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Single orchestration entry for payment gateways (strategy via PaymentGatewayInterface).
@@ -33,7 +34,9 @@ class PaymentService
         }
         $apiStatus = strtolower((string) ($order->status ?? ''));
         $legacy = strtoupper((string) ($order->order_status ?? ''));
-        $awaiting = $apiStatus === 'pending' || $legacy === 'PENDING' || $legacy === 'INITIATED'
+        // Storefront drafts start as "created" and should be allowed to initiate payment.
+        $awaiting = in_array($apiStatus, ['created', 'pending', 'pending_payment'], true)
+            || $legacy === 'PENDING' || $legacy === 'INITIATED'
             || ($apiStatus === '' && $legacy === '');
         if (! $awaiting) {
             throw new \InvalidArgumentException('Order is not awaiting payment.');
@@ -183,27 +186,32 @@ class PaymentService
                     'order_id' => $order->id,
                     'error' => $e->getMessage(),
                 ]);
-                $order->update([
-                    'status' => 'failed',
-                    'order_status' => 'FAILED',
-                    'remarks' => trim((string) ($order->remarks ?? '').' | PAYMENT_AMOUNT_MISMATCH'),
-                ]);
+                $update = ['status' => 'failed'];
+                if (Schema::hasColumn('orders', 'order_status')) {
+                    $update['order_status'] = 'FAILED';
+                }
+                if (Schema::hasColumn('orders', 'remarks')) {
+                    $update['remarks'] = trim((string) ($order->remarks ?? '').' | PAYMENT_AMOUNT_MISMATCH');
+                }
+                $order->update($update);
 
                 return;
             }
         }
         if ($result->isPaid()) {
-            $order->update([
-                'status' => 'paid',
-                'order_status' => $order->order_status ?: 'PENDING',
-            ]);
+            $update = ['status' => 'paid'];
+            if (Schema::hasColumn('orders', 'order_status')) {
+                $update['order_status'] = $order->order_status ?: 'PENDING';
+            }
+            $order->update($update);
             $order->refresh();
             FulfillPaidOrderJob::dispatch($order->id)->onQueue('fulfillment');
         } elseif (in_array($result->status, ['failed', 'cancelled'], true)) {
-            $order->update([
-                'status' => $result->status,
-                'order_status' => 'FAILED',
-            ]);
+            $update = ['status' => $result->status];
+            if (Schema::hasColumn('orders', 'order_status')) {
+                $update['order_status'] = 'FAILED';
+            }
+            $order->update($update);
         }
     }
 

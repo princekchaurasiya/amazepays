@@ -10,6 +10,7 @@ use App\Models\WalletLoadRequest;
 use App\Services\SecurityEventService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -71,10 +72,14 @@ class DashboardController extends Controller
         $start = now()->copy()->subDays($days - 1)->startOfDay();
         $end = now()->endOfDay();
 
+        $revenueExpr = Schema::hasColumn('orders', 'grand_payable_amount')
+            ? 'SUM(grand_payable_amount)'
+            : '(SUM(grand_total_minor) / 100.0)';
+
         return Order::query()
             ->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId))
             ->whereBetween('created_at', [$start, $end])
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as orders, SUM(grand_payable_amount) as revenue')
+            ->selectRaw("DATE(created_at) as date, COUNT(*) as orders, {$revenueExpr} as revenue")
             ->groupBy('date')
             ->orderBy('date')
             ->get();
@@ -131,9 +136,13 @@ class DashboardController extends Controller
     {
         $chartDays = $this->resolveChartDays($request);
 
+        $revenueToday = Schema::hasColumn('orders', 'grand_payable_amount')
+            ? (float) Order::whereDate('created_at', today())->sum('grand_payable_amount')
+            : ((float) Order::whereDate('created_at', today())->sum('grand_total_minor')) / 100.0;
+
         $stats = [
             'orders_today' => Order::whereDate('created_at', today())->count(),
-            'revenue_today' => (float) Order::whereDate('created_at', today())->sum('grand_payable_amount'),
+            'revenue_today' => $revenueToday,
             'orders_this_week' => Order::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
             'total_users' => User::count(),
             'new_users_today' => User::whereDate('created_at', today())->count(),
@@ -141,10 +150,11 @@ class DashboardController extends Controller
             'total_wallet_balance' => (float) Wallet::sum('balance'),
         ];
 
-        $recentOrders = Order::with(['user'])
+        $recentOrders = Order::query()
+            ->with(['user.authIdentities'])
             ->latest()
             ->limit(10)
-            ->get(['id', 'user_id', 'order_status', 'grand_payable_amount', 'created_at']);
+            ->get(['id', 'user_id', 'status', 'grand_total_minor', 'currency', 'created_at']);
 
         $revenueChart = $this->revenueChartForDays($chartDays);
 
@@ -166,18 +176,23 @@ class DashboardController extends Controller
     {
         $chartDays = $this->resolveChartDays($request);
 
+        $revenueToday = Schema::hasColumn('orders', 'grand_payable_amount')
+            ? (float) Order::whereDate('created_at', today())->sum('grand_payable_amount')
+            : ((float) Order::whereDate('created_at', today())->sum('grand_total_minor')) / 100.0;
+
         $stats = [
             'orders_today' => Order::whereDate('created_at', today())->count(),
-            'revenue_today' => (float) Order::whereDate('created_at', today())->sum('grand_payable_amount'),
+            'revenue_today' => $revenueToday,
             'orders_this_week' => Order::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
             'pending_loads' => WalletLoadRequest::where('status', 'pending')->count(),
             'total_wallet_balance' => (float) Wallet::sum('balance'),
         ];
 
-        $recentOrders = Order::with(['user'])
+        $recentOrders = Order::query()
+            ->with(['user.authIdentities'])
             ->latest()
             ->limit(15)
-            ->get(['id', 'user_id', 'order_status', 'grand_payable_amount', 'created_at']);
+            ->get(['id', 'user_id', 'status', 'grand_total_minor', 'currency', 'created_at']);
 
         $revenueChart = $this->revenueChartForDays($chartDays);
 
@@ -209,9 +224,13 @@ class DashboardController extends Controller
 
         $scoped = fn () => Order::query()->when($tenantId, fn ($q) => $q->where('tenant_id', $tenantId));
 
+        $revenueToday = Schema::hasColumn('orders', 'grand_payable_amount')
+            ? (float) $scoped()->whereDate('created_at', today())->sum('grand_payable_amount')
+            : ((float) $scoped()->whereDate('created_at', today())->sum('grand_total_minor')) / 100.0;
+
         $stats = [
             'orders_today' => $scoped()->whereDate('created_at', today())->count(),
-            'revenue_today' => (float) $scoped()->whereDate('created_at', today())->sum('grand_payable_amount'),
+            'revenue_today' => $revenueToday,
             'orders_this_week' => $scoped()->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
             'total_users' => 0,
             'new_users_today' => 0,
@@ -220,10 +239,10 @@ class DashboardController extends Controller
         ];
 
         $recentOrders = $scoped()
-            ->with(['user:id,name,email'])
+            ->with(['user.authIdentities'])
             ->latest()
             ->limit(10)
-            ->get(['id', 'user_id', 'order_status', 'grand_payable_amount', 'created_at']);
+            ->get(['id', 'user_id', 'status', 'grand_total_minor', 'currency', 'created_at']);
 
         $revenueChart = $this->revenueChartForDays($chartDays, $tenantId);
 

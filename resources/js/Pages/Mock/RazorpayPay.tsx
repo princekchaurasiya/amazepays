@@ -70,7 +70,7 @@ export default function RazorpayPay() {
               Simulate Cancel
             </button>
             <a
-              href={`/payment/failed?amount=${encodeURIComponent(String(p.amount))}`}
+              href={`/payment/disconnected?amount=${encodeURIComponent(String(p.amount))}`}
               className="inline-flex items-center rounded-xl border border-slate-600/60 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-slate-800"
             >
               Simulate Disconnect

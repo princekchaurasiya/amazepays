@@ -87,7 +87,9 @@ class Kernel extends HttpKernel
      *
      * @var array<string, class-string|string>
      */
-    protected $routeMiddleware = [
+    // Laravel 10 uses $routeMiddleware; Laravel 11+ uses $middlewareAliases.
+    // Define aliases in both to support mixed framework expectations.
+    protected $middlewareAliases = [
         'auth' => Authenticate::class,
         'auth.basic' => AuthenticateWithBasicAuth::class,
         'cache.headers' => SetCacheHeaders::class,
@@ -106,5 +108,26 @@ class Kernel extends HttpKernel
         'idempotency' => EnsureIdempotencyKey::class,
         'force.https' => ForceHttps::class,
         // 'block.vpn' => \App\Http\Middleware\BlockVPNUsers::class,
+    ];
+
+    /** @var array<string, class-string|string> */
+    protected $routeMiddleware = [
+        'auth' => Authenticate::class,
+        'auth.basic' => AuthenticateWithBasicAuth::class,
+        'cache.headers' => SetCacheHeaders::class,
+        'can' => Authorize::class,
+        'guest' => RedirectIfAuthenticated::class,
+        'password.confirm' => RequirePassword::class,
+        'signed' => ValidateSignature::class,
+        'throttle' => ThrottleRequests::class,
+        'verified' => EnsureEmailIsVerified::class,
+        'admin' => AdminMiddleware::class,
+        'check.transaction' => CheckUserTransactionStatus::class,
+        'verify.unlimit.signature' => VerifyUnlimitSignature::class,
+        'verify.ccavenue.signature' => VerifyCCAvenueSignature::class,
+        'verify.razorpay.signature' => VerifyRazorpaySignature::class,
+        'verify.woohoo.signature' => VerifyWoohooSignature::class,
+        'idempotency' => EnsureIdempotencyKey::class,
+        'force.https' => ForceHttps::class,
     ];
 }

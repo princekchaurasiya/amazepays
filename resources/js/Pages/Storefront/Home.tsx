@@ -4,25 +4,27 @@ import StorefrontLayout from '@/Layouts/StorefrontLayout';
 import { BrandCard, HeroCarousel, ProductCard } from '@/Components/Storefront';
 import CategoryGlyph from '@/Components/Storefront/CategoryGlyph';
 import { getCategoryIconDef } from '@/lib/categoryIcons';
-import { categoryAccentBackground } from '@/lib/categoryAccent';
+import { categoryAccentBackground, categoryAccentColor } from '@/lib/categoryAccent';
 import type { Slide } from '@/Components/Storefront/HeroCarousel';
 import { paths } from '@/lib/paths';
 
 type HomeSettings = {
     section_banner_status?: boolean;
     section_brand_status?: boolean;
-    section_hot_deal_status?: boolean;
     section_category_status?: boolean;
     section_other_deal_status?: boolean;
-    section_brand_title?: string;
-    section_hot_deal_title?: string;
-    section_category_title?: string;
-    section_other_deal_title?: string;
 };
 
 type Cat = { id: number; name: string; slug: string; thumbnail?: string | null; accent_color?: string | null };
 type Brand = { id: number; name: string; slug: string; logo?: string | null };
 type Product = Record<string, unknown>;
+type HomepageSectionItem = {
+    sort_order?: number;
+    product_id?: number | null;
+    brand_id?: number | null;
+    category_id?: number | null;
+} & Record<string, unknown>;
+type HomepageSection = { type?: string; title?: string | null; items?: HomepageSectionItem[] } & Record<string, unknown>;
 
 function thumbUrl(t: string | null | undefined) {
     if (!t || t === 'null') return null;
@@ -35,20 +37,24 @@ export default function Home({
     homeSettings,
     categories = [],
     brands = [],
-    hotDealProducts = [],
-    otherDealProducts = [],
+    sections = [],
+    sectionProductsById = {},
+    sectionBrandsById = {},
+    sectionCategoriesById = {},
     brandMaxDiscounts = {},
 }: {
     slides?: Slide[];
     homeSettings?: HomeSettings;
     categories?: Cat[];
     brands?: Brand[];
-    hotDealProducts?: Product[];
-    otherDealProducts?: Product[];
+    sections?: HomepageSection[];
+    sectionProductsById?: Record<string, Product>;
+    sectionBrandsById?: Record<string, Brand>;
+    sectionCategoriesById?: Record<string, Cat>;
     brandMaxDiscounts?: Record<string, number | string>;
 }) {
     const hs = homeSettings ?? {};
-    const emptySetup = (!categories?.length && !hotDealProducts?.length && !otherDealProducts?.length);
+    const emptySetup = !slides?.length && !sections?.length;
 
     return (
         <StorefrontLayout>
@@ -68,49 +74,71 @@ export default function Home({
             )}
 
             <div className="mx-auto max-w-7xl px-4 py-10">
-                {hs.section_brand_status && brands.length > 0 && (
-                    <section id="storefront-section-brands" className="mb-12 scroll-mt-28">
-                        <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-                            {hs.section_brand_title ?? 'Popular brands'}
-                        </p>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                            {brands.map((b) => (
-                                <BrandCard
-                                    key={b.id}
-                                    brand={b}
-                                    discount={brandMaxDiscounts[String(b.id)] ?? brandMaxDiscounts[b.id as unknown as string]}
-                                />
-                            ))}
-                        </div>
-                    </section>
-                )}
+                {Array.isArray(sections) &&
+                    sections
+                        .filter((s) => Array.isArray(s?.items) && s.items.some((it) => Number(it?.brand_id || 0) > 0))
+                        .map((s, idx) => {
+                            const items = (s.items ?? [])
+                                .filter((it) => Number(it?.brand_id || 0) > 0)
+                                .slice()
+                                .sort((a, b) => Number(a?.sort_order || 0) - Number(b?.sort_order || 0));
 
-                {hs.section_hot_deal_status && hotDealProducts.length > 0 && (
-                    <section id="storefront-section-hot" className="mb-12 scroll-mt-28">
-                        <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-                            {hs.section_hot_deal_title ?? 'Hot deals'}
-                        </p>
-                        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
-                            {hotDealProducts.map((p, i) => (
-                                <ProductCard key={(p.id as number) ?? i} product={p as Product} />
-                            ))}
-                        </div>
-                    </section>
-                )}
+                            const brandRows = items
+                                .map((it) => sectionBrandsById[String(it.brand_id)] as Brand | undefined)
+                                .filter(Boolean) as Brand[];
 
-                {hs.section_category_status && categories.length > 0 && (
-                    <section id="storefront-section-categories" className="mb-12 scroll-mt-28">
-                        <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-                            {hs.section_category_title ?? 'Categories'}
-                        </p>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                            {categories.map((c) => {
+                            if (brandRows.length === 0) return null;
+                            if (!s?.title) return null;
+
+                            return (
+                                <section key={`${s.type ?? 'brand-section'}-${idx}`} className="mb-12 scroll-mt-28">
+                                    <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                                        {s.title}
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                                        {brandRows.map((b) => (
+                                            <BrandCard
+                                                key={b.id}
+                                                brand={b}
+                                                discount={brandMaxDiscounts[String(b.id)] ?? brandMaxDiscounts[b.id as unknown as string]}
+                                            />
+                                        ))}
+                                    </div>
+                                </section>
+                            );
+                        })}
+
+                {/* Legacy hot deals removed (Option B). */}
+
+                {Array.isArray(sections) &&
+                    sections
+                        .filter((s) => Array.isArray(s?.items) && s.items.some((it) => Number(it?.category_id || 0) > 0))
+                        .map((s, idx) => {
+                            const items = (s.items ?? [])
+                                .filter((it) => Number(it?.category_id || 0) > 0)
+                                .slice()
+                                .sort((a, b) => Number(a?.sort_order || 0) - Number(b?.sort_order || 0));
+
+                            const categoryRows = items
+                                .map((it) => sectionCategoriesById[String(it.category_id)] as Cat | undefined)
+                                .filter(Boolean) as Cat[];
+
+                            if (categoryRows.length === 0) return null;
+                            if (!s?.title) return null;
+
+                            return (
+                                <section key={`${s.type ?? 'category-section'}-${idx}`} className="mb-12 scroll-mt-28">
+                                    <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                                        {s.title}
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                                        {categoryRows.map((c) => {
                                 const t = thumbUrl(c.thumbnail);
                                 const showGlyph = !t && getCategoryIconDef(c.name);
                                 const accent =
                                     typeof c.accent_color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(c.accent_color.trim())
                                         ? c.accent_color.trim()
-                                        : null;
+                                        : categoryAccentColor(c.name);
                                 const tintBg = categoryAccentBackground(accent, 0.22);
                                 return (
                                     <Link
@@ -142,23 +170,42 @@ export default function Home({
                                         <span className="line-clamp-2 text-sm font-medium text-gray-900">{c.name}</span>
                                     </Link>
                                 );
-                            })}
-                        </div>
-                    </section>
-                )}
+                                        })}
+                                    </div>
+                                </section>
+                            );
+                        })}
 
-                {hs.section_other_deal_status && otherDealProducts.length > 0 && (
-                    <section id="storefront-section-deals" className="mb-12 scroll-mt-28">
-                        <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-                            {hs.section_other_deal_title ?? 'Other deals'}
-                        </p>
-                        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
-                            {otherDealProducts.map((p, i) => (
-                                <ProductCard key={(p.id as number) ?? i} product={p as Product} />
-                            ))}
-                        </div>
-                    </section>
-                )}
+                {hs.section_other_deal_status &&
+                    Array.isArray(sections) &&
+                    sections
+                        .filter((s) => Array.isArray(s?.items) && s.items.some((it) => Number(it?.product_id || 0) > 0))
+                        .map((s, idx) => {
+                            const items = (s.items ?? [])
+                                .filter((it) => Number(it?.product_id || 0) > 0)
+                                .slice()
+                                .sort((a, b) => Number(a?.sort_order || 0) - Number(b?.sort_order || 0));
+
+                            const products = items
+                                .map((it) => sectionProductsById[String(it.product_id)] as Product | undefined)
+                                .filter(Boolean) as Product[];
+
+                            if (products.length === 0) return null;
+                            if (!s?.title) return null;
+
+                            return (
+                                <section key={`${s.type ?? 'section'}-${idx}`} className="mb-12 scroll-mt-28">
+                                    <p className="mb-4 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                                        {s.title}
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
+                                        {products.map((p, i) => (
+                                            <ProductCard key={(p.id as number) ?? i} product={p as Product} />
+                                        ))}
+                                    </div>
+                                </section>
+                            );
+                        })}
 
             </div>
         </StorefrontLayout>

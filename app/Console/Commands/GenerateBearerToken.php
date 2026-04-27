@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use Carbon;
+use App\Services\Providers\WoohooBearerTokenStore;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -108,22 +108,7 @@ class GenerateBearerToken extends Command
                 if ($tokenResp->successful()) {
                     $token = $tokenResp->json()['token'];
 
-                    DB::transaction(function () use ($token) {
-                        $updateTime = now()->toDateTimeString();
-                        $payload = [
-                            'display_name' => 'Bearer Token',
-                            'value' => $token,
-                            'details' => json_encode(['update_time' => $updateTime]),
-                            'updated_at' => now(),
-                        ];
-                        if (DB::table('settings')->where('key', 'woohoo.bearer_token')->doesntExist()) {
-                            $payload['created_at'] = now();
-                        }
-                        DB::table('settings')->updateOrInsert(
-                            ['key' => 'woohoo.bearer_token'],
-                            $payload,
-                        );
-                    });
+                    app(WoohooBearerTokenStore::class)->put((string) $token);
                     $updateTime = Carbon\Carbon::now('Asia/Kolkata')->format('d/m/y H:i:s');
                     Log::info('GenerateBearerToken command ran successfully at:', ['update_time' => $updateTime]);
 

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, isValid, parseISO } from 'date-fns';
+import PeriodSelect from '@/Components/Inputs/PeriodSelect';
 
 type DashboardType = 'admin' | 'finance' | 'b2b';
 
@@ -350,27 +351,14 @@ export default function Dashboard({
                             </h2>
                         </div>
                         <div className="flex items-center gap-2">
-                            <label htmlFor="dashboard-chart-days" className="text-xs text-gray-500 dark:text-gray-400">
-                                Period
-                            </label>
-                            <select
+                            <PeriodSelect
                                 id="dashboard-chart-days"
                                 value={chartDays}
-                                onChange={(e) => {
-                                    router.get(
-                                        '/panel',
-                                        { chart_days: Number(e.target.value) },
-                                        { preserveState: true, replace: true, preserveScroll: true },
-                                    );
-                                }}
-                                className="rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                            >
-                                {CHART_DAY_OPTIONS.map((d) => (
-                                    <option key={d} value={d}>
-                                        Last {d} days
-                                    </option>
-                                ))}
-                            </select>
+                                options={CHART_DAY_OPTIONS as unknown as number[]}
+                                onChange={(days) =>
+                                    router.get('/panel', { chart_days: days }, { preserveState: true, replace: true, preserveScroll: true })
+                                }
+                            />
                         </div>
                     </div>
                     {chartData.length === 0 ? (

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class Product extends Model
@@ -18,6 +19,7 @@ class Product extends Model
     protected $table = 'products';
 
     protected $fillable = [
+        'tenant_id',
         'sku',
         'name',
         'product_name',
@@ -116,6 +118,67 @@ class Product extends Model
         );
     }
 
+    /**
+     * Phase-3 pricing source of truth.
+     * Prefer normalized tables; fall back to legacy price JSON if needed.
+     *
+     * @return array{type:string,denominations:array<int,float>,min:float|null,max:float|null}
+     */
+    public function resolveStorefrontPrice(): array
+    {
+        // Slab (denominations)
+        if (Schema::hasTable('product_price_denominations')) {
+            $hasActive = Schema::hasColumn('product_price_denominations', 'is_active');
+            $rows = DB::table('product_price_denominations')
+                ->where('product_id', $this->id)
+                ->when($hasActive, fn ($q) => $q->where('is_active', true))
+                ->orderBy('display_order')
+                ->orderBy('amount_minor')
+                ->get(['amount_minor']);
+
+            $denoms = $rows
+                ->map(fn ($r) => (float) (((int) ($r->amount_minor ?? 0)) / 100))
+                ->filter(fn ($v) => $v > 0)
+                ->values()
+                ->all();
+
+            if ($denoms !== []) {
+                return ['type' => 'SLAB', 'denominations' => $denoms, 'min' => null, 'max' => null];
+            }
+        }
+
+        // Range (min/max)
+        if (Schema::hasTable('product_price_ranges')) {
+            $hasActive = Schema::hasColumn('product_price_ranges', 'is_active');
+            $row = DB::table('product_price_ranges')
+                ->where('product_id', $this->id)
+                ->when($hasActive, fn ($q) => $q->where('is_active', true))
+                ->first(['min_amount_minor', 'max_amount_minor']);
+
+            if ($row) {
+                $min = (float) (((int) ($row->min_amount_minor ?? 0)) / 100);
+                $max = (float) (((int) ($row->max_amount_minor ?? 0)) / 100);
+                if ($min > 0 && $max > 0 && $max >= $min) {
+                    return ['type' => 'RANGE', 'denominations' => [], 'min' => $min, 'max' => $max];
+                }
+            }
+        }
+
+        // Legacy fallback
+        $legacy = (array) ($this->price ?? []);
+        $type = strtoupper((string) ($legacy['type'] ?? ''));
+        if ($type === 'SLAB' || $type === 'RANGE') {
+            return [
+                'type' => $type,
+                'denominations' => array_values(array_filter(array_map('floatval', (array) ($legacy['denominations'] ?? [])), fn ($v) => $v > 0)),
+                'min' => isset($legacy['min']) ? (float) $legacy['min'] : null,
+                'max' => isset($legacy['max']) ? (float) $legacy['max'] : null,
+            ];
+        }
+
+        return ['type' => 'RANGE', 'denominations' => [], 'min' => null, 'max' => null];
+    }
+
     /** Storefront / navigation categories (many-to-many via category_product). */
     public function categories(): BelongsToMany
     {
@@ -147,7 +210,7 @@ class Product extends Model
 
     public function productMedia(): HasMany
     {
-        return $this->hasMany(ProductMedia::class, 'product_id')->orderBy('sort_order');
+        return $this->hasMany(ProductMedia::class, 'product_id')->orderBy('display_order');
     }
 
     public function hasCustomContent(): bool
@@ -335,27 +398,55 @@ class Product extends Model
     /** B2B panel shop / price list: tenant-assigned products with Business or Both catalog audience. */
     public function scopeForB2bCatalog($query)
     {
-        return $query->whereIn('catalog_audience', [self::CATALOG_AUDIENCE_B2B, self::CATALOG_AUDIENCE_BOTH]);
+        if (Schema::hasColumn($this->getTable(), 'catalog_audience')) {
+            return $query->whereIn('catalog_audience', [self::CATALOG_AUDIENCE_B2B, self::CATALOG_AUDIENCE_BOTH]);
+        }
+
+        // Phase-3 schema: include B2B + Both. Only exclude explicit B2C-only rows.
+        if (Schema::hasColumn($this->getTable(), 'is_b2c_only')) {
+            return $query->where('is_b2c_only', false);
+        }
+
+        // Best-effort fallback: if we only have is_b2b_only, include those plus "both" (unknown).
+        return $query;
     }
 
     /** Admin list: storefront-eligible rows (b2c + both), regardless of show_product. */
     public function scopeAdminStorefrontCatalog($query)
     {
-        return $query->where(function ($q) {
-            $q->whereIn('catalog_audience', [self::CATALOG_AUDIENCE_B2C, self::CATALOG_AUDIENCE_BOTH])
-                ->orWhereNull('catalog_audience')
-                ->orWhere('catalog_audience', '');
-        });
+        if (Schema::hasColumn($this->getTable(), 'catalog_audience')) {
+            return $query->where(function ($q) {
+                $q->whereIn('catalog_audience', [self::CATALOG_AUDIENCE_B2C, self::CATALOG_AUDIENCE_BOTH])
+                    ->orWhereNull('catalog_audience')
+                    ->orWhere('catalog_audience', '');
+            });
+        }
+
+        // Phase-3 schema: storefront excludes B2B-only.
+        if (Schema::hasColumn($this->getTable(), 'is_b2b_only')) {
+            return $query->where('is_b2b_only', false);
+        }
+
+        return $query;
     }
 
     /** Admin list: B2B-eligible rows (b2b + both), regardless of show_product. */
     public function scopeAdminBusinessCatalog($query)
     {
-        return $query->where(function ($q) {
-            $q->whereIn('catalog_audience', [self::CATALOG_AUDIENCE_B2B, self::CATALOG_AUDIENCE_BOTH])
-                ->orWhereNull('catalog_audience')
-                ->orWhere('catalog_audience', '');
-        });
+        if (Schema::hasColumn($this->getTable(), 'catalog_audience')) {
+            return $query->where(function ($q) {
+                $q->whereIn('catalog_audience', [self::CATALOG_AUDIENCE_B2B, self::CATALOG_AUDIENCE_BOTH])
+                    ->orWhereNull('catalog_audience')
+                    ->orWhere('catalog_audience', '');
+            });
+        }
+
+        // Phase-3 schema: include rows that are not explicitly B2C-only.
+        if (Schema::hasColumn($this->getTable(), 'is_b2c_only')) {
+            return $query->where('is_b2c_only', false);
+        }
+
+        return $query;
     }
 
     public function isExcludedFromConsumerStorefront(): bool
@@ -424,17 +515,37 @@ class Product extends Model
 
         $theme = null;
         if (class_exists(BrandCardTheme::class) && Schema::hasTable('brand_card_themes')) {
-            $theme = BrandCardTheme::query()
-                ->active()
-                ->where(function ($query) {
-                    $query->where('product_id', $this->id)
-                        ->orWhere('brand_id', $this->brand_id)
-                        ->orWhere('brand_name', $this->brandName);
-                })
-                ->orderByDesc('product_id')
-                ->orderByDesc('brand_id')
-                ->orderBy('priority')
-                ->first();
+            $q = BrandCardTheme::query();
+            // Legacy DBs may not have is_active; avoid crashing.
+            if (Schema::hasColumn('brand_card_themes', 'is_active')) {
+                $q->active();
+            }
+
+            $hasProductId = Schema::hasColumn('brand_card_themes', 'product_id');
+            $hasBrandId = Schema::hasColumn('brand_card_themes', 'brand_id');
+            $hasBrandName = Schema::hasColumn('brand_card_themes', 'brand_name');
+
+            // If the table doesn't have any of the selector columns, do not query it.
+            if ($hasProductId || $hasBrandId || $hasBrandName) {
+                $theme = $q
+                    ->where(function ($query) use ($hasProductId, $hasBrandId, $hasBrandName) {
+                        if ($hasProductId) {
+                            $query->orWhere('product_id', $this->id);
+                        }
+                        if ($hasBrandId) {
+                            $query->orWhere('brand_id', $this->brand_id);
+                        }
+                        if ($hasBrandName) {
+                            $query->orWhere('brand_name', $this->brandName)
+                                ->orWhereNull('brand_name');
+                        }
+                    })
+                    ->when($hasProductId, fn ($qb) => $qb->orderByDesc('product_id'))
+                    ->when($hasBrandId, fn ($qb) => $qb->orderByDesc('brand_id'))
+                    ->when(Schema::hasColumn('brand_card_themes', 'priority'), fn ($qb) => $qb->orderBy('priority'))
+                    ->when(Schema::hasColumn('brand_card_themes', 'id'), fn ($qb) => $qb->orderBy('id'))
+                    ->first();
+            }
         }
 
         $logo = $theme?->logo_url ?: ($this->card_logo_url ?: $neutral['logo_url']);

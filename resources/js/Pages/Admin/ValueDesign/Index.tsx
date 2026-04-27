@@ -1,6 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import StatCard from '@/Components/Admin/StatCard';
+import Badge from '@/Components/UI/Badge';
+import Button from '@/Components/UI/Button';
+import { Card, CardBody, CardHeader } from '@/Components/UI/Card';
+import Input from '@/Components/UI/Input';
+import { Boxes, KeyRound, RefreshCw, ShieldAlert, Wallet } from 'lucide-react';
 
 type Routes = {
     token: string;
@@ -17,6 +23,21 @@ type Props = {
     configured: boolean;
     distributorId: string;
     routes: Routes;
+    kpis: { productsImported: number; pendingQueue: number; failedJobs: number };
+    lastSyncAt: string | null;
+    syncRuns: Array<{
+        id: number;
+        job_type: string;
+        status: string;
+        records_fetched: number;
+        records_created: number;
+        records_updated: number;
+        records_failed: number;
+        last_error_message: string | null;
+        started_at: string | null;
+        completed_at: string | null;
+        created_at: string | null;
+    }>;
     syncedProducts: Array<{
         id: number;
         sku: string;
@@ -126,7 +147,7 @@ function ArraySections({ data }: { data: JsonObject }) {
     );
 }
 
-export default function ValueDesignIndex({ configured, distributorId, routes, syncedProducts }: Props) {
+export default function ValueDesignIndex({ configured, distributorId, routes, syncedProducts, kpis, lastSyncAt, syncRuns }: Props) {
     const [token, setToken] = useState('');
     const [brandCode, setBrandCode] = useState('');
     const [orderId, setOrderId] = useState('');
@@ -160,6 +181,16 @@ export default function ValueDesignIndex({ configured, distributorId, routes, sy
     const [syncBusy, setSyncBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<Record<string, unknown> | null>(null);
+    const runs = useMemo(() => syncRuns ?? [], [syncRuns]);
+
+    const badgeForRunStatus = (status: string) => {
+        const key = String(status || '').toLowerCase();
+        if (key === 'succeeded') return <Badge tone="success">Succeeded</Badge>;
+        if (key === 'running') return <Badge tone="brand">Running</Badge>;
+        if (key === 'queued') return <Badge tone="warning">Queued</Badge>;
+        if (key === 'failed') return <Badge tone="danger">Failed</Badge>;
+        return <Badge tone="neutral">{status || 'Unknown'}</Badge>;
+    };
 
     const normalizedData = (() => {
         if (!result) return null;
@@ -236,154 +267,180 @@ export default function ValueDesignIndex({ configured, distributorId, routes, sy
 
     return (
         <AdminLayout>
-            <Head title="Value Design" />
-            <div className="space-y-6 p-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Value Design</h1>
-                    <p className="mt-2 max-w-3xl text-sm text-gray-600 dark:text-gray-400">
-                        Admin integration console for VD UAT operations. Generate token first, then run downstream actions.
-                    </p>
+            <Head title="Value Design Sync Center" />
+            <div className="space-y-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Value Design</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-3">
+                            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Catalog Sync Center</h1>
+                            {configured ? <Badge tone="success">Configured</Badge> : <Badge tone="warning">Needs setup</Badge>}
+                        </div>
+                        <p className="mt-2 max-w-3xl text-sm text-gray-600 dark:text-gray-300">
+                            Generate a token, run catalog sync, and perform EVC operations from one console.
+                        </p>
+                        <p className="mt-2 text-xs text-gray-500">Distributor ID: {distributorId || '—'}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                        {lastSyncAt ? (
+                            <Badge tone="neutral">Last sync: {new Date(lastSyncAt).toLocaleString()}</Badge>
+                        ) : (
+                            <Badge tone="neutral">Last sync: —</Badge>
+                        )}
+                    </div>
                 </div>
 
-                <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-                    <p className="text-sm">
-                        Configuration:{' '}
-                        <span className={configured ? 'text-emerald-600' : 'text-amber-600'}>
-                            {configured ? 'Configured' : 'Missing env/config'}
-                        </span>
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Distributor ID: {distributorId || 'Not set'}</p>
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+                    <StatCard label="Products imported" value={kpis.productsImported} icon={Boxes} color="accent" />
+                    <StatCard label="Pending queue" value={kpis.pendingQueue} icon={RefreshCw} color="warning" />
+                    <StatCard label="Failed jobs" value={kpis.failedJobs} icon={ShieldAlert} color="danger" />
+                    <StatCard label="Token status" value={token ? 'Present' : '—'} icon={KeyRound} color="brand" />
                 </div>
 
                 {error && (
-                    <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-200">
+                    <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-900/20 dark:text-red-200">
                         {error}
                     </div>
                 )}
 
-                <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Step 1: Generate token</h2>
-                    <div className="mt-3 flex flex-wrap items-center gap-3">
-                        <button
-                            type="button"
-                            disabled={loading}
-                            onClick={() => run(routes.token, {})}
-                            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-                        >
-                            Generate token
-                        </button>
-                        <input
-                            value={token}
-                            onChange={(e) => setToken(e.target.value)}
-                            placeholder="Paste token here (or copy from response)"
-                            className="min-w-[320px] flex-1 rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900"
-                        />
-                    </div>
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <Card>
+                        <CardHeader>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Token management</p>
+                            <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-gray-100">Generate token</p>
+                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">Generate a token first, then run downstream calls.</p>
+                        </CardHeader>
+                        <CardBody>
+                            <div className="flex flex-wrap items-end gap-3">
+                                <Button variant="primary" disabled={loading} onClick={() => run(routes.token, {})}>
+                                    {loading ? 'Generating…' : 'Generate token'}
+                                </Button>
+                                <div className="min-w-[280px] flex-1">
+                                    <Input
+                                        label="Token"
+                                        value={token}
+                                        onChange={(e) => setToken(e.target.value)}
+                                        placeholder="Paste token here (or copy from response)"
+                                    />
+                                </div>
+                            </div>
+                        </CardBody>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Catalog sync</p>
+                            <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-gray-100">Sync brands to products</p>
+                            <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                                Inserts/updates Value Design brands into your `products` table.
+                            </p>
+                        </CardHeader>
+                        <CardBody>
+                            <div className="flex flex-wrap items-end gap-3">
+                                <div className="min-w-[220px]">
+                                    <Input label="BrandCode (optional)" value={brandCode} onChange={(e) => setBrandCode(e.target.value)} placeholder="e.g. AMAZON" />
+                                </div>
+                                <Button variant="muted" disabled={loading || !token} onClick={tokenRequired[0].action}>
+                                    Get brands
+                                </Button>
+                                <Button variant="muted" disabled={loading || !token} onClick={tokenRequired[1].action}>
+                                    Get stores
+                                </Button>
+                                <Button variant="secondary" disabled={syncBusy} onClick={syncCatalog}>
+                                    {syncBusy ? 'Syncing…' : 'Sync catalog'}
+                                </Button>
+                            </div>
+
+                            <div className="mt-6 rounded-2xl border border-gray-200 dark:border-gray-800">
+                                <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-3 dark:border-gray-800">
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Recent runs</p>
+                                    <Badge tone="neutral">{runs.length} recent</Badge>
+                                </div>
+                                <div className="max-h-[240px] overflow-auto">
+                                    {runs.length === 0 ? (
+                                        <p className="p-4 text-sm text-gray-600">No runs yet.</p>
+                                    ) : (
+                                        <table className="w-full text-left text-sm">
+                                            <thead className="sticky top-0 bg-white text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-900">
+                                                <tr>
+                                                    <th className="px-4 py-3">Run</th>
+                                                    <th className="px-4 py-3">Status</th>
+                                                    <th className="px-4 py-3">Counts</th>
+                                                    <th className="px-4 py-3">Completed</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                                                {runs.map((r) => (
+                                                    <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-950">
+                                                        <td className="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100">#{r.id}</td>
+                                                        <td className="px-4 py-3">{badgeForRunStatus(r.status)}</td>
+                                                        <td className="px-4 py-3 text-xs text-gray-700 dark:text-gray-200">
+                                                            C:{r.records_created} U:{r.records_updated}{' '}
+                                                            {r.records_failed ? <span className="text-red-600">X:{r.records_failed}</span> : null}
+                                                            {r.last_error_message ? (
+                                                                <p className="mt-1 line-clamp-1 text-red-600">{r.last_error_message}</p>
+                                                            ) : null}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-xs text-gray-600">
+                                                            {r.completed_at ? new Date(r.completed_at).toLocaleString() : '—'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
+                            </div>
+                        </CardBody>
+                    </Card>
                 </div>
 
-                <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Step 2: Brand & store lookups</h2>
-                    <div className="mt-3 flex flex-wrap gap-3">
-                        <input
-                            value={brandCode}
-                            onChange={(e) => setBrandCode(e.target.value)}
-                            placeholder="BrandCode (optional)"
-                            className="min-w-[240px] rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900"
+                <Card>
+                    <CardHeader>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">EVC operations</p>
+                        <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-gray-100">EVC tools</p>
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                            Create EVC, check status, fetch activated EVC, and wallet balance.
+                        </p>
+                    </CardHeader>
+                    <CardBody>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <Input label="order_id" value={orderId} onChange={(e) => setOrderId(e.target.value)} placeholder="ORD123" />
+                            <Input label="request_ref_no" value={requestRefNo} onChange={(e) => setRequestRefNo(e.target.value)} placeholder="REF123" />
+                        </div>
+                        <textarea
+                            value={payload}
+                            onChange={(e) => setPayload(e.target.value)}
+                            rows={12}
+                            className="mt-4 w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-xs text-gray-900 shadow-sm outline-none transition focus:border-product-primary focus:ring-2 focus:ring-product-primary/20 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100"
                         />
-                        <button
-                            type="button"
-                            disabled={loading || !token}
-                            onClick={tokenRequired[0].action}
-                            className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-gray-600"
-                        >
-                            Get brands
-                        </button>
-                        <button
-                            type="button"
-                            disabled={loading || !token}
-                            onClick={tokenRequired[1].action}
-                            className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-gray-600"
-                        >
-                            Get stores
-                        </button>
-                        <button
-                            type="button"
-                            disabled={syncBusy}
-                            onClick={syncCatalog}
-                            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                        >
-                            {syncBusy ? 'Syncing products...' : 'Sync brands to products'}
-                        </button>
-                    </div>
-                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        Use <strong>Sync brands to products</strong> to insert/update VD brands in the `products` table.
-                    </p>
-                </div>
+                        <div className="mt-4 flex flex-wrap gap-3">
+                            <Button variant="primary" disabled={loading || !token} onClick={tokenRequired[2].action}>
+                                Get EVC
+                            </Button>
+                            <Button variant="muted" disabled={loading || !token || !orderId || !requestRefNo} onClick={tokenRequired[3].action}>
+                                Get status
+                            </Button>
+                            <Button variant="muted" disabled={loading || !token || !orderId || !requestRefNo} onClick={tokenRequired[4].action}>
+                                Get activated EVC
+                            </Button>
+                            <Button variant="secondary" disabled={loading || !token} onClick={tokenRequired[5].action} leftIcon={<Wallet className="h-4 w-4" />}>
+                                Wallet balance
+                            </Button>
+                        </div>
+                    </CardBody>
+                </Card>
 
-                <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Step 3: EVC operations</h2>
-                    <div className="mt-3 grid gap-3 md:grid-cols-2">
-                        <input
-                            value={orderId}
-                            onChange={(e) => setOrderId(e.target.value)}
-                            placeholder="order_id"
-                            className="rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900"
-                        />
-                        <input
-                            value={requestRefNo}
-                            onChange={(e) => setRequestRefNo(e.target.value)}
-                            placeholder="request_ref_no"
-                            className="rounded border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900"
-                        />
-                    </div>
-                    <textarea
-                        value={payload}
-                        onChange={(e) => setPayload(e.target.value)}
-                        rows={12}
-                        className="mt-3 w-full rounded border border-gray-300 px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-900"
-                    />
-                    <div className="mt-3 flex flex-wrap gap-3">
-                        <button
-                            type="button"
-                            disabled={loading || !token}
-                            onClick={tokenRequired[2].action}
-                            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                        >
-                            Get EVC
-                        </button>
-                        <button
-                            type="button"
-                            disabled={loading || !token || !orderId || !requestRefNo}
-                            onClick={tokenRequired[3].action}
-                            className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-gray-600"
-                        >
-                            Get EVC status
-                        </button>
-                        <button
-                            type="button"
-                            disabled={loading || !token || !orderId || !requestRefNo}
-                            onClick={tokenRequired[4].action}
-                            className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-gray-600"
-                        >
-                            Get activated EVC
-                        </button>
-                        <button
-                            type="button"
-                            disabled={loading || !token}
-                            onClick={tokenRequired[5].action}
-                            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-                        >
-                            Wallet balance
-                        </button>
-                    </div>
-                </div>
-
-                <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+                <Card>
+                    <CardHeader>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Catalog</p>
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Synced products (products table)</h2>
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         Showing latest {syncedProducts.length} products where <code>source_provider = value_design</code>.
                     </p>
-                    <div className="mt-3 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
+                    </CardHeader>
+                    <CardBody>
+                    <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800">
                         <table className="w-full min-w-[850px] text-left text-sm">
                             <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                                 <tr>
@@ -427,7 +484,8 @@ export default function ValueDesignIndex({ configured, distributorId, routes, sy
                             </tbody>
                         </table>
                     </div>
-                </div>
+                    </CardBody>
+                </Card>
 
                 {result && (
                     <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">

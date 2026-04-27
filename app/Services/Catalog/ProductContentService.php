@@ -21,22 +21,21 @@ class ProductContentService
         $product->loadMissing('productMedia');
 
         $globalMedia = $product->productMedia
-            ->filter(fn (ProductMedia $m) => $m->tenant_id === null)
-            ->sortBy('sort_order');
+            ->sortBy('display_order');
 
-        $hero = $globalMedia->firstWhere('collection', 'hero');
+        $hero = $globalMedia->firstWhere('type', 'hero');
         if ($hero) {
-            return $hero->url();
+            return (string) $hero->url;
         }
 
-        $firstGallery = $globalMedia->firstWhere('collection', 'gallery');
+        $firstGallery = $globalMedia->firstWhere('type', 'gallery');
         if ($firstGallery) {
-            return $firstGallery->url();
+            return (string) $firstGallery->url;
         }
 
         $firstAny = $globalMedia->first();
         if ($firstAny) {
-            return $firstAny->url();
+            return (string) $firstAny->url;
         }
 
         if (! empty($product->custom_image) && $product->custom_image !== 'null') {
@@ -58,9 +57,8 @@ class ProductContentService
         $product->loadMissing('productMedia');
 
         $urls = $product->productMedia
-            ->filter(fn (ProductMedia $m) => $m->tenant_id === null)
-            ->sortBy('sort_order')
-            ->map(fn (ProductMedia $m) => $m->url())
+            ->sortBy('display_order')
+            ->map(fn (ProductMedia $m) => (string) $m->url)
             ->values()
             ->all();
 

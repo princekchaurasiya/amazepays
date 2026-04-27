@@ -14,6 +14,7 @@ import {
     X,
     Shield,
     Images,
+    Layers,
 } from 'lucide-react';
 
 type Field = {
@@ -384,6 +385,14 @@ export default function Index({ groups, sections = [], homepageSectionTypes = []
                                                                 Carousel
                                                             </Link>
                                                         )}
+                                                        <Link
+                                                            href="/panel/homepage-builder"
+                                                            className="mr-1 px-2 py-1 rounded-md text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 inline-flex items-center gap-1"
+                                                            title="Manage section items (products/brands/categories)"
+                                                        >
+                                                            <Layers size={14} />
+                                                            Manage items
+                                                        </Link>
                                                         <button
                                                             type="button"
                                                             onClick={() => openEditSection(row)}

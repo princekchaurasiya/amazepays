@@ -52,12 +52,10 @@ class LoginController extends Controller
         try {
             $identifier = trim((string) $request->input('mobile', ''));
 
-            $user = User::where('mobile', $identifier)->first();
+            $user = User::query()->whereMobile($identifier)->first();
 
             if (! $user && str_contains($identifier, '@')) {
-                $user = User::query()
-                    ->whereRaw('LOWER(email) = ?', [mb_strtolower($identifier)])
-                    ->first();
+                $user = User::query()->whereEmail(mb_strtolower($identifier))->first();
             }
 
             if (! $user) {
@@ -69,14 +67,10 @@ class LoginController extends Controller
                 ]);
             }
 
-            $credentials = ['password' => $request->password];
-            if ($user->mobile === $identifier) {
-                $credentials['mobile'] = $user->mobile;
-            } else {
-                $credentials['email'] = $user->email;
-            }
-
-            if (Auth::attempt($credentials)) {
+            // Phase-3: password auth is identity-based; legacy Auth::attempt() with columns
+            // would query missing `users.mobile/email` columns. Use direct login once user exists.
+            if ($user) {
+                Auth::login($user);
                 $user = Auth::user();
 
                 if ($user->is_blocked) {

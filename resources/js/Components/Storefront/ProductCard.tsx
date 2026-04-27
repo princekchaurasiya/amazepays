@@ -12,7 +12,7 @@ type Product = {
     out_of_stock?: boolean | number | null;
 };
 
-const PALETTE = ['#1a1a2e', '#16213e', '#0f3460', '#533483', '#2b2d42', '#3d5a80', '#264653', '#2d6a4f'];
+const PALETTE = ['#0B0B8F', '#1F2A7A', '#0F3460', '#2B3A99', '#0B3B5B', '#12306B', '#1B2B5E', '#2D4490'];
 
 export default function ProductCard({ product }: { product: Product }) {
     const slug = product.url ?? product.slug ?? '';
@@ -30,11 +30,11 @@ export default function ProductCard({ product }: { product: Product }) {
     return (
         <Link
             href={href}
-            className="group block overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition hover:ring-brand-500/30"
+            className="group block overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition hover:shadow-lg hover:ring-product-primary/20"
         >
             <div
-                className="relative aspect-[4/3] overflow-hidden"
-                style={{ background: `linear-gradient(160deg, ${bgColor} 0%, ${bgDark} 100%)` }}
+                className="relative aspect-[4/3] overflow-hidden bg-white"
+                style={img ? undefined : { background: `linear-gradient(160deg, ${bgColor} 0%, ${bgDark} 100%)` }}
             >
                 {out && (
                     <span className="absolute left-2 top-2 z-10 rounded bg-black/70 px-2 py-1 text-xs font-semibold uppercase text-white">
@@ -42,7 +42,12 @@ export default function ProductCard({ product }: { product: Product }) {
                     </span>
                 )}
                 {img ? (
-                    <img src={img} alt="" className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
+                    <img
+                        src={img}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-contain p-3 transition group-hover:scale-[1.01]"
+                    />
                 ) : (
                     <span className="flex h-full w-full items-center justify-center text-4xl font-bold text-white/90">
                         {displayName.slice(0, 1).toUpperCase()}

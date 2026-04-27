@@ -18,6 +18,7 @@ type User = {
 export default function Profile() {
     const page = usePage<{ auth: { user: User | null } }>();
     const u = page.props.auth?.user;
+    const returnTo = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('return_to') || '' : '';
     const { data, setData, post, processing, errors } = useForm({
         name: u?.name ?? '',
         email: u?.email ?? '',
@@ -28,6 +29,7 @@ export default function Profile() {
         billing_state: u?.billing_state ?? '',
         billing_zip: u?.billing_zip ?? '',
         billing_country: u?.billing_country ?? 'IN',
+        return_to: returnTo,
     });
 
     if (!u) {

@@ -17,8 +17,6 @@ final class FulfillPaidOrderJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public string $queue = 'fulfillment';
-
     public function __construct(
         public readonly int $orderId,
     ) {}

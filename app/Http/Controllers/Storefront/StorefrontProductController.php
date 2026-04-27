@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\ProductPageController;
 use App\Helpers\CheckoutHelper;
 use App\Models\Order;
+use App\Models\OrderBillingSnapshot;
 use App\Models\Product;
 use App\Services\Checkout\CheckoutOrderPayloadFactory;
 use App\Services\Checkout\CheckoutReadService;
@@ -16,6 +17,7 @@ use App\Support\BillingRequirementResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 
 /**
@@ -52,7 +54,13 @@ final class StorefrontProductController extends Controller
         }
         $order ??= new Order;
 
-        $product = Product::query()->where('url', $slug)->firstOrFail();
+        $productQuery = Product::query();
+        if (Schema::hasColumn('products', 'url')) {
+            $productQuery->where('url', $slug)->orWhere('slug', $slug);
+        } else {
+            $productQuery->where('slug', $slug);
+        }
+        $product = $productQuery->firstOrFail();
         $this->assertConsumerStorefrontProduct($product);
 
         if ($order?->id && ! $this->orderBelongsToProduct($order, $product)) {
@@ -105,11 +113,20 @@ final class StorefrontProductController extends Controller
             : null;
         $provider = (string) ($product->source_provider ?? '');
 
-        $requiredBillingFieldsByMethod = [
-            'ccavenue' => $this->billingRequirements->requiredFields('ccavenue', $provider),
-            'razorpay' => $this->billingRequirements->requiredFields('razorpay', $provider),
-            'unlimit' => $this->billingRequirements->requiredFields('unlimit', $provider),
-        ];
+        $methodToggles = (array) config('storefront.checkout_payment_methods', []);
+        $enabledMethods = collect(['ccavenue', 'razorpay', 'unlimit'])
+            ->filter(fn (string $m) => (bool) ($methodToggles[$m] ?? false))
+            ->values()
+            ->all();
+
+        // Always keep at least Razorpay enabled to prevent empty checkout screen.
+        if ($enabledMethods === []) {
+            $enabledMethods = ['razorpay'];
+        }
+
+        $requiredBillingFieldsByMethod = collect($enabledMethods)
+            ->mapWithKeys(fn (string $method) => [$method => $this->billingRequirements->requiredFields($method, $provider)])
+            ->all();
 
         $billingSnapshots = collect($requiredBillingFieldsByMethod)
             ->map(fn (array $required) => $this->checkoutReadService->buildBillingSnapshot(
@@ -120,12 +137,47 @@ final class StorefrontProductController extends Controller
             ))
             ->all();
 
+        // If billing is not ready for any enabled method, redirect to profile to complete details,
+        // then come back to this checkout page.
+        $hasAnyReady = collect($enabledMethods)->contains(fn (string $m) => (bool) ($billingSnapshots[$m]['ready'] ?? false));
+        if (! $hasAnyReady) {
+            // Use relative path to avoid open-redirects and keep profile return_to safe.
+            $returnTo = route('checkoutPage', ['slug' => $slug], false);
+            return redirect()
+                ->route('profile', ['return_to' => $returnTo])
+                ->with('warning', 'Please complete your profile details to continue checkout.');
+        }
+
+        // Persist immutable billing snapshot onto the order (Phase-3 schema).
+        // This is critical for downstream fulfilment (Woohoo) because orders do not carry billing columns.
+        if ($order->id && Schema::hasTable('order_billing_snapshots')) {
+            $firstReadyMethod = collect($enabledMethods)->first(fn (string $m) => (bool) ($billingSnapshots[$m]['ready'] ?? false)) ?? $enabledMethods[0];
+            $snap = (array) (($billingSnapshots[$firstReadyMethod]['snapshot'] ?? []) ?: []);
+
+            OrderBillingSnapshot::query()->updateOrCreate(
+                ['order_id' => (int) $order->id],
+                [
+                    'full_name' => (string) ($snap['billing_name'] ?? 'Customer'),
+                    'email' => (string) ($snap['billing_email'] ?? ''),
+                    'phone' => (string) ($snap['billing_tel'] ?? ''),
+                    'line1' => (string) ($snap['billing_address'] ?? '-'),
+                    'line2' => (string) ($snap['billing_address_two'] ?? ''),
+                    'city' => (string) ($snap['billing_city'] ?? '-'),
+                    'state' => (string) ($snap['billing_state'] ?? '-'),
+                    'postal_code' => (string) ($snap['billing_zip'] ?? '000000'),
+                    'country' => (string) ($snap['billing_country'] ?? 'IN'),
+                    'gst_number' => (string) ($snap['billing_gst_number'] ?? ''),
+                ]
+            );
+        }
+
         return Inertia::render('Checkout/Index', [
             'product' => $product,
             'checkoutData' => $checkoutData,
             'order' => $this->checkoutOrderPayloadFactory->make($order),
             'cachedBilling' => $cachedBilling,
-            'billingSnapshot' => $billingSnapshots['razorpay']['snapshot'] ?? [],
+            'enabledPaymentMethods' => $enabledMethods,
+            'billingSnapshot' => $billingSnapshots['razorpay']['snapshot'] ?? ($billingSnapshots[$enabledMethods[0]]['snapshot'] ?? []),
             'billingRequiredFieldsByMethod' => $requiredBillingFieldsByMethod,
             'billingMissingFieldsByMethod' => [
                 'ccavenue' => $billingSnapshots['ccavenue']['missing'] ?? [],
@@ -186,11 +238,18 @@ final class StorefrontProductController extends Controller
 
     private function orderBelongsToProduct(Order $order, Product $product): bool
     {
-        if ($order->product_id) {
+        if (Schema::hasColumn('orders', 'product_id') && $order->product_id) {
             return (int) $order->product_id === (int) $product->id;
         }
 
-        return (string) $order->sku === (string) $product->sku;
+        if (Schema::hasColumn('orders', 'sku')) {
+            return (string) $order->sku === (string) $product->sku;
+        }
+
+        // Fallback for older schemas: rely on order items.
+        return $order->items()
+            ->where('product_id', (int) $product->id)
+            ->exists();
     }
 
     private function assertConsumerStorefrontProduct(Product $product): void

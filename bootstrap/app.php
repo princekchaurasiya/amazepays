@@ -13,6 +13,7 @@ use App\Http\Middleware\CheckPurchaseLimits;
 use App\Http\Middleware\CheckUserTransactionStatus;
 use App\Http\Middleware\CoolingOffPeriod;
 use App\Http\Middleware\DetectVpnProxy;
+use App\Http\Middleware\EnsureIdempotencyKey;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RequireTwoFactor;
 use App\Http\Middleware\ResolveTenant;
@@ -111,6 +112,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'verify.ccavenue.signature' => VerifyCCAvenueSignature::class,
             'verify.razorpay.signature' => VerifyRazorpaySignature::class,
             'verify.woohoo.signature' => VerifyWoohooSignature::class,
+            'idempotency' => EnsureIdempotencyKey::class,
         ]);
 
         // Redis rate limiting requires ext-redis (phpredis) or predis + a Redis server.

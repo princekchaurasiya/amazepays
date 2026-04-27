@@ -28,7 +28,7 @@ final class ValueDesignCheckoutController extends Controller
     public function submit(Request $request)
     {
         if ($request->gift_send_option === 'send_as_gift' && $request->receiver_mobile) {
-            $recipient = User::where('mobile', $request->receiver_mobile)->first();
+            $recipient = User::query()->whereMobile((string) $request->receiver_mobile)->first();
             if ($recipient && ! $recipient->can_receive_gifts) {
                 Log::warning('Attempted to send gift to self', [
                     'sender_id' => Auth::id(),

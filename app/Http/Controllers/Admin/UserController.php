@@ -19,14 +19,16 @@ class UserController extends Controller
     /** List users with search + role filtering. */
     public function index(Request $request)
     {
-        $query = User::with('roles')->latest();
+        $query = User::query()
+            ->with(['roles', 'authIdentities'])
+            ->latest();
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim((string) $request->search);
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('mobile', 'like', "%{$search}%");
+                $q->where('display_name', 'like', "%{$search}%")
+                    ->orWhereMobileLike($search)
+                    ->orWhereEmailLike($search);
             });
         }
 
@@ -34,8 +36,19 @@ class UserController extends Controller
             $query->role($request->role);
         }
 
+        $users = $query->paginate(25)->through(static function (User $u): array {
+            return [
+                'id' => $u->id,
+                'name' => $u->name ?? $u->display_name,
+                'email' => $u->email ?? '—',
+                'mobile' => $u->mobile,
+                'created_at' => $u->created_at?->toIso8601String(),
+                'roles' => $u->roles->map(fn ($r) => ['name' => $r->name])->values()->all(),
+            ];
+        });
+
         return Inertia::render('Admin/Users/Index', [
-            'users' => $query->paginate(25),
+            'users' => $users,
             'filters' => $request->only('search', 'role'),
         ]);
     }
@@ -57,7 +70,7 @@ class UserController extends Controller
         }
 
         return Inertia::render('Admin/Users/Show', [
-            'user' => $user->load(['roles', 'wallet']),
+            'user' => $user->load(['roles', 'wallet', 'authIdentities']),
             'orders' => $user->orders()->latest()->take(10)->get(),
             'assignableRoles' => $assignableRoles,
             'canAssignRoles' => Gate::allows('users.assign_roles'),
@@ -102,12 +115,41 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => "required|email|unique:users,email,{$user->id}",
-            'mobile' => "nullable|string|unique:users,mobile,{$user->id}",
+            'email' => 'required|email|max:255',
+            'mobile' => 'nullable|string|max:32',
         ]);
 
-        $old = $user->only(['name', 'email', 'mobile']);
-        $user->update($validated);
+        $old = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'mobile' => $user->mobile,
+        ];
+
+        $user->update([
+            'display_name' => (string) $validated['name'],
+        ]);
+
+        $user->authIdentities()->updateOrCreate(
+            ['provider' => 'email', 'identifier' => (string) $validated['email']],
+            [
+                'display_identifier' => (string) $validated['email'],
+                'is_primary' => true,
+                'is_verified' => true,
+                'verified_at' => now(),
+            ]
+        );
+
+        if (! empty($validated['mobile'])) {
+            $user->authIdentities()->updateOrCreate(
+                ['provider' => 'mobile', 'identifier' => (string) $validated['mobile']],
+                [
+                    'display_identifier' => (string) $validated['mobile'],
+                    'is_primary' => false,
+                    'is_verified' => true,
+                    'verified_at' => now(),
+                ]
+            );
+        }
 
         audit('user.updated', $user, $old, $validated);
 

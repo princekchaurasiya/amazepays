@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
 
 /**
@@ -56,11 +57,17 @@ final class CheckoutSessionController extends Controller
 
         $this->rejectUnexpectedFields($request, $allowedKeys);
 
-        $product = Product::query()->where('url', $slug)->firstOrFail();
+        $productQuery = Product::query();
+        if (Schema::hasColumn('products', 'url')) {
+            $productQuery->where('url', $slug)->orWhere('slug', $slug);
+        } else {
+            $productQuery->where('slug', $slug);
+        }
+        $product = $productQuery->firstOrFail();
         $this->assertConsumerStorefrontProduct($product);
 
         if ($request->gift_send_option === 'send_as_gift' && $request->receiver_mobile) {
-            $recipient = User::query()->where('mobile', $request->receiver_mobile)->first();
+            $recipient = User::query()->whereMobile((string) $request->receiver_mobile)->first();
             if ($recipient && ! $recipient->can_receive_gifts) {
                 Log::warning('Attempted to send gift to self', [
                     'sender_id' => Auth::id(),
@@ -89,32 +96,31 @@ final class CheckoutSessionController extends Controller
             'denomination' => [
                 'required',
                 function ($attribute, $value, $fail) use ($product) {
-                    $priceData = (array) $product->price;
-                    if (! is_array($priceData)) {
-                        $fail('Invalid product price configuration.');
-                        return;
-                    }
-
-                    $priceType = $priceData['type'] ?? 'RANGE';
+                    $priceData = $product->resolveStorefrontPrice();
+                    $priceType = strtoupper((string) ($priceData['type'] ?? 'RANGE'));
 
                     if ($priceType === 'SLAB') {
                         $denominations = $priceData['denominations'] ?? [];
-                        if (! in_array((string) $value, $denominations)) {
-                            $fail('Invalid denomination value. Allowed values are: '.implode(', ', $denominations));
+                        $valueFloat = (float) $value;
+                        $allowed = array_map('floatval', $denominations);
+                        if (! in_array($valueFloat, $allowed, true)) {
+                            $fail('Invalid denomination value. Allowed values are: '.implode(', ', array_map(fn ($d) => '₹'.(float) $d, $allowed)));
                         }
                         return;
                     }
 
-                    if ($priceType === 'RANGE') {
-                        $minPrice = $priceData['min'] ?? $product->minPrice;
-                        $maxPrice = $priceData['max'] ?? $product->maxPrice;
-                        if ($value < $minPrice || $value > $maxPrice) {
-                            $fail("The denomination must be between ₹{$minPrice} and ₹{$maxPrice}.");
-                        }
+                    $minPrice = isset($priceData['min']) ? (float) $priceData['min'] : 0.0;
+                    $maxPrice = isset($priceData['max']) ? (float) $priceData['max'] : 0.0;
+
+                    if ($minPrice <= 0 || $maxPrice <= 0 || $maxPrice < $minPrice) {
+                        $fail('Price range not configured for this product.');
                         return;
                     }
 
-                    $fail('Invalid price configuration.');
+                    $valueFloat = (float) $value;
+                    if ($valueFloat < $minPrice || $valueFloat > $maxPrice) {
+                        $fail("The denomination must be between ₹{$minPrice} and ₹{$maxPrice}.");
+                    }
                 },
             ],
             'quantity' => 'required|integer|min:1|max:10',
@@ -123,7 +129,7 @@ final class CheckoutSessionController extends Controller
             'receiver_email' => 'nullable|required_if:gift_send_option,send_as_gift|email',
             'receiver_mobile' => 'nullable|required_if:gift_send_option,send_as_gift|digits:10',
             'receiver_msg' => 'nullable|required_if:gift_send_option,send_as_gift|string|max:500',
-            'gift_theme_id' => 'nullable|required_if:gift_send_option,send_as_gift|integer|exists:gift_card_themes,id',
+            'gift_theme_id' => 'nullable|required_if:gift_send_option,send_as_gift|integer|exists:gift_themes,id',
             'gift_message_title' => 'nullable|required_if:gift_send_option,send_as_gift|string|max:120',
             'sender_first_name' => 'nullable|required_if:gift_send_option,send_as_gift|string|max:120',
             'gift_delivery_option' => 'nullable|required_if:gift_send_option,send_as_gift|string|in:send_now,send_later',
@@ -152,8 +158,9 @@ final class CheckoutSessionController extends Controller
 
         try {
             $order = $this->checkoutWriteService->createOrRefreshDraftOrder($product, (int) $userId, $validator->validated());
-            session(['checkout_order_id' => $order->id]);
+            // Regenerate session ID for safety, then persist checkout context.
             $request->session()->regenerate();
+            session(['checkout_order_id' => $order->id]);
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (\Throwable $e) {
@@ -259,29 +266,43 @@ final class CheckoutSessionController extends Controller
 
         $this->rejectUnexpectedFields($request, $allowedKeys);
 
-        $product = Product::query()->where('url', $slug)->firstOrFail();
+        $productQuery = Product::query();
+        if (Schema::hasColumn('products', 'url')) {
+            $productQuery->where('url', $slug)->orWhere('slug', $slug);
+        } else {
+            $productQuery->where('slug', $slug);
+        }
+        $product = $productQuery->firstOrFail();
         $this->assertConsumerStorefrontProduct($product);
 
         $rules = [
             'denomination' => [
                 'required',
                 function ($attribute, $value, $fail) use ($product) {
-                    $priceData = (array) $product->price;
+                    $priceData = $product->resolveStorefrontPrice();
                     $priceType = strtoupper((string) ($priceData['type'] ?? 'RANGE'));
 
                     if ($priceType === 'SLAB') {
                         $denominations = $priceData['denominations'] ?? [];
-                        if (! in_array((string) $value, $denominations, true)) {
-                            $fail('Invalid denomination value. Allowed values are: '.implode(', ', $denominations));
+                        $valueFloat = (float) $value;
+                        $allowed = array_map('floatval', $denominations);
+                        if (! in_array($valueFloat, $allowed, true)) {
+                            $fail('Invalid denomination value. Allowed values are: '.implode(', ', array_map(fn ($d) => '₹'.(float) $d, $allowed)));
                         }
 
                         return;
                     }
 
-                    $minPrice = isset($priceData['min']) ? (float) $priceData['min'] : (float) ($product->minPrice ?? 0);
-                    $maxPrice = isset($priceData['max']) ? (float) $priceData['max'] : (float) ($product->maxPrice ?? 0);
+                    $minPrice = isset($priceData['min']) ? (float) $priceData['min'] : 0.0;
+                    $maxPrice = isset($priceData['max']) ? (float) $priceData['max'] : 0.0;
 
-                    if ($value < $minPrice || $value > $maxPrice) {
+                    if ($minPrice <= 0 || $maxPrice <= 0 || $maxPrice < $minPrice) {
+                        $fail('Price range not configured for this product.');
+                        return;
+                    }
+
+                    $valueFloat = (float) $value;
+                    if ($valueFloat < $minPrice || $valueFloat > $maxPrice) {
                         $fail("The denomination must be between ₹{$minPrice} and ₹{$maxPrice}.");
                     }
                 },
@@ -315,21 +336,26 @@ final class CheckoutSessionController extends Controller
         );
 
         $lockedProduct = Product::query()->whereKey($product->id)->firstOrFail();
-        $priceData = (array) $lockedProduct->price;
+        $priceData = $lockedProduct->resolveStorefrontPrice();
         $priceType = strtoupper((string) ($priceData['type'] ?? 'RANGE'));
         $denomination = (float) $validated['denomination'];
         $quantity = (int) $validated['quantity'];
 
         if ($priceType === 'SLAB') {
-            $denominations = array_map(static fn ($value): string => (string) $value, (array) ($priceData['denominations'] ?? []));
-            if (! in_array((string) $denomination, $denominations, true)) {
+            $denominations = array_map('floatval', (array) ($priceData['denominations'] ?? []));
+            if (! in_array((float) $denomination, $denominations, true)) {
                 throw ValidationException::withMessages([
                     'denomination' => 'Invalid denomination value.',
                 ]);
             }
         } else {
-            $minPrice = isset($priceData['min']) ? (float) $priceData['min'] : (float) ($lockedProduct->minPrice ?? 0);
-            $maxPrice = isset($priceData['max']) ? (float) $priceData['max'] : (float) ($lockedProduct->maxPrice ?? 0);
+            $minPrice = isset($priceData['min']) ? (float) $priceData['min'] : 0.0;
+            $maxPrice = isset($priceData['max']) ? (float) $priceData['max'] : 0.0;
+            if ($minPrice <= 0 || $maxPrice <= 0 || $maxPrice < $minPrice) {
+                throw ValidationException::withMessages([
+                    'denomination' => 'Price range not configured for this product.',
+                ]);
+            }
             if ($denomination < $minPrice || $denomination > $maxPrice) {
                 throw ValidationException::withMessages([
                     'denomination' => "The denomination must be between ₹{$minPrice} and ₹{$maxPrice}.",
@@ -427,7 +453,7 @@ final class CheckoutSessionController extends Controller
                 'nullable',
                 'required_if:gift_send_option,send_as_gift',
                 'integer',
-                Rule::exists('gift_card_themes', 'id')->where(static fn ($q) => $q->where('is_active', 1)),
+                Rule::exists('gift_themes', 'id')->where(static fn ($q) => $q->where('is_active', 1)),
             ],
             'gift_message_title' => 'nullable|required_if:gift_send_option,send_as_gift|string|max:120',
             'sender_first_name' => 'nullable|required_if:gift_send_option,send_as_gift|string|max:120',

@@ -7,21 +7,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SecurityEventLog extends Model
 {
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
-        'event_type', 'severity', 'ip_address', 'user_id', 'tenant_id',
-        'user_agent', 'request_url', 'request_method', 'country_code', 'city',
-        'is_vpn', 'device_id', 'metadata', 'resolved', 'resolved_by',
-        'resolved_at', 'resolution_note', 'created_at',
+        'tenant_id',
+        'user_id',
+        'severity',
+        'event_type',
+        'ip_address',
+        'user_agent',
+        'country',
+        'context',
+        'occurred_at',
     ];
 
     protected $casts = [
-        'metadata' => 'array',
-        'is_vpn' => 'boolean',
-        'resolved' => 'boolean',
-        'created_at' => 'datetime',
-        'resolved_at' => 'datetime',
+        'context' => 'array',
+        'occurred_at' => 'datetime',
     ];
 
     // Severity constants
@@ -105,7 +107,8 @@ class SecurityEventLog extends Model
     // Scopes
     public function scopeUnresolved($query)
     {
-        return $query->where('resolved', false);
+        // Phase-3 schema does not track "resolved" state.
+        return $query;
     }
 
     public function scopeHighSeverity($query)
@@ -115,7 +118,7 @@ class SecurityEventLog extends Model
 
     public function scopeToday($query)
     {
-        return $query->whereDate('created_at', today());
+        return $query->whereDate('occurred_at', today());
     }
 
     public function scopeForIp($query, string $ip)

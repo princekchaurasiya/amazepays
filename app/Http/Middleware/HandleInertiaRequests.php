@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\SecurityEventLog;
+use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -25,15 +26,33 @@ class HandleInertiaRequests extends Middleware
                 'debug' => (bool) config('app.debug'),
             ],
             'auth' => [
-                'user' => $request->user() ? [
-                    'id' => $request->user()->id,
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                    'mobile' => $request->user()->mobile ?? null,
-                    'two_factor_enabled' => $request->user()->two_factor_enabled ?? false,
-                    'roles' => $request->user()->getRoleNames()->values()->all(),
-                    'permissions' => $request->user()->getAllPermissions()->pluck('name')->values()->all(),
-                ] : null,
+                'user' => $request->user() ? (function () use ($request) {
+                    $u = $request->user();
+                    $addr = $u->addresses()
+                        ->where('is_default_billing', true)
+                        ->orderByDesc('id')
+                        ->first()
+                        ?: $u->addresses()
+                            ->whereIn('type', ['billing', 'both'])
+                            ->orderByDesc('id')
+                            ->first();
+
+                    return [
+                        'id' => $u->id,
+                        'name' => $u->name,
+                        'email' => $u->email,
+                        'mobile' => $u->mobile ?? null,
+                        'billing_address' => $addr?->line1 ?? null,
+                        'billing_address_two' => $addr?->line2 ?? null,
+                        'billing_city' => $addr?->city ?? null,
+                        'billing_state' => $addr?->state ?? null,
+                        'billing_zip' => $addr?->postal_code ?? null,
+                        'billing_country' => $addr?->country ?? null,
+                        'two_factor_enabled' => $u->two_factor_enabled ?? false,
+                        'roles' => $u->getRoleNames()->values()->all(),
+                        'permissions' => $u->getAllPermissions()->pluck('name')->values()->all(),
+                    ];
+                })() : null,
             ],
             'security' => $request->user() && $request->user()->hasAnyRole(['super-admin', 'admin'])
                 ? [

@@ -16,6 +16,7 @@ use App\Services\Pricing\PricingService;
 use App\Services\Wallet\WalletService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
@@ -161,15 +162,47 @@ class OrderCreationService
      */
     public function verifyPaymentAmount(Order $order, float $paidAmount, float $tolerance = 0.01): void
     {
-        if (abs($order->grand_total - $paidAmount) > $tolerance) {
+        $expected = null;
+
+        // Prefer Phase-3 minor-unit totals.
+        if (Schema::hasColumn('orders', 'grand_total_minor') && $order->grand_total_minor !== null) {
+            $expected = ((int) $order->grand_total_minor) / 100;
+        } elseif (Schema::hasColumn('orders', 'grand_total') && $order->grand_total !== null) {
+            $expected = (float) $order->grand_total;
+        } elseif (Schema::hasColumn('orders', 'amount_payable_after_discount') && $order->amount_payable_after_discount !== null) {
+            $expected = (float) $order->amount_payable_after_discount;
+        } elseif (Schema::hasColumn('orders', 'grand_payable_amount') && $order->grand_payable_amount !== null) {
+            $expected = (float) $order->grand_payable_amount;
+        } elseif ($order->id) {
+            // Fallback to normalized order items.
+            $minor = (int) ($order->items()->sum('line_total_minor') ?? 0);
+            if ($minor > 0) {
+                $expected = $minor / 100;
+            }
+        }
+
+        if ($expected === null) {
             Log::warning('Payment amount mismatch', [
                 'order_id' => $order->id,
-                'expected' => $order->grand_total,
+                'expected' => null,
+                'received' => $paidAmount,
+                'reason' => 'order_total_missing',
+            ]);
+
+            throw new OrderCreationException(
+                "Payment amount mismatch: expected ₹, received ₹{$paidAmount}"
+            );
+        }
+
+        if (abs($expected - $paidAmount) > $tolerance) {
+            Log::warning('Payment amount mismatch', [
+                'order_id' => $order->id,
+                'expected' => $expected,
                 'received' => $paidAmount,
             ]);
 
             throw new OrderCreationException(
-                "Payment amount mismatch: expected ₹{$order->grand_total}, received ₹{$paidAmount}"
+                "Payment amount mismatch: expected ₹{$expected}, received ₹{$paidAmount}"
             );
         }
     }

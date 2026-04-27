@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Otp;
+use App\Models\UserOtpCode;
 use App\Models\SecurityEventLog;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
@@ -26,16 +26,28 @@ class OtpService
         // Generate OTP
         $otp = $this->generateOtp();
 
-        // Hash and store in DB
-        Otp::where('mobile_number', $phone)->where('is_used', false)->delete();
+        $purpose = $this->normalizePurpose($type);
 
-        Otp::create([
-            'mobile_number' => $phone,
-            'otp' => Hash::make($otp),
-            'type' => $type,
+        // Hash and store in Phase-3 OTP table
+        UserOtpCode::query()
+            ->where('channel', 'sms')
+            ->where('purpose', $purpose)
+            ->where('identifier', $phone)
+            ->whereNull('consumed_at')
+            ->delete();
+
+        UserOtpCode::query()->create([
+            'user_id' => null,
+            'identity_id' => null,
+            'channel' => 'sms',
+            'purpose' => $purpose,
+            'identifier' => $phone,
+            'code_hash' => Hash::make($otp),
+            'attempts' => 0,
+            'max_attempts' => (int) config('sms.otp.max_attempts', 5),
             'expires_at' => now()->addMinutes(config('sms.otp.validity_minutes', 5)),
-            'is_used' => false,
-            'ip_address' => request()?->ip(),
+            'consumed_at' => null,
+            'request_ip' => request()?->ip(),
         ]);
 
         // Track rate limit
@@ -73,10 +85,15 @@ class OtpService
 
     public function verifyOtp(string $phone, string $code): bool
     {
-        $otpRecord = Otp::where('mobile_number', $phone)
-            ->where('is_used', false)
+        $purpose = $this->normalizePurpose('login');
+
+        $otpRecord = UserOtpCode::query()
+            ->where('channel', 'sms')
+            ->where('purpose', $purpose)
+            ->where('identifier', $phone)
+            ->whereNull('consumed_at')
             ->where('expires_at', '>', now())
-            ->latest()
+            ->latest('id')
             ->first();
 
         if (! $otpRecord) {
@@ -84,19 +101,20 @@ class OtpService
         }
 
         // Check max attempts
-        if ($otpRecord->attempts >= config('sms.otp.max_attempts', 5)) {
+        $maxAttempts = (int) ($otpRecord->max_attempts ?: config('sms.otp.max_attempts', 5));
+        if ($otpRecord->attempts >= $maxAttempts) {
             app(SecurityEventService::class)->log(
                 SecurityEventLog::EVENT_OTP_FAILED,
                 SecurityEventLog::SEVERITY_MEDIUM,
                 null,
                 ['reason' => 'max_attempts_exceeded', 'phone_last4' => substr($phone, -4)]
             );
-            $otpRecord->update(['is_used' => true]);
+            $otpRecord->update(['consumed_at' => now()]);
 
             return false;
         }
 
-        if (! Hash::check($code, $otpRecord->otp)) {
+        if (! Hash::check($code, $otpRecord->code_hash)) {
             $otpRecord->increment('attempts');
 
             app(SecurityEventService::class)->log(
@@ -113,8 +131,7 @@ class OtpService
         }
 
         $otpRecord->update([
-            'is_used' => true,
-            'verified_at' => now(),
+            'consumed_at' => now(),
         ]);
 
         return true;
@@ -148,5 +165,17 @@ class OtpService
         $count = Cache::get($key, 0);
 
         Cache::put($key, $count + 1, $window);
+    }
+
+    private function normalizePurpose(string $type): string
+    {
+        $t = strtolower(trim($type));
+        return match ($t) {
+            'login' => 'login',
+            'signup', 'register' => 'signup',
+            'password_reset', 'forgot', 'forget', 'reset' => 'password_reset',
+            'transaction' => 'transaction',
+            default => 'login',
+        };
     }
 }

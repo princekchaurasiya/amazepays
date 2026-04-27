@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Domains\Content\Models\ContentSection;
+use App\Domains\Homepage\Cache\HomepageCacheInvalidator;
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,31 +18,58 @@ use Inertia\Response;
 
 class HomepageBuilderController extends Controller
 {
+    public function __construct(
+        private readonly HomepageCacheInvalidator $homepageCacheInvalidator,
+    ) {}
+
     public function index(Request $request): Response
     {
         $this->authorize('settings.view');
 
         $tenantId = $this->resolveTenantId($request);
 
-        $sections = ContentSection::query()
+        $sectionsQuery = ContentSection::query()
             ->where('tenant_id', $tenantId)
             ->where('surface', 'storefront_home')
             ->orderBy('sort_order')
             ->orderBy('id')
-            ->get()
-            ->map(fn (ContentSection $s) => [
-                'id' => $s->id,
-                'slug' => $s->slug,
-                'type' => $s->type,
-                'title' => $s->title,
-                'is_enabled' => (bool) $s->is_enabled,
-                'sort_order' => (int) $s->sort_order,
-                'platform' => $s->platform,
-                'start_at' => optional($s->start_at)->toISOString(),
-                'end_at' => optional($s->end_at)->toISOString(),
-                'priority' => (int) $s->priority,
-                'metadata' => $s->metadata ?? [],
-            ])
+            ->get();
+
+        $sectionIds = $sectionsQuery->pluck('id')->map(fn ($v) => (int) $v)->values()->all();
+        $countsBySectionId = collect();
+        if ($sectionIds !== []) {
+            $countsBySectionId = DB::table('content_section_items')
+                ->selectRaw(
+                    'content_section_id, COUNT(*) as items_count, SUM(CASE WHEN product_id IS NULL THEN 0 ELSE 1 END) as products_count'
+                )
+                ->where('tenant_id', $tenantId)
+                ->whereIn('content_section_id', $sectionIds)
+                ->whereNull('deleted_at')
+                ->groupBy('content_section_id')
+                ->get()
+                ->keyBy('content_section_id');
+        }
+
+        $sections = $sectionsQuery
+            ->map(function (ContentSection $s) use ($countsBySectionId) {
+                $counts = $countsBySectionId->get($s->id);
+
+                return [
+                    'id' => $s->id,
+                    'slug' => $s->slug,
+                    'type' => $s->type,
+                    'title' => $s->title,
+                    'is_enabled' => (bool) $s->is_enabled,
+                    'sort_order' => (int) $s->sort_order,
+                    'platform' => $s->platform,
+                    'start_at' => optional($s->start_at)->toISOString(),
+                    'end_at' => optional($s->end_at)->toISOString(),
+                    'priority' => (int) $s->priority,
+                    'metadata' => $s->metadata ?? [],
+                    'items_count' => (int) ($counts?->items_count ?? 0),
+                    'products_count' => (int) ($counts?->products_count ?? 0),
+                ];
+            })
             ->values()
             ->all();
 
@@ -54,9 +85,47 @@ class HomepageBuilderController extends Controller
             'custom',
         ];
 
+        $products = Product::query()
+            ->forStorefrontCatalog()
+            ->where('tenant_id', $tenantId)
+            ->select('id', 'name', 'sku')
+            ->orderBy('name')
+            ->limit(800)
+            ->get()
+            ->map(fn (Product $p) => [
+                'id' => (int) $p->id,
+                'name' => (string) $p->name,
+                'sku' => (string) $p->sku,
+            ])
+            ->values()
+            ->all();
+
+        $brands = Brand::query()
+            ->where('tenant_id', $tenantId)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->limit(800)
+            ->get()
+            ->map(fn (Brand $b) => ['id' => (int) $b->id, 'name' => (string) $b->name])
+            ->values()
+            ->all();
+
+        $categories = Category::query()
+            ->where('tenant_id', $tenantId)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->limit(800)
+            ->get()
+            ->map(fn (Category $c) => ['id' => (int) $c->id, 'name' => (string) $c->name])
+            ->values()
+            ->all();
+
         return Inertia::render('Admin/HomepageBuilder/Index', [
             'sections' => $sections,
             'sectionTypes' => array_map(fn (string $t) => ['value' => $t, 'label' => str_replace('_', ' ', ucwords($t, '_'))], $types),
+            'products' => $products,
+            'brands' => $brands,
+            'categories' => $categories,
         ]);
     }
 
@@ -201,7 +270,70 @@ class HomepageBuilderController extends Controller
             'updated_at' => now(),
         ]);
 
+        $this->homepageCacheInvalidator->invalidate($tenantId);
+
         return back()->with('success', "Homepage layout published (v{$version}).");
+    }
+
+    public function bulkAddWoohooProducts(Request $request, ContentSection $section): RedirectResponse
+    {
+        $this->authorize('settings.update');
+
+        $tenantId = $this->resolveTenantId($request);
+        abort_if($section->tenant_id !== $tenantId || $section->surface !== 'storefront_home', 404);
+
+        $products = Product::query()
+            ->forStorefrontCatalog()
+            ->where('tenant_id', $tenantId)
+            ->where('source_provider', 'woohoo')
+            ->orderBy('id')
+            ->get(['id']);
+
+        DB::transaction(function () use ($tenantId, $section, $products) {
+            // Replace existing product links for this section.
+            DB::table('content_section_items')
+                ->where('tenant_id', $tenantId)
+                ->where('content_section_id', $section->id)
+                ->whereNotNull('product_id')
+                ->delete();
+
+            $now = now();
+            $rows = [];
+            $order = 1;
+            foreach ($products as $p) {
+                $rows[] = [
+                    'tenant_id' => $tenantId,
+                    'content_section_id' => $section->id,
+                    'sort_order' => $order++,
+                    'is_enabled' => true,
+                    'start_at' => null,
+                    'end_at' => null,
+                    'priority' => 0,
+                    'title' => null,
+                    'subtitle' => null,
+                    'web_media_asset_id' => null,
+                    'mobile_media_asset_id' => null,
+                    'cta_text' => null,
+                    'cta_type' => 'product',
+                    'cta_value' => null,
+                    'deeplink' => null,
+                    'redirect_url' => null,
+                    'product_id' => (int) $p->id,
+                    'category_id' => null,
+                    'brand_id' => null,
+                    'metadata' => null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                    'deleted_at' => null,
+                ];
+            }
+
+            if ($rows !== []) {
+                DB::table('content_section_items')->insert($rows);
+            }
+        });
+
+        return back()->with('success', "Added {$products->count()} Woohoo products to {$section->slug}.");
     }
 
     private function resolveTenantId(Request $request): int

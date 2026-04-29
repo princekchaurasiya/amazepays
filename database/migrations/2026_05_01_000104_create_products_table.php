@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug', 191);
             $table->string('source_provider', 32)->nullable();
+            $table->enum('catalog_audience', ['b2c', 'b2b', 'both'])->nullable()->index();
             $table->string('source_product_id')->nullable();
             $table->string('currency', 3)->default('INR');
             $table->enum('status', ['active', 'draft', 'archived', 'sunset'])->default('draft');
@@ -32,7 +33,7 @@ return new class extends Migration
             $table->boolean('is_b2b_only')->default(false);
             $table->boolean('is_b2c_only')->default(false);
             $table->unsignedInteger('display_order')->default(0);
-            $table->unsignedBigInteger('hsn_sac_code_id')->nullable();
+            $table->foreignId('hsn_sac_code_id')->nullable()->constrained('hsn_sac_codes')->cascadeOnUpdate()->nullOnDelete();
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
@@ -43,7 +44,6 @@ return new class extends Migration
             $table->index(['tenant_id', 'brand_id', 'status']);
             $table->index(['tenant_id', 'status', 'is_featured']);
             $table->index(['tenant_id', 'type', 'status']);
-            $table->index('hsn_sac_code_id');
         });
     }
 

@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Storefront\CheckoutSessionController;
 use App\Http\Controllers\Storefront\StorefrontProductController;
 use App\Http\Controllers\UnlimitController;
@@ -34,8 +33,6 @@ Route::middleware(['auth', 'check.transaction'])->group(function () {
     })->name('unlimit.store');
     Route::post('/checkout/session/gift-draft', [CheckoutSessionController::class, 'saveGiftCheckoutDraft'])
         ->name('checkout.session.gift_draft.save');
-
-    Route::post('/store-billing-data', [BillingController::class, 'store'])->name('storeBillingData');
 
     Route::post('/woohoo/create-order', [WoohooOrderController::class, 'createOrder'])->name('woohoo.createOrder');
     Route::get('/woohoo/check-status', [WoohooOrderController::class, 'checkTransactionStatus'])->name('woohoo.checkStatus');

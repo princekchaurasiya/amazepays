@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('user_otp_codes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->foreignId('identity_id')->nullable()->constrained('user_auth_identities')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->enum('channel', ['email', 'sms', 'whatsapp', 'voice'])->index();
+            $table->foreignId('identity_id')->nullable()->constrained('user_identities')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->enum('channel', ['sms', 'whatsapp', 'voice'])->index();
             $table->enum('purpose', ['login', 'signup', 'password_reset', 'transaction', 'pin_change', 'kyc', 'other'])->index();
             $table->string('identifier');
             $table->string('code_hash');

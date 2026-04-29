@@ -40,8 +40,6 @@ export default function AuthModal({ open, onClose }: Props) {
         setOtp,
         name,
         setName,
-        email,
-        setEmail,
         referral,
         setReferral,
         error,
@@ -149,16 +147,6 @@ export default function AuthModal({ open, onClose }: Props) {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 autoComplete="name"
-                            />
-                        </label>
-                        <label className="block text-sm font-medium text-gray-700">
-                            {t('email_optional', 'Email (optional)')}
-                            <input
-                                type="email"
-                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                autoComplete="email"
                             />
                         </label>
                         <label className="block text-sm font-medium text-gray-700">

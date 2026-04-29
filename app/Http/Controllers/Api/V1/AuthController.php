@@ -217,13 +217,8 @@ class AuthController extends Controller
         $request->validate([
             'temp_token' => 'required|string',
             'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
             'referral_code' => 'nullable|string|max:64',
         ]);
-
-        if (! $request->filled('email') || trim((string) $request->input('email')) === '') {
-            $request->merge(['email' => null]);
-        }
 
         $payload = Cache::get(self::PROFILE_CACHE_PREFIX.$request->input('temp_token'));
 
@@ -243,14 +238,11 @@ class AuthController extends Controller
             return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'auth.account_exists', httpStatus: 409);
         }
 
-        $validator = Validator::make($request->only(['name', 'email', 'referral_code']), [
+        $validator = Validator::make($request->only(['name', 'referral_code']), [
             'name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s]+$/'],
-            // Phase-3: email uniqueness is enforced in user_auth_identities
-            'email' => ['nullable', 'email', 'max:255'],
             'referral_code' => ['nullable', 'string', 'max:64'],
         ], [
             'name.regex' => 'Name should only contain letters and spaces.',
-            'email.email' => 'Please enter a valid email address.',
         ]);
 
         if ($validator->fails()) {
@@ -273,26 +265,13 @@ class AuthController extends Controller
         ]);
 
         $user->authIdentities()->firstOrCreate(
-            ['provider' => 'mobile', 'identifier' => (string) $phone],
+            ['type' => 'mobile', 'identifier' => (string) $phone],
             [
                 'display_identifier' => (string) $phone,
                 'is_primary' => true,
-                'is_verified' => true,
                 'verified_at' => now(),
             ]
         );
-
-        if (! empty($validated['email'])) {
-            $user->authIdentities()->firstOrCreate(
-                ['provider' => 'email', 'identifier' => (string) $validated['email']],
-                [
-                    'display_identifier' => (string) $validated['email'],
-                    'is_primary' => false,
-                    'is_verified' => true,
-                    'verified_at' => now(),
-                ]
-            );
-        }
 
         $user->assignRole('b2c-user');
 

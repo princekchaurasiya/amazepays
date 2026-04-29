@@ -23,11 +23,11 @@ All route files are registered in `bootstrap/app.php`.
 
 | Method | URI | Name | Controller |
 |---|---|---|---|
-| POST | `/user-login` | `user-login` | `UserPanelController@userLogin` |
-| POST | `/user-registration` | `user-registration` | `UserPanelController@userRegistration` |
-| POST | `/send-sms` | `send-sms` | `SmsController@loginWithOtp` |
-| POST | `/verify-otp` | `verify-otp` | `OtpVerificationController@loginVerifyOtp` |
-| GET | `/verify-email` | `verify.email` | `AuthController@showVerifyForm` |
+| GET | `/login` | `login` | `Auth/Login (Inertia)` |
+| POST | `/auth/send-otp` | `auth.send-otp` | `UnifiedAuthController@sendOtp` |
+| POST | `/auth/verify-otp` | `auth.verify-otp` | `UnifiedAuthController@verifyOtp` |
+| POST | `/auth/complete-registration` | `auth.complete-registration` | `UnifiedAuthController@completeRegistration` |
+| POST | `/logout` | `userLogOut` | `UnifiedAuthController@logout` |
 
 ### `routes/checkout.php` -- Checkout & Orders
 

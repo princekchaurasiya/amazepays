@@ -18,8 +18,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnUpdate()->nullOnDelete();
             $table->string('display_name');
+            // Contact email for profile/checkout (NOT used for authentication).
+            $table->string('email')->nullable()->index();
             $table->enum('account_type', ['customer', 'admin', 'support', 'partner', 'system'])->default('customer');
             $table->enum('status', ['active', 'pending', 'suspended', 'closed'])->default('active');
+            $table->boolean('is_blocked')->default(false)->index();
+            $table->boolean('can_transact')->default(true)->index();
+            $table->json('restricted_features')->nullable();
+            $table->string('restriction_reason', 255)->nullable();
             $table->boolean('is_super_admin')->default(false);
             $table->boolean('two_factor_enabled')->default(false);
             $table->timestamp('last_login_at')->nullable();

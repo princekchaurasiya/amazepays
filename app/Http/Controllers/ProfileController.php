@@ -43,8 +43,7 @@ class ProfileController extends Controller
 
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:50', 'regex:/^[a-zA-Z\s]+$/'],
-                // Phase-3: email is stored in user_auth_identities.
-                'email' => 'required|email|max:255',
+                'email' => ['nullable', 'email', 'max:255'],
                 'mobile' => ['required', 'regex:/^[0-9]{10}$/'],
                 'otp' => 'nullable|string|size:6',
                 'billing_address' => 'nullable|string|max:255',
@@ -68,21 +67,14 @@ class ProfileController extends Controller
 
             // Phase-3 users table uses display_name (no `name` column).
             $user->display_name = $validated['name'];
+            $user->email = $validated['email'] !== null && trim((string) $validated['email']) !== ''
+                ? mb_strtolower(trim((string) $validated['email']))
+                : null;
             $user->authIdentities()->updateOrCreate(
-                ['provider' => 'email', 'identifier' => (string) $validated['email']],
-                [
-                    'display_identifier' => (string) $validated['email'],
-                    'is_primary' => true,
-                    'is_verified' => true,
-                    'verified_at' => now(),
-                ]
-            );
-            $user->authIdentities()->updateOrCreate(
-                ['provider' => 'mobile', 'identifier' => (string) $validated['mobile']],
+                ['type' => 'mobile', 'identifier' => (string) $validated['mobile']],
                 [
                     'display_identifier' => (string) $validated['mobile'],
-                    'is_primary' => false,
-                    'is_verified' => true,
+                    'is_primary' => true,
                     'verified_at' => now(),
                 ]
             );

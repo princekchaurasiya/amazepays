@@ -24,7 +24,6 @@ export function usePhoneOtpAuth({ otpInputRef, onLoggedIn, onRegistrationSuccess
     const [phone, setPhone] = useState('');
     const [otp, setOtp] = useState<string[]>(emptyOtpDigits);
     const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
     const [referral, setReferral] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -36,7 +35,6 @@ export function usePhoneOtpAuth({ otpInputRef, onLoggedIn, onRegistrationSuccess
         setPhone('');
         setOtp(emptyOtpDigits());
         setName('');
-        setEmail('');
         setReferral('');
         setError(null);
     }, []);
@@ -102,7 +100,6 @@ export function usePhoneOtpAuth({ otpInputRef, onLoggedIn, onRegistrationSuccess
                 {
                     phone: phone.trim(),
                     name: name.trim(),
-                    email: email.trim() || undefined,
                     referral_code: referral.trim() || undefined,
                 },
                 { headers: { 'X-CSRF-TOKEN': csrfToken() } },
@@ -120,7 +117,7 @@ export function usePhoneOtpAuth({ otpInputRef, onLoggedIn, onRegistrationSuccess
         } finally {
             setLoading(false);
         }
-    }, [phone, name, email, referral, onRegistrationSuccess]);
+    }, [phone, name, referral, onRegistrationSuccess]);
 
     return {
         step,
@@ -132,8 +129,6 @@ export function usePhoneOtpAuth({ otpInputRef, onLoggedIn, onRegistrationSuccess
         otpCode,
         name,
         setName,
-        email,
-        setEmail,
         referral,
         setReferral,
         error,

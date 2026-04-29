@@ -20,8 +20,6 @@ export default function Login() {
         setOtp,
         name,
         setName,
-        email,
-        setEmail,
         error,
         loading,
         sendOtp,
@@ -94,14 +92,6 @@ export default function Login() {
                         }}
                     >
                         <input className="w-full rounded-lg border px-3 py-2" placeholder={t('full_name', 'Full name')} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
-                        <input
-                            className="w-full rounded-lg border px-3 py-2"
-                            placeholder={t('email_optional', 'Email (optional)')}
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            autoComplete="email"
-                        />
                         <button type="submit" disabled={loading} className="w-full rounded-full bg-gray-900 py-2.5 text-sm font-semibold text-white">
                             {t('complete', 'Complete')}
                         </button>

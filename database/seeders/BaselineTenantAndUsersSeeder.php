@@ -4,11 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Tenant;
 use App\Models\User;
-use App\Models\UserAuthIdentity;
-use App\Models\UserAuthSecret;
 use App\Models\Wallet;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class BaselineTenantAndUsersSeeder extends Seeder
@@ -114,39 +111,17 @@ class BaselineTenantAndUsersSeeder extends Seeder
                     'account_type' => $row['account_type'],
                     'status' => 'active',
                     'is_super_admin' => $row['is_super_admin'],
+                    'email' => mb_strtolower(trim((string) $row['email'])),
                 ]
             );
 
-            // Identities (email + mobile)
-            $emailIdentity = UserAuthIdentity::firstOrCreate(
-                ['provider' => 'email', 'identifier' => $row['email']],
+            // Auth identity (mobile-only OTP system).
+            $user->authIdentities()->firstOrCreate(
+                ['type' => 'mobile', 'identifier' => $row['mobile']],
                 [
-                    'user_id' => $user->id,
-                    'display_identifier' => $row['email'],
-                    'is_primary' => true,
-                    'is_verified' => true,
-                    'verified_at' => now(),
-                ]
-            );
-
-            UserAuthIdentity::firstOrCreate(
-                ['provider' => 'mobile', 'identifier' => $row['mobile']],
-                [
-                    'user_id' => $user->id,
                     'display_identifier' => $row['mobile'],
-                    'is_primary' => false,
-                    'is_verified' => true,
+                    'is_primary' => true,
                     'verified_at' => now(),
-                ]
-            );
-
-            // Password secret (one per identity_id)
-            UserAuthSecret::firstOrCreate(
-                ['identity_id' => $emailIdentity->id],
-                [
-                    'user_id' => $user->id,
-                    'password_hash' => Hash::make('password'),
-                    'failed_attempts' => 0,
                 ]
             );
 

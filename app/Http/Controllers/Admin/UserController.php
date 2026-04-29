@@ -115,8 +115,8 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'mobile' => 'nullable|string|max:32',
+            'email' => ['nullable', 'email', 'max:255'],
+            'mobile' => ['required', 'regex:/^[6-9]\d{9}$/'],
         ]);
 
         $old = [
@@ -127,29 +127,19 @@ class UserController extends Controller
 
         $user->update([
             'display_name' => (string) $validated['name'],
+            'email' => $validated['email'] !== null && trim((string) $validated['email']) !== ''
+                ? mb_strtolower(trim((string) $validated['email']))
+                : null,
         ]);
 
         $user->authIdentities()->updateOrCreate(
-            ['provider' => 'email', 'identifier' => (string) $validated['email']],
+            ['type' => 'mobile', 'identifier' => (string) $validated['mobile']],
             [
-                'display_identifier' => (string) $validated['email'],
+                'display_identifier' => (string) $validated['mobile'],
                 'is_primary' => true,
-                'is_verified' => true,
                 'verified_at' => now(),
             ]
         );
-
-        if (! empty($validated['mobile'])) {
-            $user->authIdentities()->updateOrCreate(
-                ['provider' => 'mobile', 'identifier' => (string) $validated['mobile']],
-                [
-                    'display_identifier' => (string) $validated['mobile'],
-                    'is_primary' => false,
-                    'is_verified' => true,
-                    'verified_at' => now(),
-                ]
-            );
-        }
 
         audit('user.updated', $user, $old, $validated);
 

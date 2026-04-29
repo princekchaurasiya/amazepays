@@ -50,9 +50,6 @@ export default function Profile() {
                     <Link href={paths.myOrders} className="hover:text-brand-600">
                         My orders
                     </Link>
-                    <Link href={paths.changePassword} className="hover:text-brand-600">
-                        Change password
-                    </Link>
                 </nav>
                 <h1 className="text-2xl font-bold text-gray-900">Your profile</h1>
                 <form onSubmit={submit} className="mt-6 space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -72,6 +69,7 @@ export default function Profile() {
                             className="mt-1 w-full rounded-lg border px-3 py-2"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
+                            autoComplete="email"
                         />
                         {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
                     </div>

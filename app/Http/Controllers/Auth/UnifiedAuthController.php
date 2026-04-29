@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\OtpVerificationController;
-use App\Http\Controllers\SmsController;
 use App\Models\BlockedMobile;
 use App\Models\User;
+use App\Services\OtpService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpFoundation\Response;
 
 class UnifiedAuthController extends Controller
 {
@@ -34,17 +35,48 @@ class UnifiedAuthController extends Controller
     }
 
     /**
-     * Send OTP to any mobile (login or signup). Reuses SmsController pipeline.
+     * Send OTP to any mobile (login or signup).
      */
-    public function sendOtp(Request $request, SmsController $sms)
+    public function sendOtp(Request $request, OtpService $otp)
     {
-        return $sms->sendSms($request);
+        $phone = $this->normalizePhone((string) $request->input('phone', $request->input('destination', '')));
+
+        $validator = Validator::make(
+            ['phone' => $phone],
+            [
+                'phone' => ['required', 'regex:/^[6-9]\d{9}$/'],
+            ],
+            ['phone.regex' => 'Please enter a valid 10-digit Indian mobile number.']
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $result = $otp->sendOtp($phone, (string) $request->input('type', 'login'));
+
+        if (! ($result['success'] ?? false)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $result['message'] ?? 'Failed to send OTP.',
+            ], 422);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => $result['message'] ?? 'OTP sent.',
+            'expires_in' => $result['expires_in'] ?? null,
+            'resend_available' => $result['resend_available'] ?? null,
+        ]);
     }
 
     /**
      * Verify OTP. Existing user: log in. New user: set session flag for profile step.
      */
-    public function verifyOtp(Request $request, OtpVerificationController $otpVerificationController)
+    public function verifyOtp(Request $request, OtpService $otp)
     {
         $phone = $this->normalizePhone((string) $request->input('phone', $request->input('destination', '')));
         $otp = (string) $request->input('otp', '');
@@ -65,11 +97,10 @@ class UnifiedAuthController extends Controller
             ], 422);
         }
 
-        $result = $otpVerificationController->VerifyOtp($phone, $otp);
-        if ($result['status'] !== 'success') {
+        if (! $otp->verifyOtp($phone, $otp, (string) $request->input('type', 'login'))) {
             return response()->json([
                 'status' => 'error',
-                'message' => $result['message'] ?? 'Invalid OTP',
+                'message' => 'Invalid or expired OTP',
             ], 400);
         }
 
@@ -99,6 +130,14 @@ class UnifiedAuthController extends Controller
             }
 
             Auth::login($user);
+
+            // Ensure the mobile identity is marked verified for OTP-only auth.
+            $user->authIdentities()
+                ->where('type', 'mobile')
+                ->where('identifier', $phone)
+                ->whereNull('verified_at')
+                ->update(['verified_at' => now()]);
+
             $request->session()->forget([self::SESSION_PHONE, self::SESSION_AT]);
 
             return response()->json([
@@ -159,19 +198,11 @@ class UnifiedAuthController extends Controller
             ], 403);
         }
 
-        if (! $request->filled('email') || trim((string) $request->input('email')) === '') {
-            $request->merge(['email' => null]);
-        }
-
-        $validator = Validator::make($request->only(['name', 'email', 'referral_code']), [
+        $validator = Validator::make($request->only(['name', 'referral_code']), [
             'name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s]+$/'],
-            // Phase-3: email lives in user_auth_identities; validate format only here.
-            'email' => ['nullable', 'email', 'max:255'],
             'referral_code' => ['nullable', 'string', 'max:64'],
         ], [
             'name.regex' => 'Name should only contain letters and spaces.',
-            'email.email' => 'Please enter a valid email address.',
-            'email.unique' => 'This email is already registered.',
         ]);
 
         if ($validator->fails()) {
@@ -194,26 +225,13 @@ class UnifiedAuthController extends Controller
         ]);
 
         $user->authIdentities()->firstOrCreate(
-            ['provider' => 'mobile', 'identifier' => $phone],
+            ['type' => 'mobile', 'identifier' => $phone],
             [
                 'display_identifier' => $phone,
                 'is_primary' => true,
-                'is_verified' => true,
                 'verified_at' => now(),
             ]
         );
-
-        if (! empty($validated['email'])) {
-            $user->authIdentities()->firstOrCreate(
-                ['provider' => 'email', 'identifier' => (string) $validated['email']],
-                [
-                    'display_identifier' => (string) $validated['email'],
-                    'is_primary' => false,
-                    'is_verified' => true,
-                    'verified_at' => now(),
-                ]
-            );
-        }
 
         $request->session()->forget([self::SESSION_PHONE, self::SESSION_AT]);
         Auth::login($user);
@@ -223,5 +241,17 @@ class UnifiedAuthController extends Controller
             'action' => 'registered',
             'redirect_url' => $user->homeUrl(),
         ]);
+    }
+
+    public function logout(Request $request): RedirectResponse
+    {
+        Auth::guard('web')->logout();
+
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        return redirect()->route('login', status: Response::HTTP_FOUND);
     }
 }

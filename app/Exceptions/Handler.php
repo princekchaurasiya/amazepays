@@ -134,20 +134,6 @@ class Handler extends ExceptionHandler
 
             // If admin request, show admin error page, otherwise show public error page
             if ($isAdminRequest) {
-                if ($request->header('X-Inertia')) {
-                    return Inertia::render('Error', [
-                        'status' => 500,
-                        'message' => $uiMessage,
-                        'detail' => app()->environment('local') ? $message : null,
-                    ])->toResponse($request)->setStatusCode(500);
-                }
-
-                return response($uiMessage, 500, [
-                    'Content-Type' => 'text/plain; charset=UTF-8',
-                ]);
-            }
-
-            if ($request->header('X-Inertia')) {
                 return Inertia::render('Error', [
                     'status' => 500,
                     'message' => $uiMessage,
@@ -155,9 +141,11 @@ class Handler extends ExceptionHandler
                 ])->toResponse($request)->setStatusCode(500);
             }
 
-            return response($uiMessage, 500, [
-                'Content-Type' => 'text/plain; charset=UTF-8',
-            ]);
+            return Inertia::render('Error', [
+                'status' => 500,
+                'message' => $uiMessage,
+                'detail' => app()->environment('local') ? $message : null,
+            ])->toResponse($request)->setStatusCode(500);
         }
 
         // Check if it's a general exception (not specifically handled)

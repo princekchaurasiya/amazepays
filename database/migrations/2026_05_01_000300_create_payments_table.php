@@ -34,8 +34,8 @@ return new class extends Migration
             $table->bigInteger('fee_minor')->default(0);
             $table->bigInteger('tax_on_fee_minor')->default(0);
             $table->bigInteger('settlement_amount_minor')->default(0);
-            $table->unsignedBigInteger('payment_instrument_id')->nullable();
-            $table->unsignedBigInteger('applied_bank_offer_id')->nullable();
+            $table->foreignId('payment_instrument_id')->nullable()->constrained('payment_instruments')->cascadeOnUpdate()->nullOnDelete();
+            $table->foreignId('applied_bank_offer_id')->nullable()->constrained('bank_offers')->cascadeOnUpdate()->nullOnDelete();
             $table->unsignedTinyInteger('emi_tenure_months')->nullable();
             $table->bigInteger('emi_processing_fee_minor')->nullable();
             $table->string('idempotency_key', 128)->nullable();
@@ -53,8 +53,6 @@ return new class extends Migration
             $table->index(['tenant_id', 'gateway', 'status']);
             $table->index(['tenant_id', 'status', 'captured_at']);
             $table->index(['idempotency_key']);
-            $table->index(['payment_instrument_id']);
-            $table->index(['applied_bank_offer_id']);
         });
     }
 

@@ -83,9 +83,9 @@ class OtpService
         ];
     }
 
-    public function verifyOtp(string $phone, string $code): bool
+    public function verifyOtp(string $phone, string $code, string $type = 'login'): bool
     {
-        $purpose = $this->normalizePurpose('login');
+        $purpose = $this->normalizePurpose($type);
 
         $otpRecord = UserOtpCode::query()
             ->where('channel', 'sms')

@@ -46,7 +46,7 @@ export default function CheckoutIndex({
     const orderId = order.id;
     const readyBy = billingReadyByMethod ?? { ccavenue: false, razorpay: false, unlimit: false };
     const missingBy = billingMissingFieldsByMethod ?? { ccavenue: [], razorpay: [], unlimit: [] };
-    const requiredBy = billingRequiredFieldsByMethod ?? { ccavenue: [], razorpay: [], unlimit: [] };
+    const _requiredBy = billingRequiredFieldsByMethod ?? { ccavenue: [], razorpay: [], unlimit: [] };
     const labelsBy = billingRequiredFieldLabelsByMethod ?? { ccavenue: {}, razorpay: {}, unlimit: {} };
     const payableAmount = Number(order.amount_payable_after_discount ?? order.grand_payable_amount ?? 0);
     const quantity = Math.max(1, Number(order.quantity ?? 1));
@@ -64,7 +64,7 @@ export default function CheckoutIndex({
             ? `₹${Math.round(denomination).toLocaleString('en-IN')} × ${quantity}`
             : `${t('qty_label', 'Qty')}: ${quantity}`;
 
-    const methodUi: Array<{
+    const _methodUi: Array<{
         key: MethodKey;
         label: string;
         description: string;
@@ -80,7 +80,7 @@ export default function CheckoutIndex({
         },
     ];
 
-    const methodCatalog: Record<MethodKey, (typeof methodUi)[number]> = {
+    const methodCatalog: Record<MethodKey, (typeof _methodUi)[number]> = {
         ccavenue: { key: 'ccavenue', label: 'CCAvenue', description: 'Card / Netbanking / UPI (gateway)', action: paths.paymentCcavenue },
         razorpay: { key: 'razorpay', label: 'Razorpay', description: 'Fast card + UPI checkout', action: paths.paymentRazorpay, allowMock: allowMock },
         unlimit: { key: 'unlimit', label: 'Unlimit', description: 'Card / UPI / Netbanking (gateway)', action: paths.paymentUnlimit },

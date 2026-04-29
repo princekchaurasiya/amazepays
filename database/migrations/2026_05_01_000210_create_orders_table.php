@@ -18,6 +18,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tenant_id')->constrained('tenants')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnUpdate()->nullOnDelete();
+            $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete();
+            $table->string('sku', 64)->nullable();
+            $table->unsignedInteger('quantity')->default(1);
+            // Legacy compatibility for storefront checkout UI; source of truth remains order_items unit_amount_minor.
+            $table->decimal('denomination', 12, 4)->nullable();
             $table->string('order_number', 64);
             $table->enum('channel', ['storefront', 'b2b_portal', 'corporate', 'api', 'admin'])->default('storefront');
             $table->enum('status', [
@@ -42,6 +47,8 @@ return new class extends Migration
             $table->index(['tenant_id', 'user_id', 'status']);
             $table->index(['tenant_id', 'status', 'placed_at']);
             $table->index(['tenant_id', 'channel', 'status']);
+            $table->index(['product_id']);
+            $table->index(['sku']);
         });
     }
 

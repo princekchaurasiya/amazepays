@@ -23,8 +23,6 @@ export const paths = {
     brand: (slug: string) => `/brand/${encodeURIComponent(slug)}`,
     checkout: (slug: string) => `/checkout/${encodeURIComponent(slug)}`,
     cartAdd: (slug: string) => `/cart/${encodeURIComponent(slug)}`,
-    verifyEmail: '/verify-email',
-    changePassword: '/change-password',
     paymentCcavenue: '/payment/ccavenue',
     paymentRazorpay: '/payment/razorpay',
     paymentRazorpayVerify: '/payment/razorpay/verify',

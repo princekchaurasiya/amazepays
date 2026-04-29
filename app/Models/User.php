@@ -26,6 +26,7 @@ class User extends Authenticatable
     protected $fillable = [
         'tenant_id',
         'display_name',
+        'email',
         'account_type',
         'status',
         'is_super_admin',
@@ -56,7 +57,7 @@ class User extends Authenticatable
 
     public function authIdentities(): HasMany
     {
-        return $this->hasMany(UserAuthIdentity::class);
+        return $this->hasMany(UserIdentity::class);
     }
 
     /**
@@ -65,43 +66,21 @@ class User extends Authenticatable
     public function scopeWhereMobile(Builder $query, string $mobile): Builder
     {
         return $query->whereHas('authIdentities', function (Builder $q) use ($mobile) {
-            $q->where('provider', 'mobile')->where('identifier', $mobile);
+            $q->where('type', 'mobile')->where('identifier', $mobile);
         });
     }
 
     public function scopeWhereMobileLike(Builder $query, string $fragment): Builder
     {
         return $query->whereHas('authIdentities', function (Builder $q) use ($fragment) {
-            $q->where('provider', 'mobile')->where('identifier', 'like', "%{$fragment}%");
-        });
-    }
-
-    public function scopeWhereEmail(Builder $query, string $email): Builder
-    {
-        return $query->whereHas('authIdentities', function (Builder $q) use ($email) {
-            $q->where('provider', 'email')->where('identifier', $email);
-        });
-    }
-
-    public function scopeWhereEmailLike(Builder $query, string $fragment): Builder
-    {
-        return $query->whereHas('authIdentities', function (Builder $q) use ($fragment) {
-            $q->where('provider', 'email')->where('identifier', 'like', "%{$fragment}%");
+            $q->where('type', 'mobile')->where('identifier', 'like', "%{$fragment}%");
         });
     }
 
     public function getMobileAttribute(): ?string
     {
         return $this->authIdentities()
-            ->where('provider', 'mobile')
-            ->orderByDesc('is_primary')
-            ->value('identifier');
-    }
-
-    public function getEmailAttribute(): ?string
-    {
-        return $this->authIdentities()
-            ->where('provider', 'email')
+            ->where('type', 'mobile')
             ->orderByDesc('is_primary')
             ->value('identifier');
     }
@@ -125,11 +104,6 @@ class User extends Authenticatable
         }
 
         return '/';
-    }
-
-    public function authSecrets(): HasMany
-    {
-        return $this->hasMany(UserAuthSecret::class);
     }
 
     public function otpCodes(): HasMany

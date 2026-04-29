@@ -137,6 +137,7 @@ Route::middleware('admin.user')->group(function () {
 // ── Fallback ────────────────────────────────────────────────────────
 Route::fallback(function () {
     $path = request()->path();
+    $wantsJson = request()->expectsJson() || request()->header('X-Requested-With') === 'XMLHttpRequest';
 
     // Missing Vite build files must not return JSON (breaks stylesheet/script MIME checks).
     if (str_starts_with($path, 'build/')) {
@@ -146,16 +147,20 @@ Route::fallback(function () {
     if (str_starts_with($path, 'storage/')) {
         $relativePath = substr($path, 8);
         if ($relativePath === '' || str_contains($relativePath, '..') || str_contains($relativePath, "\0")) {
-            return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
-                'reason' => 'storage_path_invalid',
-            ], httpStatus: 404);
+            return $wantsJson
+                ? ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
+                    'reason' => 'storage_path_invalid',
+                ], httpStatus: 404)
+                : response('Not Found', 404, ['Content-Type' => 'text/plain; charset=UTF-8']);
         }
 
         $basePath = realpath(storage_path('app/public'));
         if ($basePath === false) {
-            return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
-                'reason' => 'storage_base_missing',
-            ], httpStatus: 404);
+            return $wantsJson
+                ? ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
+                    'reason' => 'storage_base_missing',
+                ], httpStatus: 404)
+                : response('Not Found', 404, ['Content-Type' => 'text/plain; charset=UTF-8']);
         }
 
         $candidate = storage_path('app/public/'.str_replace('/', DIRECTORY_SEPARATOR, $relativePath));
@@ -165,18 +170,22 @@ Route::fallback(function () {
             && ($fullPath === $basePath || str_starts_with($fullPath, $basePath.DIRECTORY_SEPARATOR));
 
         if (! $isAllowedPath) {
-            return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
-                'reason' => 'storage_path_disallowed',
-            ], httpStatus: 404);
+            return $wantsJson
+                ? ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
+                    'reason' => 'storage_path_disallowed',
+                ], httpStatus: 404)
+                : response('Not Found', 404, ['Content-Type' => 'text/plain; charset=UTF-8']);
         }
 
         if (is_file($fullPath)) {
             return response()->file($fullPath);
         }
 
-        return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
-            'reason' => 'storage_file_missing',
-        ], httpStatus: 404);
+        return $wantsJson
+            ? ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
+                'reason' => 'storage_file_missing',
+            ], httpStatus: 404)
+            : response('Not Found', 404, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }
 
     return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', httpStatus: 404);

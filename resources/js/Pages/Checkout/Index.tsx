@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import CheckoutLayout from '@/Layouts/CheckoutLayout';
 import { paths } from '@/lib/paths';
-import { Check, CreditCard, Lock, Pencil, ShieldCheck, Smartphone, Wallet } from 'lucide-react';
+import { Check, CreditCard, Lock, MapPin, Pencil, ShieldCheck, Smartphone, Wallet } from 'lucide-react';
 
 type Product = Record<string, unknown>;
 type Order = {
@@ -90,106 +90,110 @@ export default function CheckoutIndex({
         (m) => Boolean(methodCatalog[m]),
     );
     const methodsToRender = enabled.map((m) => methodCatalog[m]);
+    const [selectedMethod, setSelectedMethod] = useState<MethodKey>((methodsToRender[0]?.key as MethodKey | undefined) ?? 'razorpay');
+    const selectedMethodConfig = useMemo(() => methodsToRender.find((m) => m.key === selectedMethod) ?? methodsToRender[0], [methodsToRender, selectedMethod]);
+    const selectedMethodReady = selectedMethodConfig ? Boolean(readyBy[selectedMethodConfig.key]) : false;
+    const selectedMethodMissing = selectedMethodConfig ? missingBy[selectedMethodConfig.key] ?? [] : [];
+    const selectedLabels = selectedMethodConfig ? labelsBy[selectedMethodConfig.key] ?? {} : {};
+    const selectedMissingLabels = selectedMethodMissing.map((f) => selectedLabels[f] || f);
 
     return (
         <CheckoutLayout>
             <Head title={t('title', 'Checkout')} />
-            <div className="mx-auto w-full max-w-6xl">
-                <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-                    <div>
-                        <h1 className="text-2xl font-bold text-product-primary md:text-3xl">{t('title', 'Checkout')}</h1>
-                        <p className="mt-1 text-sm text-gray-500">{t('subtitle', 'Complete your order securely')}</p>
-                    </div>
-                    <Link
-                        href={paths.product(slug)}
-                        className="shrink-0 self-start rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-gray-300"
-                    >
+            <div className="mx-auto w-full max-w-6xl rounded-2xl border border-gray-200 bg-white shadow-sm">
+                <div className="flex flex-col justify-between gap-3 border-b border-gray-200 px-5 py-4 sm:flex-row sm:items-center sm:px-6">
+                    <h1 className="text-xl font-bold text-product-primary md:text-2xl">{t('title', 'Checkout')}</h1>
+                    <Link href={paths.product(slug)} className="text-sm font-medium text-gray-600 transition hover:text-product-primary">
                         {t('back_to_shopping', 'Back to shopping')}
                     </Link>
                 </div>
 
-                {/* Stepped progress */}
-                <div className="mb-8 flex w-full min-w-0 items-center justify-between gap-1 sm:justify-start sm:gap-3">
-                    <div className="flex min-w-0 items-center gap-2">
-                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-product-primary text-white ring-2 ring-product-primary/20">
-                            <Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" />
-                        </span>
-                        <div className="min-w-0">
-                            <p className="text-xs font-semibold text-gray-500">{t('step_order', 'Order')}</p>
-                            <p className="truncate text-sm font-medium text-gray-800">{t('step_order_done', 'Details')}</p>
+                <div className="border-b border-gray-200 bg-gray-50/70 px-4 py-5 sm:px-6">
+                    <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-2">
+                        <div className="flex min-w-0 flex-col items-center gap-1 text-center">
+                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200">
+                                <Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" />
+                            </span>
+                            <p className="text-xs font-semibold text-emerald-700">{t('step_shipping', 'Shipping')}</p>
                         </div>
-                    </div>
-                    <div className="h-px min-w-4 flex-1 bg-gray-200 sm:max-w-12" role="presentation" />
-                    <div className="flex min-w-0 items-center gap-2">
-                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-product-accent/15 ring-2 ring-product-accent/30">
-                            <Wallet className="h-4 w-4 text-product-accent" aria-hidden="true" />
-                        </span>
-                        <div className="min-w-0">
-                            <p className="text-xs font-semibold text-product-accent">{t('step_payment', 'Payment')}</p>
-                            <p className="truncate text-sm font-bold text-gray-900">{t('step_payment_active', 'Choose a gateway')}</p>
+                        <div className="h-px flex-1 bg-gray-200" role="presentation" />
+                        <div className="flex min-w-0 flex-col items-center gap-1 text-center">
+                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-gray-300 bg-white text-xs font-bold text-gray-700">2</span>
+                            <p className="text-xs font-semibold text-product-primary">{t('step_payment', 'Payment')}</p>
                         </div>
-                    </div>
-                    <div className="h-px min-w-4 flex-1 bg-gray-200 sm:max-w-12" role="presentation" />
-                    <div className="flex min-w-0 items-center gap-2 opacity-70">
-                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-gray-300 bg-white text-gray-400">
-                            <span className="text-xs font-bold">3</span>
-                        </span>
-                        <div className="min-w-0">
-                            <p className="text-xs font-semibold text-gray-400">{t('step_confirmation', 'Confirmation')}</p>
-                            <p className="truncate text-sm text-gray-500">{t('step_pending', 'Pending')}</p>
+                        <div className="h-px flex-1 bg-gray-200" role="presentation" />
+                        <div className="flex min-w-0 flex-col items-center gap-1 text-center">
+                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-gray-300 bg-white text-xs font-bold text-gray-400">3</span>
+                            <p className="text-xs font-semibold text-gray-400">{t('step_review', 'Review')}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="grid items-start gap-6 lg:grid-cols-12 lg:gap-8">
+                <div className="grid items-start gap-6 p-4 sm:p-6 lg:grid-cols-12 lg:gap-8">
                     {/* Left column */}
                     <div className="space-y-6 lg:col-span-7">
-                        <section className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm md:p-6">
+                        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                             <div className="mb-4 flex items-start justify-between gap-3">
-                                <h2 className="text-lg font-bold text-product-primary">{t('shipping_details', 'Shipping details')}</h2>
+                                <h2 className="text-xl font-bold text-gray-900">{t('shipping_details', 'Shipping Address')}</h2>
                                 <Link
                                     href={paths.profile}
-                                    className="inline-flex items-center gap-1.5 rounded-full border border-product-accent/30 bg-white px-3 py-1.5 text-sm font-medium text-product-accent transition hover:bg-product-accent/5"
+                                    className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-semibold text-product-primary transition hover:bg-product-primary/5"
                                 >
                                     <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                                     {t('edit', 'Edit')}
                                 </Link>
                             </div>
-                            <dl className="grid gap-4 sm:grid-cols-2">
-                                <div>
-                                    <dt className="text-xs font-medium text-gray-500">{t('contact_name', 'Contact name')}</dt>
-                                    <dd className="mt-0.5 text-sm font-semibold text-gray-900">{contactName}</dd>
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="space-y-1">
+                                    <p className="text-sm font-semibold text-gray-900">{contactName}</p>
+                                    <p className="text-sm text-gray-600">{phone}</p>
+                                    <p className="text-sm text-gray-600">{deliveryAddress}</p>
                                 </div>
-                                <div>
-                                    <dt className="text-xs font-medium text-gray-500">{t('phone_number', 'Phone number')}</dt>
-                                    <dd className="mt-0.5 text-sm font-semibold text-gray-900">{phone}</dd>
+                                <div className="hidden h-16 w-16 items-center justify-center rounded-lg bg-product-primary/10 text-product-primary sm:flex">
+                                    <MapPin className="h-7 w-7" aria-hidden="true" />
                                 </div>
-                                <div className="sm:col-span-2">
-                                    <dt className="text-xs font-medium text-gray-500">{t('delivery_address', 'Delivery address')}</dt>
-                                    <dd className="mt-0.5 text-sm font-semibold text-gray-900">{deliveryAddress}</dd>
-                                </div>
-                            </dl>
+                            </div>
                         </section>
 
-                        <section className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm md:p-6">
-                            <h2 className="text-lg font-bold text-product-primary">{t('payment', 'Payment')}</h2>
-                            <p className="mt-1 text-sm text-gray-600">{t('gateway_pick', 'Choose a payment gateway to continue.')}</p>
+                        <section className="rounded-xl border-2 border-gray-800 bg-white p-5 shadow-sm">
+                            <h2 className="text-3xl font-bold text-gray-900">{t('payment', 'Payment Method')}</h2>
 
                             <div className="mt-6">
                                 {orderId ? (
                                     <div className="space-y-4">
                                         {methodsToRender.map((m) => {
                                             const ready = Boolean(readyBy[m.key]);
-                                            const missing = missingBy[m.key] ?? [];
-                                            const labels = labelsBy[m.key] ?? {};
-                                            const missingLabels = missing.map((f) => labels[f] || f);
+                                            const active = selectedMethod === m.key;
 
                                             return (
-                                                <div key={m.key} className="rounded-2xl border border-gray-200 p-4">
+                                                <button
+                                                    key={m.key}
+                                                    type="button"
+                                                    onClick={() => ready && setSelectedMethod(m.key)}
+                                                    disabled={!ready}
+                                                    className={`w-full rounded-lg border p-4 text-left transition ${
+                                                        active
+                                                            ? 'border-product-primary bg-product-primary/5'
+                                                            : 'border-gray-200 bg-white'
+                                                    } ${ready ? 'hover:border-product-primary/60' : 'cursor-not-allowed opacity-60'}`}
+                                                >
                                                     <div className="flex items-start justify-between gap-3">
-                                                        <div>
-                                                            <p className="text-sm font-semibold text-gray-900">{m.label}</p>
-                                                            <p className="mt-0.5 text-xs text-gray-600">{m.description}</p>
+                                                        <div className="flex items-start gap-3">
+                                                            <span
+                                                                className={`mt-0.5 inline-flex h-4 w-4 rounded-full border ${
+                                                                    active ? 'border-product-primary' : 'border-gray-400'
+                                                                }`}
+                                                            >
+                                                                <span
+                                                                    className={`m-auto h-2 w-2 rounded-full ${
+                                                                        active ? 'bg-product-primary' : 'bg-transparent'
+                                                                    }`}
+                                                                />
+                                                            </span>
+                                                            <div>
+                                                                <p className="text-base font-semibold text-gray-900">{m.label}</p>
+                                                                <p className="mt-0.5 text-sm text-gray-600">{m.description}</p>
+                                                            </div>
                                                         </div>
                                                         <span
                                                             className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -199,70 +203,44 @@ export default function CheckoutIndex({
                                                             {ready ? 'Ready' : 'Profile needed'}
                                                         </span>
                                                     </div>
-
-                                                    {!ready && missingLabels.length > 0 ? (
-                                                        <p className="mt-2 text-xs text-amber-900">
-                                                            Missing: {missingLabels.join(', ')}
-                                                        </p>
-                                                    ) : null}
-
-                                                    <div className="mt-3 space-y-2">
-                                                        <form action={m.action} method="post">
-                                                            <input
-                                                                type="hidden"
-                                                                name="_token"
-                                                                value={document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content}
-                                                            />
-                                                            <button
-                                                                type="submit"
-                                                                disabled={!ready}
-                                                                className={`flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold shadow-sm transition ${
-                                                                    ready
-                                                                        ? 'bg-product-primary text-white hover:bg-product-primary/90'
-                                                                        : 'cursor-not-allowed bg-gray-100 text-gray-400'
-                                                                }`}
-                                                            >
-                                                                {ready ? `Pay with ${m.label}` : `Update profile to use ${m.label}`}
-                                                            </button>
-                                                        </form>
-
-                                                        {m.key === 'razorpay' && m.allowMock ? (
-                                                            <form action={paths.paymentMockRazorpay} method="post">
-                                                                <input
-                                                                    type="hidden"
-                                                                    name="_token"
-                                                                    value={document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content}
-                                                                />
-                                                                <button
-                                                                    type="submit"
-                                                                    className="flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-                                                                >
-                                                                    {t('mock_pay', 'Use Mock Razorpay (local only)')}
-                                                                </button>
-                                                            </form>
-                                                        ) : null}
-                                                    </div>
-                                                </div>
+                                                </button>
                                             );
                                         })}
 
-                                        <Link href={paths.profile} className="inline-flex text-sm font-semibold text-amber-900 underline">
-                                            {t('update_profile', 'Update profile')}
-                                        </Link>
+                                        {!selectedMethodReady && selectedMissingLabels.length > 0 ? (
+                                            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                                                Missing: {selectedMissingLabels.join(', ')}
+                                            </p>
+                                        ) : null}
+
+                                        {selectedMethodConfig ? (
+                                            <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-3 text-sm text-sky-900">
+                                                {t(
+                                                    'gateway_footer',
+                                                    'Payments are securely processed by the selected gateway.',
+                                                )}
+                                            </div>
+                                        ) : null}
+
+                                        {selectedMethodConfig?.key === 'razorpay' && selectedMethodConfig.allowMock ? (
+                                            <form action={paths.paymentMockRazorpay} method="post">
+                                                <input
+                                                    type="hidden"
+                                                    name="_token"
+                                                    value={document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content}
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                                                >
+                                                    {t('mock_pay', 'Use Mock Razorpay (local only)')}
+                                                </button>
+                                            </form>
+                                        ) : null}
                                     </div>
                                 ) : (
                                     <p className="text-sm text-amber-800">{t('checkout_missing_order', 'Checkout session not found. Please start again.')}</p>
                                 )}
-                            </div>
-
-                            <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-gray-500">
-                                <Lock className="h-3.5 w-3.5 text-gray-400" aria-hidden="true" />
-                                {t('gateway_footer', 'Payments are securely processed by the selected gateway.')}
-                            </p>
-                            <div className="mt-4 flex justify-center gap-4 opacity-40">
-                                <CreditCard className="h-6 w-6" aria-hidden="true" />
-                                <Smartphone className="h-6 w-6" aria-hidden="true" />
-                                <Wallet className="h-6 w-6" aria-hidden="true" />
                             </div>
                         </section>
 
@@ -270,14 +248,14 @@ export default function CheckoutIndex({
 
                     {/* Order summary — right */}
                     <aside className="lg:col-span-5">
-                        <div className="sticky top-6 rounded-2xl border border-blue-100 bg-blue-50/80 p-5 shadow-sm md:p-6">
-                            <h2 className="text-lg font-bold text-product-primary">{t('order_summary', 'Order summary')}</h2>
+                        <div className="sticky top-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
+                            <h2 className="text-2xl font-bold text-gray-900">{t('order_summary', 'Order Summary')}</h2>
 
-                            <div className="mt-4 flex gap-4 border-b border-blue-200/60 pb-4">
+                            <div className="mt-4 flex gap-3 border-b border-gray-200 pb-4">
                                 {img ? (
-                                    <img src={img} alt="" className="h-16 w-16 shrink-0 rounded-xl border border-white object-cover shadow-sm" />
+                                    <img src={img} alt="" className="h-14 w-14 shrink-0 rounded-lg border border-gray-100 object-cover shadow-sm" />
                                 ) : (
-                                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-white bg-white text-xs font-bold text-gray-400">
+                                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-xs font-bold text-gray-400">
                                         —
                                     </div>
                                 )}
@@ -285,25 +263,9 @@ export default function CheckoutIndex({
                                     <p className="line-clamp-2 text-sm font-semibold text-gray-900">{name}</p>
                                     <p className="mt-0.5 text-xs text-gray-600">{specLine}</p>
                                 </div>
-                                <p className="shrink-0 text-sm font-bold text-product-accent">₹{payableAmount.toLocaleString('en-IN')}</p>
                             </div>
 
-                            <div className="mt-4 space-y-2 text-sm">
-                                <div className="flex justify-between text-gray-700">
-                                    <span>{t('subtotal', 'Subtotal')}</span>
-                                    <span>₹{payableAmount.toLocaleString('en-IN')}</span>
-                                </div>
-                                <div className="flex justify-between text-gray-700">
-                                    <span>{t('shipping', 'Shipping')}</span>
-                                    <span className="font-medium text-emerald-600">{t('free', 'FREE')}</span>
-                                </div>
-                                <div className="flex justify-between text-xs text-gray-500">
-                                    <span>{t('tax_note', 'Taxes')}</span>
-                                    <span>{t('tax_included', 'Included in total')}</span>
-                                </div>
-                            </div>
-
-                            <div className="mt-4 flex items-center gap-2 rounded-xl border border-blue-200/60 bg-white px-3 py-2">
+                            <div className="mt-4 flex items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5">
                                 <input
                                     type="text"
                                     readOnly
@@ -311,18 +273,57 @@ export default function CheckoutIndex({
                                     placeholder={t('promo_code', 'Promo code')}
                                     className="w-full min-w-0 border-0 bg-transparent text-sm text-gray-500 placeholder:text-gray-400"
                                 />
-                                <button type="button" className="shrink-0 text-sm font-semibold text-product-primary/50" disabled>
+                                <button type="button" className="rounded bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-500" disabled>
                                     {t('apply', 'Apply')}
                                 </button>
                             </div>
 
-                            <div className="mt-5 border-t border-blue-200/60 pt-4">
-                                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{t('total_amount_label', 'Total amount')}</p>
-                                <p className="mt-0.5 text-2xl font-bold text-product-primary">₹{payableAmount.toLocaleString('en-IN')}</p>
-                                <p className="text-xs text-gray-500">{t('all_taxes', 'All taxes included.')}</p>
+                            <div className="mt-5 space-y-2 border-b border-gray-200 pb-4 text-sm">
+                                <div className="flex justify-between text-gray-700">
+                                    <span>{t('subtotal', 'Subtotal')}</span>
+                                    <span>₹{payableAmount.toLocaleString('en-IN')}</span>
+                                </div>
+                                <div className="flex justify-between text-gray-700">
+                                    <span>{t('shipping', 'Shipping')}</span>
+                                    <span className="font-semibold text-emerald-600">{t('free', 'FREE')}</span>
+                                </div>
                             </div>
 
-                            <div className="mt-5 flex items-center gap-2 rounded-xl border border-white bg-white/90 p-3 text-xs text-gray-700 shadow-sm">
+                            <div className="mt-4 flex justify-between">
+                                <p className="text-3xl font-bold text-gray-900">{t('total', 'Total')}</p>
+                                <p className="text-3xl font-extrabold text-product-primary">₹{payableAmount.toLocaleString('en-IN')}</p>
+                            </div>
+
+                            {orderId && selectedMethodConfig ? (
+                                <form className="mt-5" action={selectedMethodConfig.action} method="post">
+                                                            <input
+                                                                type="hidden"
+                                                                name="_token"
+                                                                value={document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content}
+                                                            />
+                                                            <button
+                                                                type="submit"
+                                        disabled={!selectedMethodReady}
+                                        className={`flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold shadow-sm transition ${
+                                            selectedMethodReady
+                                                ? 'bg-product-primary text-white hover:bg-product-primary/90'
+                                                : 'cursor-not-allowed bg-gray-100 text-gray-400'
+                                        }`}
+                                                            >
+                                        {selectedMethodReady
+                                            ? `${t('proceed_to_pay', 'Proceed to Pay')} (${selectedMethodConfig.label})`
+                                            : `Update profile to use ${selectedMethodConfig.label}`}
+                                                            </button>
+                                </form>
+                            ) : null}
+
+                            {!selectedMethodReady ? (
+                                <Link href={paths.profile} className="mt-3 inline-flex text-sm font-semibold text-amber-900 underline">
+                                    {t('update_profile', 'Update profile')}
+                                </Link>
+                            ) : null}
+
+                            <div className="mt-5 flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs text-gray-700 shadow-sm">
                                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100">
                                     <ShieldCheck className="h-4 w-4 text-emerald-700" aria-hidden="true" />
                                 </div>
@@ -332,9 +333,15 @@ export default function CheckoutIndex({
                                 </p>
                             </div>
 
-                            <Link href={paths.product(slug)} className="mt-4 block text-center text-sm font-medium text-gray-600 hover:text-gray-900">
-                                {t('edit_cart', 'Edit order')}
-                            </Link>
+                            <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[11px] text-gray-500">
+                                <Lock className="h-3.5 w-3.5 text-gray-400" aria-hidden="true" />
+                                {t('secure_badges', 'PCI DSS compliant and SSL secured')}
+                            </p>
+                            <div className="mt-3 flex justify-center gap-4 opacity-40">
+                                <CreditCard className="h-5 w-5" aria-hidden="true" />
+                                <Smartphone className="h-5 w-5" aria-hidden="true" />
+                                <Wallet className="h-5 w-5" aria-hidden="true" />
+                            </div>
                         </div>
                     </aside>
                 </div>

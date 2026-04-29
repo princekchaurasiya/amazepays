@@ -120,6 +120,13 @@ class Handler extends ExceptionHandler
                 'line' => $exception->getLine(),
             ]);
 
+            $isDbConnectionError =
+                str_contains($message, 'SQLSTATE[HY000] [2002]')
+                || str_contains(strtolower($message), 'connection refused')
+                || str_contains(strtolower($message), 'actively refused');
+
+            $uiMessage = $isDbConnectionError ? 'Unable to connect to database.' : 'Something went wrong.';
+
             // Show user-friendly error page
             if ($request->expectsJson()) {
                 return ResponsePayload::fail(ResponseCode::INTERNAL_ERROR, 'errors.technical_difficulties');
@@ -130,11 +137,12 @@ class Handler extends ExceptionHandler
                 if ($request->header('X-Inertia')) {
                     return Inertia::render('Error', [
                         'status' => 500,
-                        'message' => 'Something went wrong.',
+                        'message' => $uiMessage,
+                        'detail' => app()->environment('local') ? $message : null,
                     ])->toResponse($request)->setStatusCode(500);
                 }
 
-                return response('Something went wrong.', 500, [
+                return response($uiMessage, 500, [
                     'Content-Type' => 'text/plain; charset=UTF-8',
                 ]);
             }
@@ -142,11 +150,12 @@ class Handler extends ExceptionHandler
             if ($request->header('X-Inertia')) {
                 return Inertia::render('Error', [
                     'status' => 500,
-                    'message' => 'Something went wrong.',
+                    'message' => $uiMessage,
+                    'detail' => app()->environment('local') ? $message : null,
                 ])->toResponse($request)->setStatusCode(500);
             }
 
-            return response('Something went wrong.', 500, [
+            return response($uiMessage, 500, [
                 'Content-Type' => 'text/plain; charset=UTF-8',
             ]);
         }

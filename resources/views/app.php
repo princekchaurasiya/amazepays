@@ -7,6 +7,10 @@
     <title inertia><?php echo htmlspecialchars(config('app.name', 'AmazePays'), ENT_QUOTES, 'UTF-8'); ?></title>
 
     <?php
+        // When running `npm run dev`, this injects the React Refresh preamble required by @vitejs/plugin-react.
+        // When not running hot, it outputs nothing.
+        echo \Illuminate\Support\Facades\Vite::reactRefresh();
+
         echo \Illuminate\Support\Facades\Vite::withEntryPoints([
             'resources/css/app.css',
             'resources/js/app.tsx',

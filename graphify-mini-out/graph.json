@@ -1,0 +1,1755 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "CheckoutHelper.php",
+      "file_type": "code",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L1",
+      "id": "checkouthelper",
+      "community": 3
+    },
+    {
+      "label": "CheckoutHelper",
+      "file_type": "code",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L22",
+      "id": "checkouthelper_checkouthelper",
+      "community": 3
+    },
+    {
+      "label": ".storeBillingData()",
+      "file_type": "code",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L46",
+      "id": "checkouthelper_checkouthelper_storebillingdata",
+      "community": 3
+    },
+    {
+      "label": ".getBillingData()",
+      "file_type": "code",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L80",
+      "id": "checkouthelper_checkouthelper_getbillingdata",
+      "community": 3
+    },
+    {
+      "label": ".storeCheckoutMetadata()",
+      "file_type": "code",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L110",
+      "id": "checkouthelper_checkouthelper_storecheckoutmetadata",
+      "community": 3
+    },
+    {
+      "label": ".getCheckoutMetadata()",
+      "file_type": "code",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L138",
+      "id": "checkouthelper_checkouthelper_getcheckoutmetadata",
+      "community": 3
+    },
+    {
+      "label": ".clearOrderCache()",
+      "file_type": "code",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L159",
+      "id": "checkouthelper_checkouthelper_clearordercache",
+      "community": 3
+    },
+    {
+      "label": ".sanitizeBillingData()",
+      "file_type": "code",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L189",
+      "id": "checkouthelper_checkouthelper_sanitizebillingdata",
+      "community": 3
+    },
+    {
+      "label": ".getCacheStats()",
+      "file_type": "code",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L211",
+      "id": "checkouthelper_checkouthelper_getcachestats",
+      "community": 3
+    },
+    {
+      "label": "CheckoutSessionController.php",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L1",
+      "id": "checkoutsessioncontroller",
+      "community": 2
+    },
+    {
+      "label": "CheckoutSessionController",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L32",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "community": 0
+    },
+    {
+      "label": ".__construct()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L34",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_construct",
+      "community": 0
+    },
+    {
+      "label": ".create()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Api\\V1\\CheckoutSessionController.php",
+      "source_location": "L31",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_create",
+      "community": 0
+    },
+    {
+      "label": "CheckoutController.php",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutController.php",
+      "source_location": "L1",
+      "id": "checkoutcontroller",
+      "community": 8
+    },
+    {
+      "label": "CheckoutController",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutController.php",
+      "source_location": "L12",
+      "id": "checkoutcontroller_checkoutcontroller",
+      "community": 8
+    },
+    {
+      "label": ".saveGiftCardForm()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutController.php",
+      "source_location": "L27",
+      "id": "checkoutcontroller_checkoutcontroller_savegiftcardform",
+      "community": 8
+    },
+    {
+      "label": ".submitCheckout()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L40",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_submitcheckout",
+      "community": 0
+    },
+    {
+      "label": ".updateBillingDetails()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L180",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_updatebillingdetails",
+      "community": 0
+    },
+    {
+      "label": ".addToCart()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L250",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "community": 0
+    },
+    {
+      "label": ".removeFromCart()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L396",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_removefromcart",
+      "community": 0
+    },
+    {
+      "label": ".clearCart()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L414",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_clearcart",
+      "community": 0
+    },
+    {
+      "label": ".saveGiftCheckoutDraft()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L426",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_savegiftcheckoutdraft",
+      "community": 0
+    },
+    {
+      "label": ".rejectUnexpectedFields()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L473",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields",
+      "community": 0
+    },
+    {
+      "label": ".resolveCartForUser()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L484",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_resolvecartforuser",
+      "community": 0
+    },
+    {
+      "label": ".assertConsumerStorefrontProduct()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L493",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_assertconsumerstorefrontproduct",
+      "community": 0
+    },
+    {
+      "label": ".assertGiftOptionAllowedForProduct()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L500",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_assertgiftoptionallowedforproduct",
+      "community": 0
+    },
+    {
+      "label": ".assertThemeAllowedForGiftOption()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L515",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_assertthemeallowedforgiftoption",
+      "community": 0
+    },
+    {
+      "label": ".assertDeliveryOptionAllowedForGiftOption()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L529",
+      "id": "checkoutsessioncontroller_checkoutsessioncontroller_assertdeliveryoptionallowedforgiftoption",
+      "community": 0
+    },
+    {
+      "label": "CreateCheckoutSessionRequest.php",
+      "file_type": "code",
+      "source_file": "app\\Http\\Requests\\Checkout\\CreateCheckoutSessionRequest.php",
+      "source_location": "L1",
+      "id": "createcheckoutsessionrequest",
+      "community": 2
+    },
+    {
+      "label": "CreateCheckoutSessionRequest",
+      "file_type": "code",
+      "source_file": "app\\Http\\Requests\\Checkout\\CreateCheckoutSessionRequest.php",
+      "source_location": "L8",
+      "id": "createcheckoutsessionrequest_createcheckoutsessionrequest",
+      "community": 2
+    },
+    {
+      "label": ".authorize()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Requests\\Checkout\\CreateCheckoutSessionRequest.php",
+      "source_location": "L12",
+      "id": "createcheckoutsessionrequest_createcheckoutsessionrequest_authorize",
+      "community": 2
+    },
+    {
+      "label": ".rules()",
+      "file_type": "code",
+      "source_file": "app\\Http\\Requests\\Checkout\\CreateCheckoutSessionRequest.php",
+      "source_location": "L17",
+      "id": "createcheckoutsessionrequest_createcheckoutsessionrequest_rules",
+      "community": 2
+    },
+    {
+      "label": "ApplyLoyaltyRedemption.php",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\ApplyLoyaltyRedemption.php",
+      "source_location": "L1",
+      "id": "applyloyaltyredemption",
+      "community": 6
+    },
+    {
+      "label": "ApplyLoyaltyRedemption",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\ApplyLoyaltyRedemption.php",
+      "source_location": "L18",
+      "id": "applyloyaltyredemption_applyloyaltyredemption",
+      "community": 6
+    },
+    {
+      "label": ".apply()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\ApplyLoyaltyRedemption.php",
+      "source_location": "L20",
+      "id": "applyloyaltyredemption_applyloyaltyredemption_apply",
+      "community": 6
+    },
+    {
+      "label": ".resolveProgram()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\ApplyLoyaltyRedemption.php",
+      "source_location": "L145",
+      "id": "applyloyaltyredemption_applyloyaltyredemption_resolveprogram",
+      "community": 6
+    },
+    {
+      "label": "CheckoutOrderPayloadFactory.php",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutOrderPayloadFactory.php",
+      "source_location": "L1",
+      "id": "checkoutorderpayloadfactory",
+      "community": 9
+    },
+    {
+      "label": "CheckoutOrderPayloadFactory",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutOrderPayloadFactory.php",
+      "source_location": "L8",
+      "id": "checkoutorderpayloadfactory_checkoutorderpayloadfactory",
+      "community": 9
+    },
+    {
+      "label": ".make()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutOrderPayloadFactory.php",
+      "source_location": "L15",
+      "id": "checkoutorderpayloadfactory_checkoutorderpayloadfactory_make",
+      "community": 9
+    },
+    {
+      "label": "CheckoutReadService.php",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L1",
+      "id": "checkoutreadservice",
+      "community": 3
+    },
+    {
+      "label": "CheckoutReadService",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L15",
+      "id": "checkoutreadservice_checkoutreadservice",
+      "community": 4
+    },
+    {
+      "label": ".findOrderForUser()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L17",
+      "id": "checkoutreadservice_checkoutreadservice_findorderforuser",
+      "community": 4
+    },
+    {
+      "label": ".buildBillingSnapshot()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L34",
+      "id": "checkoutreadservice_checkoutreadservice_buildbillingsnapshot",
+      "community": 4
+    },
+    {
+      "label": ".extractCheckoutPrefillFromQuery()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L75",
+      "id": "checkoutreadservice_checkoutreadservice_extractcheckoutprefillfromquery",
+      "community": 4
+    },
+    {
+      "label": ".extractCheckoutPrefillFromCartItem()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L192",
+      "id": "checkoutreadservice_checkoutreadservice_extractcheckoutprefillfromcartitem",
+      "community": 4
+    },
+    {
+      "label": ".isGiftOptionAllowedForProduct()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L245",
+      "id": "checkoutreadservice_checkoutreadservice_isgiftoptionallowedforproduct",
+      "community": 4
+    },
+    {
+      "label": ".resolveDefaultBillingAddress()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L258",
+      "id": "checkoutreadservice_checkoutreadservice_resolvedefaultbillingaddress",
+      "community": 4
+    },
+    {
+      "label": "CheckoutWriteService.php",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L1",
+      "id": "checkoutwriteservice",
+      "community": 5
+    },
+    {
+      "label": "CheckoutWriteService",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L14",
+      "id": "checkoutwriteservice_checkoutwriteservice",
+      "community": 5
+    },
+    {
+      "label": ".createOrderForCheckout()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L19",
+      "id": "checkoutwriteservice_checkoutwriteservice_createorderforcheckout",
+      "community": 5
+    },
+    {
+      "label": ".createOrRefreshDraftOrder()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L161",
+      "id": "checkoutwriteservice_checkoutwriteservice_createorrefreshdraftorder",
+      "community": 5
+    },
+    {
+      "label": ".assertDenominationValidForProduct()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L290",
+      "id": "checkoutwriteservice_checkoutwriteservice_assertdenominationvalidforproduct",
+      "community": 5
+    },
+    {
+      "label": ".assertSkuMonthlyLimit()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L320",
+      "id": "checkoutwriteservice_checkoutwriteservice_assertskumonthlylimit",
+      "community": 5
+    },
+    {
+      "label": "GateOrderOnKyc.php",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\GateOrderOnKyc.php",
+      "source_location": "L1",
+      "id": "gateorderonkyc",
+      "community": 7
+    },
+    {
+      "label": "GateOrderOnKyc",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\GateOrderOnKyc.php",
+      "source_location": "L12",
+      "id": "gateorderonkyc_gateorderonkyc",
+      "community": 7
+    },
+    {
+      "label": ".evaluateOrThrow()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\GateOrderOnKyc.php",
+      "source_location": "L14",
+      "id": "gateorderonkyc_gateorderonkyc_evaluateorthrow",
+      "community": 7
+    },
+    {
+      "label": ".missingDocumentTypes()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\GateOrderOnKyc.php",
+      "source_location": "L111",
+      "id": "gateorderonkyc_gateorderonkyc_missingdocumenttypes",
+      "community": 7
+    },
+    {
+      "label": "ResolveTax.php",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L1",
+      "id": "resolvetax",
+      "community": 2
+    },
+    {
+      "label": "ResolveTax",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L15",
+      "id": "resolvetax_resolvetax",
+      "community": 2
+    },
+    {
+      "label": ".resolveAndPersist()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L17",
+      "id": "resolvetax_resolvetax_resolveandpersist",
+      "community": 2
+    },
+    {
+      "label": ".resolveJurisdictionId()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L88",
+      "id": "resolvetax_resolvetax_resolvejurisdictionid",
+      "community": 2
+    },
+    {
+      "label": ".resolveProductTaxAssignment()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L129",
+      "id": "resolvetax_resolvetax_resolveproducttaxassignment",
+      "community": 2
+    },
+    {
+      "label": ".resolveRates()",
+      "file_type": "code",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L148",
+      "id": "resolvetax_resolvetax_resolverates",
+      "community": 2
+    },
+    {
+      "label": "CheckoutLayout.tsx",
+      "file_type": "code",
+      "source_file": "resources\\js\\Layouts\\CheckoutLayout.tsx",
+      "source_location": "L1",
+      "id": "checkoutlayout",
+      "community": 1
+    },
+    {
+      "label": "CheckoutLayout()",
+      "file_type": "code",
+      "source_file": "resources\\js\\Layouts\\CheckoutLayout.tsx",
+      "source_location": "L6",
+      "id": "checkoutlayout_checkoutlayout",
+      "community": 1
+    },
+    {
+      "label": "CcAvenueRedirect.tsx",
+      "file_type": "code",
+      "source_file": "resources\\js\\Pages\\Checkout\\CcAvenueRedirect.tsx",
+      "source_location": "L1",
+      "id": "ccavenueredirect",
+      "community": 1
+    },
+    {
+      "label": "CcAvenueRedirect()",
+      "file_type": "code",
+      "source_file": "resources\\js\\Pages\\Checkout\\CcAvenueRedirect.tsx",
+      "source_location": "L8",
+      "id": "ccavenueredirect_ccavenueredirect",
+      "community": 1
+    },
+    {
+      "label": "Index.tsx",
+      "file_type": "code",
+      "source_file": "resources\\js\\Pages\\Checkout\\Index.tsx",
+      "source_location": "L1",
+      "id": "index",
+      "community": 1
+    },
+    {
+      "label": "t()",
+      "file_type": "code",
+      "source_file": "resources\\js\\Pages\\Checkout\\Index.tsx",
+      "source_location": "L43",
+      "id": "index_t",
+      "community": 1
+    },
+    {
+      "label": "OrderStatus.tsx",
+      "file_type": "code",
+      "source_file": "resources\\js\\Pages\\Checkout\\OrderStatus.tsx",
+      "source_location": "L1",
+      "id": "orderstatus",
+      "community": 1
+    },
+    {
+      "label": "Processing.tsx",
+      "file_type": "code",
+      "source_file": "resources\\js\\Pages\\Checkout\\Processing.tsx",
+      "source_location": "L1",
+      "id": "processing",
+      "community": 1
+    },
+    {
+      "label": "tick()",
+      "file_type": "code",
+      "source_file": "resources\\js\\Pages\\Checkout\\Processing.tsx",
+      "source_location": "L35",
+      "id": "processing_tick",
+      "community": 1
+    },
+    {
+      "label": "Status.tsx",
+      "file_type": "code",
+      "source_file": "resources\\js\\Pages\\Checkout\\Status.tsx",
+      "source_location": "L1",
+      "id": "status",
+      "community": 1
+    },
+    {
+      "label": "Status()",
+      "file_type": "code",
+      "source_file": "resources\\js\\Pages\\Checkout\\Status.tsx",
+      "source_location": "L6",
+      "id": "status_status",
+      "community": 1
+    },
+    {
+      "label": "AutoSubmit.tsx",
+      "file_type": "code",
+      "source_file": "resources\\js\\Pages\\Checkout\\Woohoo\\AutoSubmit.tsx",
+      "source_location": "L1",
+      "id": "autosubmit",
+      "community": 1
+    },
+    {
+      "label": "WoohooAutoSubmit()",
+      "file_type": "code",
+      "source_file": "resources\\js\\Pages\\Checkout\\Woohoo\\AutoSubmit.tsx",
+      "source_location": "L5",
+      "id": "autosubmit_woohooautosubmit",
+      "community": 1
+    },
+    {
+      "label": "Response.tsx",
+      "file_type": "code",
+      "source_file": "resources\\js\\Pages\\Checkout\\Woohoo\\Response.tsx",
+      "source_location": "L1",
+      "id": "response",
+      "community": 1
+    },
+    {
+      "label": "checkout.php",
+      "file_type": "code",
+      "source_file": "routes\\checkout.php",
+      "source_location": "L1",
+      "id": "checkout",
+      "community": 2
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_src": "checkouthelper",
+      "_tgt": "checkouthelper_checkouthelper",
+      "source": "checkouthelper",
+      "target": "checkouthelper_checkouthelper"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_src": "checkoutreadservice",
+      "_tgt": "checkouthelper",
+      "source": "checkouthelper",
+      "target": "checkoutreadservice"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L46",
+      "weight": 1.0,
+      "_src": "checkouthelper_checkouthelper",
+      "_tgt": "checkouthelper_checkouthelper_storebillingdata",
+      "source": "checkouthelper_checkouthelper",
+      "target": "checkouthelper_checkouthelper_storebillingdata"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L80",
+      "weight": 1.0,
+      "_src": "checkouthelper_checkouthelper",
+      "_tgt": "checkouthelper_checkouthelper_getbillingdata",
+      "source": "checkouthelper_checkouthelper",
+      "target": "checkouthelper_checkouthelper_getbillingdata"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L110",
+      "weight": 1.0,
+      "_src": "checkouthelper_checkouthelper",
+      "_tgt": "checkouthelper_checkouthelper_storecheckoutmetadata",
+      "source": "checkouthelper_checkouthelper",
+      "target": "checkouthelper_checkouthelper_storecheckoutmetadata"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L138",
+      "weight": 1.0,
+      "_src": "checkouthelper_checkouthelper",
+      "_tgt": "checkouthelper_checkouthelper_getcheckoutmetadata",
+      "source": "checkouthelper_checkouthelper",
+      "target": "checkouthelper_checkouthelper_getcheckoutmetadata"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L159",
+      "weight": 1.0,
+      "_src": "checkouthelper_checkouthelper",
+      "_tgt": "checkouthelper_checkouthelper_clearordercache",
+      "source": "checkouthelper_checkouthelper",
+      "target": "checkouthelper_checkouthelper_clearordercache"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L189",
+      "weight": 1.0,
+      "_src": "checkouthelper_checkouthelper",
+      "_tgt": "checkouthelper_checkouthelper_sanitizebillingdata",
+      "source": "checkouthelper_checkouthelper",
+      "target": "checkouthelper_checkouthelper_sanitizebillingdata"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Helpers\\CheckoutHelper.php",
+      "source_location": "L211",
+      "weight": 1.0,
+      "_src": "checkouthelper_checkouthelper",
+      "_tgt": "checkouthelper_checkouthelper_getcachestats",
+      "source": "checkouthelper_checkouthelper",
+      "target": "checkouthelper_checkouthelper_getcachestats"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Api\\V1\\CheckoutSessionController.php",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller",
+      "_tgt": "createcheckoutsessionrequest",
+      "source": "checkoutsessioncontroller",
+      "target": "createcheckoutsessionrequest"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller",
+      "_tgt": "checkoutwriteservice",
+      "source": "checkoutsessioncontroller",
+      "target": "checkoutwriteservice"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Api\\V1\\CheckoutSessionController.php",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller",
+      "_tgt": "gateorderonkyc",
+      "source": "checkoutsessioncontroller",
+      "target": "gateorderonkyc"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Api\\V1\\CheckoutSessionController.php",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller",
+      "_tgt": "applyloyaltyredemption",
+      "source": "checkoutsessioncontroller",
+      "target": "applyloyaltyredemption"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller",
+      "_tgt": "resolvetax",
+      "source": "checkoutsessioncontroller",
+      "target": "resolvetax"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "source": "checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "routes\\checkout.php",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_src": "checkout",
+      "_tgt": "checkoutsessioncontroller",
+      "source": "checkoutsessioncontroller",
+      "target": "checkout"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L34",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_construct",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_construct"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Api\\V1\\CheckoutSessionController.php",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_create",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_create"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L40",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_submitcheckout",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_submitcheckout"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L180",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_updatebillingdetails",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_updatebillingdetails"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L250",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L396",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_removefromcart",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_removefromcart"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L414",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_clearcart",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_clearcart"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L426",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_savegiftcheckoutdraft",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_savegiftcheckoutdraft"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L473",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L484",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_resolvecartforuser",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_resolvecartforuser"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L493",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_assertconsumerstorefrontproduct",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_assertconsumerstorefrontproduct"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L500",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_assertgiftoptionallowedforproduct",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_assertgiftoptionallowedforproduct"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L515",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_assertthemeallowedforgiftoption",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_assertthemeallowedforgiftoption"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L529",
+      "weight": 1.0,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_assertdeliveryoptionallowedforgiftoption",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_assertdeliveryoptionallowedforgiftoption"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutController.php",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_src": "checkoutcontroller",
+      "_tgt": "checkoutcontroller_checkoutcontroller",
+      "source": "checkoutcontroller",
+      "target": "checkoutcontroller_checkoutcontroller"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutController.php",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_src": "checkoutcontroller_checkoutcontroller",
+      "_tgt": "checkoutcontroller_checkoutcontroller_savegiftcardform",
+      "source": "checkoutcontroller_checkoutcontroller",
+      "target": "checkoutcontroller_checkoutcontroller_savegiftcardform"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L58",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_submitcheckout",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_submitcheckout",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L67",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_submitcheckout",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_assertconsumerstorefrontproduct",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_submitcheckout",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_assertconsumerstorefrontproduct"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L146",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_submitcheckout",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_assertgiftoptionallowedforproduct",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_submitcheckout",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_assertgiftoptionallowedforproduct"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L147",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_submitcheckout",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_assertthemeallowedforgiftoption",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_submitcheckout",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_assertthemeallowedforgiftoption"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L151",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_submitcheckout",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_assertdeliveryoptionallowedforgiftoption",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_submitcheckout",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_assertdeliveryoptionallowedforgiftoption"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L195",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_updatebillingdetails",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_updatebillingdetails",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L267",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L276",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_assertconsumerstorefrontproduct",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_assertconsumerstorefrontproduct"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L325",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_assertgiftoptionallowedforproduct",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_assertgiftoptionallowedforproduct"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L327",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_assertthemeallowedforgiftoption",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_assertthemeallowedforgiftoption"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L332",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_assertdeliveryoptionallowedforgiftoption",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_assertdeliveryoptionallowedforgiftoption"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L367",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_resolvecartforuser",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_addtocart",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_resolvecartforuser"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L398",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_removefromcart",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_removefromcart",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L404",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_removefromcart",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_resolvecartforuser",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_removefromcart",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_resolvecartforuser"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L416",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_clearcart",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_clearcart",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L418",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_clearcart",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_resolvecartforuser",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_clearcart",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_resolvecartforuser"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Http\\Controllers\\Storefront\\CheckoutSessionController.php",
+      "source_location": "L440",
+      "weight": 0.8,
+      "_src": "checkoutsessioncontroller_checkoutsessioncontroller_savegiftcheckoutdraft",
+      "_tgt": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields",
+      "source": "checkoutsessioncontroller_checkoutsessioncontroller_savegiftcheckoutdraft",
+      "target": "checkoutsessioncontroller_checkoutsessioncontroller_rejectunexpectedfields"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Requests\\Checkout\\CreateCheckoutSessionRequest.php",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_src": "createcheckoutsessionrequest",
+      "_tgt": "createcheckoutsessionrequest_createcheckoutsessionrequest",
+      "source": "createcheckoutsessionrequest",
+      "target": "createcheckoutsessionrequest_createcheckoutsessionrequest"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Requests\\Checkout\\CreateCheckoutSessionRequest.php",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_src": "createcheckoutsessionrequest_createcheckoutsessionrequest",
+      "_tgt": "createcheckoutsessionrequest_createcheckoutsessionrequest_authorize",
+      "source": "createcheckoutsessionrequest_createcheckoutsessionrequest",
+      "target": "createcheckoutsessionrequest_createcheckoutsessionrequest_authorize"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Http\\Requests\\Checkout\\CreateCheckoutSessionRequest.php",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_src": "createcheckoutsessionrequest_createcheckoutsessionrequest",
+      "_tgt": "createcheckoutsessionrequest_createcheckoutsessionrequest_rules",
+      "source": "createcheckoutsessionrequest_createcheckoutsessionrequest",
+      "target": "createcheckoutsessionrequest_createcheckoutsessionrequest_rules"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\ApplyLoyaltyRedemption.php",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_src": "applyloyaltyredemption",
+      "_tgt": "applyloyaltyredemption_applyloyaltyredemption",
+      "source": "applyloyaltyredemption",
+      "target": "applyloyaltyredemption_applyloyaltyredemption"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\ApplyLoyaltyRedemption.php",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_src": "applyloyaltyredemption_applyloyaltyredemption",
+      "_tgt": "applyloyaltyredemption_applyloyaltyredemption_apply",
+      "source": "applyloyaltyredemption_applyloyaltyredemption",
+      "target": "applyloyaltyredemption_applyloyaltyredemption_apply"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\ApplyLoyaltyRedemption.php",
+      "source_location": "L145",
+      "weight": 1.0,
+      "_src": "applyloyaltyredemption_applyloyaltyredemption",
+      "_tgt": "applyloyaltyredemption_applyloyaltyredemption_resolveprogram",
+      "source": "applyloyaltyredemption_applyloyaltyredemption",
+      "target": "applyloyaltyredemption_applyloyaltyredemption_resolveprogram"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Services\\Checkout\\ApplyLoyaltyRedemption.php",
+      "source_location": "L31",
+      "weight": 0.8,
+      "_src": "applyloyaltyredemption_applyloyaltyredemption_apply",
+      "_tgt": "applyloyaltyredemption_applyloyaltyredemption_resolveprogram",
+      "source": "applyloyaltyredemption_applyloyaltyredemption_apply",
+      "target": "applyloyaltyredemption_applyloyaltyredemption_resolveprogram"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutOrderPayloadFactory.php",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_src": "checkoutorderpayloadfactory",
+      "_tgt": "checkoutorderpayloadfactory_checkoutorderpayloadfactory",
+      "source": "checkoutorderpayloadfactory",
+      "target": "checkoutorderpayloadfactory_checkoutorderpayloadfactory"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutOrderPayloadFactory.php",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_src": "checkoutorderpayloadfactory_checkoutorderpayloadfactory",
+      "_tgt": "checkoutorderpayloadfactory_checkoutorderpayloadfactory_make",
+      "source": "checkoutorderpayloadfactory_checkoutorderpayloadfactory",
+      "target": "checkoutorderpayloadfactory_checkoutorderpayloadfactory_make"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_src": "checkoutreadservice",
+      "_tgt": "checkoutreadservice_checkoutreadservice",
+      "source": "checkoutreadservice",
+      "target": "checkoutreadservice_checkoutreadservice"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_src": "checkoutreadservice_checkoutreadservice",
+      "_tgt": "checkoutreadservice_checkoutreadservice_findorderforuser",
+      "source": "checkoutreadservice_checkoutreadservice",
+      "target": "checkoutreadservice_checkoutreadservice_findorderforuser"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L34",
+      "weight": 1.0,
+      "_src": "checkoutreadservice_checkoutreadservice",
+      "_tgt": "checkoutreadservice_checkoutreadservice_buildbillingsnapshot",
+      "source": "checkoutreadservice_checkoutreadservice",
+      "target": "checkoutreadservice_checkoutreadservice_buildbillingsnapshot"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L75",
+      "weight": 1.0,
+      "_src": "checkoutreadservice_checkoutreadservice",
+      "_tgt": "checkoutreadservice_checkoutreadservice_extractcheckoutprefillfromquery",
+      "source": "checkoutreadservice_checkoutreadservice",
+      "target": "checkoutreadservice_checkoutreadservice_extractcheckoutprefillfromquery"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L192",
+      "weight": 1.0,
+      "_src": "checkoutreadservice_checkoutreadservice",
+      "_tgt": "checkoutreadservice_checkoutreadservice_extractcheckoutprefillfromcartitem",
+      "source": "checkoutreadservice_checkoutreadservice",
+      "target": "checkoutreadservice_checkoutreadservice_extractcheckoutprefillfromcartitem"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L245",
+      "weight": 1.0,
+      "_src": "checkoutreadservice_checkoutreadservice",
+      "_tgt": "checkoutreadservice_checkoutreadservice_isgiftoptionallowedforproduct",
+      "source": "checkoutreadservice_checkoutreadservice",
+      "target": "checkoutreadservice_checkoutreadservice_isgiftoptionallowedforproduct"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L258",
+      "weight": 1.0,
+      "_src": "checkoutreadservice_checkoutreadservice",
+      "_tgt": "checkoutreadservice_checkoutreadservice_resolvedefaultbillingaddress",
+      "source": "checkoutreadservice_checkoutreadservice",
+      "target": "checkoutreadservice_checkoutreadservice_resolvedefaultbillingaddress"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L41",
+      "weight": 0.8,
+      "_src": "checkoutreadservice_checkoutreadservice_buildbillingsnapshot",
+      "_tgt": "checkoutreadservice_checkoutreadservice_resolvedefaultbillingaddress",
+      "source": "checkoutreadservice_checkoutreadservice_buildbillingsnapshot",
+      "target": "checkoutreadservice_checkoutreadservice_resolvedefaultbillingaddress"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Services\\Checkout\\CheckoutReadService.php",
+      "source_location": "L124",
+      "weight": 0.8,
+      "_src": "checkoutreadservice_checkoutreadservice_extractcheckoutprefillfromquery",
+      "_tgt": "checkoutreadservice_checkoutreadservice_isgiftoptionallowedforproduct",
+      "source": "checkoutreadservice_checkoutreadservice_extractcheckoutprefillfromquery",
+      "target": "checkoutreadservice_checkoutreadservice_isgiftoptionallowedforproduct"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_src": "checkoutwriteservice",
+      "_tgt": "checkoutwriteservice_checkoutwriteservice",
+      "source": "checkoutwriteservice",
+      "target": "checkoutwriteservice_checkoutwriteservice"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_src": "checkoutwriteservice_checkoutwriteservice",
+      "_tgt": "checkoutwriteservice_checkoutwriteservice_createorderforcheckout",
+      "source": "checkoutwriteservice_checkoutwriteservice",
+      "target": "checkoutwriteservice_checkoutwriteservice_createorderforcheckout"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L161",
+      "weight": 1.0,
+      "_src": "checkoutwriteservice_checkoutwriteservice",
+      "_tgt": "checkoutwriteservice_checkoutwriteservice_createorrefreshdraftorder",
+      "source": "checkoutwriteservice_checkoutwriteservice",
+      "target": "checkoutwriteservice_checkoutwriteservice_createorrefreshdraftorder"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L290",
+      "weight": 1.0,
+      "_src": "checkoutwriteservice_checkoutwriteservice",
+      "_tgt": "checkoutwriteservice_checkoutwriteservice_assertdenominationvalidforproduct",
+      "source": "checkoutwriteservice_checkoutwriteservice",
+      "target": "checkoutwriteservice_checkoutwriteservice_assertdenominationvalidforproduct"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L320",
+      "weight": 1.0,
+      "_src": "checkoutwriteservice_checkoutwriteservice",
+      "_tgt": "checkoutwriteservice_checkoutwriteservice_assertskumonthlylimit",
+      "source": "checkoutwriteservice_checkoutwriteservice",
+      "target": "checkoutwriteservice_checkoutwriteservice_assertskumonthlylimit"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L41",
+      "weight": 0.8,
+      "_src": "checkoutwriteservice_checkoutwriteservice_createorderforcheckout",
+      "_tgt": "checkoutwriteservice_checkoutwriteservice_assertdenominationvalidforproduct",
+      "source": "checkoutwriteservice_checkoutwriteservice_createorderforcheckout",
+      "target": "checkoutwriteservice_checkoutwriteservice_assertdenominationvalidforproduct"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L44",
+      "weight": 0.8,
+      "_src": "checkoutwriteservice_checkoutwriteservice_createorderforcheckout",
+      "_tgt": "checkoutwriteservice_checkoutwriteservice_assertskumonthlylimit",
+      "source": "checkoutwriteservice_checkoutwriteservice_createorderforcheckout",
+      "target": "checkoutwriteservice_checkoutwriteservice_assertskumonthlylimit"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L286",
+      "weight": 0.8,
+      "_src": "checkoutwriteservice_checkoutwriteservice_createorrefreshdraftorder",
+      "_tgt": "checkoutwriteservice_checkoutwriteservice_createorderforcheckout",
+      "source": "checkoutwriteservice_checkoutwriteservice_createorderforcheckout",
+      "target": "checkoutwriteservice_checkoutwriteservice_createorrefreshdraftorder"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L183",
+      "weight": 0.8,
+      "_src": "checkoutwriteservice_checkoutwriteservice_createorrefreshdraftorder",
+      "_tgt": "checkoutwriteservice_checkoutwriteservice_assertdenominationvalidforproduct",
+      "source": "checkoutwriteservice_checkoutwriteservice_createorrefreshdraftorder",
+      "target": "checkoutwriteservice_checkoutwriteservice_assertdenominationvalidforproduct"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Services\\Checkout\\CheckoutWriteService.php",
+      "source_location": "L186",
+      "weight": 0.8,
+      "_src": "checkoutwriteservice_checkoutwriteservice_createorrefreshdraftorder",
+      "_tgt": "checkoutwriteservice_checkoutwriteservice_assertskumonthlylimit",
+      "source": "checkoutwriteservice_checkoutwriteservice_createorrefreshdraftorder",
+      "target": "checkoutwriteservice_checkoutwriteservice_assertskumonthlylimit"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\GateOrderOnKyc.php",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_src": "gateorderonkyc",
+      "_tgt": "gateorderonkyc_gateorderonkyc",
+      "source": "gateorderonkyc",
+      "target": "gateorderonkyc_gateorderonkyc"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\GateOrderOnKyc.php",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_src": "gateorderonkyc_gateorderonkyc",
+      "_tgt": "gateorderonkyc_gateorderonkyc_evaluateorthrow",
+      "source": "gateorderonkyc_gateorderonkyc",
+      "target": "gateorderonkyc_gateorderonkyc_evaluateorthrow"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\GateOrderOnKyc.php",
+      "source_location": "L111",
+      "weight": 1.0,
+      "_src": "gateorderonkyc_gateorderonkyc",
+      "_tgt": "gateorderonkyc_gateorderonkyc_missingdocumenttypes",
+      "source": "gateorderonkyc_gateorderonkyc",
+      "target": "gateorderonkyc_gateorderonkyc_missingdocumenttypes"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Services\\Checkout\\GateOrderOnKyc.php",
+      "source_location": "L62",
+      "weight": 0.8,
+      "_src": "gateorderonkyc_gateorderonkyc_evaluateorthrow",
+      "_tgt": "gateorderonkyc_gateorderonkyc_missingdocumenttypes",
+      "source": "gateorderonkyc_gateorderonkyc_evaluateorthrow",
+      "target": "gateorderonkyc_gateorderonkyc_missingdocumenttypes"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_src": "resolvetax",
+      "_tgt": "resolvetax_resolvetax",
+      "source": "resolvetax",
+      "target": "resolvetax_resolvetax"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_src": "resolvetax_resolvetax",
+      "_tgt": "resolvetax_resolvetax_resolveandpersist",
+      "source": "resolvetax_resolvetax",
+      "target": "resolvetax_resolvetax_resolveandpersist"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L88",
+      "weight": 1.0,
+      "_src": "resolvetax_resolvetax",
+      "_tgt": "resolvetax_resolvetax_resolvejurisdictionid",
+      "source": "resolvetax_resolvetax",
+      "target": "resolvetax_resolvetax_resolvejurisdictionid"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L129",
+      "weight": 1.0,
+      "_src": "resolvetax_resolvetax",
+      "_tgt": "resolvetax_resolvetax_resolveproducttaxassignment",
+      "source": "resolvetax_resolvetax",
+      "target": "resolvetax_resolvetax_resolveproducttaxassignment"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L148",
+      "weight": 1.0,
+      "_src": "resolvetax_resolvetax",
+      "_tgt": "resolvetax_resolvetax_resolverates",
+      "source": "resolvetax_resolvetax",
+      "target": "resolvetax_resolvetax_resolverates"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L31",
+      "weight": 0.8,
+      "_src": "resolvetax_resolvetax_resolveandpersist",
+      "_tgt": "resolvetax_resolvetax_resolvejurisdictionid",
+      "source": "resolvetax_resolvetax_resolveandpersist",
+      "target": "resolvetax_resolvetax_resolvejurisdictionid"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L38",
+      "weight": 0.8,
+      "_src": "resolvetax_resolvetax_resolveandpersist",
+      "_tgt": "resolvetax_resolvetax_resolveproducttaxassignment",
+      "source": "resolvetax_resolvetax_resolveandpersist",
+      "target": "resolvetax_resolvetax_resolveproducttaxassignment"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "source_file": "app\\Services\\Checkout\\ResolveTax.php",
+      "source_location": "L47",
+      "weight": 0.8,
+      "_src": "resolvetax_resolvetax_resolveandpersist",
+      "_tgt": "resolvetax_resolvetax_resolverates",
+      "source": "resolvetax_resolvetax_resolveandpersist",
+      "target": "resolvetax_resolvetax_resolverates"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources\\js\\Layouts\\CheckoutLayout.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_src": "checkoutlayout",
+      "_tgt": "checkoutlayout_checkoutlayout",
+      "source": "checkoutlayout",
+      "target": "checkoutlayout_checkoutlayout"
+    },
+    {
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "resources\\js\\Pages\\Checkout\\CcAvenueRedirect.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_src": "ccavenueredirect",
+      "_tgt": "checkoutlayout",
+      "source": "checkoutlayout",
+      "target": "ccavenueredirect"
+    },
+    {
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "resources\\js\\Pages\\Checkout\\Index.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_src": "index",
+      "_tgt": "checkoutlayout",
+      "source": "checkoutlayout",
+      "target": "index"
+    },
+    {
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "resources\\js\\Pages\\Checkout\\OrderStatus.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_src": "orderstatus",
+      "_tgt": "checkoutlayout",
+      "source": "checkoutlayout",
+      "target": "orderstatus"
+    },
+    {
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "resources\\js\\Pages\\Checkout\\Processing.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_src": "processing",
+      "_tgt": "checkoutlayout",
+      "source": "checkoutlayout",
+      "target": "processing"
+    },
+    {
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "resources\\js\\Pages\\Checkout\\Status.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_src": "status",
+      "_tgt": "checkoutlayout",
+      "source": "checkoutlayout",
+      "target": "status"
+    },
+    {
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "resources\\js\\Pages\\Checkout\\Woohoo\\AutoSubmit.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_src": "autosubmit",
+      "_tgt": "checkoutlayout",
+      "source": "checkoutlayout",
+      "target": "autosubmit"
+    },
+    {
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "resources\\js\\Pages\\Checkout\\Woohoo\\Response.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_src": "response",
+      "_tgt": "checkoutlayout",
+      "source": "checkoutlayout",
+      "target": "response"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources\\js\\Pages\\Checkout\\CcAvenueRedirect.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_src": "ccavenueredirect",
+      "_tgt": "ccavenueredirect_ccavenueredirect",
+      "source": "ccavenueredirect",
+      "target": "ccavenueredirect_ccavenueredirect"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources\\js\\Pages\\Checkout\\Index.tsx",
+      "source_location": "L43",
+      "weight": 1.0,
+      "_src": "index",
+      "_tgt": "index_t",
+      "source": "index",
+      "target": "index_t"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources\\js\\Pages\\Checkout\\Processing.tsx",
+      "source_location": "L35",
+      "weight": 1.0,
+      "_src": "processing",
+      "_tgt": "processing_tick",
+      "source": "processing",
+      "target": "processing_tick"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources\\js\\Pages\\Checkout\\Status.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_src": "status",
+      "_tgt": "status_status",
+      "source": "status",
+      "target": "status_status"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resources\\js\\Pages\\Checkout\\Woohoo\\AutoSubmit.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_src": "autosubmit",
+      "_tgt": "autosubmit_woohooautosubmit",
+      "source": "autosubmit",
+      "target": "autosubmit_woohooautosubmit"
+    }
+  ]
+}

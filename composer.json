@@ -24,6 +24,7 @@
     "require-dev": {
         "barryvdh/laravel-debugbar": "^4.2",
         "fakerphp/faker": "^1.23",
+        "laravel/boost": "^2.4",
         "laravel/dusk": "^8.0",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.31",

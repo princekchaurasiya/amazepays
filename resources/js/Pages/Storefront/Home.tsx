@@ -35,8 +35,6 @@ function thumbUrl(t: string | null | undefined) {
 export default function Home({
     slides = [],
     homeSettings,
-    categories = [],
-    brands = [],
     sections = [],
     sectionProductsById = {},
     sectionBrandsById = {},
@@ -75,20 +73,26 @@ export default function Home({
 
             <div className="mx-auto max-w-7xl px-4 py-10">
                 {Array.isArray(sections) &&
-                    sections
-                        .filter((s) => Array.isArray(s?.items) && s.items.some((it) => Number(it?.brand_id || 0) > 0))
-                        .map((s, idx) => {
-                            const items = (s.items ?? [])
+                    sections.map((s, idx) => {
+                        const items = s.items ?? [];
+                        if (items.length === 0) return null;
+
+                        // Identify section content type
+                        const hasBrands = items.some((it) => Number(it?.brand_id || 0) > 0);
+                        const hasCategories = items.some((it) => Number(it?.category_id || 0) > 0);
+                        const hasProducts = items.some((it) => Number(it?.product_id || 0) > 0);
+
+                        if (hasBrands) {
+                            const brandItems = items
                                 .filter((it) => Number(it?.brand_id || 0) > 0)
                                 .slice()
                                 .sort((a, b) => Number(a?.sort_order || 0) - Number(b?.sort_order || 0));
 
-                            const brandRows = items
+                            const brandRows = brandItems
                                 .map((it) => sectionBrandsById[String(it.brand_id)] as Brand | undefined)
                                 .filter(Boolean) as Brand[];
 
-                            if (brandRows.length === 0) return null;
-                            if (!s?.title) return null;
+                            if (brandRows.length === 0 || !s?.title) return null;
 
                             return (
                                 <section key={`${s.type ?? 'brand-section'}-${idx}`} className="mb-12 scroll-mt-28">
@@ -106,25 +110,19 @@ export default function Home({
                                     </div>
                                 </section>
                             );
-                        })}
+                        }
 
-                {/* Legacy hot deals removed (Option B). */}
-
-                {Array.isArray(sections) &&
-                    sections
-                        .filter((s) => Array.isArray(s?.items) && s.items.some((it) => Number(it?.category_id || 0) > 0))
-                        .map((s, idx) => {
-                            const items = (s.items ?? [])
+                        if (hasCategories) {
+                            const catItems = items
                                 .filter((it) => Number(it?.category_id || 0) > 0)
                                 .slice()
                                 .sort((a, b) => Number(a?.sort_order || 0) - Number(b?.sort_order || 0));
 
-                            const categoryRows = items
+                            const categoryRows = catItems
                                 .map((it) => sectionCategoriesById[String(it.category_id)] as Cat | undefined)
                                 .filter(Boolean) as Cat[];
 
-                            if (categoryRows.length === 0) return null;
-                            if (!s?.title) return null;
+                            if (categoryRows.length === 0 || !s?.title) return null;
 
                             return (
                                 <section key={`${s.type ?? 'category-section'}-${idx}`} className="mb-12 scroll-mt-28">
@@ -133,65 +131,60 @@ export default function Home({
                                     </p>
                                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                                         {categoryRows.map((c) => {
-                                const t = thumbUrl(c.thumbnail);
-                                const showGlyph = !t && getCategoryIconDef(c.name);
-                                const accent =
-                                    typeof c.accent_color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(c.accent_color.trim())
-                                        ? c.accent_color.trim()
-                                        : categoryAccentColor(c.name);
-                                const tintBg = categoryAccentBackground(accent, 0.22);
-                                return (
-                                    <Link
-                                        key={c.id}
-                                        href={paths.category(c.slug)}
-                                        className="flex flex-col items-center rounded-2xl bg-white p-4 text-center shadow-sm ring-1 ring-gray-100 transition hover:ring-brand-500/25"
-                                    >
-                                        <span
-                                            className={`mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full ring-1 ${tintBg ? 'ring-black/5' : 'bg-gray-50 ring-gray-100'}`}
-                                            style={tintBg ? { backgroundColor: tintBg } : undefined}
-                                        >
-                                            {t ? (
-                                                <img src={t} alt="" className="h-full w-full object-cover" />
-                                            ) : showGlyph ? (
-                                                <CategoryGlyph
-                                                    name={c.name}
-                                                    className={`h-7 w-7 ${accent ? '' : 'text-brand-600'}`}
-                                                    accentColor={accent}
-                                                />
-                                            ) : (
-                                                <span
-                                                    className={`text-lg font-bold ${accent ? '' : 'text-brand-600'}`}
-                                                    style={accent ? { color: accent } : undefined}
+                                            const t = thumbUrl(c.thumbnail);
+                                            const showGlyph = !t && getCategoryIconDef(c.name);
+                                            const accent =
+                                                typeof c.accent_color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(c.accent_color.trim())
+                                                    ? c.accent_color.trim()
+                                                    : categoryAccentColor(c.name);
+                                            const tintBg = categoryAccentBackground(accent, 0.22);
+                                            return (
+                                                <Link
+                                                    key={c.id}
+                                                    href={paths.category(c.slug)}
+                                                    className="flex flex-col items-center rounded-2xl bg-white p-4 text-center shadow-sm ring-1 ring-gray-100 transition hover:ring-brand-500/25"
                                                 >
-                                                    {c.name.slice(0, 1).toUpperCase()}
-                                                </span>
-                                            )}
-                                        </span>
-                                        <span className="line-clamp-2 text-sm font-medium text-gray-900">{c.name}</span>
-                                    </Link>
-                                );
+                                                    <span
+                                                        className={`mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full ring-1 ${tintBg ? 'ring-black/5' : 'bg-gray-50 ring-gray-100'}`}
+                                                        style={tintBg ? { backgroundColor: tintBg } : undefined}
+                                                    >
+                                                        {t ? (
+                                                            <img src={t} alt="" className="h-full w-full object-cover" />
+                                                        ) : showGlyph ? (
+                                                            <CategoryGlyph
+                                                                name={c.name}
+                                                                className={`h-7 w-7 ${accent ? '' : 'text-brand-600'}`}
+                                                                accentColor={accent}
+                                                            />
+                                                        ) : (
+                                                            <span
+                                                                className={`text-lg font-bold ${accent ? '' : 'text-brand-600'}`}
+                                                                style={accent ? { color: accent } : undefined}
+                                                            >
+                                                                {c.name.slice(0, 1).toUpperCase()}
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                    <span className="line-clamp-2 text-sm font-medium text-gray-900">{c.name}</span>
+                                                </Link>
+                                            );
                                         })}
                                     </div>
                                 </section>
                             );
-                        })}
+                        }
 
-                {hs.section_other_deal_status &&
-                    Array.isArray(sections) &&
-                    sections
-                        .filter((s) => Array.isArray(s?.items) && s.items.some((it) => Number(it?.product_id || 0) > 0))
-                        .map((s, idx) => {
-                            const items = (s.items ?? [])
+                        if (hasProducts) {
+                            const prodItems = items
                                 .filter((it) => Number(it?.product_id || 0) > 0)
                                 .slice()
                                 .sort((a, b) => Number(a?.sort_order || 0) - Number(b?.sort_order || 0));
 
-                            const products = items
+                            const products = prodItems
                                 .map((it) => sectionProductsById[String(it.product_id)] as Product | undefined)
                                 .filter(Boolean) as Product[];
 
-                            if (products.length === 0) return null;
-                            if (!s?.title) return null;
+                            if (products.length === 0 || !s?.title) return null;
 
                             return (
                                 <section key={`${s.type ?? 'section'}-${idx}`} className="mb-12 scroll-mt-28">
@@ -205,8 +198,10 @@ export default function Home({
                                     </div>
                                 </section>
                             );
-                        })}
+                        }
 
+                        return null;
+                    })}
             </div>
         </StorefrontLayout>
     );

@@ -473,10 +473,37 @@ class ProductPageController extends Controller
 
     private function resolveCartForUser(int $userId, bool $create = true): ?Cart
     {
+        $tenantId = $this->resolveTenantId(request());
+
         if ($create) {
-            return Cart::query()->firstOrCreate(['user_id' => $userId]);
+            return Cart::query()->firstOrCreate([
+                'user_id' => $userId,
+                'tenant_id' => $tenantId,
+            ]);
         }
 
-        return Cart::query()->where('user_id', $userId)->first();
+        return Cart::query()
+            ->where('user_id', $userId)
+            ->where('tenant_id', $tenantId)
+            ->first();
+    }
+
+    private function resolveTenantId(Request $request): int
+    {
+        $tenant = $request->attributes->get('tenant');
+        if ($tenant && method_exists($tenant, 'getKey')) {
+            return (int) $tenant->getKey();
+        }
+
+        if (app()->bound('current_tenant_id')) {
+            return (int) app('current_tenant_id');
+        }
+
+        // Fallback to first tenant if exists, or ID 1
+        if (Schema::hasTable('tenants')) {
+            return (int) (DB::table('tenants')->orderBy('id')->value('id') ?? 1);
+        }
+
+        return 1;
     }
 }

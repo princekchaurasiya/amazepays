@@ -8,8 +8,8 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class CheckoutWriteService
 {
@@ -79,7 +79,7 @@ class CheckoutWriteService
             $orderNumber = 'AMZ'.now()->format('YmdHis').Str::upper(Str::random(6));
 
             $orderAttrs = [
-                'tenant_id' => 1,
+                'tenant_id' => $this->resolveTenantId(),
                 'user_id' => $userId,
                 'order_number' => $orderNumber,
                 'channel' => 'storefront',
@@ -130,6 +130,16 @@ class CheckoutWriteService
                 'line_total_minor' => $grandTotalMinor,
                 'currency' => 'INR',
                 'fulfilment_status' => 'pending',
+                'gift_theme_id' => $validated['gift_theme_id'] ?? null,
+                'gift_send_option' => (string) ($validated['gift_send_option'] ?? 'buy_for_self'),
+                'gift_message_title' => $validated['gift_message_title'] ?? null,
+                'gift_delivery_option' => $validated['gift_delivery_option'] ?? null,
+                'gift_delivery_at' => $validated['gift_delivery_at'] ?? null,
+                'sender_first_name' => $validated['sender_first_name'] ?? null,
+                'receiver_name' => $validated['receiver_name'] ?? null,
+                'receiver_email' => $validated['receiver_email'] ?? null,
+                'receiver_mobile' => $validated['receiver_mobile'] ?? null,
+                'receiver_msg' => $validated['receiver_msg'] ?? null,
             ]);
 
             // Phase-3 schema: persist immutable billing snapshot (required for downstream providers like Woohoo).
@@ -260,6 +270,16 @@ class CheckoutWriteService
                     'line_total_minor' => $grandTotalMinor,
                     'currency' => 'INR',
                     'fulfilment_status' => 'pending',
+                    'gift_theme_id' => $validated['gift_theme_id'] ?? null,
+                    'gift_send_option' => (string) ($validated['gift_send_option'] ?? 'buy_for_self'),
+                    'gift_message_title' => $validated['gift_message_title'] ?? null,
+                    'gift_delivery_option' => $validated['gift_delivery_option'] ?? null,
+                    'gift_delivery_at' => $validated['gift_delivery_at'] ?? null,
+                    'sender_first_name' => $validated['sender_first_name'] ?? null,
+                    'receiver_name' => $validated['receiver_name'] ?? null,
+                    'receiver_email' => $validated['receiver_email'] ?? null,
+                    'receiver_mobile' => $validated['receiver_mobile'] ?? null,
+                    'receiver_msg' => $validated['receiver_msg'] ?? null,
                 ]);
 
                 if (Schema::hasTable('order_billing_snapshots')) {
@@ -346,5 +366,23 @@ class CheckoutWriteService
                 'message' => "The remaining purchase limit is ₹{$remainingLimit}, but your order total is ₹{$orderAmount}.",
             ]);
         }
+    }
+
+    private function resolveTenantId(): int
+    {
+        if (app()->bound('current_tenant_id')) {
+            return (int) app('current_tenant_id');
+        }
+
+        $tenant = request()->attributes->get('tenant');
+        if ($tenant && method_exists($tenant, 'getKey')) {
+            return (int) $tenant->getKey();
+        }
+
+        if (Schema::hasTable('tenants')) {
+            return (int) (DB::table('tenants')->orderBy('id')->value('id') ?? 1);
+        }
+
+        return 1;
     }
 }

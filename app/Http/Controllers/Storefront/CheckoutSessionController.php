@@ -14,14 +14,15 @@ use App\Models\User;
 use App\Services\Checkout\CheckoutWriteService;
 use App\Services\Checkout\ResolveTax;
 use App\Support\Http\ResponsePayload;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 /**
@@ -107,6 +108,7 @@ final class CheckoutSessionController extends Controller
                         if (! in_array($valueFloat, $allowed, true)) {
                             $fail('Invalid denomination value. Allowed values are: '.implode(', ', array_map(fn ($d) => '₹'.(float) $d, $allowed)));
                         }
+
                         return;
                     }
 
@@ -115,6 +117,7 @@ final class CheckoutSessionController extends Controller
 
                     if ($minPrice <= 0 || $maxPrice <= 0 || $maxPrice < $minPrice) {
                         $fail('Price range not configured for this product.');
+
                         return;
                     }
 
@@ -305,6 +308,7 @@ final class CheckoutSessionController extends Controller
 
                     if ($minPrice <= 0 || $maxPrice <= 0 || $maxPrice < $minPrice) {
                         $fail('Price range not configured for this product.');
+
                         return;
                     }
 
@@ -395,6 +399,7 @@ final class CheckoutSessionController extends Controller
             'denomination' => $denomination,
             'quantity' => $quantity,
             'line_total' => $lineTotal,
+            'unit_amount_minor' => (int) round($denomination * 100),
         ]);
 
         return back()->with('success', 'Added to cart successfully.');
@@ -489,11 +494,38 @@ final class CheckoutSessionController extends Controller
 
     private function resolveCartForUser(int $userId, bool $create = true): ?Cart
     {
+        $tenantId = $this->resolveTenantId(request());
+
         if ($create) {
-            return Cart::query()->firstOrCreate(['user_id' => $userId]);
+            return Cart::query()->firstOrCreate([
+                'user_id' => $userId,
+                'tenant_id' => $tenantId,
+            ]);
         }
 
-        return Cart::query()->where('user_id', $userId)->first();
+        return Cart::query()
+            ->where('user_id', $userId)
+            ->where('tenant_id', $tenantId)
+            ->first();
+    }
+
+    private function resolveTenantId(Request $request): int
+    {
+        $tenant = $request->attributes->get('tenant');
+        if ($tenant && method_exists($tenant, 'getKey')) {
+            return (int) $tenant->getKey();
+        }
+
+        if (app()->bound('current_tenant_id')) {
+            return (int) app('current_tenant_id');
+        }
+
+        // Fallback to first tenant if exists, or ID 1
+        if (Schema::hasTable('tenants')) {
+            return (int) (DB::table('tenants')->orderBy('id')->value('id') ?? 1);
+        }
+
+        return 1;
     }
 
     private function assertConsumerStorefrontProduct(Product $product): void
@@ -553,4 +585,3 @@ final class CheckoutSessionController extends Controller
         }
     }
 }
-

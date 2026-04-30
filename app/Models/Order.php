@@ -48,6 +48,17 @@ class Order extends Model
         'order_payment',
         'additional_txn_fields',
         'woohoo_currency_snapshot',
+        'gift_send_option',
+        'receiver_name',
+        'receiver_email',
+        'receiver_mobile',
+        'receiver_msg',
+        'delivery_mode',
+        'gift_theme_id',
+        'gift_message_title',
+        'sender_first_name',
+        'gift_delivery_option',
+        'gift_delivery_at',
     ];
 
     protected $casts = [
@@ -65,6 +76,8 @@ class Order extends Model
         'order_payment' => 'array',
         'additional_txn_fields' => 'array',
         'woohoo_currency_snapshot' => 'array',
+        'gift_delivery_at' => 'datetime',
+        'gift_theme_id' => 'integer',
     ];
 
     public function tenant(): BelongsTo

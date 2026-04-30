@@ -29,6 +29,8 @@ class CartItem extends Model
         'receiver_email',
         'receiver_mobile',
         'receiver_msg',
+        'unit_amount_minor',
+        'currency',
     ];
 
     protected $casts = [

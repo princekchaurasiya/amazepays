@@ -29,6 +29,16 @@ class OrderItem extends Model
         'line_total_minor',
         'currency',
         'fulfilment_status',
+        'gift_theme_id',
+        'gift_send_option',
+        'gift_message_title',
+        'gift_delivery_option',
+        'gift_delivery_at',
+        'sender_first_name',
+        'receiver_name',
+        'receiver_email',
+        'receiver_mobile',
+        'receiver_msg',
     ];
 
     protected $casts = [
@@ -38,6 +48,8 @@ class OrderItem extends Model
         'line_discount_minor' => 'integer',
         'line_tax_minor' => 'integer',
         'line_total_minor' => 'integer',
+        'gift_delivery_at' => 'datetime',
+        'gift_theme_id' => 'integer',
     ];
 
     public function order(): BelongsTo

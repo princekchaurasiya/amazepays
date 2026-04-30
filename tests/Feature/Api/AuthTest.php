@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\Otp;
+use App\Models\UserOtpCode;
 use App\Models\User;
 use App\Services\SmsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,13 +23,18 @@ class AuthTest extends TestCase
 
     private function seedValidOtp(string $phone, string $plain = '123456'): void
     {
-        Otp::create([
-            'mobile_number' => $phone,
-            'otp' => Hash::make($plain),
-            'type' => 'login',
+        UserOtpCode::create([
+            'user_id' => null,
+            'identity_id' => null,
+            'channel' => 'sms',
+            'purpose' => 'login',
+            'identifier' => $phone,
+            'code_hash' => Hash::make($plain),
+            'attempts' => 0,
+            'max_attempts' => 5,
             'expires_at' => now()->addMinutes(5),
-            'is_used' => false,
-            'ip_address' => '127.0.0.1',
+            'consumed_at' => null,
+            'request_ip' => '127.0.0.1',
         ]);
     }
 
@@ -39,8 +44,13 @@ class AuthTest extends TestCase
         $this->seedValidOtp($mobile);
 
         $user = User::factory()->create([
-            'mobile' => $mobile,
             'two_factor_enabled' => false,
+        ]);
+        $user->authIdentities()->create([
+            'type' => 'mobile',
+            'identifier' => $mobile,
+            'is_primary' => true,
+            'verified_at' => now(),
         ]);
 
         $response = $this->postJson('/api/v1/auth/otp/verify', [
@@ -94,10 +104,9 @@ class AuthTest extends TestCase
             ->assertJsonPath('data.action', 'registered')
             ->assertJsonStructure(['success', 'message', 'data' => ['token', 'user']]);
 
-        $this->assertDatabaseHas('users', [
-            'mobile' => $mobile,
-            'name' => 'Test User',
-            'email' => 'newuser@example.com',
+        $this->assertDatabaseHas('user_identities', [
+            'identifier' => $mobile,
+            'user_id' => User::whereMobile($mobile)->first()->id,
         ]);
     }
 
@@ -106,10 +115,15 @@ class AuthTest extends TestCase
         $mobile = '9876501234';
         $this->seedValidOtp($mobile);
 
-        User::factory()->create([
-            'mobile' => $mobile,
+        $user = User::factory()->create([
             'account_locked' => true,
             'account_locked_reason' => 'Too many failed attempts',
+        ]);
+        $user->authIdentities()->create([
+            'type' => 'mobile',
+            'identifier' => $mobile,
+            'is_primary' => true,
+            'verified_at' => now(),
         ]);
 
         $response = $this->postJson('/api/v1/auth/otp/verify', [

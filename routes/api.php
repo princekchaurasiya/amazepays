@@ -40,6 +40,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             ->middleware('throttle:20,1');
         Route::post('/2fa/verify', [AuthController::class, 'verifyTwoFactor'])->name('2fa.verify')
             ->middleware('auth:sanctum');
+
+        // Aliases for consistency with Web/Inertia route names
+        Route::post('/send-otp', [AuthController::class, 'sendOtp'])->name('send-otp')
+            ->middleware('throttle:3,1');
+        Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('verify-otp')
+            ->middleware('throttle:20,1');
+        Route::post('/complete-registration', [AuthController::class, 'completeProfile'])->name('complete-registration')
+            ->middleware('throttle:20,1');
     });
 
     /*

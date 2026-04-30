@@ -18,6 +18,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RequireTwoFactor;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\StampRequestId;
 use App\Http\Middleware\StepUpAuth;
 use App\Http\Middleware\ThreatDetection;
 use App\Http\Middleware\VerifyCCAvenueSignature;
@@ -84,6 +85,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // API group
         $middleware->api(prepend: [
+            StampRequestId::class,
             EnsureFrontendRequestsAreStateful::class,
             ThreatDetection::class,
             DetectVpnProxy::class,

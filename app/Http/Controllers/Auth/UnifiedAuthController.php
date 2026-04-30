@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
 use App\Enums\ResponseCode;
+use App\Http\Controllers\Controller;
 use App\Models\BlockedMobile;
 use App\Models\User;
 use App\Models\UserIdentity;
@@ -12,6 +12,7 @@ use App\Support\Http\ResponsePayload;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -40,10 +41,16 @@ class UnifiedAuthController extends Controller
     private function normalizeOtpType(?string $type): string
     {
         $t = strtolower(trim((string) $type));
+
         return match ($t) {
             'login', 'signup', 'register', 'transaction' => $t,
             default => 'login',
         };
+    }
+
+    private function isInertiaRequest(Request $request): bool
+    {
+        return $request->headers->has('X-Inertia');
     }
 
     /**
@@ -51,7 +58,7 @@ class UnifiedAuthController extends Controller
      */
     public function sendOtp(Request $request, OtpService $otp)
     {
-        $phone = $this->normalizePhone((string) $request->input('phone', $request->input('destination', '')));
+        $phone = $this->normalizePhone((string) $request->input('phone', $request->input('destination', $request->input('mobile', ''))));
 
         $validator = Validator::make(
             ['phone' => $phone],
@@ -115,7 +122,7 @@ class UnifiedAuthController extends Controller
      */
     public function verifyOtp(Request $request, OtpService $otp)
     {
-        $phone = $this->normalizePhone((string) $request->input('phone', $request->input('destination', '')));
+        $phone = $this->normalizePhone((string) $request->input('phone', $request->input('destination', $request->input('mobile', ''))));
         $otpCode = (string) $request->input('otp', '');
 
         $validator = Validator::make(
@@ -208,8 +215,29 @@ class UnifiedAuthController extends Controller
             }
 
             Auth::login($user);
+            $request->session()->regenerate();
+
+            $isInertia = $this->isInertiaRequest($request);
+            $expectsJson = $request->expectsJson();
+
+            Log::info('OTP verified', [
+                'user_id' => $user->id,
+                'authenticated' => auth()->check(),
+                'session_id' => $request->session()->getId(),
+                'is_inertia' => $isInertia,
+                'expects_json' => $expectsJson,
+            ]);
 
             $request->session()->forget([self::SESSION_PHONE, self::SESSION_AT]);
+
+            if ($isInertia || ! $expectsJson) {
+                $url = (string) $user->homeUrl();
+                if (! str_starts_with($url, '/')) {
+                    $url = '/';
+                }
+
+                return redirect()->intended($url);
+            }
 
             return ResponsePayload::ok('auth.login.success', [
                 'action' => 'logged_in',
@@ -242,7 +270,7 @@ class UnifiedAuthController extends Controller
             return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'auth.session.expired', details: ['reason' => 'registration_session_expired'], httpStatus: 400);
         }
 
-        $phone = $this->normalizePhone((string) $request->input('phone', $sessionPhone));
+        $phone = $this->normalizePhone((string) $request->input('phone', $request->input('destination', $request->input('mobile', $sessionPhone))));
         if ($phone !== $sessionPhone) {
             return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'error.validation_failed', details: ['reason' => 'phone_mismatch'], httpStatus: 400);
         }
@@ -308,6 +336,27 @@ class UnifiedAuthController extends Controller
 
         $request->session()->forget([self::SESSION_PHONE, self::SESSION_AT]);
         Auth::login($user);
+        $request->session()->regenerate();
+
+        $isInertia = $this->isInertiaRequest($request);
+        $expectsJson = $request->expectsJson();
+
+        Log::info('OTP verified (registration complete)', [
+            'user_id' => $user->id,
+            'authenticated' => auth()->check(),
+            'session_id' => $request->session()->getId(),
+            'is_inertia' => $isInertia,
+            'expects_json' => $expectsJson,
+        ]);
+
+        if ($isInertia || ! $expectsJson) {
+            $url = (string) $user->homeUrl();
+            if (! str_starts_with($url, '/')) {
+                $url = '/';
+            }
+
+            return redirect()->intended($url);
+        }
 
         return ResponsePayload::created('auth.profile.completed', [
             'action' => 'registered',

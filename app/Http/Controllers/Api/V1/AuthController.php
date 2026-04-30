@@ -68,7 +68,7 @@ class AuthController extends Controller
 
     public function sendOtp(Request $request): ResponsePayload
     {
-        $phone = $this->normalizePhone((string) $request->input('mobile', ''));
+        $phone = $this->normalizePhone((string) $request->input('phone', $request->input('destination', $request->input('mobile', ''))));
 
         $validator = Validator::make(
             ['mobile' => $phone],
@@ -133,7 +133,7 @@ class AuthController extends Controller
      */
     public function verifyOtp(Request $request): ResponsePayload
     {
-        $phone = $this->normalizePhone((string) $request->input('mobile', ''));
+        $phone = $this->normalizePhone((string) $request->input('phone', $request->input('destination', $request->input('mobile', ''))));
         $otp = (string) $request->input('otp', '');
 
         $validator = Validator::make(

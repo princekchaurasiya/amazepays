@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Models\Order;
+use App\Support\Http\ResponsePayload;
+use App\Enums\ResponseCode;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,11 +29,16 @@ class CheckPurchaseLimits
 
         // Check single-order max
         if ($amount > $limits['single_order_max']) {
-            return response()->json([
-                'error' => 'PURCHASE_LIMIT_EXCEEDED',
-                'message' => "Maximum order amount is ₹{$limits['single_order_max']}.",
-                'limit' => $limits['single_order_max'],
-            ], Response::HTTP_FORBIDDEN);
+            return ResponsePayload::fail(
+                ResponseCode::PURCHASE_LIMIT_EXCEEDED,
+                'error.purchase_limit_exceeded',
+                details: [
+                    'scope' => 'single_order',
+                    'limit' => $limits['single_order_max'],
+                    'amount' => $amount,
+                ],
+                httpStatus: Response::HTTP_FORBIDDEN
+            )->toResponse($request);
         }
 
         // Check daily limit
@@ -39,12 +46,16 @@ class CheckPurchaseLimits
         if ($dailySpent + $amount > $limits['daily_max']) {
             $remaining = max(0, $limits['daily_max'] - $dailySpent);
 
-            return response()->json([
-                'error' => 'DAILY_LIMIT_EXCEEDED',
-                'message' => "Daily purchase limit reached. Remaining today: ₹{$remaining}.",
-                'limit' => $limits['daily_max'],
-                'remaining' => $remaining,
-            ], Response::HTTP_FORBIDDEN);
+            return ResponsePayload::fail(
+                ResponseCode::PURCHASE_LIMIT_EXCEEDED,
+                'error.purchase_limit_exceeded',
+                details: [
+                    'scope' => 'daily',
+                    'limit' => $limits['daily_max'],
+                    'remaining' => $remaining,
+                ],
+                httpStatus: Response::HTTP_FORBIDDEN
+            )->toResponse($request);
         }
 
         // Check monthly limit
@@ -52,12 +63,16 @@ class CheckPurchaseLimits
         if ($monthlySpent + $amount > $limits['monthly_max']) {
             $remaining = max(0, $limits['monthly_max'] - $monthlySpent);
 
-            return response()->json([
-                'error' => 'MONTHLY_LIMIT_EXCEEDED',
-                'message' => "Monthly purchase limit reached. Remaining this month: ₹{$remaining}.",
-                'limit' => $limits['monthly_max'],
-                'remaining' => $remaining,
-            ], Response::HTTP_FORBIDDEN);
+            return ResponsePayload::fail(
+                ResponseCode::PURCHASE_LIMIT_EXCEEDED,
+                'error.purchase_limit_exceeded',
+                details: [
+                    'scope' => 'monthly',
+                    'limit' => $limits['monthly_max'],
+                    'remaining' => $remaining,
+                ],
+                httpStatus: Response::HTTP_FORBIDDEN
+            )->toResponse($request);
         }
 
         return $next($request);

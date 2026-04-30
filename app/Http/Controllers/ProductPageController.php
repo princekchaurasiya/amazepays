@@ -185,7 +185,7 @@ class ProductPageController extends Controller
             return;
         }
 
-        $message = __('responses.PRODUCT_UNAVAILABLE');
+        $message = __('error.product_unavailable');
 
         throw ValidationException::withMessages([
             'gift_send_option' => $message,

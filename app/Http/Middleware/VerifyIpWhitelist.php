@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ResponseCode;
 use App\Models\IpWhitelist;
 use App\Services\SecurityEventService;
+use App\Support\Http\ResponsePayload;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -46,10 +48,12 @@ class VerifyIpWhitelist
                 ]
             );
 
-            return response()->json([
-                'error' => 'IP_NOT_WHITELISTED',
-                'message' => 'Your IP address is not authorized for API access on this account.',
-            ], Response::HTTP_FORBIDDEN);
+            return ResponsePayload::fail(
+                ResponseCode::FORBIDDEN,
+                'error.forbidden',
+                details: ['reason' => 'ip_not_whitelisted'],
+                httpStatus: Response::HTTP_FORBIDDEN
+            )->toResponse($request);
         }
 
         return $next($request);

@@ -16,7 +16,8 @@ return new class extends Migration
     {
         Schema::create('user_identities', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnUpdate()->cascadeOnDelete();
+            // Identity can exist before a user is created (OTP pre-registration).
+            $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnUpdate()->nullOnDelete();
             $table->enum('type', ['mobile'])->default('mobile')->index();
             $table->string('identifier')->comment('10-digit mobile number');
             $table->string('display_identifier')->nullable();

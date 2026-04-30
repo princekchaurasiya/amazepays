@@ -168,7 +168,7 @@ Root Navigator
 
 | Element | Source | Refresh |
 |---------|--------|---------|
-| Hero banners | `GET /api/v1/home` → `data.slides` (each slide: `image_mobile`, `desktop_image`, optional links) | Pull-to-refresh / TanStack refetch |
+| Hero banners | `GET /api/v1/homepage` (homepage document; see `API_DOCUMENTATION.md`) | Pull-to-refresh / TanStack refetch |
 | Categories row | `GET /api/v1/catalog/categories` | Cached ~15 min |
 | Product list | `GET /api/v1/catalog` (pagination; filters: `search`, `category_id`, `brand_id`) | Cached ~5 min |
 | Active offers | (when exposed) offer validate endpoints — see API docs | — |
@@ -354,13 +354,13 @@ export default client;
 // api/products.ts
 export const products = {
   list: (filters: ProductFilters) =>
-    client.get('/products', { params: filters }),
+    client.get('/catalog', { params: filters }),
 
   get: (id: number) =>
-    client.get(`/products/${id}`),
+    client.get(`/catalog/${id}`),
 
   search: (query: string) =>
-    client.get('/products', { params: { search: query } }),
+    client.get('/catalog', { params: { search: query } }),
 };
 
 // api/orders.ts
@@ -371,8 +371,8 @@ export const orders = {
   list: (params?: OrderListParams) =>
     client.get('/orders', { params }),
 
-  get: (merchantOrderId: string) =>
-    client.get(`/orders/${merchantOrderId}`),
+  get: (orderId: string | number) =>
+    client.get(`/orders/${orderId}`),
 };
 
 // api/wallet.ts
@@ -461,11 +461,15 @@ Since payment gateways (CCAvenue, Razorpay, Unlimit) require browser-based check
 Checkout Screen
     │
     ▼
-POST /api/v1/checkout/initiate
-    → Returns { payment_url, merchant_order_id }
+POST /api/v1/checkout/sessions
+    → Returns { order_id, order_number, totals... }
     │
     ▼
-Open WebView with payment_url
+POST /api/v1/payments/sessions
+    → Returns { redirect_url, payment_token, gateway_order_id }
+    │
+    ▼
+Open WebView with redirect_url
     │
     ├── User completes payment on gateway
     │   │

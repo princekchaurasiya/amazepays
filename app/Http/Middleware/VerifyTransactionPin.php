@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ResponseCode;
 use App\Models\SecurityEventLog;
 use App\Services\SecurityEventService;
+use App\Support\Http\ResponsePayload;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,7 +23,8 @@ class VerifyTransactionPin
         $user = $request->user();
 
         if (! $user) {
-            return response()->json(['error' => 'UNAUTHENTICATED'], Response::HTTP_UNAUTHORIZED);
+            return ResponsePayload::fail(ResponseCode::UNAUTHENTICATED, 'error.unauthenticated', httpStatus: Response::HTTP_UNAUTHORIZED)
+                ->toResponse($request);
         }
 
         // Check if transaction PIN is required for this user
@@ -33,19 +36,23 @@ class VerifyTransactionPin
         $pinCode = $request->input('pin');
 
         if (! $pin && ! $pinCode) {
-            return response()->json([
-                'error' => 'TRANSACTION_PIN_REQUIRED',
-                'message' => 'Transaction PIN is required for this action.',
-            ], Response::HTTP_FORBIDDEN);
+            return ResponsePayload::fail(
+                ResponseCode::FORBIDDEN,
+                'error.forbidden',
+                details: ['reason' => 'transaction_pin_required'],
+                httpStatus: Response::HTTP_FORBIDDEN
+            )->toResponse($request);
         }
 
         $transactionPin = $user->transactionPin;
 
         if (! $transactionPin) {
-            return response()->json([
-                'error' => 'PIN_NOT_SET',
-                'message' => 'Please set a transaction PIN before performing financial actions.',
-            ], Response::HTTP_FORBIDDEN);
+            return ResponsePayload::fail(
+                ResponseCode::FORBIDDEN,
+                'error.forbidden',
+                details: ['reason' => 'transaction_pin_not_set'],
+                httpStatus: Response::HTTP_FORBIDDEN
+            )->toResponse($request);
         }
 
         if ($transactionPin->isLocked()) {
@@ -56,11 +63,15 @@ class VerifyTransactionPin
                 ['reason' => 'pin_locked', 'user_id' => $user->id]
             );
 
-            return response()->json([
-                'error' => 'PIN_LOCKED',
-                'message' => 'Transaction PIN is locked. Try again in 30 minutes.',
-                'locked_until' => $transactionPin->locked_until,
-            ], Response::HTTP_LOCKED);
+            return ResponsePayload::fail(
+                ResponseCode::FORBIDDEN,
+                'error.forbidden',
+                details: [
+                    'reason' => 'transaction_pin_locked',
+                    'locked_until' => $transactionPin->locked_until,
+                ],
+                httpStatus: Response::HTTP_LOCKED
+            )->toResponse($request);
         }
 
         if (! $transactionPin->verify($pin ?? $pinCode)) {
@@ -74,11 +85,15 @@ class VerifyTransactionPin
                 ]
             );
 
-            return response()->json([
-                'error' => 'INVALID_PIN',
-                'message' => 'Invalid transaction PIN.',
-                'attempts_remaining' => max(0, config('security.transaction_pin.max_failed_attempts', 5) - $transactionPin->fresh()->failed_attempts),
-            ], Response::HTTP_FORBIDDEN);
+            return ResponsePayload::fail(
+                ResponseCode::FORBIDDEN,
+                'error.forbidden',
+                details: [
+                    'reason' => 'invalid_transaction_pin',
+                    'attempts_remaining' => max(0, config('security.transaction_pin.max_failed_attempts', 5) - $transactionPin->fresh()->failed_attempts),
+                ],
+                httpStatus: Response::HTTP_FORBIDDEN
+            )->toResponse($request);
         }
 
         return $next($request);

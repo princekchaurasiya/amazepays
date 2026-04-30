@@ -48,7 +48,7 @@ final class ProductPricingController extends Controller
             tenant: null,
         );
 
-        return $this->ok('Pricing resolved.', [
+        return $this->ok('response.ok', [
             'sku' => $sku,
             'pricing' => $result->toArray(),
         ]);

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\UserIdentity;
 use App\Models\UserOtpCode;
 use App\Models\SecurityEventLog;
 use Illuminate\Support\Facades\Cache;
@@ -12,7 +13,12 @@ class OtpService
 {
     public function __construct(private SmsService $sms) {}
 
-    public function sendOtp(string $phone, string $type = 'login'): array
+    private function cooldownKey(string $phone, string $purpose): string
+    {
+        return "otp_cooldown:{$purpose}:{$phone}";
+    }
+
+    public function sendOtp(string $phone, string $type = 'login', ?UserIdentity $identity = null): array
     {
         // Check rate limit
         if ($this->isRateLimited($phone)) {
@@ -28,6 +34,19 @@ class OtpService
 
         $purpose = $this->normalizePurpose($type);
 
+        $cooldownKey = $this->cooldownKey($phone, $purpose);
+        $cooldownSeconds = (int) config('sms.otp.resend_cooldown', 60);
+        $cooldownUntil = Cache::get($cooldownKey);
+
+        if ($cooldownUntil && now()->timestamp < (int) $cooldownUntil) {
+            return [
+                'success' => false,
+                'error' => 'COOLDOWN',
+                'message' => 'Please wait before requesting another OTP.',
+                'retry_after' => ((int) $cooldownUntil) - now()->timestamp,
+            ];
+        }
+
         // Hash and store in Phase-3 OTP table
         UserOtpCode::query()
             ->where('channel', 'sms')
@@ -37,8 +56,8 @@ class OtpService
             ->delete();
 
         UserOtpCode::query()->create([
-            'user_id' => null,
-            'identity_id' => null,
+            'user_id' => $identity?->user_id,
+            'identity_id' => $identity?->id,
             'channel' => 'sms',
             'purpose' => $purpose,
             'identifier' => $phone,
@@ -52,6 +71,7 @@ class OtpService
 
         // Track rate limit
         $this->trackRateLimit($phone);
+        Cache::put($cooldownKey, now()->addSeconds($cooldownSeconds)->timestamp, $cooldownSeconds);
 
         if (app()->environment('local') && config('app.debug')) {
             Log::info('[TEST MODE] OTP stored (hash of 123456 used)', ['phone_last4' => substr($phone, -4)]);
@@ -83,7 +103,7 @@ class OtpService
         ];
     }
 
-    public function verifyOtp(string $phone, string $code, string $type = 'login'): bool
+    public function verifyOtpRecord(string $phone, string $code, string $type = 'login'): ?UserOtpCode
     {
         $purpose = $this->normalizePurpose($type);
 
@@ -97,7 +117,7 @@ class OtpService
             ->first();
 
         if (! $otpRecord) {
-            return false;
+            return null;
         }
 
         // Check max attempts
@@ -111,7 +131,7 @@ class OtpService
             );
             $otpRecord->update(['consumed_at' => now()]);
 
-            return false;
+            return null;
         }
 
         if (! Hash::check($code, $otpRecord->code_hash)) {
@@ -127,14 +147,19 @@ class OtpService
                 ]
             );
 
-            return false;
+            return null;
         }
 
         $otpRecord->update([
             'consumed_at' => now(),
         ]);
 
-        return true;
+        return $otpRecord;
+    }
+
+    public function verifyOtp(string $phone, string $code, string $type = 'login'): bool
+    {
+        return (bool) $this->verifyOtpRecord($phone, $code, $type);
     }
 
     private function generateOtp(): string

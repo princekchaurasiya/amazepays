@@ -73,7 +73,7 @@ return [
         'max_attempts' => 5,
         'rate_limit' => [
             'per_phone' => 3,          // max OTPs per phone number
-            'window' => 600,        // in N seconds (10 minutes)
+            'window' => 300,        // in N seconds (5 minutes)
         ],
         'resend_cooldown' => 60,         // seconds before resend is allowed
     ],

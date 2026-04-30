@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Enums\ResponseCode;
 use App\Models\BlockedMobile;
 use App\Models\User;
+use App\Models\UserIdentity;
 use App\Services\OtpService;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -34,6 +37,15 @@ class UnifiedAuthController extends Controller
         return $normalized;
     }
 
+    private function normalizeOtpType(?string $type): string
+    {
+        $t = strtolower(trim((string) $type));
+        return match ($t) {
+            'login', 'signup', 'register', 'transaction' => $t,
+            default => 'login',
+        };
+    }
+
     /**
      * Send OTP to any mobile (login or signup).
      */
@@ -50,26 +62,51 @@ class UnifiedAuthController extends Controller
         );
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validator->errors()->first(),
-            ], 422);
+            return ResponsePayload::fail(
+                ResponseCode::VALIDATION_FAILED,
+                messageKey: 'error.validation_failed',
+                details: ['phone' => $validator->errors()->get('phone')],
+                httpStatus: 422
+            );
         }
 
-        $result = $otp->sendOtp($phone, (string) $request->input('type', 'login'));
+        $type = $this->normalizeOtpType($request->input('type'));
+
+        // Always create identity first (even before user exists).
+        $identity = UserIdentity::query()->firstOrCreate(
+            ['type' => 'mobile', 'identifier' => $phone],
+            [
+                'user_id' => null,
+                'display_identifier' => $phone,
+                'is_primary' => false,
+                'verified_at' => null,
+            ]
+        );
+
+        $result = $otp->sendOtp($phone, $type, $identity);
 
         if (! ($result['success'] ?? false)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $result['message'] ?? 'Failed to send OTP.',
-            ], 422);
+            if (($result['error'] ?? null) === 'RATE_LIMIT' || ($result['error'] ?? null) === 'COOLDOWN') {
+                return ResponsePayload::fail(
+                    ResponseCode::TOO_MANY_REQUESTS,
+                    messageKey: 'error.rate_limited',
+                    details: ['retry_after' => $result['retry_after'] ?? null],
+                    httpStatus: 429
+                );
+            }
+
+            return ResponsePayload::fail(
+                ResponseCode::UNKNOWN_ERROR,
+                messageKey: 'error.unknown',
+                details: ['reason' => $result['error'] ?? ($result['message'] ?? null)],
+                httpStatus: 422
+            );
         }
 
-        return response()->json([
-            'status' => 'success',
-            'message' => $result['message'] ?? 'OTP sent.',
+        return ResponsePayload::ok('auth.otp.sent', [
             'expires_in' => $result['expires_in'] ?? null,
             'resend_available' => $result['resend_available'] ?? null,
+            'identity_id' => $identity->id,
         ]);
     }
 
@@ -79,10 +116,10 @@ class UnifiedAuthController extends Controller
     public function verifyOtp(Request $request, OtpService $otp)
     {
         $phone = $this->normalizePhone((string) $request->input('phone', $request->input('destination', '')));
-        $otp = (string) $request->input('otp', '');
+        $otpCode = (string) $request->input('otp', '');
 
         $validator = Validator::make(
-            ['phone' => $phone, 'otp' => $otp],
+            ['phone' => $phone, 'otp' => $otpCode],
             [
                 'phone' => ['required', 'regex:/^[6-9]\d{9}$/'],
                 'otp' => ['required', 'string', 'min:4'],
@@ -91,69 +128,104 @@ class UnifiedAuthController extends Controller
         );
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $validator->errors()->first(),
-            ], 422);
+            return ResponsePayload::fail(
+                ResponseCode::VALIDATION_FAILED,
+                messageKey: 'error.validation_failed',
+                details: $validator->errors()->toArray(),
+                httpStatus: 422
+            );
         }
 
-        if (! $otp->verifyOtp($phone, $otp, (string) $request->input('type', 'login'))) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Invalid or expired OTP',
-            ], 400);
+        $type = $this->normalizeOtpType($request->input('type'));
+        $otpRecord = $otp->verifyOtpRecord($phone, $otpCode, $type);
+
+        if (! $otpRecord) {
+            return ResponsePayload::fail(
+                ResponseCode::INVALID_OTP,
+                messageKey: 'error.invalid_otp',
+                details: ['otp' => ['Invalid OTP.']],
+                httpStatus: 422
+            );
         }
 
         if (BlockedMobile::isBlocked($phone)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'This mobile number cannot be used to sign in. Please contact support.',
-                'contact_info' => [
-                    'email' => config('companyDefaultValues.company_email', 'support@amazepays.in'),
-                    'phone' => '+91 '.config('companyDefaultValues.company_contact_no', ''),
+            return ResponsePayload::fail(
+                ResponseCode::FORBIDDEN,
+                messageKey: 'auth.account.blocked',
+                details: [
+                    'contact_info' => [
+                        'email' => config('companyDefaultValues.company_email', 'support@amazepays.in'),
+                        'phone' => '+91 '.config('companyDefaultValues.company_contact_no', ''),
+                    ],
                 ],
-            ], 403);
+                httpStatus: 403
+            );
         }
+
+        $identity = UserIdentity::query()->firstOrCreate(
+            ['type' => 'mobile', 'identifier' => $phone],
+            [
+                'user_id' => null,
+                'display_identifier' => $phone,
+                'is_primary' => false,
+                'verified_at' => null,
+            ]
+        );
 
         $user = User::query()->whereMobile($phone)->first();
 
         if ($user) {
             if ($user->is_blocked) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Your account has been restricted. Please contact support.',
-                    'contact_info' => [
-                        'email' => config('companyDefaultValues.company_email', 'support@amazepays.in'),
-                        'phone' => '+91 '.config('companyDefaultValues.company_contact_no', ''),
+                return ResponsePayload::fail(
+                    ResponseCode::FORBIDDEN,
+                    messageKey: 'auth.account.blocked',
+                    details: [
+                        'contact_info' => [
+                            'email' => config('companyDefaultValues.company_email', 'support@amazepays.in'),
+                            'phone' => '+91 '.config('companyDefaultValues.company_contact_no', ''),
+                        ],
                     ],
-                ], 403);
+                    httpStatus: 403
+                );
+            }
+
+            if (! $identity->user_id) {
+                $identity->forceFill([
+                    'user_id' => $user->id,
+                    'is_primary' => true,
+                ])->save();
+            }
+
+            if (! $identity->verified_at) {
+                $identity->forceFill(['verified_at' => now()])->save();
+            }
+
+            if (! $otpRecord->user_id || ! $otpRecord->identity_id) {
+                $otpRecord->forceFill([
+                    'user_id' => $user->id,
+                    'identity_id' => $identity->id,
+                ])->save();
             }
 
             Auth::login($user);
 
-            // Ensure the mobile identity is marked verified for OTP-only auth.
-            $user->authIdentities()
-                ->where('type', 'mobile')
-                ->where('identifier', $phone)
-                ->whereNull('verified_at')
-                ->update(['verified_at' => now()]);
-
             $request->session()->forget([self::SESSION_PHONE, self::SESSION_AT]);
 
-            return response()->json([
-                'status' => 'success',
+            return ResponsePayload::ok('auth.login.success', [
                 'action' => 'logged_in',
                 'redirect_url' => $user->homeUrl(),
+                'identity_id' => $identity->id,
             ]);
         }
 
         $request->session()->put(self::SESSION_PHONE, $phone);
         $request->session()->put(self::SESSION_AT, now()->timestamp);
+        $request->session()->put('unified_auth_identity_id', $identity->id);
 
-        return response()->json([
-            'status' => 'success',
+        return ResponsePayload::ok('auth.profile.required', [
             'action' => 'needs_profile',
             'phone' => $phone,
+            'identity_id' => $identity->id,
         ]);
     }
 
@@ -164,38 +236,33 @@ class UnifiedAuthController extends Controller
     {
         $sessionPhone = $request->session()->get(self::SESSION_PHONE);
         $sessionAt = $request->session()->get(self::SESSION_AT);
+        $identityId = $request->session()->get('unified_auth_identity_id');
 
         if (! $sessionPhone || ! $sessionAt || (now()->timestamp - $sessionAt) > 900) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Session expired. Please verify your mobile again.',
-            ], 400);
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'auth.session.expired', details: ['reason' => 'registration_session_expired'], httpStatus: 400);
         }
 
         $phone = $this->normalizePhone((string) $request->input('phone', $sessionPhone));
         if ($phone !== $sessionPhone) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Phone number does not match verified session.',
-            ], 400);
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'error.validation_failed', details: ['reason' => 'phone_mismatch'], httpStatus: 400);
         }
 
         if (User::query()->whereMobile($phone)->exists()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'An account already exists for this number.',
-            ], 409);
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'auth.account.exists', httpStatus: 409);
         }
 
         if (BlockedMobile::isBlocked($phone)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'This mobile number cannot be used to register. Please contact support.',
-                'contact_info' => [
-                    'email' => config('companyDefaultValues.company_email', 'support@amazepays.in'),
-                    'phone' => '+91 '.config('companyDefaultValues.company_contact_no', ''),
+            return ResponsePayload::fail(
+                ResponseCode::FORBIDDEN,
+                'auth.account.blocked',
+                [
+                    'contact_info' => [
+                        'email' => config('companyDefaultValues.company_email', 'support@amazepays.in'),
+                        'phone' => '+91 '.config('companyDefaultValues.company_contact_no', ''),
+                    ],
                 ],
-            ], 403);
+                403
+            );
         }
 
         $validator = Validator::make($request->only(['name', 'referral_code']), [
@@ -206,10 +273,7 @@ class UnifiedAuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'errors' => $validator->errors()->toArray(),
-            ], 422);
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'error.validation_failed', $validator->errors()->toArray(), 422);
         }
 
         $validated = $validator->validated();
@@ -224,22 +288,31 @@ class UnifiedAuthController extends Controller
             'is_super_admin' => false,
         ]);
 
-        $user->authIdentities()->firstOrCreate(
+        $identity = $identityId ? UserIdentity::query()->find((int) $identityId) : null;
+        $identity = $identity ?: UserIdentity::query()->firstOrCreate(
             ['type' => 'mobile', 'identifier' => $phone],
             [
+                'user_id' => null,
                 'display_identifier' => $phone,
-                'is_primary' => true,
-                'verified_at' => now(),
+                'is_primary' => false,
+                'verified_at' => null,
             ]
         );
+
+        $identity->forceFill([
+            'user_id' => $user->id,
+            'display_identifier' => $phone,
+            'is_primary' => true,
+            'verified_at' => $identity->verified_at ?: now(),
+        ])->save();
 
         $request->session()->forget([self::SESSION_PHONE, self::SESSION_AT]);
         Auth::login($user);
 
-        return response()->json([
-            'status' => 'success',
+        return ResponsePayload::created('auth.profile.completed', [
             'action' => 'registered',
             'redirect_url' => $user->homeUrl(),
+            'identity_id' => $identity->id,
         ]);
     }
 

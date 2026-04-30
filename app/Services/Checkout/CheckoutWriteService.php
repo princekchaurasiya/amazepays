@@ -46,7 +46,7 @@ class CheckoutWriteService
             $discountPercentage = (float) ($productLocked->discount_percentage ?? 0);
             if ($discountPercentage < 0 || $discountPercentage > 100) {
                 throw ValidationException::withMessages([
-                    'message' => __('responses.UNKNOWN_ERROR'),
+                    'message' => __('error.unknown'),
                 ]);
             }
 
@@ -54,7 +54,7 @@ class CheckoutWriteService
             $totalPayableAmountAfterDiscount = $grandPayableAmount - $discountAmount;
             if ($totalPayableAmountAfterDiscount < 0) {
                 throw ValidationException::withMessages([
-                    'message' => __('responses.UNKNOWN_ERROR'),
+                    'message' => __('error.unknown'),
                 ]);
             }
 
@@ -188,7 +188,7 @@ class CheckoutWriteService
             $discountPercentage = (float) ($productLocked->discount_percentage ?? 0);
             if ($discountPercentage < 0 || $discountPercentage > 100) {
                 throw ValidationException::withMessages([
-                    'message' => __('responses.UNKNOWN_ERROR'),
+                    'message' => __('error.unknown'),
                 ]);
             }
 
@@ -196,7 +196,7 @@ class CheckoutWriteService
             $totalPayableAmountAfterDiscount = $grandPayableAmount - $discountAmount;
             if ($totalPayableAmountAfterDiscount < 0) {
                 throw ValidationException::withMessages([
-                    'message' => __('responses.UNKNOWN_ERROR'),
+                    'message' => __('error.unknown'),
                 ]);
             }
 

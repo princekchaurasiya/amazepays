@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ResponseCode;
 use App\Services\SecurityEventService;
 use App\Services\VpnDetectionService;
+use App\Support\Http\ResponsePayload;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -45,10 +47,12 @@ class DetectVpnProxy
             $action = $this->resolveAction($request);
 
             if ($action === 'block') {
-                return response()->json([
-                    'error' => 'ACCESS_DENIED',
-                    'message' => 'Access denied. VPN/proxy connections are not permitted for this action.',
-                ], Response::HTTP_FORBIDDEN);
+                return ResponsePayload::fail(
+                    ResponseCode::FORBIDDEN,
+                    'error.vpn_blocked',
+                    details: ['reason' => 'vpn_proxy_detected'],
+                    httpStatus: Response::HTTP_FORBIDDEN
+                )->toResponse($request);
             }
 
             // Flag mode — attach VPN info to request for downstream use

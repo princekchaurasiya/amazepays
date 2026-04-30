@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ResponseCode;
+use App\Support\Http\ResponsePayload;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,11 +19,15 @@ class CheckBusinessHours
         }
 
         if (! $tenant->isWithinBusinessHours()) {
-            return response()->json([
-                'error' => 'OUTSIDE_BUSINESS_HOURS',
-                'message' => 'Orders can only be placed during business hours for your account.',
-                'hours' => $tenant->business_hours,
-            ], Response::HTTP_FORBIDDEN);
+            return ResponsePayload::fail(
+                ResponseCode::FORBIDDEN,
+                'error.forbidden',
+                details: [
+                    'reason' => 'outside_business_hours',
+                    'hours' => $tenant->business_hours,
+                ],
+                httpStatus: Response::HTTP_FORBIDDEN
+            )->toResponse($request);
         }
 
         return $next($request);

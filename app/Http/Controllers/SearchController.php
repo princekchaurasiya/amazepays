@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use Illuminate\Http\JsonResponse;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -12,11 +12,11 @@ class SearchController extends Controller
     /**
      * Lightweight JSON suggestions for storefront typeahead (no Inertia).
      */
-    public function suggest(Request $request): JsonResponse
+    public function suggest(Request $request): ResponsePayload
     {
         $q = trim((string) $request->input('q', ''));
         if (mb_strlen($q) < 2) {
-            return response()->json([]);
+            return ResponsePayload::ok('response.ok', ['items' => []]);
         }
 
         $like = '%'.$q.'%';
@@ -34,18 +34,19 @@ class SearchController extends Controller
             ->limit(8)
             ->get();
 
-        return response()->json(
-            $products
-                ->map(fn ($p) => [
-                    'id' => $p->id,
-                    'name' => $p->display_name,
-                    'slug' => trim((string) ($p->url ?: $p->slug ?? '')),
-                    'image' => $p->display_image_url,
-                    'discount' => $p->discount_percentage,
-                ])
-                ->filter(fn (array $row) => $row['slug'] !== '')
-                ->values()
-        );
+        $items = $products
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->display_name,
+                'slug' => trim((string) ($p->url ?: $p->slug ?? '')),
+                'image' => $p->display_image_url,
+                'discount' => $p->discount_percentage,
+            ])
+            ->filter(fn (array $row) => $row['slug'] !== '')
+            ->values()
+            ->all();
+
+        return ResponsePayload::ok('response.ok', ['items' => $items]);
     }
 
     public function search(Request $request)

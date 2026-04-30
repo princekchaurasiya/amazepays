@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->name('api.v1.')->group(function () {
 
     // Health check (no auth)
-    Route::get('/health', fn () => ResponsePayload::ok(null, ['status' => 'ok', 'version' => '1.0']));
+    Route::get('/health', fn () => ResponsePayload::ok('response.ok', ['status' => 'ok', 'version' => '1.0']));
 
     /*
     |--------------------------------------------------------------------------

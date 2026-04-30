@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\ResponseCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Payment\CreatePaymentSessionRequest;
 use App\Http\Requests\Payment\VerifyPaymentSessionRequest;
@@ -87,7 +88,7 @@ final class PaymentSessionController extends Controller
             ?? '');
 
         if ($tx === '') {
-            return $this->error('VALIDATION_FAILED', 'payments.missing_transaction_id', 422, [
+            return $this->error(ResponseCode::VALIDATION_FAILED, 'payments.missing_transaction_id', 422, [
                 'transaction_id' => ['payments.missing_transaction_id'],
             ]);
         }

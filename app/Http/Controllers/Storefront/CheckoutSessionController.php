@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\Checkout\CheckoutWriteService;
 use App\Services\Checkout\ResolveTax;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\JsonResponse;
@@ -196,9 +197,12 @@ final class CheckoutSessionController extends Controller
 
         $orderId = (int) session('checkout_order_id', 0);
         if ($orderId <= 0) {
-            return response()->json([
-                'message' => 'No active checkout session. Complete the checkout step first.',
-            ], 422);
+            return ResponsePayload::fail(
+                ResponseCode::VALIDATION_FAILED,
+                'error.validation_failed',
+                details: ['reason' => 'no_active_checkout_session'],
+                httpStatus: 422
+            );
         }
 
         $order = Order::query()
@@ -207,9 +211,12 @@ final class CheckoutSessionController extends Controller
             ->first();
 
         if (! $order) {
-            return response()->json([
-                'message' => 'Order not found or access denied.',
-            ], 404);
+            return ResponsePayload::fail(
+                ResponseCode::NOT_FOUND,
+                'error.not_found',
+                details: ['reason' => 'order_not_found_or_access_denied'],
+                httpStatus: 404
+            );
         }
 
         $validated = $request->validate([
@@ -244,7 +251,7 @@ final class CheckoutSessionController extends Controller
         // Phase 3: tax depends on billing jurisdiction; re-resolve after billing updates.
         $this->resolveTax->resolveAndPersist($order->fresh());
 
-        return response()->json(['message' => __('responses.OK')]);
+        return ResponsePayload::ok('response.ok');
     }
 
     public function addToCart(Request $request, string $slug): mixed
@@ -464,9 +471,8 @@ final class CheckoutSessionController extends Controller
             'gift_card_form' => $validated,
         ]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Gift checkout draft saved successfully',
+        return ResponsePayload::ok('response.ok', [
+            'action' => 'gift_checkout_draft_saved',
         ]);
     }
 

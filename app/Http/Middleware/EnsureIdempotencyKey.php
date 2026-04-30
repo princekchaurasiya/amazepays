@@ -44,7 +44,7 @@ final class EnsureIdempotencyKey
                 if ($row->request_hash !== null && $row->request_hash !== $hash) {
                     return ResponsePayload::fail(
                         ResponseCode::DUPLICATE_ORDER,
-                        'responses.DUPLICATE_ORDER',
+                        'error.duplicate_order',
                         [
                             'idempotency_key' => $key,
                             'reason' => 'idempotency_key_reused_with_different_request',
@@ -61,7 +61,7 @@ final class EnsureIdempotencyKey
 
                 return ResponsePayload::fail(
                     ResponseCode::DUPLICATE_ORDER,
-                    'responses.DUPLICATE_ORDER',
+                    'error.duplicate_order',
                     [
                         'idempotency_key' => $key,
                         'completed_at' => $row->completed_at?->toISOString(),

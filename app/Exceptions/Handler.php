@@ -12,6 +12,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
@@ -46,11 +47,53 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {});
 
+        $this->renderable(function (ValidationException $e, $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return ResponsePayload::fail(
+                    ResponseCode::VALIDATION_FAILED,
+                    'error.validation_failed',
+                    $e->errors(),
+                    422
+                );
+            }
+        });
+
+        $this->renderable(function (AuthenticationException $e, $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return ResponsePayload::fail(
+                    ResponseCode::UNAUTHENTICATED,
+                    'error.unauthenticated',
+                    details: [],
+                    httpStatus: 401
+                );
+            }
+        });
+
+        $this->renderable(function (NotFoundHttpException $e, $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'error.not_found', httpStatus: 404);
+            }
+        });
+
+        $this->renderable(function (HttpException $e, $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                $status = $e->getStatusCode();
+
+                return match ($status) {
+                    401 => ResponsePayload::fail(ResponseCode::UNAUTHENTICATED, 'error.unauthenticated', httpStatus: 401),
+                    403 => ResponsePayload::fail(ResponseCode::FORBIDDEN, 'error.forbidden', httpStatus: 403),
+                    404 => ResponsePayload::fail(ResponseCode::NOT_FOUND, 'error.not_found', httpStatus: 404),
+                    429 => ResponsePayload::fail(ResponseCode::TOO_MANY_REQUESTS, 'error.rate_limited', httpStatus: 429),
+                    default => ResponsePayload::fail(ResponseCode::INTERNAL_ERROR, 'error.unknown', httpStatus: $status),
+                };
+            }
+        });
+
         $this->renderable(function (KycRequiredException $e, $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return ResponsePayload::fail(
                     ResponseCode::KYC_REQUIRED,
-                    'responses.KYC_REQUIRED',
+                    'error.kyc_required',
                     [
                         'required_threshold_amount_minor' => (int) $e->threshold->threshold_amount_minor,
                         'currency' => (string) $e->threshold->currency,
@@ -89,10 +132,7 @@ class Handler extends ExceptionHandler
     {
         $message = $exception->getMessage();
 
-        // Check if it's an authentication or validation exception
-        if ($exception instanceof AuthenticationException || $exception instanceof ValidationException) {
-            return parent::render($request, $exception);
-        }
+        // Authentication/validation/HTTP exceptions are handled by renderables above for JSON/API requests.
 
         if ($exception instanceof WalletFrozenException) {
             if ($request->expectsJson() || $request->is('api/*')) {
@@ -129,7 +169,7 @@ class Handler extends ExceptionHandler
 
             // Show user-friendly error page
             if ($request->expectsJson()) {
-                return ResponsePayload::fail(ResponseCode::INTERNAL_ERROR, 'errors.technical_difficulties');
+                return ResponsePayload::fail(ResponseCode::INTERNAL_ERROR, 'error.unknown');
             }
 
             // If admin request, show admin error page, otherwise show public error page
@@ -160,7 +200,7 @@ class Handler extends ExceptionHandler
 
             // Show user-friendly error page instead of exposing error details
             if ($request->expectsJson()) {
-                return ResponsePayload::fail(ResponseCode::INTERNAL_ERROR, 'errors.technical_difficulties');
+                return ResponsePayload::fail(ResponseCode::INTERNAL_ERROR, 'error.unknown');
             }
 
             // If admin request, show admin error page, otherwise show public error page

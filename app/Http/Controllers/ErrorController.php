@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
+use App\Enums\ResponseCode;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -23,80 +24,73 @@ class ErrorController extends Controller
         ])->toResponse($request)->setStatusCode(500);
     }
 
-    public function badRequest($message = 'The request was invalid or malformed.'): JsonResponse
+    public function badRequest(string $message = 'The request was invalid or malformed.'): ResponsePayload
     {
-        return response()->json([
-            'error' => [
-                'code' => 400,
-                'type' => 'BAD_REQUEST',
-                'message' => $message,
-            ],
-        ], 400);
+        return ResponsePayload::fail(
+            ResponseCode::VALIDATION_FAILED,
+            'error.validation_failed',
+            details: ['reason' => $message],
+            httpStatus: 400
+        );
     }
 
-    public function internalServerError($message = 'An unexpected error occurred on the server.'): JsonResponse
+    public function internalServerError(string $message = 'An unexpected error occurred on the server.'): ResponsePayload
     {
-        return response()->json([
-            'error' => [
-                'code' => 500,
-                'type' => 'INTERNAL_SERVER_ERROR',
-                'message' => $message,
-            ],
-        ], 500);
+        return ResponsePayload::fail(
+            ResponseCode::INTERNAL_ERROR,
+            'error.unknown',
+            details: ['reason' => $message],
+            httpStatus: 500
+        );
     }
 
-    public function unauthorized($message = 'Authentication failed or invalid credentials.'): JsonResponse
+    public function unauthorized(string $message = 'Authentication failed or invalid credentials.'): ResponsePayload
     {
-        return response()->json([
-            'error' => [
-                'code' => 401,
-                'type' => 'UNAUTHORIZED',
-                'message' => $message,
-            ],
-        ], 401);
+        return ResponsePayload::fail(
+            ResponseCode::UNAUTHENTICATED,
+            'error.unauthenticated',
+            details: ['reason' => $message],
+            httpStatus: 401
+        );
     }
 
-    public function accessDenied($message = 'You do not have permission to perform this action.'): JsonResponse
+    public function accessDenied(string $message = 'You do not have permission to perform this action.'): ResponsePayload
     {
-        return response()->json([
-            'error' => [
-                'code' => 403,
-                'type' => 'ACCESS_DENIED',
-                'message' => $message,
-            ],
-        ], 403);
+        return ResponsePayload::fail(
+            ResponseCode::FORBIDDEN,
+            'error.forbidden',
+            details: ['reason' => $message],
+            httpStatus: 403
+        );
     }
 
-    public function conflict($message = 'The request could not be completed due to a conflict with the current state of the resource.'): JsonResponse
+    public function conflict(string $message = 'The request could not be completed due to a conflict with the current state of the resource.'): ResponsePayload
     {
-        return response()->json([
-            'error' => [
-                'code' => 409,
-                'type' => 'CONFLICT',
-                'message' => $message,
-            ],
-        ], 409);
+        return ResponsePayload::fail(
+            ResponseCode::VALIDATION_FAILED,
+            'error.validation_failed',
+            details: ['reason' => $message],
+            httpStatus: 409
+        );
     }
 
-    public function recordNotFound($message = 'The requested resource or record was not found.'): JsonResponse
+    public function recordNotFound(string $message = 'The requested resource or record was not found.'): ResponsePayload
     {
-        return response()->json([
-            'error' => [
-                'code' => 404,
-                'type' => 'RECORD_NOT_FOUND',
-                'message' => $message,
-            ],
-        ], 404);
+        return ResponsePayload::fail(
+            ResponseCode::NOT_FOUND,
+            'error.not_found',
+            details: ['reason' => $message],
+            httpStatus: 404
+        );
     }
 
-    public function unprocessableEntity($message = 'The request was valid but could not be processed due to semantic errors.'): JsonResponse
+    public function unprocessableEntity(string $message = 'The request was valid but could not be processed due to semantic errors.'): ResponsePayload
     {
-        return response()->json([
-            'error' => [
-                'code' => 422,
-                'type' => 'UNPROCESSABLE_ENTITY',
-                'message' => $message,
-            ],
-        ], 422);
+        return ResponsePayload::fail(
+            ResponseCode::VALIDATION_FAILED,
+            'error.validation_failed',
+            details: ['reason' => $message],
+            httpStatus: 422
+        );
     }
 }

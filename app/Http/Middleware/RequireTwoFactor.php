@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ResponseCode;
+use App\Support\Http\ResponsePayload;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,7 +16,8 @@ class RequireTwoFactor
 
         if (! $user) {
             if ($request->expectsJson()) {
-                return response()->json(['error' => 'UNAUTHENTICATED'], 401);
+                return ResponsePayload::fail(ResponseCode::UNAUTHENTICATED, 'error.unauthenticated', httpStatus: 401)
+                    ->toResponse($request);
             }
 
             return redirect()->guest(route('login'));
@@ -29,11 +32,12 @@ class RequireTwoFactor
 
         if ($user->hasAnyRole($requireFor) && ! $user->two_factor_enabled) {
             if ($request->expectsJson()) {
-                return response()->json([
-                    'error' => '2FA_REQUIRED',
-                    'message' => 'Two-factor authentication must be enabled for your account.',
-                    'setup_url' => route('panel.2fa.setup'),
-                ], Response::HTTP_FORBIDDEN);
+                return ResponsePayload::fail(
+                    ResponseCode::FORBIDDEN,
+                    'auth.two_factor.required',
+                    details: ['setup_url' => route('panel.2fa.setup')],
+                    httpStatus: Response::HTTP_FORBIDDEN
+                )->toResponse($request);
             }
 
             return redirect()->route('panel.2fa.setup')
@@ -43,10 +47,12 @@ class RequireTwoFactor
         // Check if current request has 2FA verified in session
         if ($user->two_factor_enabled && ! session('2fa_verified')) {
             if ($request->expectsJson()) {
-                return response()->json([
-                    'error' => '2FA_CHALLENGE',
-                    'message' => 'Please complete two-factor authentication.',
-                ], Response::HTTP_FORBIDDEN);
+                return ResponsePayload::fail(
+                    ResponseCode::FORBIDDEN,
+                    'auth.two_factor.required',
+                    details: ['reason' => 'two_factor_challenge_required'],
+                    httpStatus: Response::HTTP_FORBIDDEN
+                )->toResponse($request);
             }
 
             return redirect()->route('panel.2fa.challenge');

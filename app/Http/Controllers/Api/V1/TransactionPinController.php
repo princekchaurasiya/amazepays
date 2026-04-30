@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
+use App\Enums\ResponseCode;
 use App\Models\TransactionPin;
 use App\Support\Http\ResponsePayload;
 use Illuminate\Http\Request;
@@ -30,7 +31,12 @@ class TransactionPinController extends Controller
         $user = $request->user();
 
         if (TransactionPin::where('user_id', $user->id)->exists()) {
-            return $this->error('PIN_ALREADY_SET', 'Transaction PIN is already set. Use the change endpoint.', 422);
+            return $this->error(
+                ResponseCode::VALIDATION_FAILED,
+                'error.validation_failed',
+                422,
+                ['reason' => 'pin_already_set']
+            );
         }
 
         TransactionPin::create([
@@ -38,7 +44,7 @@ class TransactionPinController extends Controller
             'pin' => Hash::make($validated['pin']),
         ]);
 
-        return $this->created('Transaction PIN set successfully.');
+        return $this->created('response.created');
     }
 
     /** Change the transaction PIN (requires current PIN). */
@@ -59,7 +65,7 @@ class TransactionPinController extends Controller
 
         $pin->update(['pin' => Hash::make($validated['new_pin'])]);
 
-        return $this->ok('Transaction PIN changed successfully.');
+        return $this->ok('response.ok');
     }
 
     /** Verify the transaction PIN (used by middleware for step-up auth). */
@@ -73,11 +79,16 @@ class TransactionPinController extends Controller
         $pin = TransactionPin::where('user_id', $user->id)->first();
 
         if (! $pin || ! Hash::check($validated['pin'], $pin->pin)) {
-            return $this->error('INVALID_PIN', 'The transaction PIN is incorrect.', 401);
+            return $this->error(
+                ResponseCode::VALIDATION_FAILED,
+                'error.validation_failed',
+                401,
+                ['pin' => ['Invalid transaction PIN.']]
+            );
         }
 
         session(['transaction_pin_verified_at' => now()]);
 
-        return $this->ok('PIN verified.');
+        return $this->ok('response.ok');
     }
 }

@@ -28,7 +28,7 @@ final class ResponsePayload implements Responsable
      */
     public static function ok(?string $messageKey = null, array $data = []): self
     {
-        return new self(true, ResponseCode::OK, $messageKey, $data);
+        return new self(true, ResponseCode::OK, $messageKey, $data, details: [], meta: []);
     }
 
     /**
@@ -36,7 +36,7 @@ final class ResponsePayload implements Responsable
      */
     public static function created(?string $messageKey = null, array $data = []): self
     {
-        return new self(true, ResponseCode::CREATED, $messageKey, $data, httpStatus: 201);
+        return new self(true, ResponseCode::CREATED, $messageKey, $data, details: [], meta: [], httpStatus: 201);
     }
 
     public static function paginated(LengthAwarePaginator $paginator): self
@@ -45,7 +45,7 @@ final class ResponsePayload implements Responsable
             success: true,
             code: ResponseCode::OK,
             messageKey: null,
-            data: $paginator->items(),
+            data: ['items' => $paginator->items()],
             meta: [
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
@@ -60,7 +60,7 @@ final class ResponsePayload implements Responsable
      */
     public static function fail(ResponseCode $code, ?string $messageKey = null, array $details = [], ?int $httpStatus = null): self
     {
-        return new self(false, $code, $messageKey, null, $details, null, $httpStatus);
+        return new self(false, $code, $messageKey, data: [], details: $details, meta: [], httpStatus: $httpStatus);
     }
 
     public function toResponse($request)

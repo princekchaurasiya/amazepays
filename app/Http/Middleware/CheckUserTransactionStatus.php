@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ResponseCode;
+use App\Support\Http\ResponsePayload;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -40,14 +42,17 @@ class CheckUserTransactionStatus
                 ]);
 
                 if ($request->ajax()) {
-                    return response()->json([
-                        'status' => 403,
-                        'msg' => 'Your account is currently restricted from making transactions. Please contact:',
-                        'contact_info' => [
-                            'email' => config('companyDefaultValues.company_email'),
-                            'phone' => '+91 '.config('companyDefaultValues.company_contact_no'),
+                    return ResponsePayload::fail(
+                        ResponseCode::FORBIDDEN,
+                        'auth.account.blocked',
+                        details: [
+                            'contact_info' => [
+                                'email' => config('companyDefaultValues.company_email'),
+                                'phone' => '+91 '.config('companyDefaultValues.company_contact_no'),
+                            ],
                         ],
-                    ]);
+                        httpStatus: 403
+                    )->toResponse($request);
                 }
 
                 return redirect()->route('home')

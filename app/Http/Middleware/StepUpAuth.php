@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ResponseCode;
 use App\Services\StepUpAuthService;
+use App\Support\Http\ResponsePayload;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,7 +24,8 @@ class StepUpAuth
         $user = $request->user();
 
         if (! $user) {
-            return response()->json(['error' => 'UNAUTHENTICATED'], 401);
+            return ResponsePayload::fail(ResponseCode::UNAUTHENTICATED, 'error.unauthenticated', httpStatus: 401)
+                ->toResponse($request);
         }
 
         // Auto-determine required level from amount if not specified
@@ -35,13 +38,18 @@ class StepUpAuth
         $current = $this->stepUp->getCurrentLevel($request);
 
         if ($current < $requiredLevel) {
-            return response()->json([
-                'error' => 'STEP_UP_REQUIRED',
-                'required_level' => $requiredLevel,
-                'required_action' => $this->stepUp->levelName($requiredLevel),
-                'current_level' => $current,
-                'message' => $this->getStepUpMessage($requiredLevel, $current),
-            ], Response::HTTP_PAYMENT_REQUIRED);
+            return ResponsePayload::fail(
+                ResponseCode::FORBIDDEN,
+                'error.forbidden',
+                details: [
+                    'reason' => 'step_up_required',
+                    'required_level' => $requiredLevel,
+                    'required_action' => $this->stepUp->levelName($requiredLevel),
+                    'current_level' => $current,
+                    'hint' => $this->getStepUpMessage($requiredLevel, $current),
+                ],
+                httpStatus: Response::HTTP_PAYMENT_REQUIRED
+            )->toResponse($request);
         }
 
         return $next($request);

@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ResponseCode;
 use App\Models\ApiKey;
+use App\Support\Http\ResponsePayload;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,18 +26,22 @@ class AuthenticateApiKey
         $signature = $request->header('X-Signature');
 
         if (! $rawKey || ! $timestamp || ! $signature) {
-            return response()->json([
-                'error' => 'MISSING_AUTH_HEADERS',
-                'message' => 'API key authentication headers are required: X-API-Key, X-Timestamp, X-Signature',
-            ], Response::HTTP_UNAUTHORIZED);
+            return ResponsePayload::fail(
+                ResponseCode::UNAUTHENTICATED,
+                'error.unauthenticated',
+                details: ['reason' => 'missing_auth_headers'],
+                httpStatus: Response::HTTP_UNAUTHORIZED
+            )->toResponse($request);
         }
 
         // Replay attack: reject requests older than 5 minutes
         if (abs(time() - (int) $timestamp) > 300) {
-            return response()->json([
-                'error' => 'REQUEST_EXPIRED',
-                'message' => 'Request timestamp is expired. Ensure your clock is synchronized.',
-            ], Response::HTTP_UNAUTHORIZED);
+            return ResponsePayload::fail(
+                ResponseCode::UNAUTHENTICATED,
+                'error.unauthenticated',
+                details: ['reason' => 'request_expired'],
+                httpStatus: Response::HTTP_UNAUTHORIZED
+            )->toResponse($request);
         }
 
         // Look up the API key
@@ -43,10 +49,12 @@ class AuthenticateApiKey
         $apiKey = ApiKey::where('key', $hashedKey)->where('is_active', true)->first();
 
         if (! $apiKey || ! $apiKey->isValid()) {
-            return response()->json([
-                'error' => 'INVALID_API_KEY',
-                'message' => 'The provided API key is invalid or inactive.',
-            ], Response::HTTP_UNAUTHORIZED);
+            return ResponsePayload::fail(
+                ResponseCode::UNAUTHENTICATED,
+                'error.unauthenticated',
+                details: ['reason' => 'invalid_api_key'],
+                httpStatus: Response::HTTP_UNAUTHORIZED
+            )->toResponse($request);
         }
 
         // Verify HMAC signature
@@ -54,18 +62,22 @@ class AuthenticateApiKey
         $expected = hash_hmac('sha256', $rawKey.$timestamp.$bodyHash, $apiKey->secret);
 
         if (! hash_equals($expected, $signature)) {
-            return response()->json([
-                'error' => 'INVALID_SIGNATURE',
-                'message' => 'Request signature verification failed.',
-            ], Response::HTTP_UNAUTHORIZED);
+            return ResponsePayload::fail(
+                ResponseCode::UNAUTHENTICATED,
+                'error.unauthenticated',
+                details: ['reason' => 'invalid_signature'],
+                httpStatus: Response::HTTP_UNAUTHORIZED
+            )->toResponse($request);
         }
 
         // Check IP whitelist
         if ($apiKey->allowed_ips && ! in_array($request->ip(), $apiKey->allowed_ips)) {
-            return response()->json([
-                'error' => 'IP_NOT_ALLOWED',
-                'message' => 'Request IP is not in the allowed list for this API key.',
-            ], Response::HTTP_FORBIDDEN);
+            return ResponsePayload::fail(
+                ResponseCode::FORBIDDEN,
+                'error.forbidden',
+                details: ['reason' => 'ip_not_allowed'],
+                httpStatus: Response::HTTP_FORBIDDEN
+            )->toResponse($request);
         }
 
         $apiKey->markUsed();

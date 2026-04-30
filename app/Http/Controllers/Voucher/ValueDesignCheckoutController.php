@@ -8,6 +8,7 @@ use App\Models\OrderSummary;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\User;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -223,6 +224,6 @@ final class ValueDesignCheckoutController extends Controller
         $data = $request->only($allowed);
         Session::put('vd_checkout_session', $data);
 
-        return response()->json(['message' => __('responses.OK')]);
+        return ResponsePayload::ok('response.ok');
     }
 }

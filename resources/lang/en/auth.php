@@ -12,21 +12,36 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | AmazePays API auth lines (mobile / api/v1)
+    | AmazePays auth domain (OTP-only)
     |--------------------------------------------------------------------------
     */
-    'validation_failed' => 'Validation failed.',
-    'otp_sent' => 'OTP sent successfully.',
-    'otp_send_failed' => 'Could not send OTP. Please try again.',
-    'logged_in' => 'Logged in successfully.',
-    'needs_profile' => 'Profile completion required.',
-    'two_factor_required' => 'Please complete 2FA verification.',
-    'registration_successful' => 'Registration successful.',
-    'two_factor_verified' => '2FA verified.',
-    'logged_out' => 'Logged out successfully.',
+    'otp' => [
+        'sent' => 'OTP sent successfully.',
+        'send_failed' => 'Could not send OTP. Please try again.',
+        'verified' => 'OTP verified successfully.',
+    ],
+    'login' => [
+        'success' => 'Logged in successfully.',
+    ],
+    'profile' => [
+        'required' => 'Profile completion required.',
+        'completed' => 'Profile completed successfully.',
+    ],
+    'two_factor' => [
+        'required' => 'Please complete 2FA verification.',
+        'verified' => '2FA verified.',
+    ],
+    'session' => [
+        'expired' => 'Session expired. Please verify your mobile again.',
+    ],
+    'account' => [
+        'exists' => 'An account already exists for this number.',
+        'blocked' => 'Your account has been restricted. Please contact support.',
+        'locked' => 'Your account has been locked.',
+    ],
+    'logout' => [
+        'success' => 'Logged out successfully.',
+    ],
+
     'me' => 'User retrieved.',
-    'session_expired' => 'Session expired. Please verify your mobile again.',
-    'account_exists' => 'An account already exists for this number.',
-    'account_blocked' => 'Your account has been restricted. Please contact support.',
-    'account_locked' => 'Your account has been locked.',
 ];

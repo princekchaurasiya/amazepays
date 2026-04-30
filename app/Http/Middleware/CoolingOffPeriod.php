@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ResponseCode;
+use App\Support\Http\ResponsePayload;
 use Carbon\Carbon;
 use Closure;
 use Illuminate\Http\Request;
@@ -39,11 +41,16 @@ class CoolingOffPeriod
         if (now()->isBefore($coolingEndsAt)) {
             $remaining = now()->diffInMinutes($coolingEndsAt);
 
-            return response()->json([
-                'error' => 'COOLING_OFF_PERIOD',
-                'message' => "This action is temporarily restricted after a recent account change. Please try again in {$remaining} minutes.",
-                'available_at' => $coolingEndsAt->toISOString(),
-            ], Response::HTTP_LOCKED);
+            return ResponsePayload::fail(
+                ResponseCode::FORBIDDEN,
+                'error.cooling_off_period',
+                details: [
+                    'remaining_minutes' => $remaining,
+                    'available_at' => $coolingEndsAt->toISOString(),
+                    'trigger' => $triggerEvent,
+                ],
+                httpStatus: Response::HTTP_LOCKED
+            )->toResponse($request);
         }
 
         return $next($request);

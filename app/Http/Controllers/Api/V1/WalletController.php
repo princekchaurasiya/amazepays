@@ -25,7 +25,7 @@ class WalletController extends Controller
     {
         $wallet = $request->user()->wallet;
 
-        return $this->ok('Wallet balance retrieved.', [
+        return $this->ok('response.ok', [
             'balance' => $wallet?->balance ?? 0,
             'currency' => 'INR',
             'is_frozen' => $wallet?->is_frozen ?? false,
@@ -38,7 +38,7 @@ class WalletController extends Controller
         $wallet = $request->user()->wallet;
 
         if (! $wallet) {
-            return $this->ok('No transactions found.', ['transactions' => []]);
+            return $this->ok('response.ok', ['transactions' => []]);
         }
 
         $transactions = WalletTransaction::where('wallet_id', $wallet->id)
@@ -53,7 +53,7 @@ class WalletController extends Controller
     {
         $loadRequest = $this->loadRequestService->submitForUser($request->user(), $request);
 
-        return $this->created('Load request submitted. It will be reviewed within 2-4 business hours.', [
+        return $this->created('response.created', [
             'request_id' => $loadRequest->id,
             'amount' => $loadRequest->amount,
             'status' => $loadRequest->status,
@@ -67,7 +67,7 @@ class WalletController extends Controller
             return $this->notFound();
         }
 
-        return $this->ok('Load request status.', [
+        return $this->ok('response.ok', [
             'id' => $loadRequest->id,
             'amount' => $loadRequest->amount,
             'payment_mode' => $loadRequest->payment_mode,

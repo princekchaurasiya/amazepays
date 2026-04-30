@@ -48,14 +48,14 @@ export function usePhoneOtpAuth({ otpInputRef, onLoggedIn, onRegistrationSuccess
                 { destination: phone.trim() },
                 { headers: { 'X-CSRF-TOKEN': csrfToken() } },
             );
-            if (data.status === 'error') {
-                setError(data.message ?? 'Failed to send OTP');
+            if (!data?.success) {
+                setError(data?.error?.message ?? 'Failed to send OTP');
             } else {
                 setStep('otp');
                 setTimeout(() => otpInputRef?.current?.focus(0), 0);
             }
         } catch (e: unknown) {
-            const msg = axios.isAxiosError(e) ? (e.response?.data as { message?: string })?.message : null;
+            const msg = axios.isAxiosError(e) ? (e.response?.data as { error?: { message?: string } })?.error?.message : null;
             setError(msg ?? 'Failed to send OTP');
         } finally {
             setLoading(false);
@@ -71,20 +71,21 @@ export function usePhoneOtpAuth({ otpInputRef, onLoggedIn, onRegistrationSuccess
                 { phone: phone.trim(), otp: otpCode },
                 { headers: { 'X-CSRF-TOKEN': csrfToken() } },
             );
-            if (data.status !== 'success') {
-                setError((data as { message?: string }).message ?? 'Invalid OTP');
+            if (!data?.success) {
+                setError(data?.error?.message ?? 'Invalid OTP');
                 setLoading(false);
                 return;
             }
-            if (data.action === 'logged_in') {
-                onLoggedIn({ redirectUrl: data.redirect_url });
+            const payload = data.data as { action?: string; redirect_url?: string | null };
+            if (payload.action === 'logged_in') {
+                onLoggedIn({ redirectUrl: payload.redirect_url });
                 return;
             }
-            if (data.action === 'needs_profile') {
+            if (payload.action === 'needs_profile') {
                 setStep('profile');
             }
         } catch (e: unknown) {
-            const msg = axios.isAxiosError(e) ? (e.response?.data as { message?: string })?.message : null;
+            const msg = axios.isAxiosError(e) ? (e.response?.data as { error?: { message?: string } })?.error?.message : null;
             setError(msg ?? 'Verification failed');
         } finally {
             setLoading(false);
@@ -104,15 +105,16 @@ export function usePhoneOtpAuth({ otpInputRef, onLoggedIn, onRegistrationSuccess
                 },
                 { headers: { 'X-CSRF-TOKEN': csrfToken() } },
             );
-            if (data.status !== 'success') {
-                const errs = (data as { errors?: Record<string, string[]> }).errors;
-                setError(errs ? Object.values(errs).flat().join(' ') : (data as { message?: string }).message ?? 'Failed');
+            if (!data?.success) {
+                const errs = (data as { error?: { details?: Record<string, string[]> } })?.error?.details;
+                setError(errs ? Object.values(errs).flat().join(' ') : data?.error?.message ?? 'Failed');
                 setLoading(false);
                 return;
             }
-            onRegistrationSuccess({ redirectUrl: data.redirect_url });
+            const payload = data.data as { redirect_url?: string | null };
+            onRegistrationSuccess({ redirectUrl: payload.redirect_url });
         } catch (e: unknown) {
-            const msg = axios.isAxiosError(e) ? (e.response?.data as { message?: string })?.message : null;
+            const msg = axios.isAxiosError(e) ? (e.response?.data as { error?: { message?: string } })?.error?.message : null;
             setError(msg ?? 'Registration failed');
         } finally {
             setLoading(false);

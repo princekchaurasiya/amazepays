@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Data\BillingData;
 use App\Data\OrderData;
+use App\Enums\ResponseCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\PlaceOrderRequest;
 use App\Http\Requests\Order\RefundOrderRequest;
@@ -72,7 +73,7 @@ class OrderController extends Controller
         $done = strtolower((string) ($order->status ?? '')) === 'completed'
             || strtoupper((string) ($order->order_status ?? '')) === 'COMPLETE';
         if (! $done) {
-            return $this->error('ORDER_NOT_COMPLETED', 'orders.not_completed', 422);
+            return $this->error(ResponseCode::VALIDATION_FAILED, 'orders.not_completed', 422);
         }
 
         $protection = config('security.voucher_protection', []);
@@ -85,7 +86,7 @@ class OrderController extends Controller
                 ['order_id' => $order->id, 'user_id' => $request->user()->id]
             );
 
-            return $this->error('VPN_NOT_ALLOWED', 'orders.voucher_vpn_blocked', 403);
+            return $this->error(ResponseCode::FORBIDDEN, 'orders.voucher_vpn_blocked', 403);
         }
 
         $viewCacheKey = "voucher_views:{$request->user()->id}";
@@ -93,7 +94,7 @@ class OrderController extends Controller
         $maxViews = $protection['max_views_per_hour'] ?? 20;
 
         if ($views >= $maxViews) {
-            return $this->error('RATE_LIMIT', 'orders.voucher_rate_limited', 429);
+            return $this->error(ResponseCode::TOO_MANY_REQUESTS, 'orders.voucher_rate_limited', 429);
         }
 
         \Cache::put($viewCacheKey, $views + 1, 3600);

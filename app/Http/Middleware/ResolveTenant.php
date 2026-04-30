@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\ResponseCode;
 use App\Models\ApiKey;
 use App\Models\Tenant;
+use App\Support\Http\ResponsePayload;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -43,10 +45,12 @@ class ResolveTenant
 
             // Check if tenant is suspended
             if ($tenant->isSuspended() && ! $request->routeIs('admin.*')) {
-                return response()->json([
-                    'error' => 'TENANT_SUSPENDED',
-                    'message' => 'Your account has been suspended. Please contact support.',
-                ], Response::HTTP_FORBIDDEN);
+                return ResponsePayload::fail(
+                    ResponseCode::FORBIDDEN,
+                    'error.forbidden',
+                    details: ['reason' => 'tenant_suspended'],
+                    httpStatus: Response::HTTP_FORBIDDEN
+                )->toResponse($request);
             }
         } else {
             app()->instance('current_tenant_id', null);

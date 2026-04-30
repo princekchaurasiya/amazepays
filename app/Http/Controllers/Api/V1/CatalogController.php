@@ -94,7 +94,7 @@ class CatalogController extends Controller
             'how_to_redeem' => $this->productContent->resolveHowToRedeem($product),
         ];
 
-        return $this->ok('Product retrieved.', ['product' => $payload]);
+        return $this->ok('response.ok', ['product' => $payload]);
     }
 
     /** List storefront navigation categories. */
@@ -112,6 +112,6 @@ class CatalogController extends Controller
             ];
         });
 
-        return $this->ok('Categories retrieved.', ['categories' => $mapped->toArray()]);
+        return $this->ok('response.ok', ['categories' => $mapped->toArray()]);
     }
 }

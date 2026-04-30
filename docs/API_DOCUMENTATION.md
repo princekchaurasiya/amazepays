@@ -33,6 +33,50 @@ AmazePays exposes three API surfaces:
 
 All APIs return JSON. All requests must include `Accept: application/json`.
 
+### API v1 canonical routes (source of truth)
+
+The canonical list of v1 routes is defined in `routes/api.php` under the `/api/v1` prefix.
+
+**Public (no auth)**
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/health` | Minimal health check |
+| GET | `/homepage` | Canonical homepage document (web + RN) |
+| GET | `/home` | Legacy alias for `/homepage` |
+| GET | `/catalog` | Product list (paginated) |
+| GET | `/catalog/categories` | Navigation categories |
+| GET | `/catalog/{product}` | Product details |
+| GET | `/products/{sku}/pricing` | Price breakdown envelope |
+| POST | `/auth/otp/send` | Throttled |
+| POST | `/auth/otp/verify` | Throttled |
+| POST | `/auth/complete-profile` | Throttled |
+
+**Authenticated Consumer (Sanctum)**
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/auth/me` | Current user |
+| POST | `/auth/logout` | Logout current token |
+| POST | `/auth/2fa/verify` | Requires a `2fa-pending` token |
+| GET | `/customers/{customer}` | Self lookup only |
+| POST | `/checkout/sessions` | Draft order session (idempotent) |
+| POST | `/payments/sessions` | Initiate payment (idempotent) |
+| GET | `/payments/sessions/{payment}` | Payment session status |
+| POST | `/payments/sessions/{payment}/verify` | Query gateway status (idempotent) |
+| GET | `/wallet/balance` | Wallet summary |
+| GET | `/wallet/transactions` | Wallet tx list (paginated) |
+| POST | `/wallet/load-request` | Wallet load request (step-up + PIN + idempotent) |
+| GET | `/wallet/load-request/{loadRequest}` | Wallet load request status |
+| GET | `/orders` | Order history (paginated) |
+| GET | `/orders/{order}` | Order details |
+| POST | `/orders` | Place order (idempotent + limits + VPN check) |
+| POST | `/orders/{order}/refund` | Refund request (idempotent) |
+| GET | `/orders/{order}/voucher-code` | Protected by step-up + transaction PIN |
+| POST | `/transaction-pin/set` | Set PIN |
+| POST | `/transaction-pin/change` | Change PIN |
+| POST | `/transaction-pin/verify` | Verify PIN |
+
 ### Server-side validation (clients cannot be trusted)
 
 The API validates every write with explicit rules. Extra JSON fields sent by the client are **ignored** for persistence unless they are part of validated input—do not rely on undocumented keys. Webhook endpoints under `/api/v1/webhooks/*` verify gateway signatures (where configured) and pass only whitelisted payload fragments to the payment service (see [PAYMENT_GATEWAYS.md](PAYMENT_GATEWAYS.md#payload-whitelisting-and-application-logs) and [CODE_STANDARDS.md](CODE_STANDARDS.md#http-request-input--logging)).
@@ -93,6 +137,14 @@ The UI receives:
 
 B2C consumers authenticate like the web storefront: **10-digit Indian mobile → SMS OTP → token**. There is **no** email/password login on this API.
 
+#### Identity table (new)
+
+OTP authentication is backed by `user_identities`:
+
+- A `user_identities` row is created/ensured when OTP is sent/verified.
+- A mobile identity can exist **before** a `users` row (OTP pre-registration).
+- Once registration completes, the identity is attached to the created user and marked `is_primary = 1`, `verified_at = now()`.
+
 #### Step 1 — Send OTP
 
 ```
@@ -113,9 +165,16 @@ Response (success):
 ```json
 {
   "success": true,
+  "code": "OK",
+  "message_key": "auth.otp.sent",
   "message": "OTP sent successfully.",
-  "expires_in": 300,
-  "resend_available": 1712505660
+  "data": {
+    "expires_in": 300,
+    "resend_available": 1712505660,
+    "identity_id": 123
+  },
+  "details": {},
+  "meta": {}
 }
 ```
 
@@ -135,18 +194,27 @@ Content-Type: application/json
 
 ```json
 {
-  "action": "logged_in",
-  "token": "1|plaintext...",
-  "user": {
-    "id": 42,
-    "name": "John Doe",
-    "email": "john@example.com",
-    "mobile": "9876543210",
-    "two_factor_enabled": false,
-    "transaction_pin_set": false,
-    "roles": ["b2c-user"]
+  "success": true,
+  "code": "OK",
+  "message_key": "auth.login.success",
+  "message": "Login successful.",
+  "data": {
+    "action": "logged_in",
+    "token": "1|plaintext...",
+    "user": {
+      "id": 42,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "mobile": "9876543210",
+      "two_factor_enabled": false,
+      "transaction_pin_set": false,
+      "roles": ["b2c-user"]
+    },
+    "new_device": false,
+    "identity_id": 123
   },
-  "new_device": false
+  "details": {},
+  "meta": {}
 }
 ```
 
@@ -154,11 +222,18 @@ If the user has **2FA enabled**, HTTP **202**:
 
 ```json
 {
-  "action": "2fa_required",
+  "success": true,
+  "code": "OK",
+  "message_key": "auth.two_factor.required",
   "message": "Please complete 2FA verification.",
-  "temp_token": "…",
-  "method": "totp",
-  "new_device": false
+  "data": {
+    "action": "2fa_required",
+    "temp_token": "…",
+    "method": "totp",
+    "new_device": false
+  },
+  "details": {},
+  "meta": {}
 }
 ```
 
@@ -176,9 +251,18 @@ Content-Type: application/json
 
 ```json
 {
-  "action": "needs_profile",
-  "temp_token": "opaque_hex_string",
-  "phone": "9876543210"
+  "success": true,
+  "code": "OK",
+  "message_key": "auth.profile.required",
+  "message": "Profile required.",
+  "data": {
+    "action": "needs_profile",
+    "temp_token": "opaque_hex_string",
+    "phone": "9876543210",
+    "identity_id": 123
+  },
+  "details": {},
+  "meta": {}
 }
 ```
 
@@ -206,10 +290,18 @@ Response — HTTP **201**:
 
 ```json
 {
+  "success": true,
+  "code": "CREATED",
+  "message_key": "auth.profile.completed",
   "message": "Registration successful.",
-  "action": "registered",
-  "token": "2|plaintext...",
-  "user": { "...": "same shape as logged_in" }
+  "data": {
+    "action": "registered",
+    "token": "2|plaintext...",
+    "user": { "...": "same shape as logged_in" },
+    "identity_id": 123
+  },
+  "details": {},
+  "meta": {}
 }
 ```
 
@@ -278,77 +370,52 @@ Response:
 
 ## 3. Common Response Format
 
-### Success
+Most v1 endpoints return a unified envelope produced by `App\Support\Http\ResponseFormatter`:
 
 ```json
 {
   "success": true,
-  "data": { },
-  "meta": {
-    "request_id": "req_abc123",
-    "timestamp": "2026-04-07T12:00:00Z"
-  }
+  "code": "OK",
+  "message_key": "response.ok",
+  "message": "OK",
+  "data": {},
+  "details": {},
+  "meta": {}
 }
 ```
 
-### Success with Pagination
+Notes:
 
-```json
-{
-  "success": true,
-  "data": [ ],
-  "meta": {
-    "request_id": "req_abc123",
-    "timestamp": "2026-04-07T12:00:00Z"
-  },
-  "pagination": {
-    "current_page": 1,
-    "per_page": 20,
-    "total": 250,
-    "last_page": 13,
-    "has_more": true
-  }
-}
-```
-
-### Error
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "The amount field is required.",
-    "details": {
-      "amount": ["The amount field is required."]
-    }
-  },
-  "meta": {
-    "request_id": "req_abc123",
-    "timestamp": "2026-04-07T12:00:00Z"
-  }
-}
-```
+- `data` is always an object. If the controller returns a list, it is normalized to `{ "items": [ ... ] }`.
+- `details` is present on every response; on success it is always `{}`.
+- Not every endpoint uses this envelope yet. Notably, `/homepage` currently returns `{ success, message, data }` (no `code/message_key/details/meta`).
 
 ---
 
 ## 4. Error Codes
 
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| `VALIDATION_ERROR` | 422 | Request validation failed |
-| `UNAUTHORIZED` | 401 | Invalid or missing authentication |
+The canonical list of API response codes is defined in `App\Enums\ResponseCode`.
+
+| Code | Typical HTTP Status | Description |
+|------|----------------------|-------------|
+| `OK` | 200 | Success |
+| `CREATED` | 201 | Resource created |
+| `VALIDATION_FAILED` | 422 | Request validation failed |
+| `UNAUTHENTICATED` | 401 | Missing/invalid auth |
 | `FORBIDDEN` | 403 | Insufficient permissions |
 | `NOT_FOUND` | 404 | Resource not found |
-| `RATE_LIMITED` | 429 | Too many requests |
-| `INSUFFICIENT_BALANCE` | 400 | Wallet balance too low |
-| `ORDER_FAILED` | 400 | Order could not be placed |
-| `PAYMENT_FAILED` | 400 | Payment processing failed |
-| `PRODUCT_OUT_OF_STOCK` | 400 | Product unavailable |
-| `INVALID_PROMO_CODE` | 400 | Promo code invalid or expired |
-| `DUPLICATE_ORDER` | 409 | Order already exists (idempotency) |
-| `PROVIDER_ERROR` | 502 | Upstream voucher provider error |
-| `SERVER_ERROR` | 500 | Internal server error |
+| `RATE_LIMITED` / `TOO_MANY_REQUESTS` | 429 | Too many requests |
+| `INVALID_OTP` / `OTP_EXPIRED` / `OTP_REPLAYED` | 422 | OTP problems |
+| `INSUFFICIENT_BALANCE` | 422 | Wallet balance too low |
+| `INVALID_DENOMINATION` | 422 | Invalid denomination |
+| `PURCHASE_LIMIT_EXCEEDED` | 422 | Purchase limits exceeded |
+| `PRODUCT_UNAVAILABLE` | 422 | Product unavailable |
+| `DUPLICATE_ORDER` | 422 | Duplicate request / idempotency protection |
+| `KYC_REQUIRED` | 422 | KYC gate failed |
+| `VOUCHER_FULFILLMENT_FAILED` | 502 | Provider fulfillment failed |
+| `PROVIDER_TIMEOUT` / `PROVIDER_UNAVAILABLE` | 502 | Provider issues |
+| `PAYMENT_FAILED` / `PAYMENT_GATEWAY_ERROR` | 502 | Payment issues |
+| `INTERNAL_ERROR` / `UNKNOWN_ERROR` | 500 | Server error |
 
 ---
 
@@ -371,229 +438,133 @@ X-RateLimit-Reset: 1712506000
 
 ## 6. Consumer API (Mobile App)
 
-### 6.1 Products
-
-**List Products**
+### 6.1 Homepage (public)
 
 ```
-GET /api/v1/products?category_id=5&brand_id=3&search=amazon&page=1&per_page=20
+GET /api/v1/homepage?platform=mobile&surface=storefront_home
 ```
 
-Response:
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 123,
-      "name": "Amazon Gift Card",
-      "sku": "AMZ-GC-001",
-      "slug": "amazon-gift-card",
-      "brand": { "id": 3, "name": "Amazon", "logo": "..." },
-      "category": { "id": 5, "name": "Shopping" },
-      "images": ["https://..."],
-      "price_type": "RANGE",
-      "min_price": 100.00,
-      "max_price": 10000.00,
-      "denominations": null,
-      "currency": "INR",
-      "discount_percentage": 2.50,
-      "in_stock": true,
-      "how_to_redeem": "...",
-      "terms_and_conditions": "..."
-    }
-  ],
-  "pagination": { "current_page": 1, "total": 85, "per_page": 20, "last_page": 5 }
-}
-```
+Notes:
 
-**Product Detail**
+- `platform` defaults to `mobile`
+- `surface` defaults to `storefront_home`
+- Response is currently **not** the standard envelope (see §3).
+
+### 6.2 Catalog (public)
+
+**List products**
 
 ```
-GET /api/v1/products/{id}
+GET /api/v1/catalog?search=amazon&category_id=5&brand_id=3&source_provider=woohoo&page=1&per_page=20
 ```
 
-### 6.2 Categories
+**Product detail**
 
 ```
-GET /api/v1/categories
-GET /api/v1/categories/{id}/products
+GET /api/v1/catalog/{product}
 ```
 
-### 6.3 Brands
+**Categories**
 
 ```
-GET /api/v1/brands
-GET /api/v1/brands/{id}/products
+GET /api/v1/catalog/categories
 ```
 
-### 6.4 Orders
-
-**Create Order** (requires auth)
+### 6.3 Pricing (public; optionally authenticated)
 
 ```
-POST /api/v1/orders
+GET /api/v1/products/{sku}/pricing?quantity=1&denomination=500&offer_code=FIRST15
+```
+
+### 6.4 Customers (authenticated)
+
+Self-lookup only:
+
+```
+GET /api/v1/customers/{customer}
 Authorization: Bearer {token}
+```
+
+### 6.5 Checkout + Payments (authenticated)
+
+**Create checkout session** (draft order, idempotent)
+
+```
+POST /api/v1/checkout/sessions
+Authorization: Bearer {token}
+Idempotency-Key: <client-generated-unique-key>
 Content-Type: application/json
-
-{
-  "sku": "AMZ-GC-001",
-  "denomination": 500,
-  "quantity": 2,
-  "receiver": {
-    "name": "Jane Doe",
-    "email": "jane@example.com",
-    "mobile": "+919876543210",
-    "message": "Happy Birthday!"
-  },
-  "payment_method": "wallet",
-  "promo_code": "FIRST15"
-}
 ```
 
-Response:
-```json
-{
-  "success": true,
-  "data": {
-    "order_id": "ORD-2026-00042",
-    "merchant_order_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    "status": "PENDING_PAYMENT",
-    "amount": 1000.00,
-    "discount": 150.00,
-    "payable_amount": 850.00,
-    "payment_method": "wallet",
-    "payment_url": null
-  }
-}
-```
-
-For gateway payments, `payment_url` or `checkout_token` is returned instead.
-
-**Order History**
+**Create payment session** (idempotent)
 
 ```
-GET /api/v1/orders?status=COMPLETE&page=1
+POST /api/v1/payments/sessions
+Authorization: Bearer {token}
+Idempotency-Key: <client-generated-unique-key>
+Content-Type: application/json
+```
+
+**Fetch payment session**
+
+```
+GET /api/v1/payments/sessions/{payment}
 Authorization: Bearer {token}
 ```
 
-**Order Detail**
+**Verify/query payment status** (idempotent)
 
 ```
-GET /api/v1/orders/{merchant_order_id}
+POST /api/v1/payments/sessions/{payment}/verify
+Authorization: Bearer {token}
+Idempotency-Key: <client-generated-unique-key>
+Content-Type: application/json
+```
+
+### 6.6 Orders (authenticated)
+
+```
+GET /api/v1/orders
+Authorization: Bearer {token}
+
+GET /api/v1/orders/{order}
 Authorization: Bearer {token}
 ```
 
-Response includes voucher details (card number, pin) for completed orders.
+**Voucher code (completed orders only)** (protected by step-up + transaction PIN middleware)
 
-### 6.5 Wallet
+```
+GET /api/v1/orders/{order}/voucher-code
+Authorization: Bearer {token}
+```
 
-**Get Balance**
+### 6.7 Wallet (authenticated)
 
 ```
 GET /api/v1/wallet/balance
 Authorization: Bearer {token}
-```
 
-Response:
-```json
-{
-  "success": true,
-  "data": {
-    "balance": 5250.00,
-    "currency": "INR"
-  }
-}
-```
-
-**Transaction History**
-
-```
-GET /api/v1/wallet/transactions?type=credit&page=1
+GET /api/v1/wallet/transactions
 Authorization: Bearer {token}
-```
 
-**Request Wallet Load** (B2B clients)
-
-```
 POST /api/v1/wallet/load-request
 Authorization: Bearer {token}
+Idempotency-Key: <client-generated-unique-key>
 Content-Type: application/json
 
-{
-  "amount": 50000.00,
-  "bank_reference": "UTR123456789",
-  "bank_name": "HDFC Bank",
-  "notes": "Wire transfer on April 7"
-}
+GET /api/v1/wallet/load-request/{loadRequest}
+Authorization: Bearer {token}
 ```
 
-### 6.6 Offers
-
-**List Active Offers**
+### 6.8 Transaction PIN (authenticated)
 
 ```
-GET /api/v1/offers
-```
-
-**Apply Promo Code**
-
-```
-POST /api/v1/offers/apply
+POST /api/v1/transaction-pin/set
+POST /api/v1/transaction-pin/change
+POST /api/v1/transaction-pin/verify
 Authorization: Bearer {token}
 Content-Type: application/json
-
-{
-  "promo_code": "FIRST15",
-  "order_amount": 1000.00,
-  "product_id": 123
-}
 ```
-
-Response:
-```json
-{
-  "success": true,
-  "data": {
-    "offer_id": 7,
-    "discount_type": "percentage_discount",
-    "discount_value": 15,
-    "discount_amount": 150.00,
-    "final_amount": 850.00
-  }
-}
-```
-
-### 6.7 Profile
-
-```
-GET /api/v1/profile
-PUT /api/v1/profile
-POST /api/v1/profile/update-email
-```
-
-### 6.8 Home (hero carousel)
-
-```
-GET /api/v1/home
-```
-
-Public. Returns the standard success envelope with **`data.slides`**: an array of homepage hero slides (same source as the web storefront carousel). Active slides are those with `status = 1` and `display_on_page = homepage` (see `SlidePresentationService`).
-
-Each slide object includes (among others):
-
-| Field | Description |
-|-------|-------------|
-| `id` | Slide id |
-| `desktop_image` | Absolute URL for wide / desktop hero |
-| `image_mobile` | Absolute URL for mobile hero |
-| `slug` | Resolved target slug when linked to product/category/brand |
-| `product_id`, `category_id`, `brand_id` | Optional deep-link targets |
-| `is_linked` | Whether the slide should be tappable |
-| `img_alt_tag` | Accessibility |
-| `cta_link`, `custom_url`, `link_type` | Optional URLs / metadata |
-
-**Admin:** Manage slides in the panel at **Settings → Hero carousel** (`/panel/settings/hero-slides`). Legacy URL `/panel/slides` redirects there.
 
 ---
 

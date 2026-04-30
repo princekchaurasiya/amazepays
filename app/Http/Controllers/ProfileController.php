@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\UserAddress;
+use App\Support\Http\ResponsePayload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -138,16 +139,8 @@ class ProfileController extends Controller
             ->where('id', '!=', auth()->id())
             ->exists();
 
-        if ($isInUse) {
-            return response()->json([
-                'status' => 'unavailable',
-                'message' => 'This mobile number is already in use.',
-            ]);
-        }
-
-        return response()->json([
-            'status' => 'available',
-            'message' => 'This mobile number is available.',
+        return ResponsePayload::ok('response.ok', [
+            'available' => ! $isInUse,
         ]);
     }
 }

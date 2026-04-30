@@ -15,7 +15,7 @@ type Product = {
 const PALETTE = ['#0B0B8F', '#1F2A7A', '#0F3460', '#2B3A99', '#0B3B5B', '#12306B', '#1B2B5E', '#2D4490'];
 
 export default function ProductCard({ product }: { product: Product }) {
-    const slug = product.url ?? product.slug ?? '';
+    const slug = product.slug ?? product.url ?? '';
     const href = slug ? paths.product(slug) : '#';
     const img = product.display_image_url ?? null;
     const discount = Number(product.discount_percentage ?? 0);

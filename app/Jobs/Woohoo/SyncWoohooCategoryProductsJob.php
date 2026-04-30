@@ -12,7 +12,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -58,6 +57,7 @@ final class SyncWoohooCategoryProductsJob implements ShouldQueue
             foreach ($products as $item) {
                 if (! is_array($item)) {
                     $skipped++;
+
                     continue;
                 }
 
@@ -158,8 +158,6 @@ final class SyncWoohooCategoryProductsJob implements ShouldQueue
                 'brand_id' => $brand->id,
                 'name' => $name,
                 'slug' => $slug,
-                // Keep legacy `url` aligned with slug for storefront routing.
-                'url' => $slug,
                 'source_provider' => 'woohoo',
                 'source_product_id' => $sourceProductId !== '' ? $sourceProductId : null,
                 'currency' => $currency,
@@ -179,4 +177,3 @@ final class SyncWoohooCategoryProductsJob implements ShouldQueue
         return $exists ? 'updated' : 'created';
     }
 }
-

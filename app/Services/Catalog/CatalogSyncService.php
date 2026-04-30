@@ -165,9 +165,9 @@ class CatalogSyncService
 
                 if ($product) {
                     $product->update($providerPayload);
-                    if (empty($product->slug) && empty($product->url)) {
+                    if (empty($product->slug)) {
                         $slug = $this->generateUniqueSlug($product);
-                        $product->update(['slug' => $slug, 'url' => $slug]);
+                        $product->update(['slug' => $slug]);
                     }
                     $this->ensureDefaultAudiences($product->id, $providerName);
                     $updated++;
@@ -181,7 +181,7 @@ class CatalogSyncService
                     }
                     $newProduct = Product::create($createAttrs);
                     $slug = $this->generateUniqueSlug($newProduct);
-                    $newProduct->update(['slug' => $slug, 'url' => $slug]);
+                    $newProduct->update(['slug' => $slug]);
                     $this->ensureDefaultAudiences($newProduct->id, $providerName);
                     $created++;
                 }

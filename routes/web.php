@@ -2,7 +2,6 @@
 
 use App\Enums\ResponseCode;
 use App\Http\Controllers\Admin\ExportController;
-use App\Http\Controllers\Admin\Voucher\LystoGiftCardController;
 use App\Http\Controllers\CommonController;
 use App\Http\Controllers\ContactUsController;
 use App\Http\Controllers\DocumentController;
@@ -15,7 +14,6 @@ use App\Http\Controllers\ProductSlugController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SmsController;
-use App\Http\Controllers\StoreController;
 use App\Http\Controllers\Storefront\CardBalanceController;
 use App\Http\Controllers\Storefront\StaticPageController;
 use App\Http\Controllers\StorefrontBrandController;
@@ -23,8 +21,8 @@ use App\Http\Controllers\StorefrontBusinessController;
 use App\Http\Controllers\StorefrontCategoryController;
 use App\Http\Controllers\TransactionReportController;
 use App\Http\Controllers\UserBlockController;
-use App\Http\Controllers\Voucher\ValueDesignStorefrontController;
 use App\Http\Controllers\ViewCardDetailsController;
+use App\Http\Controllers\Voucher\ValueDesignStorefrontController;
 use App\Support\Http\ResponsePayload;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -148,7 +146,7 @@ Route::fallback(function () {
         $relativePath = substr($path, 8);
         if ($relativePath === '' || str_contains($relativePath, '..') || str_contains($relativePath, "\0")) {
             return $wantsJson
-                ? ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
+                ? ResponsePayload::fail(ResponseCode::NOT_FOUND, 'error.not_found', details: [
                     'reason' => 'storage_path_invalid',
                 ], httpStatus: 404)
                 : response('Not Found', 404, ['Content-Type' => 'text/plain; charset=UTF-8']);
@@ -157,7 +155,7 @@ Route::fallback(function () {
         $basePath = realpath(storage_path('app/public'));
         if ($basePath === false) {
             return $wantsJson
-                ? ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
+                ? ResponsePayload::fail(ResponseCode::NOT_FOUND, 'error.not_found', details: [
                     'reason' => 'storage_base_missing',
                 ], httpStatus: 404)
                 : response('Not Found', 404, ['Content-Type' => 'text/plain; charset=UTF-8']);
@@ -171,7 +169,7 @@ Route::fallback(function () {
 
         if (! $isAllowedPath) {
             return $wantsJson
-                ? ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
+                ? ResponsePayload::fail(ResponseCode::NOT_FOUND, 'error.not_found', details: [
                     'reason' => 'storage_path_disallowed',
                 ], httpStatus: 404)
                 : response('Not Found', 404, ['Content-Type' => 'text/plain; charset=UTF-8']);
@@ -182,11 +180,11 @@ Route::fallback(function () {
         }
 
         return $wantsJson
-            ? ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', details: [
+            ? ResponsePayload::fail(ResponseCode::NOT_FOUND, 'error.not_found', details: [
                 'reason' => 'storage_file_missing',
             ], httpStatus: 404)
             : response('Not Found', 404, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }
 
-    return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'responses.NOT_FOUND', httpStatus: 404);
+    return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'error.not_found', httpStatus: 404);
 });

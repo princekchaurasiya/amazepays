@@ -23,7 +23,7 @@ export default function ProductPage({
     const loggedIn = Boolean(page.props.auth?.user);
     const sharedText = page.props.i18n?.storefront?.product ?? {};
     const t = (key: string, fallback: string) => sharedText[key] || fallback;
-    const slug = String(productDetails.url ?? productDetails.slug ?? '');
+    const slug = String(productDetails.slug ?? productDetails.url ?? '');
     const name = String(productDetails.display_name ?? productDetails.name ?? 'Gift card');
     const fallbackImg = productDetails.display_image_url as string | undefined;
     const rawImages = productDetails.images as unknown;

@@ -63,8 +63,6 @@ final class WoohooNormalizedProductPersister
         $updates = [
             'name' => $name,
             'slug' => $slug,
-            // storefront uses url/slug; keep aligned
-            'url' => $slug,
             ...(is_int($brandId) ? ['brand_id' => $brandId] : []),
             'currency' => strtoupper(substr($currency, 0, 3)),
             'source_provider' => 'woohoo',
@@ -308,9 +306,16 @@ final class WoohooNormalizedProductPersister
 
     private function stringish(mixed $v): string
     {
-        if ($v === null) return '';
-        if (is_string($v)) return trim($v);
-        if (is_numeric($v)) return trim((string) $v);
+        if ($v === null) {
+            return '';
+        }
+        if (is_string($v)) {
+            return trim($v);
+        }
+        if (is_numeric($v)) {
+            return trim((string) $v);
+        }
+
         return '';
     }
 
@@ -321,24 +326,35 @@ final class WoohooNormalizedProductPersister
         }
         if (is_array($currency)) {
             $code = $currency['code'] ?? ($currency['currency'] ?? null);
+
             return $this->stringish($code);
         }
+
         return '';
     }
 
     private function moneyToMinor(mixed $value): int
     {
-        if ($value === null) return 0;
-        if (is_int($value)) return $value * 100;
-        if (is_float($value)) return (int) round($value * 100);
+        if ($value === null) {
+            return 0;
+        }
+        if (is_int($value)) {
+            return $value * 100;
+        }
+        if (is_float($value)) {
+            return (int) round($value * 100);
+        }
         if (is_string($value)) {
             $v = trim($value);
-            if ($v === '') return 0;
+            if ($v === '') {
+                return 0;
+            }
             // Some providers send "100.00" strings.
             if (is_numeric($v)) {
                 return (int) round(((float) $v) * 100);
             }
         }
+
         return 0;
     }
 
@@ -349,10 +365,10 @@ final class WoohooNormalizedProductPersister
     {
         try {
             $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
             return is_string($json) ? $json : null;
         } catch (\Throwable) {
             return null;
         }
     }
 }
-

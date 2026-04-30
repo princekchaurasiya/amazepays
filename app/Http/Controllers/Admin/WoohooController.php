@@ -2,24 +2,25 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\ResponseCode;
 use App\Helpers\ApiSignatureHelper;
 use App\Http\Controllers\Controller;
+use App\Jobs\Woohoo\SyncWoohooAllProductDetailsJob;
+use App\Jobs\Woohoo\SyncWoohooCategoryProductsJob;
+use App\Jobs\Woohoo\SyncWoohooSkuJob;
 use App\Models\Brand;
 use App\Models\Product;
 use App\Models\ProviderConnection;
 use App\Models\ProviderSyncRun;
 use App\Models\SyncedCategory;
 use App\Models\Tenant;
+use App\Services\Providers\WoohooBearerTokenStore;
 use App\Support\Http\ResponsePayload;
-use App\Jobs\Woohoo\SyncWoohooCategoryProductsJob;
-use App\Jobs\Woohoo\SyncWoohooAllProductDetailsJob;
-use App\Jobs\Woohoo\SyncWoohooSkuJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use App\Services\Providers\WoohooBearerTokenStore;
 
 final class WoohooController extends Controller
 {
@@ -35,7 +36,7 @@ final class WoohooController extends Controller
 
         if ($host === '' || $clientId === '' || $clientSecret === '' || $username === '' || $password === '') {
             return ResponsePayload::fail(
-                code: \App\Enums\ResponseCode::VALIDATION_FAILED,
+                code: ResponseCode::VALIDATION_FAILED,
                 messageKey: 'providers.woohoo_missing_credentials',
                 details: [
                     'required' => ['WOOHOO_URL', 'WOOHOO_CLIENT_ID', 'WOOHOO_CLIENT_SECRET', 'WOOHOO_USERNAME', 'WOOHOO_PASSWORD'],
@@ -64,7 +65,8 @@ final class WoohooController extends Controller
 
             if (! $verifyResp->successful()) {
                 Log::error('Woohoo verify failed', ['status' => $verifyResp->status(), 'body' => $verifyResp->body()]);
-                return ResponsePayload::fail(\App\Enums\ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_verify_failed', [
+
+                return ResponsePayload::fail(ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_verify_failed', [
                     'status' => $verifyResp->status(),
                     'body' => substr($verifyResp->body(), 0, 500),
                 ], $verifyResp->status());
@@ -72,7 +74,7 @@ final class WoohooController extends Controller
 
             $authorizationCode = (string) ($verifyResp->json()['authorizationCode'] ?? '');
             if ($authorizationCode === '') {
-                return ResponsePayload::fail(\App\Enums\ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_verify_failed', [
+                return ResponsePayload::fail(ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_verify_failed', [
                     'reason' => 'missing_authorizationCode',
                     'response' => $verifyResp->json(),
                 ], 502);
@@ -94,7 +96,8 @@ final class WoohooController extends Controller
 
             if (! $tokenResp->successful()) {
                 Log::error('Woohoo token failed', ['status' => $tokenResp->status(), 'body' => $tokenResp->body()]);
-                return ResponsePayload::fail(\App\Enums\ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_token_failed', [
+
+                return ResponsePayload::fail(ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_token_failed', [
                     'status' => $tokenResp->status(),
                     'body' => substr($tokenResp->body(), 0, 500),
                 ], $tokenResp->status());
@@ -102,7 +105,7 @@ final class WoohooController extends Controller
 
             $token = (string) ($tokenResp->json()['token'] ?? '');
             if ($token === '') {
-                return ResponsePayload::fail(\App\Enums\ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_token_failed', [
+                return ResponsePayload::fail(ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_token_failed', [
                     'reason' => 'missing_token',
                     'response' => $tokenResp->json(),
                 ], 502);
@@ -120,7 +123,8 @@ final class WoohooController extends Controller
             ]);
         } catch (\Throwable $e) {
             Log::error('Woohoo getToken exception', ['error' => $e->getMessage()]);
-            return ResponsePayload::fail(\App\Enums\ResponseCode::INTERNAL_ERROR, 'providers.woohoo_token_failed', [
+
+            return ResponsePayload::fail(ResponseCode::INTERNAL_ERROR, 'providers.woohoo_token_failed', [
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -135,7 +139,7 @@ final class WoohooController extends Controller
         $bearerToken = (string) (app(WoohooBearerTokenStore::class)->get() ?: '');
 
         if ($host === '' || $clientSecret === '' || $bearerToken === '') {
-            return ResponsePayload::fail(\App\Enums\ResponseCode::VALIDATION_FAILED, 'providers.woohoo_missing_credentials', [
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'providers.woohoo_missing_credentials', [
                 'required' => ['WOOHOO_URL', 'WOOHOO_CLIENT_SECRET', 'Woohoo bearer token stored in settings'],
             ], 422);
         }
@@ -156,7 +160,7 @@ final class WoohooController extends Controller
                 ->get($absApiUrl);
 
             if (! $resp->successful()) {
-                return ResponsePayload::fail(\App\Enums\ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_categories_failed', [
+                return ResponsePayload::fail(ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_categories_failed', [
                     'status' => $resp->status(),
                     'body' => substr($resp->body(), 0, 500),
                 ], $resp->status());
@@ -164,7 +168,7 @@ final class WoohooController extends Controller
 
             $payload = $resp->json();
             if (! is_array($payload)) {
-                return ResponsePayload::fail(\App\Enums\ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_categories_failed', [
+                return ResponsePayload::fail(ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_categories_failed', [
                     'reason' => 'invalid_json',
                 ], 502);
             }
@@ -176,7 +180,7 @@ final class WoohooController extends Controller
             $name = (string) ($payload['name'] ?? '');
 
             if ($externalId === '' || $name === '') {
-                return ResponsePayload::fail(\App\Enums\ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_categories_failed', [
+                return ResponsePayload::fail(ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_categories_failed', [
                     'reason' => 'missing_id_or_name',
                     'response' => $payload,
                 ], 502);
@@ -204,7 +208,8 @@ final class WoohooController extends Controller
             ]);
         } catch (\Throwable $e) {
             Log::error('Woohoo fetchCategories exception', ['error' => $e->getMessage()]);
-            return ResponsePayload::fail(\App\Enums\ResponseCode::INTERNAL_ERROR, 'providers.woohoo_categories_failed', [
+
+            return ResponsePayload::fail(ResponseCode::INTERNAL_ERROR, 'providers.woohoo_categories_failed', [
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -219,7 +224,7 @@ final class WoohooController extends Controller
 
         $cat = SyncedCategory::query()->find((int) $validated['synced_category_id']);
         if (! $cat) {
-            return ResponsePayload::fail(\App\Enums\ResponseCode::NOT_FOUND, 'providers.woohoo_category_not_found', httpStatus: 404);
+            return ResponsePayload::fail(ResponseCode::NOT_FOUND, 'providers.woohoo_category_not_found', httpStatus: 404);
         }
 
         $host = (string) config('woohoo.host');
@@ -227,7 +232,7 @@ final class WoohooController extends Controller
         $bearerToken = (string) (app(WoohooBearerTokenStore::class)->get() ?: '');
 
         if ($host === '' || $clientSecret === '' || $bearerToken === '') {
-            return ResponsePayload::fail(\App\Enums\ResponseCode::VALIDATION_FAILED, 'providers.woohoo_missing_credentials', [
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'providers.woohoo_missing_credentials', [
                 'required' => ['WOOHOO_URL', 'WOOHOO_CLIENT_SECRET', 'Woohoo bearer token stored in settings'],
             ], 422);
         }
@@ -249,7 +254,7 @@ final class WoohooController extends Controller
                 ->get($absApiUrl);
 
             if (! $resp->successful()) {
-                return ResponsePayload::fail(\App\Enums\ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_products_failed', [
+                return ResponsePayload::fail(ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_products_failed', [
                     'status' => $resp->status(),
                     'body' => substr($resp->body(), 0, 500),
                 ], $resp->status());
@@ -258,7 +263,7 @@ final class WoohooController extends Controller
             $json = $resp->json();
             $products = is_array($json) ? ($json['products'] ?? null) : null;
             if (! is_array($products)) {
-                return ResponsePayload::fail(\App\Enums\ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_products_failed', [
+                return ResponsePayload::fail(ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_products_failed', [
                     'reason' => 'missing_products_array',
                     'response' => is_array($json) ? array_keys($json) : gettype($json),
                 ], 502);
@@ -272,6 +277,7 @@ final class WoohooController extends Controller
             foreach ($products as $item) {
                 if (! is_array($item)) {
                     $skipped++;
+
                     continue;
                 }
                 $skuRaw = $item['sku'] ?? '';
@@ -283,6 +289,7 @@ final class WoohooController extends Controller
 
                 if ($sku === '' || $name === '') {
                     $skipped++;
+
                     continue;
                 }
 
@@ -326,8 +333,6 @@ final class WoohooController extends Controller
                         'brand_id' => $brand->id,
                         'name' => $name,
                         'slug' => $slug,
-                        // Storefront product page currently resolves by `url` (legacy) — keep it in sync.
-                        'url' => $slug,
                         'source_provider' => 'woohoo',
                         'source_product_id' => $sourceProductId !== '' ? $sourceProductId : null,
                         'currency' => $currency,
@@ -363,7 +368,8 @@ final class WoohooController extends Controller
             ]);
         } catch (\Throwable $e) {
             Log::error('Woohoo fetchProducts exception', ['error' => $e->getMessage()]);
-            return ResponsePayload::fail(\App\Enums\ResponseCode::INTERNAL_ERROR, 'providers.woohoo_products_failed', [
+
+            return ResponsePayload::fail(ResponseCode::INTERNAL_ERROR, 'providers.woohoo_products_failed', [
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -378,7 +384,7 @@ final class WoohooController extends Controller
 
         $sku = trim((string) $validated['sku']);
         if ($sku === '') {
-            return ResponsePayload::fail(\App\Enums\ResponseCode::VALIDATION_FAILED, 'providers.woohoo_products_failed', [
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'providers.woohoo_products_failed', [
                 'sku' => 'required',
             ], 422);
         }
@@ -388,7 +394,7 @@ final class WoohooController extends Controller
         $bearerToken = (string) (app(WoohooBearerTokenStore::class)->get() ?: '');
 
         if ($host === '' || $clientSecret === '' || $bearerToken === '') {
-            return ResponsePayload::fail(\App\Enums\ResponseCode::VALIDATION_FAILED, 'providers.woohoo_missing_credentials', [
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'providers.woohoo_missing_credentials', [
                 'required' => ['WOOHOO_URL', 'WOOHOO_CLIENT_SECRET', 'Woohoo bearer token stored in settings'],
             ], 422);
         }
@@ -409,7 +415,7 @@ final class WoohooController extends Controller
                 ->get($absApiUrl);
 
             if (! $resp->successful()) {
-                return ResponsePayload::fail(\App\Enums\ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_product_details_failed', [
+                return ResponsePayload::fail(ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_product_details_failed', [
                     'status' => $resp->status(),
                     'body' => substr($resp->body(), 0, 500),
                 ], $resp->status());
@@ -417,7 +423,7 @@ final class WoohooController extends Controller
 
             $payload = $resp->json();
             if (! is_array($payload)) {
-                return ResponsePayload::fail(\App\Enums\ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_product_details_failed', [
+                return ResponsePayload::fail(ResponseCode::UPSTREAM_FAILED, 'providers.woohoo_product_details_failed', [
                     'reason' => 'invalid_json',
                 ], 502);
             }
@@ -452,7 +458,8 @@ final class WoohooController extends Controller
             ]);
         } catch (\Throwable $e) {
             Log::error('Woohoo fetchProductDetails exception', ['error' => $e->getMessage()]);
-            return ResponsePayload::fail(\App\Enums\ResponseCode::INTERNAL_ERROR, 'providers.woohoo_product_details_failed', [
+
+            return ResponsePayload::fail(ResponseCode::INTERNAL_ERROR, 'providers.woohoo_product_details_failed', [
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -490,7 +497,7 @@ final class WoohooController extends Controller
 
         $sku = trim((string) $validated['sku']);
         if ($sku === '') {
-            return ResponsePayload::fail(\App\Enums\ResponseCode::VALIDATION_FAILED, 'providers.woohoo_products_failed', [
+            return ResponsePayload::fail(ResponseCode::VALIDATION_FAILED, 'providers.woohoo_products_failed', [
                 'sku' => 'required',
             ], 422);
         }
@@ -605,4 +612,3 @@ final class WoohooController extends Controller
         return $conn;
     }
 }
-

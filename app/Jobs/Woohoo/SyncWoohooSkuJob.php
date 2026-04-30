@@ -123,8 +123,6 @@ final class SyncWoohooSkuJob implements ShouldQueue
                 'brand_id' => $brand->id,
                 'name' => $name,
                 'slug' => $slug,
-                // Keep legacy `url` aligned with slug for storefront routing.
-                'url' => $slug,
                 'source_provider' => 'woohoo',
                 'source_product_id' => $externalProductId !== '' ? $externalProductId : null,
                 'currency' => $currency,
@@ -161,4 +159,3 @@ final class SyncWoohooSkuJob implements ShouldQueue
         return [$exists ? 0 : 1, $exists ? 1 : 0];
     }
 }
-

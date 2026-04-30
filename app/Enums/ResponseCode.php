@@ -91,6 +91,11 @@ enum ResponseCode: string
         $key = match ($this) {
             self::OK => 'response.ok',
             self::CREATED => 'response.created',
+            self::NOT_FOUND => 'error.not_found',
+            self::FORBIDDEN => 'error.forbidden',
+            self::UNAUTHENTICATED => 'error.unauthenticated',
+            self::VALIDATION_FAILED => 'error.validation_failed',
+            self::RATE_LIMITED, self::TOO_MANY_REQUESTS => 'error.rate_limited',
             default => 'error.unknown',
         };
 

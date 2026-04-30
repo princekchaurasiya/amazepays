@@ -58,7 +58,6 @@ class Product extends Model
         'out_of_stock',
         'is_special_sku',
         'slug',
-        'url',
         'gift_option_policy',
         'synced_category_id',
         'sku_limits',

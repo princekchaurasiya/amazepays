@@ -62,6 +62,8 @@ return [
         'add_to_cart' => 'Add to Cart',
         'checkout' => 'Checkout',
         'login_to_purchase' => 'Log in to purchase this gift card.',
+        'login_to_customize_gift' => 'Log in to customize your gift, add it to cart, or check out.',
+        'cta_log_in' => 'Log in or sign up',
         'added_to_cart' => 'Added to cart.',
         'add_to_cart_failed' => 'Could not add to cart. Please check required fields.',
         'for_myself' => 'For Myself',

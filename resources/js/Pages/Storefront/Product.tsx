@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import StorefrontLayout from '@/Layouts/StorefrontLayout';
 import { ProductInfoModal, type ProductInfoSection, ProductPurchasePanel, type GiftPersonalizationState } from '@/Components/Storefront';
+import { normalizeGiftOptionPolicy } from '@/lib/giftOptions';
 import { Gift } from 'lucide-react';
 
 export default function ProductPage({
@@ -21,13 +22,22 @@ export default function ProductPage({
 }) {
     const page = usePage<{ auth?: { user?: unknown }; i18n?: { storefront?: { product?: Record<string, string> } } }>();
     const loggedIn = Boolean(page.props.auth?.user);
-    const sharedText = page.props.i18n?.storefront?.product ?? {};
-    const t = (key: string, fallback: string) => sharedText[key] || fallback;
+    const storefrontProductCopy = page.props.i18n?.storefront?.product;
+    const t = useCallback(
+        (key: string, fallback: string): string => {
+            const v = storefrontProductCopy?.[key];
+            return typeof v === 'string' && v !== '' ? v : fallback;
+        },
+        [storefrontProductCopy],
+    );
     const slug = String(productDetails.slug ?? productDetails.url ?? '');
     const name = String(productDetails.display_name ?? productDetails.name ?? 'Gift card');
     const fallbackImg = productDetails.display_image_url as string | undefined;
     const rawImages = productDetails.images as unknown;
-    const rawCardTheme = (productDetails.card_theme as Record<string, unknown> | undefined) ?? {};
+    const rawCardTheme = useMemo(
+        () => (productDetails.card_theme as Record<string, unknown> | undefined) ?? {},
+        [productDetails.card_theme],
+    );
     const defaultCardValue = Number(productDetails.default_card_value ?? 0);
 
     let highQualityImg: string | undefined;
@@ -61,7 +71,9 @@ export default function ProductPage({
         Number.isFinite(defaultCardValue) && defaultCardValue > 0 ? defaultCardValue : 0,
     );
     const [giftCustomizeMode, setGiftCustomizeMode] = useState(false);
-    const [giftSendOption, setGiftSendOption] = useState<'send_as_gift' | 'buy_for_self'>('buy_for_self');
+    const [giftSendOption, setGiftSendOption] = useState<'send_as_gift' | 'buy_for_self'>(() =>
+        normalizeGiftOptionPolicy(productDetails.gift_option_policy) === 'gift_only' ? 'send_as_gift' : 'buy_for_self',
+    );
     const [giftPreviewData, setGiftPreviewData] = useState<GiftPersonalizationState>({
         gift_theme_id: '',
         gift_theme_image_url: '',
@@ -76,6 +88,14 @@ export default function ProductPage({
     });
     const [infoModalOpen, setInfoModalOpen] = useState(false);
     const [activeInfoSectionId, setActiveInfoSectionId] = useState('about-brand');
+
+    const previousLoggedInRef = useRef<boolean>(loggedIn);
+    useEffect(() => {
+        if (previousLoggedInRef.current === true && loggedIn === false) {
+            setGiftCustomizeMode(false);
+        }
+        previousLoggedInRef.current = loggedIn;
+    }, [loggedIn]);
 
     const cardTheme = useMemo(
         () => ({
@@ -302,7 +322,6 @@ export default function ProductPage({
                             <div className="mt-2 flex w-full justify-end md:mt-0">
                                 <ProductPurchasePanel
                                     slug={slug}
-                                    loggedIn={loggedIn}
                                     price={productDetails.price}
                                     giftOptionPolicy={productDetails.gift_option_policy as string | undefined}
                                     giftThemes={giftThemes ?? []}

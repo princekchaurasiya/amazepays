@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Enums\ResponseCode;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ProductPageController;
-use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderBillingSnapshot;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\Checkout\CartResolver;
 use App\Services\Checkout\CheckoutWriteService;
 use App\Services\Checkout\ResolveTax;
 use App\Support\Http\ResponsePayload;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
@@ -36,6 +37,7 @@ final class CheckoutSessionController extends Controller
     public function __construct(
         private readonly CheckoutWriteService $checkoutWriteService,
         private readonly ResolveTax $resolveTax,
+        private readonly CartResolver $cartResolver,
         private ProductPageController $legacy,
     ) {}
 
@@ -257,7 +259,7 @@ final class CheckoutSessionController extends Controller
         return ResponsePayload::ok('response.ok');
     }
 
-    public function addToCart(Request $request, string $slug): mixed
+    public function addToCart(Request $request, string $slug): RedirectResponse
     {
         $allowedKeys = [
             'denomination',
@@ -375,7 +377,10 @@ final class CheckoutSessionController extends Controller
         }
 
         $lineTotal = $denomination * $quantity;
-        $cart = $this->resolveCartForUser((int) Auth::id());
+        $cart = $this->cartResolver->resolve($request);
+        if (! $cart) {
+            return back()->withErrors(['message' => __('Unable to update cart.')])->withInput();
+        }
 
         $cart->items()->create([
             'product_id' => $lockedProduct->id,
@@ -405,7 +410,7 @@ final class CheckoutSessionController extends Controller
         return back()->with('success', 'Added to cart successfully.');
     }
 
-    public function removeFromCart(Request $request): mixed
+    public function removeFromCart(Request $request): RedirectResponse
     {
         $this->rejectUnexpectedFields($request, ['cart_item_id']);
 
@@ -413,7 +418,7 @@ final class CheckoutSessionController extends Controller
             'cart_item_id' => 'required|integer',
         ]);
 
-        $cart = $this->resolveCartForUser((int) Auth::id(), false);
+        $cart = $this->cartResolver->resolve($request, false);
         if ($cart) {
             $cart->items()
                 ->whereKey((int) $validated['cart_item_id'])
@@ -423,11 +428,11 @@ final class CheckoutSessionController extends Controller
         return back()->with('success', 'Removed from cart.');
     }
 
-    public function clearCart(Request $request): mixed
+    public function clearCart(Request $request): RedirectResponse
     {
         $this->rejectUnexpectedFields($request, []);
 
-        $cart = $this->resolveCartForUser((int) Auth::id(), false);
+        $cart = $this->cartResolver->resolve($request, false);
         if ($cart) {
             $cart->items()->delete();
         }
@@ -490,42 +495,6 @@ final class CheckoutSessionController extends Controller
         if ($unexpected !== []) {
             abort(422, 'Unexpected input fields: '.implode(', ', $unexpected));
         }
-    }
-
-    private function resolveCartForUser(int $userId, bool $create = true): ?Cart
-    {
-        $tenantId = $this->resolveTenantId(request());
-
-        if ($create) {
-            return Cart::query()->firstOrCreate([
-                'user_id' => $userId,
-                'tenant_id' => $tenantId,
-            ]);
-        }
-
-        return Cart::query()
-            ->where('user_id', $userId)
-            ->where('tenant_id', $tenantId)
-            ->first();
-    }
-
-    private function resolveTenantId(Request $request): int
-    {
-        $tenant = $request->attributes->get('tenant');
-        if ($tenant && method_exists($tenant, 'getKey')) {
-            return (int) $tenant->getKey();
-        }
-
-        if (app()->bound('current_tenant_id')) {
-            return (int) app('current_tenant_id');
-        }
-
-        // Fallback to first tenant if exists, or ID 1
-        if (Schema::hasTable('tenants')) {
-            return (int) (DB::table('tenants')->orderBy('id')->value('id') ?? 1);
-        }
-
-        return 1;
     }
 
     private function assertConsumerStorefrontProduct(Product $product): void

@@ -134,7 +134,7 @@ export default function Form({ product, default_catalog_audience }: Props) {
         };
         setDefaults(hydrated);
         setData(hydrated);
-    }, [product, default_catalog_audience]);
+    }, [product, default_catalog_audience, reset, setData, setDefaults]);
 
     useEffect(() => {
         if (isEdit) return;
@@ -143,7 +143,7 @@ export default function Form({ product, default_catalog_audience }: Props) {
             return;
         }
         setData('catalog_audience', defaultCatalogAudience(data.source_provider));
-    }, [data.source_provider, isEdit]);
+    }, [data.source_provider, isEdit, setData]);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();

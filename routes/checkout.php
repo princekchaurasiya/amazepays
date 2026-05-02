@@ -15,17 +15,22 @@ use Illuminate\Support\Facades\Route;
 | Checkout flows, order creation, and order processing for all providers.
 */
 
+/*
+|--------------------------------------------------------------------------
+| Guest cart (no auth — web middleware is applied globally in bootstrap/app.php)
+|--------------------------------------------------------------------------
+*/
+Route::get('/cart', [StorefrontProductController::class, 'showCart'])->name('storefront.cart');
+Route::post('/cart/remove', [CheckoutSessionController::class, 'removeFromCart'])->name('storefront.cart.remove');
+Route::post('/cart/clear', [CheckoutSessionController::class, 'clearCart'])->name('storefront.cart.clear');
+Route::post('/cart/{slug}', [CheckoutSessionController::class, 'addToCart'])->name('storefront.cart.add');
+
 Route::middleware(['auth', 'check.transaction'])->group(function () {
     Route::post('/checkout/session/billing', [CheckoutSessionController::class, 'updateBillingDetails'])
         ->name('checkout.session.billing.update');
 
     Route::get('/checkout/{slug}', [StorefrontProductController::class, 'showCheckout'])->name('checkoutPage');
     Route::post('/checkout/{slug}', [CheckoutSessionController::class, 'submitCheckout'])->name('checkoutPage.post');
-
-    Route::get('/cart', [StorefrontProductController::class, 'showCart'])->name('storefront.cart');
-    Route::post('/cart/remove', [CheckoutSessionController::class, 'removeFromCart'])->name('storefront.cart.remove');
-    Route::post('/cart/clear', [CheckoutSessionController::class, 'clearCart'])->name('storefront.cart.clear');
-    Route::post('/cart/{slug}', [CheckoutSessionController::class, 'addToCart'])->name('storefront.cart.add');
 
     // Legacy alias (Phase 4): preserve endpoint for one release; redirect to canonical route.
     Route::post('/payment-process', function () {

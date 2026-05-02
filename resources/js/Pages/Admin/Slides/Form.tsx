@@ -88,7 +88,7 @@ export default function Form({ slide, products, categories, brands }: Props) {
             desktop_image_file: null,
             image_mobile_file: null,
         });
-    }, [slide?.id]);
+    }, [slide, reset, setData]);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();

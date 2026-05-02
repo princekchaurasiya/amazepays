@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useMemo } from 'react';
+import React, { PropsWithChildren, useCallback, useMemo } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { Bell, Search, UserCircle2 } from 'lucide-react';
 
@@ -25,16 +25,19 @@ export default function AdminLayout({ children }: PropsWithChildren) {
     const page = usePage();
     const currentPath = page.url?.split('?')[0] ?? '';
 
-    const isActive = (href: string) => {
-        // Dashboard (/panel) should not match every /panel/* page.
-        if (href === '/panel') return currentPath === '/panel';
-        return currentPath === href || currentPath.startsWith(href + '/');
-    };
+    const isActive = useCallback(
+        (href: string) => {
+            // Dashboard (/panel) should not match every /panel/* page.
+            if (href === '/panel') return currentPath === '/panel';
+            return currentPath === href || currentPath.startsWith(href + '/');
+        },
+        [currentPath],
+    );
 
     const title = useMemo(() => {
         const found = adminMenu.find((m) => isActive(m.href));
         return found?.label ?? 'Admin';
-    }, [currentPath]);
+    }, [isActive]);
 
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">

@@ -15,8 +15,8 @@ export default function StoresWorkspace({
     brandcodes = [],
     brandnames = [],
     countries = [],
-    states = [],
-    cities = [],
+    states: _states = [],
+    cities: _cities = [],
     errorFlash,
     allBrands = [],
 }: {

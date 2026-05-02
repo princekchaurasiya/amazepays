@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\CheckoutHelper;
-use App\Helpers\ProductHelper;
 use App\Models\Billing;
 use App\Models\Cart;
 use App\Models\CartItem;
@@ -11,6 +10,7 @@ use App\Models\GiftCardTheme;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\Checkout\CartResolver;
 use App\Services\Checkout\CheckoutOrderPayloadFactory;
 use App\Services\Checkout\CheckoutReadService;
 use App\Services\Checkout\CheckoutWriteService;
@@ -23,7 +23,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -41,6 +40,7 @@ class ProductPageController extends Controller
         private CheckoutReadService $checkoutReadService,
         private CheckoutWriteService $checkoutWriteService,
         private CheckoutOrderPayloadFactory $checkoutOrderPayloadFactory,
+        private CartResolver $cartResolver,
     ) {}
 
     public function saveGiftCardFormValues(Request $request)
@@ -76,7 +76,7 @@ class ProductPageController extends Controller
 
     public function showCart(Request $request)
     {
-        $cart = $request->user()?->cart()->with('items.giftTheme')->first();
+        $cart = $this->cartResolver->resolve($request, false)?->load(['items.giftTheme']);
         $items = $cart
             ? $cart->items->map(static function (CartItem $item): array {
                 return [

@@ -4,7 +4,6 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Gift, RefreshCw, Send, Download, Search, Store, Database, Activity, Copy, Check, Archive } from 'lucide-react';
 import StatCard from '@/Components/Admin/StatCard';
 import Badge from '@/Components/UI/Badge';
-import Button from '@/Components/UI/Button';
 import { Card, CardBody, CardHeader } from '@/Components/UI/Card';
 
 /** Sanitized row from GET /panel/vouchagram/fetch-brands */

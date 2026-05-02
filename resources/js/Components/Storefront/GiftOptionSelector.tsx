@@ -1,9 +1,9 @@
 import React from 'react';
 import { usePage } from '@inertiajs/react';
 import { Gift, UserRound } from 'lucide-react';
+import type { GiftOption, GiftOptionPolicy } from '@/lib/giftOptions';
 
-export type GiftOption = 'buy_for_self' | 'send_as_gift';
-export type GiftOptionPolicy = 'both' | 'self_only' | 'gift_only';
+export type { GiftOption, GiftOptionPolicy };
 
 type Props = {
     policy: GiftOptionPolicy;

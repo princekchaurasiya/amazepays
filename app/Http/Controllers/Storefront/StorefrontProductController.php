@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Helpers\CheckoutHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ProductPageController;
-use App\Helpers\CheckoutHelper;
 use App\Models\Order;
 use App\Models\OrderBillingSnapshot;
 use App\Models\Product;
+use App\Services\Checkout\CartResolver;
 use App\Services\Checkout\CheckoutOrderPayloadFactory;
 use App\Services\Checkout\CheckoutReadService;
 use App\Services\Checkout\CheckoutWriteService;
@@ -40,6 +41,7 @@ final class StorefrontProductController extends Controller
         private readonly CheckoutReadService $checkoutReadService,
         private readonly CheckoutWriteService $checkoutWriteService,
         private readonly CheckoutOrderPayloadFactory $checkoutOrderPayloadFactory,
+        private readonly CartResolver $cartResolver,
         private ProductPageController $legacy,
     ) {}
 
@@ -69,8 +71,13 @@ final class StorefrontProductController extends Controller
         }
 
         $prefillFromCartItem = $this->checkoutReadService->extractCheckoutPrefillFromCartItem($request, $product, (int) Auth::id());
+        $prefillFromLatestCart = $prefillFromCartItem === []
+            ? $this->checkoutReadService->extractCheckoutPrefillFromLatestCartLine($product, $this->cartResolver->resolveForAuthenticatedPrefill($request))
+            : [];
         $prefillFromQuery = $this->checkoutReadService->extractCheckoutPrefillFromQuery($request, $product);
-        $prefillFromSource = $prefillFromCartItem !== [] ? $prefillFromCartItem : $prefillFromQuery;
+        $prefillFromSource = $prefillFromCartItem !== []
+            ? $prefillFromCartItem
+            : ($prefillFromLatestCart !== [] ? $prefillFromLatestCart : $prefillFromQuery);
 
         $hasQueryParams = $request->query->count() > 0;
         if ($this->canCreateDraftFromPrefill($prefillFromSource)) {
@@ -143,6 +150,7 @@ final class StorefrontProductController extends Controller
         if (! $hasAnyReady) {
             // Use relative path to avoid open-redirects and keep profile return_to safe.
             $returnTo = route('checkoutPage', ['slug' => $slug], false);
+
             return redirect()
                 ->route('profile', ['return_to' => $returnTo])
                 ->with('warning', 'Please complete your profile details to continue checkout.');
@@ -259,4 +267,3 @@ final class StorefrontProductController extends Controller
         }
     }
 }
-

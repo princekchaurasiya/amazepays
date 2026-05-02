@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 
 type Props = {

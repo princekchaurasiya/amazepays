@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, Search, FileDown } from 'lucide-react';
 
 export type Column<T> = {

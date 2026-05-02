@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Checkout;
 
 use App\Helpers\CheckoutHelper;
+use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\GiftCardTheme;
 use App\Models\Order;
@@ -205,6 +208,37 @@ class CheckoutReadService
             return [];
         }
 
+        return $this->prefillCheckoutFromCartLine($item);
+    }
+
+    /**
+     * When there is no `?cart_item=`, hydrate checkout from the latest cart line for this product.
+     *
+     * @return array<string, float|int|string>
+     */
+    public function extractCheckoutPrefillFromLatestCartLine(Product $product, ?Cart $cart): array
+    {
+        if ($cart === null) {
+            return [];
+        }
+
+        $item = $cart->items()
+            ->where('product_id', (int) $product->id)
+            ->latest('id')
+            ->first();
+
+        if ($item === null) {
+            return [];
+        }
+
+        return $this->prefillCheckoutFromCartLine($item);
+    }
+
+    /**
+     * @return array<string, float|int|string>
+     */
+    private function prefillCheckoutFromCartLine(CartItem $item): array
+    {
         $out = [
             'denomination' => (float) $item->denomination,
             'quantity' => (int) $item->quantity,

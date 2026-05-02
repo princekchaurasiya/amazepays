@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import { paths } from '@/lib/paths';
-import GiftOptionSelector, { type GiftOption, type GiftOptionPolicy } from './GiftOptionSelector';
+import { normalizeGiftOptionPolicy, shouldClearGiftCustomizeMode, type GiftOption, type GiftOptionPolicy } from '@/lib/giftOptions';
+import GiftOptionSelector from './GiftOptionSelector';
 import GiftPersonalizationPanel, { type GiftPersonalizationState, type GiftTheme } from './GiftPersonalizationPanel';
 import { Check, Clock, CreditCard, Loader2, ShieldCheck, ShoppingCart, Zap } from 'lucide-react';
 
@@ -14,7 +15,6 @@ type PriceData = {
 
 type Props = {
     slug: string;
-    loggedIn: boolean;
     price: unknown;
     giftThemes: Array<Record<string, unknown>>;
     giftOptionPolicy?: GiftOptionPolicy | string | null;
@@ -55,12 +55,6 @@ function formatMoney(n: number, currencySymbol: string): string {
     return `${currencySymbol}${Math.round(n).toLocaleString('en-IN')}`;
 }
 
-function normalizeGiftOptionPolicy(v: unknown): GiftOptionPolicy {
-    const policy = String(v ?? '').toLowerCase();
-    if (policy === 'self_only' || policy === 'gift_only') return policy;
-    return 'both';
-}
-
 function normalizeGiftThemes(raw: Array<Record<string, unknown>>): GiftTheme[] {
     return raw
         .map((item) => {
@@ -86,7 +80,6 @@ function normalizeGiftThemes(raw: Array<Record<string, unknown>>): GiftTheme[] {
 
 export default function ProductPurchasePanel({
     slug,
-    loggedIn,
     price,
     giftThemes,
     giftOptionPolicy,
@@ -226,7 +219,7 @@ export default function ProductPurchasePanel({
     }, [denomination, giftData, giftSendOption, quantity]);
 
     const isInvalidRange = priceData.type === 'RANGE' && (!!error || rangeInput === '');
-    const isActionDisabled = isInvalidRange || !loggedIn;
+    const isActionDisabled = isInvalidRange;
 
     const validate = (): boolean => {
         if (quantity < 1 || quantity > 10) {
@@ -440,9 +433,12 @@ export default function ProductPurchasePanel({
                 policy={policy}
                 value={giftSendOption}
                 onChange={(next) => {
+                    const previous = giftSendOption;
                     setGiftSendOption(next);
                     onGiftSendOptionChange?.(next);
-                    onGiftCustomizeModeChange?.(next === 'send_as_gift' ? giftCustomizeMode : false);
+                    if (shouldClearGiftCustomizeMode(previous, next)) {
+                        onGiftCustomizeModeChange?.(false);
+                    }
                     if (next !== 'send_as_gift') {
                         setGiftErrors({});
                     }
@@ -520,112 +516,110 @@ export default function ProductPurchasePanel({
                 </div>
             </div>
 
-            {loggedIn ? (
-                <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row">
-                    {giftSendOption === 'send_as_gift' && !giftCustomizeMode ? (
-                        <>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (!validate()) return;
-                                    setActionMessage(null);
-                                    router.post(paths.cartAdd(slug), payload, {
-                                        preserveScroll: true,
-                                        preserveState: true,
-                                        onStart: () => setPendingAction('cart'),
-                                        onFinish: () => setPendingAction(null),
-                                        onSuccess: () => setActionMessage(t('added_to_cart', 'Added to cart.')),
-                                        onError: () => setActionMessage(t('add_to_cart_failed', 'Could not add to cart. Please check required fields.')),
-                                    });
-                                }}
-                                disabled={isActionDisabled || isBusy}
-                                className="inline-flex w-full min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-product-primary bg-white py-2.5 text-sm font-medium text-product-primary transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[2.75rem]"
-                            >
-                                {pendingAction === 'cart' ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
-                                        {t('adding_to_cart', 'Adding…')}
-                                    </>
-                                ) : (
-                                    <>
-                                        <ShoppingCart className="h-4 w-4 shrink-0" aria-hidden="true" />
-                                        {t('add_to_cart', 'Add to Cart')}
-                                    </>
-                                )}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => onGiftCustomizeModeChange?.(true)}
-                                className="inline-flex w-full min-w-0 flex-[1.15] items-center justify-center gap-2 rounded-lg bg-product-primary py-3 text-base font-semibold text-white shadow-md transition hover:bg-product-primary/90 sm:min-h-[3rem]"
-                            >
-                                <CreditCard className="h-5 w-5 shrink-0" aria-hidden="true" />
-                                {t('customize_gift_card', 'Customize Gift Card')}
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (!validate()) return;
-                                    setActionMessage(null);
-                                    router.post(paths.cartAdd(slug), payload, {
-                                        preserveScroll: true,
-                                        preserveState: true,
-                                        onStart: () => setPendingAction('cart'),
-                                        onFinish: () => setPendingAction(null),
-                                        onSuccess: () => setActionMessage(t('added_to_cart', 'Added to cart.')),
-                                        onError: () => setActionMessage(t('add_to_cart_failed', 'Could not add to cart. Please check required fields.')),
-                                    });
-                                }}
-                                disabled={isActionDisabled || isBusy}
-                                className="inline-flex w-full min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-product-primary bg-white py-2.5 text-sm font-medium text-product-primary transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[2.75rem]"
-                            >
-                                {pendingAction === 'cart' ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
-                                        {t('adding_to_cart', 'Adding…')}
-                                    </>
-                                ) : (
-                                    <>
-                                        <ShoppingCart className="h-4 w-4 shrink-0" aria-hidden="true" />
-                                        {t('add_to_cart', 'Add to Cart')}
-                                    </>
-                                )}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (!validate()) return;
-                                    setActionMessage(null);
-                                    router.post(paths.checkout(slug), payload, {
-                                        preserveScroll: true,
-                                        preserveState: true,
-                                        onStart: () => setPendingAction('checkout'),
-                                        onFinish: () => setPendingAction(null),
-                                    });
-                                }}
-                                disabled={isActionDisabled || isBusy}
-                                className="inline-flex w-full min-w-0 flex-[1.2] items-center justify-center gap-2 rounded-lg bg-product-primary py-3 text-base font-semibold text-white shadow-md transition hover:bg-product-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-product-primary/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[3rem]"
-                            >
-                                {pendingAction === 'checkout' ? (
-                                    <>
-                                        <Loader2 className="h-5 w-5 shrink-0 animate-spin" aria-hidden="true" />
-                                        {t('please_wait', 'Please wait')}…
-                                    </>
-                                ) : (
-                                    <>
-                                        <Zap className="h-5 w-5 shrink-0" aria-hidden="true" />
-                                        {t('checkout_now', t('checkout', 'Checkout'))}
-                                    </>
-                                )}
-                            </button>
-                        </>
-                    )}
-                </div>
-            ) : (
-                <p className="text-sm text-gray-600">{t('login_to_purchase', 'Log in to purchase this gift card.')}</p>
-            )}
+            <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row">
+                {giftSendOption === 'send_as_gift' && !giftCustomizeMode ? (
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (!validate()) return;
+                                setActionMessage(null);
+                                router.post(paths.cartAdd(slug), payload, {
+                                    preserveScroll: true,
+                                    preserveState: true,
+                                    onStart: () => setPendingAction('cart'),
+                                    onFinish: () => setPendingAction(null),
+                                    onSuccess: () => setActionMessage(t('added_to_cart', 'Added to cart.')),
+                                    onError: () => setActionMessage(t('add_to_cart_failed', 'Could not add to cart. Please check required fields.')),
+                                });
+                            }}
+                            disabled={isActionDisabled || isBusy}
+                            className="inline-flex w-full min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-product-primary bg-white py-2.5 text-sm font-medium text-product-primary transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[2.75rem]"
+                        >
+                            {pendingAction === 'cart' ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
+                                    {t('adding_to_cart', 'Adding…')}
+                                </>
+                            ) : (
+                                <>
+                                    <ShoppingCart className="h-4 w-4 shrink-0" aria-hidden="true" />
+                                    {t('add_to_cart', 'Add to Cart')}
+                                </>
+                            )}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onGiftCustomizeModeChange?.(true)}
+                            className="inline-flex w-full min-w-0 flex-[1.15] items-center justify-center gap-2 rounded-lg bg-product-primary py-3 text-base font-semibold text-white shadow-md transition hover:bg-product-primary/90 sm:min-h-[3rem]"
+                        >
+                            <CreditCard className="h-5 w-5 shrink-0" aria-hidden="true" />
+                            {t('customize_gift_card', 'Customize Gift Card')}
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (!validate()) return;
+                                setActionMessage(null);
+                                router.post(paths.cartAdd(slug), payload, {
+                                    preserveScroll: true,
+                                    preserveState: true,
+                                    onStart: () => setPendingAction('cart'),
+                                    onFinish: () => setPendingAction(null),
+                                    onSuccess: () => setActionMessage(t('added_to_cart', 'Added to cart.')),
+                                    onError: () => setActionMessage(t('add_to_cart_failed', 'Could not add to cart. Please check required fields.')),
+                                });
+                            }}
+                            disabled={isActionDisabled || isBusy}
+                            className="inline-flex w-full min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-product-primary bg-white py-2.5 text-sm font-medium text-product-primary transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[2.75rem]"
+                        >
+                            {pendingAction === 'cart' ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
+                                    {t('adding_to_cart', 'Adding…')}
+                                </>
+                            ) : (
+                                <>
+                                    <ShoppingCart className="h-4 w-4 shrink-0" aria-hidden="true" />
+                                    {t('add_to_cart', 'Add to Cart')}
+                                </>
+                            )}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (!validate()) return;
+                                setActionMessage(null);
+                                router.post(paths.cartAdd(slug), payload, {
+                                    preserveScroll: true,
+                                    preserveState: true,
+                                    onStart: () => setPendingAction('checkout'),
+                                    onFinish: () => setPendingAction(null),
+                                    onSuccess: () => router.visit(paths.checkout(slug)),
+                                    onError: () => setActionMessage(t('checkout_failed_prefix', 'Could not proceed. Please review the form.')),
+                                });
+                            }}
+                            disabled={isActionDisabled || isBusy}
+                            className="inline-flex w-full min-w-0 flex-[1.2] items-center justify-center gap-2 rounded-lg bg-product-primary py-3 text-base font-semibold text-white shadow-md transition hover:bg-product-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-product-primary/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[3rem]"
+                        >
+                            {pendingAction === 'checkout' ? (
+                                <>
+                                    <Loader2 className="h-5 w-5 shrink-0 animate-spin" aria-hidden="true" />
+                                    {t('please_wait', 'Please wait')}…
+                                </>
+                            ) : (
+                                <>
+                                    <Zap className="h-5 w-5 shrink-0" aria-hidden="true" />
+                                    {t('checkout_now', t('checkout', 'Checkout'))}
+                                </>
+                            )}
+                        </button>
+                    </>
+                )}
+            </div>
 
             <div className="mt-4 flex w-full items-center justify-between gap-2 text-xs text-gray-400">
                 <span className="inline-flex min-w-0 items-center gap-1">

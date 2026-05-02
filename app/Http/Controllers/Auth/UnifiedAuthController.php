@@ -54,6 +54,33 @@ class UnifiedAuthController extends Controller
     }
 
     /**
+     * JSON clients (e.g. axios from AuthModal) cannot follow `redirect()->intended()`; mirror that behavior with `redirect_url`.
+     */
+    private function otpJsonRedirectTarget(Request $request, User $user): string
+    {
+        $default = (string) $user->homeUrl();
+        if ($default === '' || ! str_starts_with($default, '/')) {
+            $default = '/';
+        }
+
+        $intended = $request->session()->pull('url.intended');
+        if (! is_string($intended) || $intended === '') {
+            return $default;
+        }
+
+        if (str_starts_with($intended, '/') && ! str_starts_with($intended, '//')) {
+            return $intended;
+        }
+
+        $appUrl = rtrim((string) config('app.url'), '/');
+        if ($appUrl !== '' && str_starts_with($intended, $appUrl)) {
+            return $intended;
+        }
+
+        return $default;
+    }
+
+    /**
      * Send OTP to any mobile (login or signup).
      */
     public function sendOtp(Request $request, OtpService $otp)
@@ -241,7 +268,7 @@ class UnifiedAuthController extends Controller
 
             return ResponsePayload::ok('auth.login.success', [
                 'action' => 'logged_in',
-                'redirect_url' => $user->homeUrl(),
+                'redirect_url' => $this->otpJsonRedirectTarget($request, $user),
                 'identity_id' => $identity->id,
             ]);
         }
@@ -360,7 +387,7 @@ class UnifiedAuthController extends Controller
 
         return ResponsePayload::created('auth.profile.completed', [
             'action' => 'registered',
-            'redirect_url' => $user->homeUrl(),
+            'redirect_url' => $this->otpJsonRedirectTarget($request, $user),
             'identity_id' => $identity->id,
         ]);
     }

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import StatCard from '@/Components/Admin/StatCard';
@@ -204,25 +204,7 @@ export default function ValueDesignIndex({ configured, distributorId, routes, sy
         return dataObj;
     })();
 
-    const tokenRequired = useMemo(
-        () => [
-            { label: 'Get brands', action: () => run(routes.brands, { token, brand_code: brandCode || null }) },
-            { label: 'Get stores', action: () => run(routes.stores, { token, brand_code: brandCode || null }) },
-            {
-                label: 'Get EVC',
-                action: () => {
-                    const parsed = JSON.parse(payload) as Record<string, unknown>;
-                    return run(routes.evc, { token, payload: parsed });
-                },
-            },
-            { label: 'Get EVC status', action: () => run(routes.status, { token, order_id: orderId, request_ref_no: requestRefNo }) },
-            { label: 'Get activated EVC', action: () => run(routes.activated, { token, order_id: orderId, request_ref_no: requestRefNo }) },
-            { label: 'Get wallet balance', action: () => run(routes.wallet, { token }) },
-        ],
-        [token, brandCode, payload, orderId, requestRefNo, routes]
-    );
-
-    async function run(url: string, body: Record<string, unknown>) {
+    const run = useCallback(async (url: string, body: Record<string, unknown>) => {
         setLoading(true);
         setError(null);
         setResult(null);
@@ -243,7 +225,25 @@ export default function ValueDesignIndex({ configured, distributorId, routes, sy
         } finally {
             setLoading(false);
         }
-    }
+    }, [routes]);
+
+    const tokenRequired = useMemo(
+        () => [
+            { label: 'Get brands', action: () => run(routes.brands, { token, brand_code: brandCode || null }) },
+            { label: 'Get stores', action: () => run(routes.stores, { token, brand_code: brandCode || null }) },
+            {
+                label: 'Get EVC',
+                action: () => {
+                    const parsed = JSON.parse(payload) as Record<string, unknown>;
+                    return run(routes.evc, { token, payload: parsed });
+                },
+            },
+            { label: 'Get EVC status', action: () => run(routes.status, { token, order_id: orderId, request_ref_no: requestRefNo }) },
+            { label: 'Get activated EVC', action: () => run(routes.activated, { token, order_id: orderId, request_ref_no: requestRefNo }) },
+            { label: 'Get wallet balance', action: () => run(routes.wallet, { token }) },
+        ],
+        [token, brandCode, payload, orderId, requestRefNo, routes, run]
+    );
 
     async function syncCatalog() {
         setSyncBusy(true);

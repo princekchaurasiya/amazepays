@@ -5,7 +5,7 @@ import StorefrontLayout from '@/Layouts/StorefrontLayout';
 
 type Prefill = Record<string, string | undefined>;
 
-export default function EvcRequestCreate({ prefill = {} }: { prefill?: Prefill }) {
+export default function EvcRequestCreate({ prefill: _prefill = {} }: { prefill?: Prefill }) {
     const page = usePage<{ i18n?: { storefront?: { product?: Record<string, string> } } }>();
     const text = page.props.i18n?.storefront?.product ?? {};
 
